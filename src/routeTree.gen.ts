@@ -14,7 +14,10 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppInspecoesIndexRouteImport } from './routes/_app.inspecoes.index'
+import { Route as AppChecklistsIndexRouteImport } from './routes/_app.checklists.index'
 import { Route as AppInspecoesNovaRouteImport } from './routes/_app.inspecoes.nova'
+import { Route as AppInspecoesIdRouteImport } from './routes/_app.inspecoes.$id'
+import { Route as AppChecklistsIdRouteImport } from './routes/_app.checklists.$id'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -40,9 +43,24 @@ const AppInspecoesIndexRoute = AppInspecoesIndexRouteImport.update({
   path: '/inspecoes/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppChecklistsIndexRoute = AppChecklistsIndexRouteImport.update({
+  id: '/checklists/',
+  path: '/checklists/',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppInspecoesNovaRoute = AppInspecoesNovaRouteImport.update({
   id: '/inspecoes/nova',
   path: '/inspecoes/nova',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppInspecoesIdRoute = AppInspecoesIdRouteImport.update({
+  id: '/inspecoes/$id',
+  path: '/inspecoes/$id',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppChecklistsIdRoute = AppChecklistsIdRouteImport.update({
+  id: '/checklists/$id',
+  path: '/checklists/$id',
   getParentRoute: () => AppRoute,
 } as any)
 
@@ -50,14 +68,20 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/dashboard': typeof AppDashboardRoute
+  '/checklists/$id': typeof AppChecklistsIdRoute
+  '/inspecoes/$id': typeof AppInspecoesIdRoute
   '/inspecoes/nova': typeof AppInspecoesNovaRoute
+  '/checklists/': typeof AppChecklistsIndexRoute
   '/inspecoes/': typeof AppInspecoesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/dashboard': typeof AppDashboardRoute
+  '/checklists/$id': typeof AppChecklistsIdRoute
+  '/inspecoes/$id': typeof AppInspecoesIdRoute
   '/inspecoes/nova': typeof AppInspecoesNovaRoute
+  '/checklists': typeof AppChecklistsIndexRoute
   '/inspecoes': typeof AppInspecoesIndexRoute
 }
 export interface FileRoutesById {
@@ -66,21 +90,43 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/checklists/$id': typeof AppChecklistsIdRoute
+  '/_app/inspecoes/$id': typeof AppInspecoesIdRoute
   '/_app/inspecoes/nova': typeof AppInspecoesNovaRoute
+  '/_app/checklists/': typeof AppChecklistsIndexRoute
   '/_app/inspecoes/': typeof AppInspecoesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/dashboard' | '/inspecoes/nova' | '/inspecoes/'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/dashboard'
+    | '/checklists/$id'
+    | '/inspecoes/$id'
+    | '/inspecoes/nova'
+    | '/checklists/'
+    | '/inspecoes/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/dashboard' | '/inspecoes/nova' | '/inspecoes'
+  to:
+    | '/'
+    | '/login'
+    | '/dashboard'
+    | '/checklists/$id'
+    | '/inspecoes/$id'
+    | '/inspecoes/nova'
+    | '/checklists'
+    | '/inspecoes'
   id:
     | '__root__'
     | '/'
     | '/_app'
     | '/login'
     | '/_app/dashboard'
+    | '/_app/checklists/$id'
+    | '/_app/inspecoes/$id'
     | '/_app/inspecoes/nova'
+    | '/_app/checklists/'
     | '/_app/inspecoes/'
   fileRoutesById: FileRoutesById
 }
@@ -127,6 +173,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppInspecoesIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/checklists/': {
+      id: '/_app/checklists/'
+      path: '/checklists'
+      fullPath: '/checklists/'
+      preLoaderRoute: typeof AppChecklistsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/inspecoes/nova': {
       id: '/_app/inspecoes/nova'
       path: '/inspecoes/nova'
@@ -134,18 +187,38 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppInspecoesNovaRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/inspecoes/$id': {
+      id: '/_app/inspecoes/$id'
+      path: '/inspecoes/$id'
+      fullPath: '/inspecoes/$id'
+      preLoaderRoute: typeof AppInspecoesIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/checklists/$id': {
+      id: '/_app/checklists/$id'
+      path: '/checklists/$id'
+      fullPath: '/checklists/$id'
+      preLoaderRoute: typeof AppChecklistsIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
+  AppChecklistsIdRoute: typeof AppChecklistsIdRoute
+  AppInspecoesIdRoute: typeof AppInspecoesIdRoute
   AppInspecoesNovaRoute: typeof AppInspecoesNovaRoute
+  AppChecklistsIndexRoute: typeof AppChecklistsIndexRoute
   AppInspecoesIndexRoute: typeof AppInspecoesIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
+  AppChecklistsIdRoute: AppChecklistsIdRoute,
+  AppInspecoesIdRoute: AppInspecoesIdRoute,
   AppInspecoesNovaRoute: AppInspecoesNovaRoute,
+  AppChecklistsIndexRoute: AppChecklistsIndexRoute,
   AppInspecoesIndexRoute: AppInspecoesIndexRoute,
 }
 
