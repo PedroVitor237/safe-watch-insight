@@ -119,6 +119,11 @@ export const store = {
 
 export function useStore<T>(selector: (s: State) => T): T {
   const [, force] = useState(0);
-  useEffect(() => store.subscribe(() => force((x) => x + 1)), []);
+  useEffect(() => {
+    const unsub = store.subscribe(() => force((x) => x + 1));
+    return () => {
+      unsub();
+    };
+  }, []);
   return selector(store.get());
 }
