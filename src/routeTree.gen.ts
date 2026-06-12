@@ -12,9 +12,16 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppRelatoriosRouteImport } from './routes/_app.relatorios'
+import { Route as AppNormasRouteImport } from './routes/_app.normas'
+import { Route as AppEquipeRouteImport } from './routes/_app.equipe'
+import { Route as AppEmpresasRouteImport } from './routes/_app.empresas'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
+import { Route as AppConfiguracoesRouteImport } from './routes/_app.configuracoes'
+import { Route as AppNaoConformidadesIndexRouteImport } from './routes/_app.nao-conformidades.index'
 import { Route as AppInspecoesIndexRouteImport } from './routes/_app.inspecoes.index'
 import { Route as AppChecklistsIndexRouteImport } from './routes/_app.checklists.index'
+import { Route as AppNaoConformidadesIdRouteImport } from './routes/_app.nao-conformidades.$id'
 import { Route as AppInspecoesNovaRouteImport } from './routes/_app.inspecoes.nova'
 import { Route as AppInspecoesIdRouteImport } from './routes/_app.inspecoes.$id'
 import { Route as AppChecklistsIdRouteImport } from './routes/_app.checklists.$id'
@@ -33,11 +40,42 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppRelatoriosRoute = AppRelatoriosRouteImport.update({
+  id: '/relatorios',
+  path: '/relatorios',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNormasRoute = AppNormasRouteImport.update({
+  id: '/normas',
+  path: '/normas',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEquipeRoute = AppEquipeRouteImport.update({
+  id: '/equipe',
+  path: '/equipe',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEmpresasRoute = AppEmpresasRouteImport.update({
+  id: '/empresas',
+  path: '/empresas',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
+const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNaoConformidadesIndexRoute =
+  AppNaoConformidadesIndexRouteImport.update({
+    id: '/nao-conformidades/',
+    path: '/nao-conformidades/',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppInspecoesIndexRoute = AppInspecoesIndexRouteImport.update({
   id: '/inspecoes/',
   path: '/inspecoes/',
@@ -46,6 +84,11 @@ const AppInspecoesIndexRoute = AppInspecoesIndexRouteImport.update({
 const AppChecklistsIndexRoute = AppChecklistsIndexRouteImport.update({
   id: '/checklists/',
   path: '/checklists/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNaoConformidadesIdRoute = AppNaoConformidadesIdRouteImport.update({
+  id: '/nao-conformidades/$id',
+  path: '/nao-conformidades/$id',
   getParentRoute: () => AppRoute,
 } as any)
 const AppInspecoesNovaRoute = AppInspecoesNovaRouteImport.update({
@@ -67,67 +110,109 @@ const AppChecklistsIdRoute = AppChecklistsIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/configuracoes': typeof AppConfiguracoesRoute
   '/dashboard': typeof AppDashboardRoute
+  '/empresas': typeof AppEmpresasRoute
+  '/equipe': typeof AppEquipeRoute
+  '/normas': typeof AppNormasRoute
+  '/relatorios': typeof AppRelatoriosRoute
   '/checklists/$id': typeof AppChecklistsIdRoute
   '/inspecoes/$id': typeof AppInspecoesIdRoute
   '/inspecoes/nova': typeof AppInspecoesNovaRoute
+  '/nao-conformidades/$id': typeof AppNaoConformidadesIdRoute
   '/checklists/': typeof AppChecklistsIndexRoute
   '/inspecoes/': typeof AppInspecoesIndexRoute
+  '/nao-conformidades/': typeof AppNaoConformidadesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/configuracoes': typeof AppConfiguracoesRoute
   '/dashboard': typeof AppDashboardRoute
+  '/empresas': typeof AppEmpresasRoute
+  '/equipe': typeof AppEquipeRoute
+  '/normas': typeof AppNormasRoute
+  '/relatorios': typeof AppRelatoriosRoute
   '/checklists/$id': typeof AppChecklistsIdRoute
   '/inspecoes/$id': typeof AppInspecoesIdRoute
   '/inspecoes/nova': typeof AppInspecoesNovaRoute
+  '/nao-conformidades/$id': typeof AppNaoConformidadesIdRoute
   '/checklists': typeof AppChecklistsIndexRoute
   '/inspecoes': typeof AppInspecoesIndexRoute
+  '/nao-conformidades': typeof AppNaoConformidadesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
+  '/_app/configuracoes': typeof AppConfiguracoesRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/empresas': typeof AppEmpresasRoute
+  '/_app/equipe': typeof AppEquipeRoute
+  '/_app/normas': typeof AppNormasRoute
+  '/_app/relatorios': typeof AppRelatoriosRoute
   '/_app/checklists/$id': typeof AppChecklistsIdRoute
   '/_app/inspecoes/$id': typeof AppInspecoesIdRoute
   '/_app/inspecoes/nova': typeof AppInspecoesNovaRoute
+  '/_app/nao-conformidades/$id': typeof AppNaoConformidadesIdRoute
   '/_app/checklists/': typeof AppChecklistsIndexRoute
   '/_app/inspecoes/': typeof AppInspecoesIndexRoute
+  '/_app/nao-conformidades/': typeof AppNaoConformidadesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/login'
+    | '/configuracoes'
     | '/dashboard'
+    | '/empresas'
+    | '/equipe'
+    | '/normas'
+    | '/relatorios'
     | '/checklists/$id'
     | '/inspecoes/$id'
     | '/inspecoes/nova'
+    | '/nao-conformidades/$id'
     | '/checklists/'
     | '/inspecoes/'
+    | '/nao-conformidades/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
+    | '/configuracoes'
     | '/dashboard'
+    | '/empresas'
+    | '/equipe'
+    | '/normas'
+    | '/relatorios'
     | '/checklists/$id'
     | '/inspecoes/$id'
     | '/inspecoes/nova'
+    | '/nao-conformidades/$id'
     | '/checklists'
     | '/inspecoes'
+    | '/nao-conformidades'
   id:
     | '__root__'
     | '/'
     | '/_app'
     | '/login'
+    | '/_app/configuracoes'
     | '/_app/dashboard'
+    | '/_app/empresas'
+    | '/_app/equipe'
+    | '/_app/normas'
+    | '/_app/relatorios'
     | '/_app/checklists/$id'
     | '/_app/inspecoes/$id'
     | '/_app/inspecoes/nova'
+    | '/_app/nao-conformidades/$id'
     | '/_app/checklists/'
     | '/_app/inspecoes/'
+    | '/_app/nao-conformidades/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -159,11 +244,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/relatorios': {
+      id: '/_app/relatorios'
+      path: '/relatorios'
+      fullPath: '/relatorios'
+      preLoaderRoute: typeof AppRelatoriosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/normas': {
+      id: '/_app/normas'
+      path: '/normas'
+      fullPath: '/normas'
+      preLoaderRoute: typeof AppNormasRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/equipe': {
+      id: '/_app/equipe'
+      path: '/equipe'
+      fullPath: '/equipe'
+      preLoaderRoute: typeof AppEquipeRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/empresas': {
+      id: '/_app/empresas'
+      path: '/empresas'
+      fullPath: '/empresas'
+      preLoaderRoute: typeof AppEmpresasRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/dashboard': {
       id: '/_app/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/configuracoes': {
+      id: '/_app/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof AppConfiguracoesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/nao-conformidades/': {
+      id: '/_app/nao-conformidades/'
+      path: '/nao-conformidades'
+      fullPath: '/nao-conformidades/'
+      preLoaderRoute: typeof AppNaoConformidadesIndexRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/inspecoes/': {
@@ -178,6 +305,13 @@ declare module '@tanstack/react-router' {
       path: '/checklists'
       fullPath: '/checklists/'
       preLoaderRoute: typeof AppChecklistsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/nao-conformidades/$id': {
+      id: '/_app/nao-conformidades/$id'
+      path: '/nao-conformidades/$id'
+      fullPath: '/nao-conformidades/$id'
+      preLoaderRoute: typeof AppNaoConformidadesIdRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/inspecoes/nova': {
@@ -205,21 +339,35 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppConfiguracoesRoute: typeof AppConfiguracoesRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppEmpresasRoute: typeof AppEmpresasRoute
+  AppEquipeRoute: typeof AppEquipeRoute
+  AppNormasRoute: typeof AppNormasRoute
+  AppRelatoriosRoute: typeof AppRelatoriosRoute
   AppChecklistsIdRoute: typeof AppChecklistsIdRoute
   AppInspecoesIdRoute: typeof AppInspecoesIdRoute
   AppInspecoesNovaRoute: typeof AppInspecoesNovaRoute
+  AppNaoConformidadesIdRoute: typeof AppNaoConformidadesIdRoute
   AppChecklistsIndexRoute: typeof AppChecklistsIndexRoute
   AppInspecoesIndexRoute: typeof AppInspecoesIndexRoute
+  AppNaoConformidadesIndexRoute: typeof AppNaoConformidadesIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppConfiguracoesRoute: AppConfiguracoesRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppEmpresasRoute: AppEmpresasRoute,
+  AppEquipeRoute: AppEquipeRoute,
+  AppNormasRoute: AppNormasRoute,
+  AppRelatoriosRoute: AppRelatoriosRoute,
   AppChecklistsIdRoute: AppChecklistsIdRoute,
   AppInspecoesIdRoute: AppInspecoesIdRoute,
   AppInspecoesNovaRoute: AppInspecoesNovaRoute,
+  AppNaoConformidadesIdRoute: AppNaoConformidadesIdRoute,
   AppChecklistsIndexRoute: AppChecklistsIndexRoute,
   AppInspecoesIndexRoute: AppInspecoesIndexRoute,
+  AppNaoConformidadesIndexRoute: AppNaoConformidadesIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
