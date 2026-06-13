@@ -348,6 +348,6 @@ Melhorias compatíveis com a arquitetura atual:
 
 # 👤 Autor
 
-Desenvolvedor: Pedro Vitor
+[Pedro Vitor](https://github.com/PedroVitor237) & [Felipe Ferreira](https://github.com/Fel1ph3)
 
 Projeto acadêmico/protótipo de plataforma para inspeções de Segurança e Saúde no Trabalho.
