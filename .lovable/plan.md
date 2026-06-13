@@ -1,55 +1,31 @@
-# Plano: Geração do documento `ESPECIFICACAO_DE_TELAS.md`
+# Plano: Geração do documento `MAPA_DE_NAVEGACAO.md`
 
 ## Objetivo
-Criar, na raiz do projeto, o arquivo `ESPECIFICACAO_DE_TELAS.md` contendo a especificação acadêmica de todas as telas existentes na aplicação de apoio a inspeções de SST, em linguagem adequada para TCC e documentação de requisitos.
+Criar, na raiz do projeto, o arquivo `MAPA_DE_NAVEGACAO.md` contendo o mapa de navegação completo da plataforma SST, em linguagem acadêmica adequada para entrega de TCC, baseado nas rotas existentes em `src/routes/` e nos vínculos de navegação reais entre elas (já levantados ao produzir `ESPECIFICACAO_DE_TELAS.md`).
 
-## Telas a serem documentadas
-A partir da análise das rotas em `src/routes/`, serão descritas as seguintes telas:
+## Estrutura do documento
 
-1. **Login** (`/login`) — autenticação simulada com seleção de perfil (Inspetor, Gestor, Auditor).
-2. **Dashboard** (`/dashboard`) — KPIs, gráficos de inspeções por mês, NCs por criticidade, NCs por norma, NCs críticas e próximas inspeções.
-3. **Lista de Inspeções** (`/inspecoes`) — listagem com filtros por status e busca.
-4. **Nova Inspeção** (`/inspecoes/nova`) — wizard de criação (empresa/unidade, checklist, agendamento).
-5. **Detalhe / Execução de Inspeção** (`/inspecoes/$id`) — execução do checklist, registro de respostas, evidências, geolocalização, assinatura digital e finalização.
-6. **Biblioteca de Checklists** (`/checklists`) — catálogo de modelos por NR.
-7. **Editor de Checklist** (`/checklists/$id`) — visualização das seções e itens com criticidade.
-8. **Lista de Não Conformidades** (`/nao-conformidades`) — visualização em lista e Kanban.
-9. **Detalhe de Não Conformidade** (`/nao-conformidades/$id`) — Plano de Ação 5W2H, prazo, responsável, evidências, timeline.
-10. **Relatórios** (`/relatorios`) — seleção de inspeção, preview e exportação simulada.
-11. **Empresas** (`/empresas`) — cadastro de empresas/unidades fiscalizadas.
-12. **Normas Regulamentadoras** (`/normas`) — biblioteca de NRs.
-13. **Equipe** (`/equipe`) — inspetores, gestores e auditores.
-14. **Configurações** (`/configuracoes`) — preferências, tema escuro, modo offline.
-
-## Estrutura de cada tela no documento
-Para cada uma das 14 telas:
-
-- **Nome da Tela**
-- **Rota**
-- **Objetivo** — parágrafo em linguagem acadêmica explicando a finalidade.
-- **Componentes**, organizados nas subseções:
-  - Campos (inputs, selects, textareas, uploads, canvas de assinatura, etc.)
-  - Botões (com ação associada)
-  - Tabelas (colunas e finalidade)
-  - Cards (conteúdo e função informacional)
-  - Menus (sidebar, dropdowns, abas)
-  - Modais (diálogos de confirmação, criação de NC, etc.)
-- **Navegação** — descrição de quais telas precedem e sucedem o fluxo do usuário.
-
-## Tabela-resumo final
-Tabela em Markdown com duas colunas: **Tela** e **Objetivo** (resumo de uma linha por tela).
-
-## Investigação prévia (modo build)
-Antes de redigir o documento, ler os arquivos de rota ainda não totalmente visíveis para garantir fidelidade dos componentes descritos:
-- `src/routes/_app.inspecoes.index.tsx`
-- `src/routes/_app.inspecoes.nova.tsx`
-- `src/routes/_app.inspecoes.$id.tsx`
-- `src/routes/_app.nao-conformidades.index.tsx`
-- `src/routes/_app.nao-conformidades.$id.tsx`
-- `src/routes/_app.relatorios.tsx`
-- `src/routes/_app.configuracoes.tsx`
-- `src/routes/login.tsx`
-- `src/components/layout/AppShell.tsx` (para descrever o menu lateral global)
+1. **Introdução** — propósito do documento e escopo (frontend protótipo, dados mockados).
+2. **Visão geral do fluxo do usuário** — narrativa textual percorrendo a jornada típica desde a autenticação até a emissão de relatórios, destacando o papel do *AppShell* (menu lateral persistente) como hub de navegação.
+3. **Diagrama Mermaid global** — `flowchart` (TD) representando todas as rotas e arestas de navegação, agrupadas por subgrafos:
+   - *Acesso* (Login, raiz `/`)
+   - *Operação* (Dashboard, Inspeções, Checklists, NCs, Relatórios)
+   - *Cadastros* (Empresas, Normas, Equipe, Configurações)
+   - Nós para rotas dinâmicas (`/inspecoes/$id`, `/checklists/$id`, `/nao-conformidades/$id`) e ações relevantes (criação automática de NC, conclusão de inspeção → Relatórios).
+4. **Fluxos principais** — uma subseção por fluxo, cada uma com:
+   - Descrição textual em prosa acadêmica;
+   - Sequência de telas (lista ordenada);
+   - Pequeno diagrama Mermaid `flowchart LR` específico do fluxo.
+   Fluxos cobertos:
+   1. Autenticação (Login)
+   2. Cadastro de Empresa
+   3. Cadastro de Checklist
+   4. Execução de Inspeção
+   5. Registro de Não Conformidades
+   6. Consulta de Histórico (timeline da inspeção e da NC; listagem filtrável)
+   7. Geração de Relatórios
+5. **Matriz de navegação** — tabela com colunas *Tela de origem*, *Telas de destino possíveis* e *Gatilho* (botão/link), consolidando as relações.
+6. **Observações sobre persistência e navegação programática** — nota explicando o uso do `mockStore` (sem backend) e dos *toasts* como feedback substituto a modais.
 
 ## Entregável
-Um único arquivo novo: `ESPECIFICACAO_DE_TELAS.md` na raiz do projeto. Nenhum código de aplicação será alterado.
+Único arquivo novo: `MAPA_DE_NAVEGACAO.md` na raiz do projeto. Os diagramas Mermaid são incluídos *inline* em blocos ```mermaid```, prática suportada por GitHub e por leitores acadêmicos comuns. Nenhum código de aplicação será alterado.
