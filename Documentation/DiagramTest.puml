@@ -1,0 +1,68 @@
+@startuml
+
+left to right direction
+
+actor "Técnico SST" as Tecnico
+actor "Supervisor SST" as Supervisor
+actor "Administrador" as Admin
+
+rectangle "Plataforma SST" {
+
+  usecase "Realizar Login" as UC01
+
+  usecase "Cadastrar Empresa" as UC02
+  usecase "Consultar Empresas" as UC03
+
+  usecase "Criar Checklist" as UC04
+  usecase "Editar Checklist" as UC05
+  usecase "Consultar Checklists" as UC06
+
+  usecase "Associar Normas ao Checklist" as UC07
+
+  usecase "Executar Inspeção" as UC08
+  usecase "Registrar Não Conformidade" as UC09
+  usecase "Exibir Normas Relacionadas" as UC10
+
+  usecase "Consultar Histórico" as UC11
+
+  usecase "Registrar Ação Corretiva" as UC12
+
+  usecase "Emitir Relatório" as UC13
+
+  usecase "Visualizar Dashboard" as UC14
+
+  usecase "Gerenciar Usuários" as UC15
+  usecase "Gerenciar Templates" as UC16
+  usecase "Gerenciar Base de Normas" as UC17
+  usecase "Gerenciar Empresas" as UC18
+}
+
+Tecnico --> UC01
+Tecnico --> UC02
+Tecnico --> UC03
+Tecnico --> UC04
+Tecnico --> UC05
+Tecnico --> UC06
+Tecnico --> UC08
+Tecnico --> UC11
+Tecnico --> UC12
+Tecnico --> UC13
+
+Supervisor --> UC01
+Supervisor --> UC11
+Supervisor --> UC12
+Supervisor --> UC13
+Supervisor --> UC14
+
+Admin --> UC15
+Admin --> UC16
+Admin --> UC17
+Admin --> UC18
+
+UC04 .> UC07 : <<include>>
+UC05 .> UC07 : <<include>>
+
+UC08 .> UC09 : <<include>>
+UC08 .> UC10 : <<include>>
+
+@enduml
