@@ -1,0 +1,521 @@
+# 10. Especificação da API REST
+
+## 10.1 Objetivo
+
+Este documento descreve os endpoints da API REST responsáveis pela comunicação entre o frontend da Plataforma Web para Apoio a Inspeções e Fiscalizações de Segurança e Saúde no Trabalho (SST) e o banco de dados PostgreSQL.
+
+A API será implementada utilizando os **Route Handlers do Next.js**, juntamente com o **Prisma ORM** para acesso ao banco de dados PostgreSQL hospedado no Neon.
+
+Os endpoints seguem princípios RESTful e utilizam JSON como formato de troca de dados.
+
+---
+
+# 10.2 Arquitetura
+
+```text
+Frontend (Next.js + React)
+
+        │
+
+HTTP / JSON
+
+        │
+
+Route Handlers (Next.js)
+
+        │
+
+Prisma ORM
+
+        │
+
+PostgreSQL (Neon)
+
+        ▲
+
+IndexedDB (Offline)
+```
+
+---
+
+# 10.3 Autenticação
+
+A API deverá exigir autenticação para todos os recursos privados.
+
+Fluxo previsto:
+
+* Login utilizando e-mail e senha;
+* Validação das credenciais;
+* Geração da sessão autenticada;
+* Proteção das rotas privadas por middleware.
+
+---
+
+# 10.4 Padrão de Respostas
+
+## Sucesso
+
+```json
+{
+  "success": true,
+  "data": {}
+}
+```
+
+---
+
+## Erro
+
+```json
+{
+  "success": false,
+  "message": "Descrição do erro."
+}
+```
+
+---
+
+# 10.5 Endpoints
+
+---
+
+# Autenticação
+
+## POST /api/auth/login
+
+Realiza o login do usuário.
+
+### Body
+
+```json
+{
+  "email": "usuario@email.com",
+  "password": "senha"
+}
+```
+
+### Resposta
+
+```json
+{
+  "success": true,
+  "user": {}
+}
+```
+
+---
+
+## POST /api/auth/logout
+
+Encerra a sessão do usuário.
+
+---
+
+## GET /api/auth/me
+
+Retorna o usuário autenticado.
+
+---
+
+# Usuários
+
+## GET /api/users
+
+Lista usuários.
+
+---
+
+## GET /api/users/:id
+
+Obtém um usuário.
+
+---
+
+## POST /api/users
+
+Cria um usuário.
+
+---
+
+## PUT /api/users/:id
+
+Atualiza um usuário.
+
+---
+
+## DELETE /api/users/:id
+
+Remove um usuário.
+
+---
+
+# Empresas
+
+## GET /api/companies
+
+Lista empresas cadastradas.
+
+Permite filtros por:
+
+* CNAE
+* Grau de risco
+* Nome
+* CNPJ
+
+---
+
+## GET /api/companies/:id
+
+Obtém uma empresa.
+
+---
+
+## POST /api/companies
+
+Cadastra uma empresa.
+
+### Exemplo
+
+```json
+{
+  "corporateName":"Empresa Exemplo",
+  "tradeName":"Empresa",
+  "cnpj":"00.000.000/0001-00",
+  "cnae":"4321500",
+  "riskLevel":3,
+  "employeeCount":85
+}
+```
+
+---
+
+## PUT /api/companies/:id
+
+Atualiza empresa.
+
+---
+
+## DELETE /api/companies/:id
+
+Remove empresa.
+
+### Regra
+
+Não permitir exclusão caso existam inspeções vinculadas.
+
+---
+
+# Checklists
+
+## GET /api/checklists
+
+Lista checklists.
+
+---
+
+## GET /api/checklists/:id
+
+Obtém checklist completo.
+
+Inclui:
+
+* itens;
+* normas relacionadas.
+
+---
+
+## POST /api/checklists
+
+Cria checklist.
+
+---
+
+## PUT /api/checklists/:id
+
+Atualiza checklist.
+
+---
+
+## DELETE /api/checklists/:id
+
+Desativa ou remove checklist.
+
+---
+
+# Itens do Checklist
+
+## POST /api/checklists/:id/items
+
+Adiciona item.
+
+---
+
+## PUT /api/checklists/items/:id
+
+Atualiza item.
+
+---
+
+## DELETE /api/checklists/items/:id
+
+Remove item.
+
+---
+
+# Normas
+
+## GET /api/standards
+
+Lista normas.
+
+Filtros:
+
+* NR
+* NBR
+* NT
+
+---
+
+## GET /api/standards/:id
+
+Consulta norma.
+
+---
+
+## GET /api/standards/search
+
+Pesquisa normas.
+
+Parâmetros:
+
+* código
+* título
+
+---
+
+# Inspeções
+
+## GET /api/inspections
+
+Lista inspeções.
+
+Filtros:
+
+* empresa;
+* usuário;
+* data;
+* status.
+
+---
+
+## GET /api/inspections/:id
+
+Retorna inspeção completa.
+
+Inclui:
+
+* respostas;
+* não conformidades;
+* evidências.
+
+---
+
+## POST /api/inspections
+
+Cria inspeção.
+
+---
+
+## PUT /api/inspections/:id
+
+Atualiza inspeção.
+
+---
+
+## DELETE /api/inspections/:id
+
+Cancela inspeção.
+
+---
+
+# Respostas da Inspeção
+
+## POST /api/inspection-responses
+
+Salva resposta.
+
+---
+
+## PUT /api/inspection-responses/:id
+
+Atualiza resposta.
+
+---
+
+# Não Conformidades
+
+## GET /api/non-conformities
+
+Lista todas.
+
+---
+
+## GET /api/non-conformities/:id
+
+Obtém detalhes.
+
+---
+
+## POST /api/non-conformities
+
+Cria não conformidade.
+
+---
+
+## PUT /api/non-conformities/:id
+
+Atualiza.
+
+---
+
+## DELETE /api/non-conformities/:id
+
+Remove.
+
+---
+
+# Ações Corretivas
+
+## GET /api/corrective-actions
+
+Lista ações.
+
+---
+
+## POST /api/corrective-actions
+
+Cria ação.
+
+---
+
+## PUT /api/corrective-actions/:id
+
+Atualiza ação.
+
+---
+
+## DELETE /api/corrective-actions/:id
+
+Remove ação.
+
+---
+
+# Evidências
+
+## GET /api/evidences
+
+Lista evidências.
+
+---
+
+## POST /api/evidences
+
+Realiza upload da evidência.
+
+Campos:
+
+* imagem;
+* legenda;
+* inspeção.
+
+---
+
+## DELETE /api/evidences/:id
+
+Remove evidência.
+
+---
+
+# Relatórios
+
+## GET /api/reports
+
+Lista relatórios.
+
+---
+
+## GET /api/reports/:id
+
+Obtém relatório.
+
+---
+
+## POST /api/reports
+
+Gera relatório.
+
+---
+
+## GET /api/reports/:id/download
+
+Realiza download do relatório.
+
+---
+
+# Dashboard
+
+## GET /api/dashboard
+
+Retorna indicadores gerais.
+
+Exemplos:
+
+* quantidade de inspeções;
+* empresas cadastradas;
+* não conformidades abertas;
+* ações corretivas pendentes;
+* inspeções concluídas.
+
+---
+
+# Sincronização Offline
+
+## POST /api/sync
+
+Endpoint responsável pela sincronização dos dados registrados offline.
+
+Fluxo esperado:
+
+1. O usuário realiza inspeções sem conexão com a internet.
+2. Os dados são armazenados localmente no IndexedDB.
+3. Quando a conexão é restabelecida, o frontend envia os registros pendentes para o endpoint `/api/sync`.
+4. O backend valida os dados recebidos.
+5. Os registros são persistidos no PostgreSQL por meio do Prisma ORM.
+6. O frontend recebe a confirmação da sincronização e marca os registros locais como sincronizados.
+
+---
+
+# 10.6 Códigos de Resposta HTTP
+
+| Código | Significado                                                      |
+| ------ | ---------------------------------------------------------------- |
+| 200    | Requisição realizada com sucesso.                                |
+| 201    | Recurso criado com sucesso.                                      |
+| 400    | Dados inválidos enviados pelo cliente.                           |
+| 401    | Usuário não autenticado.                                         |
+| 403    | Usuário autenticado, porém sem permissão para acessar o recurso. |
+| 404    | Recurso não encontrado.                                          |
+| 409    | Conflito de dados (por exemplo, CNPJ ou e-mail já cadastrados).  |
+| 500    | Erro interno do servidor.                                        |
+
+---
+
+# 10.7 Regras Gerais da API
+
+* Todas as requisições e respostas utilizarão o formato **JSON**.
+* Os endpoints privados exigirão autenticação.
+* As operações deverão validar os dados recebidos antes da persistência.
+* O acesso ao banco de dados será realizado exclusivamente por meio do **Prisma ORM**.
+* O backend deverá preservar a integridade referencial entre as entidades do banco de dados.
+* A sincronização de inspeções realizadas offline deverá ocorrer por meio do endpoint `/api/sync`, evitando duplicidade de registros.
+* O armazenamento de evidências será preparado para integração com serviços de armazenamento em nuvem, mantendo apenas os metadados e a URL do arquivo no banco de dados.
