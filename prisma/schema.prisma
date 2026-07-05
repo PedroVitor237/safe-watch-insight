@@ -11,3 +11,286 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum UserRole {
+  ADMIN
+  TECHNICIAN
+  SUPERVISOR
+  AUDITOR
+}
+
+enum StandardType {
+  NR
+  NBR
+  NT
+  OTHER
+}
+
+enum InspectionStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum SyncStatus {
+  PENDING
+  SYNCING
+  SYNCED
+  ERROR
+}
+
+enum ResponseStatus {
+  COMPLIANT
+  NON_COMPLIANT
+  NOT_APPLICABLE
+}
+
+enum Severity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum NonConformityStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  OVERDUE
+}
+
+enum CorrectiveActionStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  OVERDUE
+}
+
+model User {
+  id        String    @id @default(uuid()) @db.Uuid
+  name      String
+  email     String    @unique
+  password  String
+  role      UserRole
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  companies   Company[]
+  checklists  Checklist[]
+  inspections Inspection[]
+  reports     Report[]
+
+  @@index([role])
+  @@index([deletedAt])
+}
+
+model Company {
+  id            String    @id @default(uuid()) @db.Uuid
+  corporateName String
+  tradeName     String?
+  cnpj          String?   @unique
+  cnae          String
+  riskLevel     Int
+  employeeCount Int
+  address       String?
+  notes         String?
+  createdById   String    @db.Uuid
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  createdBy   User         @relation(fields: [createdById], references: [id])
+  inspections Inspection[]
+
+  @@index([createdById])
+  @@index([cnpj])
+  @@index([deletedAt])
+}
+
+model Checklist {
+  id          String    @id @default(uuid()) @db.Uuid
+  title       String
+  description String?
+  isTemplate  Boolean   @default(false)
+  isActive    Boolean   @default(true)
+  createdById String    @db.Uuid
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  createdBy   User            @relation(fields: [createdById], references: [id])
+  items       ChecklistItem[]
+  inspections Inspection[]
+
+  @@index([createdById])
+  @@index([isTemplate])
+  @@index([isActive])
+  @@index([deletedAt])
+}
+
+model ChecklistItem {
+  id          String  @id @default(uuid()) @db.Uuid
+  checklistId String  @db.Uuid
+  description String
+  orderIndex  Int
+  isRequired  Boolean @default(true)
+
+  checklist Checklist               @relation(fields: [checklistId], references: [id])
+  standards ChecklistItemStandard[]
+  responses InspectionResponse[]
+
+  @@index([checklistId])
+  @@unique([checklistId, orderIndex])
+}
+
+model Standard {
+  id          String       @id @default(uuid()) @db.Uuid
+  type        StandardType
+  code        String       @unique
+  title       String
+  summary     String?
+  officialUrl String?
+  isActive    Boolean      @default(true)
+
+  checklistItems ChecklistItemStandard[]
+
+  @@index([type])
+  @@index([code])
+  @@index([isActive])
+}
+
+model ChecklistItemStandard {
+  checklistItemId String @db.Uuid
+  standardId      String @db.Uuid
+
+  checklistItem ChecklistItem @relation(fields: [checklistItemId], references: [id])
+  standard      Standard      @relation(fields: [standardId], references: [id])
+
+  @@id([checklistItemId, standardId])
+  @@index([standardId])
+}
+
+model Inspection {
+  id             String           @id @default(uuid()) @db.Uuid
+  userId         String           @db.Uuid
+  companyId      String           @db.Uuid
+  checklistId    String           @db.Uuid
+  inspectionDate DateTime
+  status         InspectionStatus @default(PLANNED)
+  syncStatus     SyncStatus       @default(SYNCED)
+  notes          String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  deletedAt      DateTime?
+
+  user      User                 @relation(fields: [userId], references: [id])
+  company   Company              @relation(fields: [companyId], references: [id])
+  checklist Checklist            @relation(fields: [checklistId], references: [id])
+  responses InspectionResponse[]
+  evidence  Evidence[]
+  report    Report?
+
+  @@index([userId])
+  @@index([companyId])
+  @@index([checklistId])
+  @@index([inspectionDate])
+  @@index([status])
+  @@index([syncStatus])
+  @@index([deletedAt])
+}
+
+model InspectionResponse {
+  id              String         @id @default(uuid()) @db.Uuid
+  inspectionId    String         @db.Uuid
+  checklistItemId String         @db.Uuid
+  status          ResponseStatus
+  observation     String?
+
+  inspection     Inspection     @relation(fields: [inspectionId], references: [id])
+  checklistItem  ChecklistItem  @relation(fields: [checklistItemId], references: [id])
+  nonConformity  NonConformity?
+
+  @@index([inspectionId])
+  @@index([checklistItemId])
+  @@index([status])
+  @@unique([inspectionId, checklistItemId])
+}
+
+model NonConformity {
+  id                   String              @id @default(uuid()) @db.Uuid
+  inspectionResponseId String              @unique @db.Uuid
+  description          String
+  severity             Severity
+  dueDate              DateTime?
+  status               NonConformityStatus @default(OPEN)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  deletedAt            DateTime?
+
+  inspectionResponse InspectionResponse @relation(fields: [inspectionResponseId], references: [id])
+  correctiveActions  CorrectiveAction[]
+  evidence           Evidence[]
+
+  @@index([severity])
+  @@index([status])
+  @@index([dueDate])
+  @@index([deletedAt])
+}
+
+model CorrectiveAction {
+  id              String                 @id @default(uuid()) @db.Uuid
+  nonConformityId String                 @db.Uuid
+  description     String
+  responsible     String?
+  dueDate         DateTime?
+  status          CorrectiveActionStatus @default(PENDING)
+  completedAt     DateTime?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  deletedAt       DateTime?
+
+  nonConformity NonConformity @relation(fields: [nonConformityId], references: [id])
+
+  @@index([nonConformityId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([deletedAt])
+}
+
+model Evidence {
+  id              String    @id @default(uuid()) @db.Uuid
+  inspectionId    String?   @db.Uuid
+  nonConformityId String?   @db.Uuid
+  storageUrl      String
+  fileName        String
+  mimeType        String
+  fileSize        BigInt
+  caption         String?
+  createdAt       DateTime  @default(now())
+  deletedAt       DateTime?
+
+  inspection    Inspection?    @relation(fields: [inspectionId], references: [id])
+  nonConformity NonConformity? @relation(fields: [nonConformityId], references: [id])
+
+  @@index([inspectionId])
+  @@index([nonConformityId])
+  @@index([mimeType])
+  @@index([deletedAt])
+}
+
+model Report {
+  id            String   @id @default(uuid()) @db.Uuid
+  inspectionId  String   @unique @db.Uuid
+  generatedById String   @db.Uuid
+  version       Int      @default(1)
+  generatedAt   DateTime @default(now())
+  observations  String?
+
+  inspection  Inspection @relation(fields: [inspectionId], references: [id])
+  generatedBy User       @relation(fields: [generatedById], references: [id])
+
+  @@index([generatedById])
+  @@index([generatedAt])
+}
