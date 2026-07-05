@@ -501,6 +501,11 @@ A camada de domínio (Services, Repositories e Prisma) deve permanecer independe
 Essa decisão reduz o esforço de migração e preserva a maior parte da lógica de negócio.
 
 ---
+# Tech Decisions
+
+O plugin nitro() foi mantido explicitamente no vite.config.ts devido à necessidade de compatibilidade com o deploy atual na Vercel. Essa configuração deverá ser reavaliada durante a futura migração para Next.js.
+
+---
 
 # Objetivo Final
 
