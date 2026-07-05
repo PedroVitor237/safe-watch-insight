@@ -298,7 +298,9 @@ Antes de iniciar qualquer tarefa:
 
 4. Ler TASKS.md
 
-5. Ler os documentos específicos da pasta AI relacionados à tarefa.
+5. TECH_DECISIONS.md
+
+6. Ler os documentos específicos da pasta AI relacionados à tarefa.
 
 ---
 
