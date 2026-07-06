@@ -1,20 +1,40 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useRef, useState, useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ArrowLeft, MapPin, Camera, CheckCircle2, XCircle, MinusCircle,
-  AlertTriangle, FileSignature, Trash2,
+  ArrowLeft,
+  CheckCircle2,
+  FileSignature,
+  MinusCircle,
+  Trash2,
+  XCircle,
 } from "lucide-react";
+
 import { PageHeader } from "@/components/common/PageHeader";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import { useStore, store } from "@/lib/mockStore";
-import { checklists, empresas, usuarios } from "@/mocks/data";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { useFinishInspection, useSaveInspectionResponse } from "@/hooks/useInspectionResponses";
+import { useInspection } from "@/hooks/useInspections";
 import { fmtDataHora } from "@/lib/format";
-import type { RespostaItem, NaoConformidade } from "@/types/sst";
 import { toast } from "sonner";
+
+type UiInspectionStatus = "planejada" | "em_andamento" | "concluida" | "pendente_sync";
+type UiResponseStatus = "conforme" | "nao_conforme" | "na";
+type BackendResponseStatus = "COMPLIANT" | "NON_COMPLIANT" | "NOT_APPLICABLE";
+
+const responseStatusToUi: Record<BackendResponseStatus, UiResponseStatus> = {
+  COMPLIANT: "conforme",
+  NON_COMPLIANT: "nao_conforme",
+  NOT_APPLICABLE: "na",
+};
+
+const uiResponseStatusToBackend: Record<UiResponseStatus, BackendResponseStatus> = {
+  conforme: "COMPLIANT",
+  nao_conforme: "NON_COMPLIANT",
+  na: "NOT_APPLICABLE",
+};
 
 export const Route = createFileRoute("/_app/inspecoes/$id")({
   head: () => ({ meta: [{ title: "Inspeção — SST" }] }),
@@ -22,192 +42,268 @@ export const Route = createFileRoute("/_app/inspecoes/$id")({
   notFoundComponent: () => <div className="p-8">Inspeção não encontrada</div>,
 });
 
+function toUiInspectionStatus(status: string): UiInspectionStatus {
+  const map: Record<string, UiInspectionStatus> = {
+    PLANNED: "planejada",
+    IN_PROGRESS: "em_andamento",
+    COMPLETED: "concluida",
+    CANCELLED: "pendente_sync",
+  };
+
+  return map[status] ?? "pendente_sync";
+}
+
 function DetalheInspecao() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
-  const inspecao = useStore((s) => s.inspecoes.find((i) => i.id === id));
+  const inspectionQuery = useInspection(id);
+  const saveResponse = useSaveInspectionResponse();
+  const finishInspection = useFinishInspection();
 
-  if (!inspecao) {
+  const inspectionResult = inspectionQuery.data;
+  const inspection = inspectionResult?.success ? inspectionResult.data : null;
+  const items = inspection?.checklist.items ?? [];
+  const responses = inspection?.responses ?? [];
+  const responseByItemId = useMemo(
+    () => new Map(responses.map((response) => [response.checklistItemId, response])),
+    [responses],
+  );
+
+  const totalItens = items.length;
+  const respondidos = responses.length;
+  const ncCount = responses.filter((response) => response.status === "NON_COMPLIANT").length;
+  const progresso = totalItens ? Math.round((respondidos / totalItens) * 100) : 0;
+  const isCompleted = inspection?.status === "COMPLETED";
+
+  async function setResposta(
+    checklistItemId: string,
+    status: UiResponseStatus,
+    observation?: string | null,
+  ) {
+    const result = await saveResponse.mutateAsync({
+      inspectionId: id,
+      checklistItemId,
+      status: uiResponseStatusToBackend[status],
+      observation,
+    });
+
+    if (!result.success) {
+      toast.error(result.message);
+      return;
+    }
+
+    toast.success("Resposta salva.");
+  }
+
+  async function setObservacao(
+    checklistItemId: string,
+    status: BackendResponseStatus,
+    observation: string,
+  ) {
+    const result = await saveResponse.mutateAsync({
+      inspectionId: id,
+      checklistItemId,
+      status,
+      observation,
+    });
+
+    if (!result.success) {
+      toast.error(result.message);
+    }
+  }
+
+  async function concluir() {
+    const result = await finishInspection.mutateAsync(id);
+
+    if (!result.success) {
+      toast.error(result.message);
+      return;
+    }
+
+    toast.success("Inspeção concluída!");
+    navigate({ to: "/inspecoes" });
+  }
+
+  if (inspectionQuery.isLoading) {
     return (
       <div className="p-8">
-        <Button asChild variant="ghost"><Link to="/inspecoes"><ArrowLeft className="h-4 w-4" />Voltar</Link></Button>
-        <p className="mt-4 text-muted-foreground">Inspeção não encontrada.</p>
+        <p className="text-sm text-muted-foreground">Carregando inspeção...</p>
       </div>
     );
   }
 
-  const checklist = checklists.find((c) => c.id === inspecao.checklistId)!;
-  const emp = empresas.find((e) => e.id === inspecao.empresaId)!;
-  const insp = usuarios.find((u) => u.id === inspecao.inspetorId)!;
-
-  const totalItens = checklist.secoes.reduce((s, sec) => s + sec.itens.length, 0);
-  const respondidos = Object.keys(inspecao.respostas).length;
-  const ncCount = Object.values(inspecao.respostas).filter((r) => r?.resposta === "nao_conforme").length;
-  const progresso = totalItens ? Math.round((respondidos / totalItens) * 100) : 0;
-
-  function setResposta(itemId: string, resposta: RespostaItem, observacao?: string) {
-    const atual = inspecao!.respostas[itemId];
-    const novas = {
-      ...inspecao!.respostas,
-      [itemId]: { resposta, observacao: observacao ?? atual?.observacao },
-    };
-    store.upsertInspecao({
-      ...inspecao!,
-      respostas: novas,
-      status: inspecao!.status === "planejada" ? "em_andamento" : inspecao!.status,
-      iniciadaEm: inspecao!.iniciadaEm ?? new Date().toISOString(),
-    });
-
-    if (resposta === "nao_conforme" && atual?.resposta !== "nao_conforme") {
-      const nc: NaoConformidade = {
-        id: `nc${Date.now()}`,
-        codigo: `NC-2026-${String(Math.floor(Math.random() * 9000) + 1000)}`,
-        titulo: `NC identificada em ${checklist.titulo}`,
-        descricao: observacao ?? "Não conformidade registrada durante a inspeção.",
-        inspecaoId: inspecao!.id,
-        empresaId: inspecao!.empresaId,
-        itemChecklistId: itemId,
-        criticidade: "alta",
-        status: "aberta",
-        abertaEm: new Date().toISOString(),
-        prazo: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14).toISOString(),
-        responsavelId: "u3",
-        evidencias: [],
-        timeline: [
-          { id: "t1", data: new Date().toISOString(), autor: insp.nome, descricao: "NC criada a partir de inspeção" },
-        ],
-      };
-      store.upsertNC(nc);
-      toast.warning("Não conformidade criada automaticamente");
-    }
-  }
-
-  function setObservacao(itemId: string, observacao: string) {
-    const atual = inspecao!.respostas[itemId];
-    store.upsertInspecao({
-      ...inspecao!,
-      respostas: { ...inspecao!.respostas, [itemId]: { resposta: atual?.resposta ?? null, observacao } },
-    });
-  }
-
-  function concluir(assinatura: string) {
-    store.upsertInspecao({
-      ...inspecao!,
-      status: "concluida",
-      concluidaEm: new Date().toISOString(),
-      assinaturaResponsavel: assinatura,
-      timeline: [
-        ...inspecao!.timeline,
-        { id: `t${Date.now()}`, data: new Date().toISOString(), autor: insp.nome, descricao: "Inspeção concluída e assinada" },
-      ],
-    });
-    toast.success("Inspeção concluída!");
-    navigate({ to: "/relatorios" });
+  if (!inspection) {
+    return (
+      <div className="p-8">
+        <Button asChild variant="ghost">
+          <Link to="/inspecoes">
+            <ArrowLeft className="h-4 w-4" />
+            Voltar
+          </Link>
+        </Button>
+        <p className="mt-4 text-muted-foreground">
+          {inspectionResult?.success === false ? inspectionResult.message : "Inspeção não encontrada."}
+        </p>
+      </div>
+    );
   }
 
   return (
     <div>
       <PageHeader
-        title={inspecao.titulo}
-        description={`${inspecao.codigo} · ${emp.nomeFantasia}`}
+        title={inspection.checklist.title}
+        description={`${inspection.id.slice(0, 8)} · ${
+          inspection.company.tradeName ?? inspection.company.corporateName
+        }`}
         actions={
           <>
-            <StatusBadge value={inspecao.status} />
+            <StatusBadge value={toUiInspectionStatus(inspection.status)} />
             <Button asChild variant="outline" size="sm">
-              <Link to="/inspecoes"><ArrowLeft className="h-4 w-4" />Voltar</Link>
+              <Link to="/inspecoes">
+                <ArrowLeft className="h-4 w-4" />
+                Voltar
+              </Link>
             </Button>
           </>
         }
       />
 
-      <div className="p-4 sm:p-8 space-y-4">
+      <div className="space-y-4 p-4 sm:p-8">
         <div className="grid gap-4 md:grid-cols-4">
-          <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">Progresso</div><div className="mt-1 text-2xl font-bold">{progresso}%</div><div className="text-xs text-muted-foreground">{respondidos}/{totalItens} itens</div></CardContent></Card>
-          <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">Não conformidades</div><div className="mt-1 text-2xl font-bold text-destructive">{ncCount}</div></CardContent></Card>
-          <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">Inspetor</div><div className="mt-1 text-sm font-medium">{insp.nome}</div><div className="text-xs text-muted-foreground">{insp.registroProfissional}</div></CardContent></Card>
-          <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">Geolocalização</div><div className="mt-1 flex items-center gap-1 text-sm"><MapPin className="h-3.5 w-3.5" />-23.6815, -46.5658</div><div className="text-xs text-muted-foreground">{fmtDataHora(inspecao.iniciadaEm)}</div></CardContent></Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="text-xs text-muted-foreground">Progresso</div>
+              <div className="mt-1 text-2xl font-bold">{progresso}%</div>
+              <div className="text-xs text-muted-foreground">
+                {respondidos}/{totalItens} itens
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="text-xs text-muted-foreground">Não conformidades</div>
+              <div className="mt-1 text-2xl font-bold text-destructive">{ncCount}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="text-xs text-muted-foreground">Inspetor</div>
+              <div className="mt-1 text-sm font-medium">{inspection.user.name}</div>
+              <div className="text-xs text-muted-foreground">{inspection.user.email}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="text-xs text-muted-foreground">Data da inspeção</div>
+              <div className="mt-1 text-sm font-medium">
+                {fmtDataHora(String(inspection.inspectionDate))}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Atualizada em {fmtDataHora(String(inspection.updatedAt))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <Tabs defaultValue="execucao">
           <TabsList>
             <TabsTrigger value="execucao">Execução do checklist</TabsTrigger>
-            <TabsTrigger value="timeline">Timeline</TabsTrigger>
             <TabsTrigger value="encerrar">Encerrar</TabsTrigger>
           </TabsList>
 
           <TabsContent value="execucao" className="space-y-4">
-            {checklist.secoes.map((sec) => (
-              <Card key={sec.id}>
-                <CardHeader><CardTitle className="text-base">{sec.titulo}</CardTitle></CardHeader>
-                <CardContent className="space-y-4">
-                  {sec.itens.map((item) => {
-                    const resp = inspecao.respostas[item.id];
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">{inspection.checklist.title}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {items.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    Este checklist ainda não possui itens cadastrados.
+                  </p>
+                ) : (
+                  items.map((item) => {
+                    const response = responseByItemId.get(item.id);
+                    const uiStatus = response
+                      ? responseStatusToUi[response.status as BackendResponseStatus]
+                      : null;
+
                     return (
                       <div key={item.id} className="rounded-lg border p-4">
                         <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3">
                           <div className="min-w-0">
-                            <div className="text-sm font-medium">{item.texto}</div>
-                            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                              <StatusBadge value={item.criticidade} className="text-[10px]" />
-                              {item.normaRef && <span>· {item.normaRef}</span>}
+                            <div className="text-sm font-medium">{item.description}</div>
+                            <div className="mt-1 text-xs text-muted-foreground">
+                              Item {item.orderIndex}
+                              {item.isRequired ? " · obrigatório" : ""}
                             </div>
                           </div>
                           <div className="flex shrink-0 flex-wrap gap-1.5">
-                            <Button size="sm" variant={resp?.resposta === "conforme" ? "default" : "outline"} className={resp?.resposta === "conforme" ? "bg-success hover:bg-success/90" : ""} onClick={() => setResposta(item.id, "conforme")}>
-                              <CheckCircle2 className="h-3.5 w-3.5" />Conforme
+                            <Button
+                              size="sm"
+                              variant={uiStatus === "conforme" ? "default" : "outline"}
+                              className={uiStatus === "conforme" ? "bg-success hover:bg-success/90" : ""}
+                              disabled={isCompleted || saveResponse.isPending}
+                              onClick={() =>
+                                setResposta(item.id, "conforme", response?.observation ?? null)
+                              }
+                            >
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                              Conforme
                             </Button>
-                            <Button size="sm" variant={resp?.resposta === "nao_conforme" ? "destructive" : "outline"} onClick={() => setResposta(item.id, "nao_conforme", resp?.observacao)}>
-                              <XCircle className="h-3.5 w-3.5" />NC
+                            <Button
+                              size="sm"
+                              variant={uiStatus === "nao_conforme" ? "destructive" : "outline"}
+                              disabled={isCompleted || saveResponse.isPending}
+                              onClick={() =>
+                                setResposta(item.id, "nao_conforme", response?.observation ?? null)
+                              }
+                            >
+                              <XCircle className="h-3.5 w-3.5" />
+                              NC
                             </Button>
-                            <Button size="sm" variant={resp?.resposta === "na" ? "secondary" : "outline"} onClick={() => setResposta(item.id, "na")}>
-                              <MinusCircle className="h-3.5 w-3.5" />N/A
+                            <Button
+                              size="sm"
+                              variant={uiStatus === "na" ? "secondary" : "outline"}
+                              disabled={isCompleted || saveResponse.isPending}
+                              onClick={() => setResposta(item.id, "na", response?.observation ?? null)}
+                            >
+                              <MinusCircle className="h-3.5 w-3.5" />
+                              N/A
                             </Button>
                           </div>
                         </div>
-                        {(resp?.resposta === "nao_conforme" || resp?.observacao) && (
+                        {response && (
                           <div className="mt-3 space-y-2">
                             <Textarea
-                              placeholder="Observações, evidências verbais, contexto…"
-                              value={resp?.observacao ?? ""}
-                              onChange={(e) => setObservacao(item.id, e.target.value)}
+                              placeholder="Observações, evidências verbais, contexto..."
+                              defaultValue={response.observation ?? ""}
+                              disabled={isCompleted || saveResponse.isPending}
                               rows={2}
+                              onBlur={(event) =>
+                                setObservacao(item.id, response.status, event.target.value)
+                              }
                             />
-                            <div className="flex flex-wrap gap-2">
-                              <Button size="sm" variant="outline" onClick={() => toast.info("Evidência (mock) anexada")}>
-                                <Camera className="h-3.5 w-3.5" />Anexar foto
-                              </Button>
-                              {resp?.resposta === "nao_conforme" && (
-                                <span className="inline-flex items-center gap-1 text-xs text-destructive">
-                                  <AlertTriangle className="h-3.5 w-3.5" />NC gerada automaticamente
-                                </span>
-                              )}
-                            </div>
+                            {uiStatus === "nao_conforme" && (
+                              <span className="inline-flex items-center text-xs text-destructive">
+                                Não conformidade identificada.
+                              </span>
+                            )}
                           </div>
                         )}
                       </div>
                     );
-                  })}
-                </CardContent>
-              </Card>
-            ))}
-          </TabsContent>
-
-          <TabsContent value="timeline">
-            <Card><CardContent className="p-6">
-              <ol className="relative space-y-6 border-l pl-6">
-                {inspecao.timeline.map((ev) => (
-                  <li key={ev.id} className="relative">
-                    <div className="absolute -left-[27px] top-1 h-3 w-3 rounded-full bg-primary" />
-                    <div className="text-sm font-medium">{ev.descricao}</div>
-                    <div className="text-xs text-muted-foreground">{fmtDataHora(ev.data)} · {ev.autor}</div>
-                  </li>
-                ))}
-              </ol>
-            </CardContent></Card>
+                  })
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="encerrar">
-            <EncerrarInspecao onConcluir={concluir} disabled={inspecao.status === "concluida"} />
+            <EncerrarInspecao
+              onConcluir={concluir}
+              disabled={isCompleted || finishInspection.isPending}
+            />
           </TabsContent>
         </Tabs>
       </div>
@@ -215,15 +311,24 @@ function DetalheInspecao() {
   );
 }
 
-function EncerrarInspecao({ onConcluir, disabled }: { onConcluir: (sig: string) => void; disabled: boolean }) {
+function EncerrarInspecao({
+  onConcluir,
+  disabled,
+}: {
+  onConcluir: () => void;
+  disabled: boolean;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [drawing, setDrawing] = useState(false);
   const [hasSig, setHasSig] = useState(false);
 
   useEffect(() => {
-    const c = canvasRef.current;
-    if (!c) return;
-    const ctx = c.getContext("2d");
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      return;
+    }
+
+    const ctx = canvas.getContext("2d");
     if (ctx) {
       ctx.strokeStyle = "#0f172a";
       ctx.lineWidth = 2;
@@ -232,17 +337,19 @@ function EncerrarInspecao({ onConcluir, disabled }: { onConcluir: (sig: string) 
   }, []);
 
   function pos(e: React.PointerEvent) {
-    const r = canvasRef.current!.getBoundingClientRect();
-    return { x: e.clientX - r.left, y: e.clientY - r.top };
+    const rect = canvasRef.current!.getBoundingClientRect();
+
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   }
 
   return (
     <Card>
-      <CardHeader><CardTitle className="text-base">Encerramento e assinatura</CardTitle></CardHeader>
+      <CardHeader>
+        <CardTitle className="text-base">Encerramento e assinatura</CardTitle>
+      </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Coleta de assinatura do responsável pela área inspecionada. Após encerrar, a inspeção será marcada como
-          concluída e estará disponível para geração de relatório.
+          Após encerrar, a inspeção será marcada como concluída.
         </p>
         <div className="rounded-md border bg-white">
           <canvas
@@ -251,18 +358,24 @@ function EncerrarInspecao({ onConcluir, disabled }: { onConcluir: (sig: string) 
             height={180}
             className="block w-full touch-none rounded-md"
             onPointerDown={(e) => {
-              if (disabled) return;
+              if (disabled) {
+                return;
+              }
+
               setDrawing(true);
               const ctx = canvasRef.current!.getContext("2d")!;
-              const p = pos(e);
+              const point = pos(e);
               ctx.beginPath();
-              ctx.moveTo(p.x, p.y);
+              ctx.moveTo(point.x, point.y);
             }}
             onPointerMove={(e) => {
-              if (!drawing) return;
+              if (!drawing) {
+                return;
+              }
+
               const ctx = canvasRef.current!.getContext("2d")!;
-              const p = pos(e);
-              ctx.lineTo(p.x, p.y);
+              const point = pos(e);
+              ctx.lineTo(point.x, point.y);
               ctx.stroke();
               setHasSig(true);
             }}
@@ -274,19 +387,19 @@ function EncerrarInspecao({ onConcluir, disabled }: { onConcluir: (sig: string) 
           <Button
             variant="outline"
             size="sm"
+            disabled={disabled}
             onClick={() => {
-              const c = canvasRef.current!;
-              c.getContext("2d")!.clearRect(0, 0, c.width, c.height);
+              const canvas = canvasRef.current!;
+              canvas.getContext("2d")!.clearRect(0, 0, canvas.width, canvas.height);
               setHasSig(false);
             }}
           >
-            <Trash2 className="h-4 w-4" />Limpar
+            <Trash2 className="h-4 w-4" />
+            Limpar
           </Button>
-          <Button
-            disabled={disabled || !hasSig}
-            onClick={() => onConcluir(canvasRef.current!.toDataURL())}
-          >
-            <FileSignature className="h-4 w-4" />Concluir e assinar
+          <Button disabled={disabled || !hasSig} onClick={onConcluir}>
+            <FileSignature className="h-4 w-4" />
+            Concluir e assinar
           </Button>
         </div>
       </CardContent>

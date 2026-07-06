@@ -1,4 +1,4 @@
-import type { Inspection, Prisma } from "@/generated/prisma/client";
+import type { Inspection, InspectionStatus, Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/server/prisma/client";
 import { paginate } from "@/server/responses/pagination";
 import type { PaginatedResult, SortOrder } from "@/server/types";
@@ -16,7 +16,15 @@ const INSPECTION_SORT_FIELDS = {
 
 const inspectionRelations = {
   company: true,
-  checklist: true,
+  checklist: {
+    include: {
+      items: {
+        orderBy: {
+          orderIndex: "asc",
+        },
+      },
+    },
+  },
   user: {
     select: {
       id: true,
@@ -26,6 +34,11 @@ const inspectionRelations = {
       createdAt: true,
       updatedAt: true,
       deletedAt: true,
+    },
+  },
+  responses: {
+    include: {
+      checklistItem: true,
     },
   },
 } satisfies Prisma.InspectionInclude;
@@ -102,6 +115,14 @@ export class InspectionRepository extends BaseRepository<
     return prisma.inspection.update({
       where: { id },
       data: { deletedAt: new Date() },
+      include: inspectionRelations,
+    });
+  }
+
+  updateStatus(id: string, status: InspectionStatus): Promise<InspectionWithRelations> {
+    return prisma.inspection.update({
+      where: { id },
+      data: { status },
       include: inspectionRelations,
     });
   }
