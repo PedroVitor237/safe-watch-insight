@@ -98,10 +98,10 @@ Finalidade das principais pastas e arquivos:
 
 Para executar o projeto localmente, é necessário ter:
 
-- **Node.js:** recomendado Node.js 20 ou superior para compatibilidade com Vite 7 e o ecossistema atual do projeto.
+- **Node.js:** recomendado Node.js 22.12 ou superior para compatibilidade com TanStack Start/Vite atuais.
 - **Bun:** recomendado, pois o repositório possui `bun.lock` e `bunfig.toml`.
 
-Também é possível usar npm, já que os comandos estão definidos em `package.json`. O repositório não possui `package-lock.json`, `pnpm-lock.yaml` ou `yarn.lock`.
+Também é possível usar npm, já que os comandos estão definidos em `package.json` e há `package-lock.json` no repositório.
 
 Verifique as versões instaladas:
 
@@ -128,6 +128,56 @@ Alternativa com npm:
 
 ```bash
 npm install
+```
+
+# Primeira execução
+
+Após clonar o projeto, configure um arquivo `.env` com base em `.env.example` e execute:
+
+1. Instalar dependências
+
+```bash
+npm install
+```
+
+2. Executar migrations
+
+```bash
+npx prisma migrate deploy
+```
+
+Em desenvolvimento, também é possível usar:
+
+```bash
+npx prisma migrate dev
+```
+
+3. Executar seed
+
+```bash
+npx prisma db seed
+```
+
+4. Iniciar o projeto
+
+```bash
+npm run dev
+```
+
+5. Acessar com o usuário administrador
+
+```text
+Email: admin@demo.com
+Senha: Admin@123
+```
+
+O seed é idempotente e pode ser executado mais de uma vez sem duplicar o usuário, a empresa, o checklist, os itens ou a inspeção demonstrativa.
+
+Para produção na Vercel, configure as variáveis de ambiente, faça o deploy e execute no banco de produção:
+
+```bash
+npx prisma migrate deploy
+npx prisma db seed
 ```
 
 # 🚀 Execução em Ambiente de Desenvolvimento
@@ -210,25 +260,19 @@ vite preview
 
 # 🔐 Variáveis de Ambiente
 
-Não foram encontrados arquivos `.env` ou `.env.example` no repositório.
+Crie um arquivo `.env` com base em `.env.example`.
 
-No código atual, a única variável lida diretamente é:
-
-- `NODE_ENV`: acessada em `src/lib/config.server.ts` por meio de `process.env.NODE_ENV`.
-
-O arquivo `src/lib/config.server.ts` também documenta padrões para uso futuro:
-
-- variáveis públicas devem usar o prefixo `VITE_` e podem ser lidas com `import.meta.env.VITE_NOME`;
-- segredos devem permanecer no servidor e ser lidos via `process.env` em arquivos server-only ou handlers;
-- exemplos comentados no código incluem `DATABASE_URL` e `STRIPE_SECRET_KEY`, mas essas variáveis não são usadas atualmente.
-
-Exemplo opcional para futuras variáveis públicas:
+Variáveis necessárias:
 
 ```env
-VITE_PUBLIC_APP_NAME="SST Inspeções"
+DATABASE_URL="postgresql://USER:PASSWORD@HOST/DATABASE?sslmode=require"
+SESSION_SECRET="replace-with-a-secure-random-string"
 ```
 
-No estado atual do projeto, nenhuma variável de ambiente customizada é obrigatória para executar a aplicação localmente.
+- `DATABASE_URL`: conexão PostgreSQL/Neon usada pelo Prisma.
+- `SESSION_SECRET`: segredo usado para assinar/criptografar a sessão do TanStack Start.
+
+As variáveis `INITIAL_ADMIN_NAME`, `INITIAL_ADMIN_EMAIL` e `INITIAL_ADMIN_PASSWORD` não são utilizadas. O usuário administrador de demonstração é criado exclusivamente pelo seed.
 
 # 🧭 Rotas e Páginas Principais
 

@@ -105,6 +105,17 @@ function LoginPage() {
                 {isSubmitting ? "Entrando..." : "Entrar"}
               </Button>
             </form>
+            <div className="mt-4 rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground">
+              <div className="font-medium text-foreground">Ambiente de demonstração</div>
+              <div className="mt-2 space-y-1">
+                <div>
+                  Email: <span className="font-medium text-foreground">admin@demo.com</span>
+                </div>
+                <div>
+                  Senha: <span className="font-medium text-foreground">Admin@123</span>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
