@@ -33,6 +33,10 @@ async function getInspectionService() {
   return inspectionService;
 }
 
+async function getAuthSessionHelpers() {
+  return await import("@/server/auth/session");
+}
+
 function toJsonValue(value: unknown): JsonValue {
   if (
     value === null ||
@@ -76,8 +80,19 @@ export const createInspection = createServerFn({ method: "POST" })
   .inputValidator(createInspectionSchema)
   .handler(async ({ data }) => {
     const service = await getInspectionService();
+    const { getAuthenticatedUser } = await getAuthSessionHelpers();
+    const userResult = await getAuthenticatedUser();
 
-    return toServerResult(await service.createInspection(data));
+    if (!userResult.success) {
+      return toServerResult<never>(userResult);
+    }
+
+    return toServerResult(
+      await service.createInspection({
+        ...data,
+        userId: userResult.data.id,
+      }),
+    );
   });
 
 export const getInspectionById = createServerFn({ method: "POST" })

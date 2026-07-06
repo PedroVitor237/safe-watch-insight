@@ -5,29 +5,46 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { store } from "@/lib/mockStore";
-import type { PerfilUsuario } from "@/types/sst";
-import { usuarios } from "@/mocks/data";
+import { getCurrentSession, login } from "@/lib/api/auth.functions";
 import { toast } from "sonner";
+import { redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Entrar — SST Inspeções" }] }),
+  beforeLoad: async () => {
+    const result = await getCurrentSession();
+
+    if (result.success) {
+      throw redirect({ to: "/dashboard" });
+    }
+  },
   component: LoginPage,
 });
 
 function LoginPage() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("ana.lima@sstapp.com.br");
-  const [senha, setSenha] = useState("demo1234");
-  const [perfil, setPerfil] = useState<PerfilUsuario>("inspetor");
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleLogin(e: React.FormEvent) {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    const u = usuarios.find((x) => x.email === email) ?? usuarios[0];
-    store.setUsuario(u.id);
-    store.setPerfil(perfil);
-    toast.success(`Bem-vindo(a), ${u.nome.split(" ")[0]}!`);
+
+    setIsSubmitting(true);
+    const result = await login({
+      data: {
+        email,
+        password: senha,
+      },
+    });
+    setIsSubmitting(false);
+
+    if (!result.success) {
+      toast.error(result.message);
+      return;
+    }
+
+    toast.success(`Bem-vindo(a), ${result.data.name.split(" ")[0]}!`);
     navigate({ to: "/dashboard" });
   }
 
@@ -35,7 +52,9 @@ function LoginPage() {
     <div className="grid min-h-screen lg:grid-cols-2">
       <div className="hidden flex-col justify-between bg-sidebar p-12 text-sidebar-foreground lg:flex">
         <div className="flex items-center gap-2">
-          <div className="grid h-9 w-9 place-items-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground font-bold">S</div>
+          <div className="grid h-9 w-9 place-items-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground font-bold">
+            S
+          </div>
           <span className="font-semibold">SST Inspeções</span>
         </div>
         <div>
@@ -45,8 +64,8 @@ function LoginPage() {
             <span className="text-sidebar-primary"> em um só lugar.</span>
           </h2>
           <p className="mt-4 max-w-md text-sm text-sidebar-foreground/70">
-            Execução de checklists em campo, registro de não conformidades,
-            planos de ação 5W2H e relatórios — com suporte offline.
+            Execução de checklists em campo, registro de não conformidades, planos de ação 5W2H e
+            relatórios — com suporte offline.
           </p>
         </div>
         <div className="text-xs text-sidebar-foreground/50">
@@ -59,39 +78,32 @@ function LoginPage() {
           <CardHeader>
             <CardTitle>Entrar na plataforma</CardTitle>
             <CardDescription>
-              Protótipo: qualquer credencial é aceita. Escolha um perfil para simular permissões.
+              Use suas credenciais cadastradas para acessar a plataforma.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">E-mail</Label>
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="senha">Senha</Label>
-                <Input id="senha" type="password" value={senha} onChange={(e) => setSenha(e.target.value)} />
+                <Input
+                  id="senha"
+                  type="password"
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                />
               </div>
-              <div className="space-y-2">
-                <Label>Perfil</Label>
-                <RadioGroup
-                  value={perfil}
-                  onValueChange={(v) => setPerfil(v as PerfilUsuario)}
-                  className="grid grid-cols-3 gap-2"
-                >
-                  {(["inspetor", "gestor", "auditor"] as PerfilUsuario[]).map((p) => (
-                    <label
-                      key={p}
-                      htmlFor={`p-${p}`}
-                      className="flex cursor-pointer items-center justify-center gap-2 rounded-md border bg-background px-3 py-2 text-sm capitalize hover:bg-accent has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/10"
-                    >
-                      <RadioGroupItem id={`p-${p}`} value={p} />
-                      {p}
-                    </label>
-                  ))}
-                </RadioGroup>
-              </div>
-              <Button type="submit" className="w-full">Entrar</Button>
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Entrando..." : "Entrar"}
+              </Button>
             </form>
           </CardContent>
         </Card>

@@ -1,18 +1,40 @@
 import { Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
-  LayoutDashboard, ClipboardCheck, ListChecks, AlertTriangle, FileText,
-  Building2, BookOpen, Users, Settings, LogOut, WifiOff, RefreshCw, Bell,
+  LayoutDashboard,
+  ClipboardCheck,
+  ListChecks,
+  AlertTriangle,
+  FileText,
+  Building2,
+  BookOpen,
+  Users,
+  Settings,
+  LogOut,
+  WifiOff,
+  RefreshCw,
+  Bell,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import {
-  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
-  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger,
-  SidebarHeader, SidebarFooter, useSidebar,
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+  SidebarHeader,
+  SidebarFooter,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { store, useStore } from "@/lib/mockStore";
-import { usuarios } from "@/mocks/data";
+import { getCurrentSession, logout } from "@/lib/api/auth.functions";
 import { toast } from "sonner";
 
 const nav = [
@@ -33,8 +55,14 @@ const navAdmin = [
 function AppSidebar() {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const { state } = useSidebar();
+  const navigate = useNavigate();
   const collapsed = state === "collapsed";
   const isActive = (p: string) => pathname === p || pathname.startsWith(p + "/");
+
+  async function handleLogout() {
+    await logout();
+    navigate({ to: "/login" });
+  }
 
   return (
     <Sidebar collapsible="icon">
@@ -45,8 +73,12 @@ function AppSidebar() {
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <div className="truncate text-sm font-semibold text-sidebar-foreground">SST Inspeções</div>
-              <div className="truncate text-[10px] text-sidebar-foreground/60">Plataforma de fiscalização</div>
+              <div className="truncate text-sm font-semibold text-sidebar-foreground">
+                SST Inspeções
+              </div>
+              <div className="truncate text-[10px] text-sidebar-foreground/60">
+                Plataforma de fiscalização
+              </div>
             </div>
           )}
         </div>
@@ -93,11 +125,9 @@ function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link to="/" className="flex items-center gap-2">
-                <LogOut className="h-4 w-4" />
-                {!collapsed && <span>Sair</span>}
-              </Link>
+            <SidebarMenuButton onClick={handleLogout}>
+              <LogOut className="h-4 w-4" />
+              {!collapsed && <span>Sair</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -107,16 +137,29 @@ function AppSidebar() {
 }
 
 function TopBar() {
-  const { offline, pendingSync, usuarioLogado, perfil } = useStore((s) => s);
-  const user = usuarios.find((u) => u.id === usuarioLogado) ?? usuarios[0];
+  const { offline, pendingSync } = useStore((s) => s);
   const navigate = useNavigate();
+  const { data: sessionResult } = useQuery({
+    queryKey: ["auth", "session"],
+    queryFn: () => getCurrentSession(),
+  });
+  const user = sessionResult?.success ? sessionResult.data : null;
+  const initials =
+    user?.name
+      .split(" ")
+      .map((part) => part[0])
+      .slice(0, 2)
+      .join("") ?? "SW";
 
   return (
     <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b bg-background/95 px-3 backdrop-blur sm:px-6">
       <SidebarTrigger className="-ml-1" />
       <div className="flex flex-1 items-center gap-2 min-w-0">
         {offline && (
-          <Badge variant="outline" className="gap-1 border-warning text-warning-foreground bg-warning/15">
+          <Badge
+            variant="outline"
+            className="gap-1 border-warning text-warning-foreground bg-warning/15"
+          >
             <WifiOff className="h-3 w-3" /> Offline
           </Badge>
         )}
@@ -151,13 +194,15 @@ function TopBar() {
         >
           <div
             className="grid h-8 w-8 place-items-center rounded-full text-xs font-semibold text-white"
-            style={{ backgroundColor: user.avatarColor }}
+            style={{ backgroundColor: "hsl(var(--primary))" }}
           >
-            {user.nome.split(" ").map((s) => s[0]).slice(0, 2).join("")}
+            {initials}
           </div>
           <div className="hidden text-left sm:block">
-            <div className="text-xs font-medium leading-tight">{user.nome}</div>
-            <div className="text-[10px] capitalize text-muted-foreground">{perfil}</div>
+            <div className="text-xs font-medium leading-tight">{user?.name ?? "Usuário"}</div>
+            <div className="text-[10px] capitalize text-muted-foreground">
+              {user?.role.toLowerCase() ?? "autenticado"}
+            </div>
           </div>
         </button>
       </div>
@@ -175,8 +220,8 @@ export function AppShell() {
           <TopBar />
           {offline && (
             <div className="border-b border-warning/30 bg-warning/10 px-4 py-2 text-xs text-foreground">
-              Você está em <strong>modo offline</strong>. As alterações ficarão em fila e serão sincronizadas
-              automaticamente ao voltar a conexão.
+              Você está em <strong>modo offline</strong>. As alterações ficarão em fila e serão
+              sincronizadas automaticamente ao voltar a conexão.
             </div>
           )}
           <main className="flex-1 bg-muted/30">

@@ -51,7 +51,6 @@ function NovaInspecao() {
     const result = await createInspection.mutateAsync({
       companyId: empresaId,
       checklistId,
-      userId: selectedChecklist.createdById,
       inspectionDate: agendada ? new Date(agendada) : new Date(),
       status: "PLANNED",
       syncStatus: "SYNCED",
