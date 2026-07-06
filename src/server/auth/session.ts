@@ -5,7 +5,7 @@ import { clearSession, getSession, updateSession } from "@tanstack/react-start/s
 import { UnauthorizedError } from "@/server/errors";
 import type { Result } from "@/server/responses";
 import { failure } from "@/server/responses";
-import { userService, type SafeUser } from "@/server/services";
+import { userService, type SafeUser } from "@/server/services/user.service";
 
 const SESSION_NAME = "safe_watch_session";
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 8;

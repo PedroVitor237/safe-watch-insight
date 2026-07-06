@@ -20,7 +20,7 @@ type ServerResult<TData> =
     };
 
 async function getUserService() {
-  const { userService } = await import("@/server/services");
+  const { userService } = await import("@/server/services/user.service");
 
   return userService;
 }

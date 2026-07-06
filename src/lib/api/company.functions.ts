@@ -30,7 +30,7 @@ const updateCompanyInputSchema = z.object({
 });
 
 async function getCompanyService() {
-  const { companyService } = await import("@/server/services");
+  const { companyService } = await import("@/server/services/company.service");
 
   return companyService;
 }

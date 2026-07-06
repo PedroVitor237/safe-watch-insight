@@ -1,0 +1,95 @@
+const fs = require('fs');
+const path = require('path');
+
+const root = path.resolve(__dirname, '..');
+const src = path.join(root, 'src');
+
+function listFiles(dir) {
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  let files = [];
+  for (const ent of entries) {
+    const full = path.join(dir, ent.name);
+    if (ent.isDirectory()) {
+      files = files.concat(listFiles(full));
+    } else if (ent.isFile() && full.endsWith('.ts')) {
+      files.push(full);
+    }
+  }
+  return files;
+}
+
+const files = listFiles(src);
+const importRegex = /import\s+(?:[^'\"]+from\s+)?['\"](@\/[^'\"]+)['\"]/g;
+
+const map = new Map();
+const normalize = (p) => {
+  if (p.startsWith('@/')) {
+    const rel = p.replace('@/','src/');
+    const abs = path.join(root, rel);
+    // try .ts or index.ts
+    if (fs.existsSync(abs + '.ts')) return path.resolve(abs + '.ts');
+    if (fs.existsSync(abs + '/index.ts')) return path.resolve(abs + '/index.ts');
+    return path.resolve(abs);
+  }
+  return p;
+};
+
+for (const file of files) {
+  const txt = fs.readFileSync(file, 'utf8');
+  const imports = [];
+  let m;
+  while ((m = importRegex.exec(txt)) !== null) {
+    const imp = normalize(m[1]);
+    imports.push(imp);
+  }
+  map.set(path.resolve(file), imports);
+}
+
+function findCycles(start, visited = [], stack = new Set()) {
+  const cycles = [];
+  function dfs(node, pathArr) {
+    if (!map.has(node)) return;
+    const neighbors = map.get(node);
+    for (const n of neighbors) {
+      if (!n.startsWith(path.resolve(root))) continue; // skip external
+      const resolved = n;
+      if (pathArr.includes(resolved)) {
+        const cycle = pathArr.slice(pathArr.indexOf(resolved)).concat([resolved]);
+        cycles.push(cycle);
+        continue;
+      }
+      dfs(resolved, pathArr.concat([resolved]));
+    }
+  }
+  dfs(start, [start]);
+  return cycles;
+}
+
+// target files
+const targets = [
+  'src/server/repositories/inspection.repository.ts',
+  'src/server/services/inspection.service.ts',
+  'src/server/repositories/inspection-response.repository.ts',
+  'src/server/services/inspection-response.service.ts',
+  'src/lib/api/inspection.functions.ts',
+  'src/lib/api/inspection-response.functions.ts',
+  'src/routes/_app.tsx',
+  'src/routes/_app.index.tsx',
+];
+
+const absTargets = targets.map(t => path.resolve(root, t)).filter(p => fs.existsSync(p));
+
+const allCycles = new Set();
+for (const t of absTargets) {
+  const cycles = findCycles(t);
+  for (const c of cycles) {
+    allCycles.add(c.join(' -> '));
+  }
+}
+
+if (allCycles.size === 0) {
+  console.log('No cycles detected starting from targets.');
+} else {
+  console.log('Cycles detected:');
+  for (const c of allCycles) console.log(c);
+}
