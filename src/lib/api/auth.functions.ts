@@ -29,6 +29,12 @@ async function getSessionHelpers() {
   return await import("@/server/auth/session");
 }
 
+function validateLoginInput(input: unknown) {
+  console.info("[auth.login] payload received by Server Function:", input);
+
+  return loginSchema.parse(input);
+}
+
 async function toServerErrorResult(error: unknown): Promise<ServerResult<never>> {
   const { resultFromError } = await import("@/server/responses");
 
@@ -75,7 +81,7 @@ function toServerResult<TData>(result: Result<TData>): ServerResult<TData> {
 }
 
 export const login = createServerFn({ method: "POST" })
-  .inputValidator(loginSchema)
+  .inputValidator(validateLoginInput)
   .handler(async ({ data }) => {
     const service = await getUserService();
     const result = await service.authenticate(data.email, data.password);

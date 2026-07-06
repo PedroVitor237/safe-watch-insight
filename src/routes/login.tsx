@@ -30,22 +30,34 @@ function LoginPage() {
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
 
+    const formData = new FormData(e.currentTarget as HTMLFormElement);
+    const payload = {
+      email: String(formData.get("email") ?? ""),
+      password: String(formData.get("password") ?? ""),
+    };
+
+    console.info("[login.form] payload sent to Server Function:", payload);
+
     setIsSubmitting(true);
-    const result = await login({
-      data: {
-        email,
-        password: senha,
-      },
-    });
-    setIsSubmitting(false);
 
-    if (!result.success) {
-      toast.error(result.message);
-      return;
+    try {
+      const result = await login({
+        data: payload,
+      });
+
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success(`Bem-vindo(a), ${result.data.name.split(" ")[0]}!`);
+      navigate({ to: "/dashboard" });
+    } catch (error) {
+      console.error("[login.form] Server Function error:", error);
+      toast.error(error instanceof Error ? error.message : "Não foi possível realizar o login.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    toast.success(`Bem-vindo(a), ${result.data.name.split(" ")[0]}!`);
-    navigate({ to: "/dashboard" });
   }
 
   return (
@@ -87,7 +99,9 @@ function LoginPage() {
                 <Label htmlFor="email">E-mail</Label>
                 <Input
                   id="email"
+                  name="email"
                   type="email"
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
@@ -96,7 +110,9 @@ function LoginPage() {
                 <Label htmlFor="senha">Senha</Label>
                 <Input
                   id="senha"
+                  name="password"
                   type="password"
+                  autoComplete="current-password"
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
                 />
