@@ -38,6 +38,8 @@ function ListaInspecoes() {
       ? inspectionsResult.message
       : "Não foi possível carregar as inspeções.";
 
+  console.log(inspections);
+
   return (
     <div>
       <PageHeader
@@ -114,7 +116,7 @@ function ListaInspecoes() {
                 <div className="min-w-0 truncate text-sm text-muted-foreground">
                   {i.company.tradeName ?? i.company.corporateName}
                 </div>
-                <div className="text-sm">{fmtData(i.inspectionDate.toString())}</div>
+                <div className="text-sm">{formatInspectionDate(i.inspectionDate)}</div>
                 <div className="truncate text-sm text-muted-foreground">
                   {i.user.name.split(" ")[0]}
                 </div>
@@ -133,6 +135,15 @@ function ListaInspecoes() {
       </div>
     </div>
   );
+}
+
+function formatInspectionDate(inspectionDate: string | Date | null | undefined): string {
+  const text =
+    inspectionDate && !isNaN(new Date(inspectionDate).getTime())
+      ? fmtData(new Date(inspectionDate).toISOString())
+      : "—";
+
+  return text;
 }
 
 function toInspectionStatus(status: string) {
