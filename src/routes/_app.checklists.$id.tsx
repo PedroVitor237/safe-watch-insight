@@ -4,7 +4,8 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import { checklists, normas } from "@/mocks/data";
+import { Badge } from "@/components/ui/badge";
+import { useChecklist } from "@/hooks/useChecklists";
 
 export const Route = createFileRoute("/_app/checklists/$id")({
   head: () => ({ meta: [{ title: "Editor de checklist — SST" }] }),
@@ -13,35 +14,52 @@ export const Route = createFileRoute("/_app/checklists/$id")({
 
 function EditorChecklist() {
   const { id } = Route.useParams();
-  const c = checklists.find((x) => x.id === id);
-  if (!c) return <div className="p-8">Checklist não encontrado.</div>;
-  const n = normas.find((x) => x.id === c.normaId);
+  const { data: checklistResult, isError, isLoading } = useChecklist(id);
+  const checklist = checklistResult?.success ? checklistResult.data : null;
+
+  if (isLoading) {
+    return <div className="p-8 text-sm text-muted-foreground">Carregando checklist...</div>;
+  }
+
+  if (isError || !checklistResult?.success || !checklist) {
+    return <div className="p-8">Checklist não encontrado.</div>;
+  }
 
   return (
     <div>
       <PageHeader
-        title={c.titulo}
-        description={`${n?.codigo} · ${n?.titulo} · versão ${c.versao}`}
-        actions={<Button asChild variant="outline"><Link to="/checklists"><ArrowLeft className="h-4 w-4" />Voltar</Link></Button>}
+        title={checklist.title}
+        description={checklist.description ?? "Sem descrição cadastrada."}
+        actions={
+          <Button asChild variant="outline">
+            <Link to="/checklists">
+              <ArrowLeft className="h-4 w-4" />
+              Voltar
+            </Link>
+          </Button>
+        }
       />
       <div className="space-y-4 p-4 sm:p-8">
-        {c.secoes.map((sec) => (
-          <Card key={sec.id}>
-            <CardHeader><CardTitle className="text-base">{sec.titulo}</CardTitle></CardHeader>
-            <CardContent className="divide-y">
-              {sec.itens.map((item, idx) => (
-                <div key={item.id} className="grid grid-cols-[24px_minmax(0,1fr)_auto] items-start gap-3 py-3">
-                  <div className="text-xs font-mono text-muted-foreground">{idx + 1}.</div>
-                  <div className="min-w-0">
-                    <div className="text-sm">{item.texto}</div>
-                    {item.normaRef && <div className="text-xs text-muted-foreground">{item.normaRef}</div>}
-                  </div>
-                  <StatusBadge value={item.criticidade} />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        ))}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Dados do checklist</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            <Badge variant="outline">{checklist.isTemplate ? "Template" : "Personalizado"}</Badge>
+            <StatusBadge value={checklist.isActive ? "ativo" : "inativo"} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Itens do checklist</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              Os itens serão integrados na próxima etapa.
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
