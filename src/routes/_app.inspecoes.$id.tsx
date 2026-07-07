@@ -1,13 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  ArrowLeft,
-  CheckCircle2,
-  FileSignature,
-  MinusCircle,
-  Trash2,
-  XCircle,
-} from "lucide-react";
+import { ArrowLeft, CheckCircle2, FileSignature, MinusCircle, Trash2, XCircle } from "lucide-react";
 
 import { PageHeader } from "@/components/common/PageHeader";
 import { StatusBadge } from "@/components/common/StatusBadge";
@@ -142,7 +135,9 @@ function DetalheInspecao() {
           </Link>
         </Button>
         <p className="mt-4 text-muted-foreground">
-          {inspectionResult?.success === false ? inspectionResult.message : "Inspeção não encontrada."}
+          {inspectionResult?.success === false
+            ? inspectionResult.message
+            : "Inspeção não encontrada."}
         </p>
       </div>
     );
@@ -196,10 +191,10 @@ function DetalheInspecao() {
             <CardContent className="p-4">
               <div className="text-xs text-muted-foreground">Data da inspeção</div>
               <div className="mt-1 text-sm font-medium">
-                {fmtDataHora(String(inspection.inspectionDate))}
+                {fmtDataHora(inspection.inspectionDate)}
               </div>
               <div className="text-xs text-muted-foreground">
-                Atualizada em {fmtDataHora(String(inspection.updatedAt))}
+                Atualizada em {fmtDataHora(inspection.updatedAt)}
               </div>
             </CardContent>
           </Card>
@@ -242,7 +237,9 @@ function DetalheInspecao() {
                             <Button
                               size="sm"
                               variant={uiStatus === "conforme" ? "default" : "outline"}
-                              className={uiStatus === "conforme" ? "bg-success hover:bg-success/90" : ""}
+                              className={
+                                uiStatus === "conforme" ? "bg-success hover:bg-success/90" : ""
+                              }
                               disabled={isCompleted || saveResponse.isPending}
                               onClick={() =>
                                 setResposta(item.id, "conforme", response?.observation ?? null)
@@ -266,7 +263,9 @@ function DetalheInspecao() {
                               size="sm"
                               variant={uiStatus === "na" ? "secondary" : "outline"}
                               disabled={isCompleted || saveResponse.isPending}
-                              onClick={() => setResposta(item.id, "na", response?.observation ?? null)}
+                              onClick={() =>
+                                setResposta(item.id, "na", response?.observation ?? null)
+                              }
                             >
                               <MinusCircle className="h-3.5 w-3.5" />
                               N/A
@@ -311,13 +310,7 @@ function DetalheInspecao() {
   );
 }
 
-function EncerrarInspecao({
-  onConcluir,
-  disabled,
-}: {
-  onConcluir: () => void;
-  disabled: boolean;
-}) {
+function EncerrarInspecao({ onConcluir, disabled }: { onConcluir: () => void; disabled: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [drawing, setDrawing] = useState(false);
   const [hasSig, setHasSig] = useState(false);

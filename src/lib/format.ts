@@ -1,11 +1,35 @@
-import { format, parseISO } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-export const fmtData = (iso?: string) =>
-  iso ? format(parseISO(iso), "dd/MM/yyyy", { locale: ptBR }) : "—";
+export type DateFormatInput = Date | string | null | undefined;
 
-export const fmtDataHora = (iso?: string) =>
-  iso ? format(parseISO(iso), "dd/MM/yyyy HH:mm", { locale: ptBR }) : "—";
+export const fmtData = (value: DateFormatInput) => formatDate(value, "dd/MM/yyyy");
+
+export const fmtDataHora = (value: DateFormatInput) => formatDate(value, "dd/MM/yyyy HH:mm");
+
+function formatDate(value: DateFormatInput, pattern: string): string {
+  const date = normalizeDate(value);
+
+  if (!date) {
+    return "—";
+  }
+
+  try {
+    return format(date, pattern, { locale: ptBR });
+  } catch {
+    return "—";
+  }
+}
+
+function normalizeDate(value: DateFormatInput): Date | null {
+  if (!value) {
+    return null;
+  }
+
+  const date = value instanceof Date ? value : parseISO(value);
+
+  return isValid(date) ? date : null;
+}
 
 export const fmtCnpj = (v: string) =>
   v.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
