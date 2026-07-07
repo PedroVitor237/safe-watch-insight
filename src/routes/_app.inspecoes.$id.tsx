@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, CheckCircle2, FileSignature, MinusCircle, Trash2, XCircle } from "lucide-react";
 
 import { PageHeader } from "@/components/common/PageHeader";
@@ -57,9 +57,8 @@ function DetalheInspecao() {
   const inspection = inspectionResult?.success ? inspectionResult.data : null;
   const items = inspection?.checklist.items ?? [];
   const responses = inspection?.responses ?? [];
-  const responseByItemId = useMemo(
-    () => new Map(responses.map((response) => [response.checklistItemId, response])),
-    [responses],
+  const responseByItemId = new Map(
+    responses.map((response) => [response.checklistItemId, response]),
   );
 
   const totalItens = items.length;
