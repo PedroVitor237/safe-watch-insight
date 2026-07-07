@@ -6,6 +6,18 @@ import { getPaginationOffset, normalizePagination } from "@/server/utils/paginat
 
 import { BaseRepository } from "./base.repository";
 
+const checklistRelations = {
+  items: {
+    orderBy: {
+      orderIndex: "asc",
+    },
+  },
+} satisfies Prisma.ChecklistInclude;
+
+export type ChecklistWithItems = Prisma.ChecklistGetPayload<{
+  include: typeof checklistRelations;
+}>;
+
 const CHECKLIST_SORT_FIELDS = {
   title: "title",
   isTemplate: "isTemplate",
@@ -40,16 +52,37 @@ export class ChecklistRepository extends BaseRepository<
     super(prisma.checklist);
   }
 
-  findActiveById(id: string): Promise<Checklist | null> {
+  createWithItems(data: Prisma.ChecklistCreateInput): Promise<ChecklistWithItems> {
+    return prisma.checklist.create({
+      data,
+      include: checklistRelations,
+    });
+  }
+
+  updateWithItems(
+    where: Prisma.ChecklistWhereUniqueInput,
+    data: Prisma.ChecklistUpdateInput,
+  ): Promise<ChecklistWithItems> {
+    return prisma.checklist.update({
+      where,
+      data,
+      include: checklistRelations,
+    });
+  }
+
+  findActiveById(id: string): Promise<ChecklistWithItems | null> {
     return prisma.checklist.findFirst({
       where: {
         id,
         deletedAt: null,
       },
+      include: checklistRelations,
     });
   }
 
-  findManyPaginated(filters: ChecklistFindManyFilters = {}): Promise<PaginatedResult<Checklist>> {
+  findManyPaginated(
+    filters: ChecklistFindManyFilters = {},
+  ): Promise<PaginatedResult<ChecklistWithItems>> {
     const pagination = normalizePagination(filters.page, filters.pageSize);
     const where = this.buildWhere(filters);
     const orderBy = this.buildOrderBy(filters.sortBy, filters.sortOrder);
@@ -60,15 +93,17 @@ export class ChecklistRepository extends BaseRepository<
         orderBy,
         skip: getPaginationOffset(pagination),
         take: pagination.pageSize,
+        include: checklistRelations,
       }),
       prisma.checklist.count({ where }),
     ]).then(([items, totalItems]) => paginate(items, totalItems, pagination));
   }
 
-  softDelete(id: string): Promise<Checklist> {
+  softDelete(id: string): Promise<ChecklistWithItems> {
     return prisma.checklist.update({
       where: { id },
       data: { deletedAt: new Date() },
+      include: checklistRelations,
     });
   }
 

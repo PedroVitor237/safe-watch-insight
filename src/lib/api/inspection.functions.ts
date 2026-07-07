@@ -99,6 +99,12 @@ export const getInspectionById = createServerFn({ method: "POST" })
   .inputValidator(inspectionIdSchema)
   .handler(async ({ data }) => {
     const service = await getInspectionService();
+    const { getAuthenticatedUser } = await getAuthSessionHelpers();
+    const userResult = await getAuthenticatedUser();
+
+    if (!userResult.success) {
+      return toServerResult<never>(userResult);
+    }
 
     return toServerResult(await service.getInspectionById(data.id));
   });
@@ -107,6 +113,12 @@ export const listInspections = createServerFn({ method: "POST" })
   .inputValidator(inspectionFiltersSchema)
   .handler(async ({ data }) => {
     const service = await getInspectionService();
+    const { getAuthenticatedUser } = await getAuthSessionHelpers();
+    const userResult = await getAuthenticatedUser();
+
+    if (!userResult.success) {
+      return toServerResult<never>(userResult);
+    }
 
     return toServerResult(await service.listInspections(data));
   });
@@ -115,6 +127,12 @@ export const deleteInspection = createServerFn({ method: "POST" })
   .inputValidator(inspectionIdSchema)
   .handler(async ({ data }) => {
     const service = await getInspectionService();
+    const { getAuthenticatedUser } = await getAuthSessionHelpers();
+    const userResult = await getAuthenticatedUser();
+
+    if (!userResult.success) {
+      return toServerResult<never>(userResult);
+    }
 
     return toServerResult(await service.deleteInspection(data.id));
   });

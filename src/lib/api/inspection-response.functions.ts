@@ -30,6 +30,10 @@ async function getInspectionResponseService() {
   return inspectionResponseService;
 }
 
+async function getAuthSessionHelpers() {
+  return await import("@/server/auth/session");
+}
+
 function toJsonValue(value: unknown): JsonValue {
   if (
     value === null ||
@@ -73,6 +77,12 @@ export const listInspectionResponses = createServerFn({ method: "POST" })
   .inputValidator(inspectionResponseIdSchema)
   .handler(async ({ data }) => {
     const service = await getInspectionResponseService();
+    const { getAuthenticatedUser } = await getAuthSessionHelpers();
+    const userResult = await getAuthenticatedUser();
+
+    if (!userResult.success) {
+      return toServerResult<never>(userResult);
+    }
 
     return toServerResult(await service.listInspectionResponses(data.inspectionId));
   });
@@ -81,6 +91,12 @@ export const saveInspectionResponse = createServerFn({ method: "POST" })
   .inputValidator(saveInspectionResponseSchema)
   .handler(async ({ data }) => {
     const service = await getInspectionResponseService();
+    const { getAuthenticatedUser } = await getAuthSessionHelpers();
+    const userResult = await getAuthenticatedUser();
+
+    if (!userResult.success) {
+      return toServerResult<never>(userResult);
+    }
 
     return toServerResult(await service.saveInspectionResponse(data));
   });
@@ -89,6 +105,12 @@ export const finishInspection = createServerFn({ method: "POST" })
   .inputValidator(inspectionResponseIdSchema)
   .handler(async ({ data }) => {
     const service = await getInspectionResponseService();
+    const { getAuthenticatedUser } = await getAuthSessionHelpers();
+    const userResult = await getAuthenticatedUser();
+
+    if (!userResult.success) {
+      return toServerResult<never>(userResult);
+    }
 
     return toServerResult(await service.finishInspection(data.inspectionId));
   });

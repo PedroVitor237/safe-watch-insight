@@ -36,8 +36,6 @@ function LoginPage() {
       password: String(formData.get("password") ?? ""),
     };
 
-    console.info("[login.form] payload sent to Server Function:", payload);
-
     setIsSubmitting(true);
 
     try {

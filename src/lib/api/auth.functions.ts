@@ -30,8 +30,6 @@ async function getSessionHelpers() {
 }
 
 function validateLoginInput(input: unknown) {
-  console.info("[auth.login] payload received by Server Function:", input);
-
   return loginSchema.parse(input);
 }
 

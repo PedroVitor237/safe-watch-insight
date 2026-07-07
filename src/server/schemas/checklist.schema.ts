@@ -30,6 +30,8 @@ export const createChecklistSchema = checklistMutableFieldsSchema.extend({
   createdById: z.string().uuid(),
 });
 
+export const createChecklistClientSchema = createChecklistSchema.omit({ createdById: true });
+
 export const updateChecklistSchema = checklistMutableFieldsSchema
   .partial()
   .refine((data) => Object.keys(data).length > 0, {
@@ -43,7 +45,11 @@ export const checklistFiltersSchema = listQuerySchema.extend({
   isActive: z.coerce.boolean().optional(),
 });
 
+export const checklistClientFiltersSchema = checklistFiltersSchema.omit({ createdById: true });
+
 export type CreateChecklistSchemaInput = z.infer<typeof createChecklistSchema>;
+export type CreateChecklistClientSchemaInput = z.infer<typeof createChecklistClientSchema>;
 export type UpdateChecklistSchemaInput = z.infer<typeof updateChecklistSchema>;
 export type ChecklistFiltersSchemaInput = z.infer<typeof checklistFiltersSchema>;
+export type ChecklistClientFiltersSchemaInput = z.infer<typeof checklistClientFiltersSchema>;
 export type ChecklistSortFieldSchemaInput = z.infer<typeof checklistSortFieldSchema>;

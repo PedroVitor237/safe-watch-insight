@@ -35,7 +35,7 @@ export class ChecklistService extends BaseService<ChecklistRepository> {
 
   async createChecklist(input: CreateChecklistInput): Promise<Result<ChecklistEntity>> {
     return this.execute(async () => {
-      const checklist = await this.repository.create(this.toCreateData(input));
+      const checklist = await this.repository.createWithItems(this.toCreateData(input));
 
       return this.success(checklist);
     });
@@ -45,7 +45,7 @@ export class ChecklistService extends BaseService<ChecklistRepository> {
     return this.execute(async () => {
       await this.ensureChecklistExists(id);
 
-      const checklist = await this.repository.update({ id }, this.toUpdateData(input));
+      const checklist = await this.repository.updateWithItems({ id }, this.toUpdateData(input));
 
       return this.success(checklist);
     });

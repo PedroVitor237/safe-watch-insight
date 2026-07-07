@@ -1,17 +1,16 @@
-import type { CompanyFiltersSchemaInput } from "@/server/schemas";
+import type { CompanyClientFiltersSchemaInput } from "@/server/schemas";
 
-export type CompanyQueryFilters = Partial<CompanyFiltersSchemaInput>;
+export type CompanyQueryFilters = Partial<CompanyClientFiltersSchemaInput>;
 
 export function getCompanyListFilters(
   filters: CompanyQueryFilters = {},
-): CompanyFiltersSchemaInput {
+): CompanyClientFiltersSchemaInput {
   return {
     page: filters.page ?? 1,
     pageSize: filters.pageSize ?? 20,
     sortOrder: filters.sortOrder ?? "desc",
     ...(filters.search === undefined ? {} : { search: filters.search }),
     ...(filters.sortBy === undefined ? {} : { sortBy: filters.sortBy }),
-    ...(filters.createdById === undefined ? {} : { createdById: filters.createdById }),
   };
 }
 

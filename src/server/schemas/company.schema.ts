@@ -43,6 +43,8 @@ export const createCompanySchema = z.object({
   createdById: z.string().uuid(),
 });
 
+export const createCompanyClientSchema = createCompanySchema.omit({ createdById: true });
+
 export const updateCompanySchema = createCompanySchema
   .omit({ createdById: true })
   .partial()
@@ -55,7 +57,11 @@ export const companyFiltersSchema = listQuerySchema.extend({
   createdById: z.string().uuid().optional(),
 });
 
+export const companyClientFiltersSchema = companyFiltersSchema.omit({ createdById: true });
+
 export type CreateCompanySchemaInput = z.infer<typeof createCompanySchema>;
+export type CreateCompanyClientSchemaInput = z.infer<typeof createCompanyClientSchema>;
 export type UpdateCompanySchemaInput = z.infer<typeof updateCompanySchema>;
 export type CompanyFiltersSchemaInput = z.infer<typeof companyFiltersSchema>;
+export type CompanyClientFiltersSchemaInput = z.infer<typeof companyClientFiltersSchema>;
 export type CompanySortFieldSchemaInput = z.infer<typeof companySortFieldSchema>;

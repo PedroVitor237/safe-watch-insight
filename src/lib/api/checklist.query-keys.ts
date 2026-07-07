@@ -1,17 +1,16 @@
-import type { ChecklistFiltersSchemaInput } from "@/server/schemas/checklist.schema";
+import type { ChecklistClientFiltersSchemaInput } from "@/server/schemas/checklist.schema";
 
-export type ChecklistQueryFilters = Partial<ChecklistFiltersSchemaInput>;
+export type ChecklistQueryFilters = Partial<ChecklistClientFiltersSchemaInput>;
 
 export function getChecklistListFilters(
   filters: ChecklistQueryFilters = {},
-): ChecklistFiltersSchemaInput {
+): ChecklistClientFiltersSchemaInput {
   return {
     page: filters.page ?? 1,
     pageSize: filters.pageSize ?? 20,
     sortOrder: filters.sortOrder ?? "desc",
     ...(filters.search === undefined ? {} : { search: filters.search }),
     ...(filters.sortBy === undefined ? {} : { sortBy: filters.sortBy }),
-    ...(filters.createdById === undefined ? {} : { createdById: filters.createdById }),
     ...(filters.isTemplate === undefined ? {} : { isTemplate: filters.isTemplate }),
     ...(filters.isActive === undefined ? {} : { isActive: filters.isActive }),
   };

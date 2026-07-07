@@ -13,7 +13,7 @@ import {
   type ChecklistQueryFilters,
 } from "@/lib/api/checklist.query-keys";
 import type {
-  CreateChecklistSchemaInput,
+  CreateChecklistClientSchemaInput,
   UpdateChecklistSchemaInput,
 } from "@/server/schemas/checklist.schema";
 
@@ -49,7 +49,7 @@ export function useCreateChecklist() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateChecklistSchemaInput) => createChecklist({ data }),
+    mutationFn: (data: CreateChecklistClientSchemaInput) => createChecklist({ data }),
     onSuccess: async (result) => {
       if (!result.success) {
         return;

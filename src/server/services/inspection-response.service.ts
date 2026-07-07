@@ -6,7 +6,7 @@ import {
   type InspectionResponseWithRelations,
 } from "@/server/repositories/inspection-response.repository";
 import {
-  inspectionRepository,
+  inspectionRepository as defaultInspectionRepository,
   InspectionRepository,
   type InspectionWithRelations,
 } from "@/server/repositories/inspection.repository";
@@ -24,7 +24,7 @@ export interface SaveInspectionResponseInput {
 export class InspectionResponseService extends BaseService<InspectionResponseRepository> {
   constructor(
     repository: InspectionResponseRepository = inspectionResponseRepository,
-    private readonly inspectionRepository: InspectionRepository = inspectionRepository,
+    private readonly inspectionRepository: InspectionRepository = defaultInspectionRepository,
   ) {
     super(repository);
   }

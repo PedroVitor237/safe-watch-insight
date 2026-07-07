@@ -12,7 +12,7 @@ import {
   getCompanyListFilters,
   type CompanyQueryFilters,
 } from "@/lib/api/company.query-keys";
-import type { CreateCompanySchemaInput, UpdateCompanySchemaInput } from "@/server/schemas";
+import type { CreateCompanyClientSchemaInput, UpdateCompanySchemaInput } from "@/server/schemas";
 
 export interface UseCompanyOptions {
   enabled?: boolean;
@@ -46,7 +46,7 @@ export function useCreateCompany() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateCompanySchemaInput) => createCompany({ data }),
+    mutationFn: (data: CreateCompanyClientSchemaInput) => createCompany({ data }),
     onSuccess: async (result) => {
       if (!result.success) {
         return;

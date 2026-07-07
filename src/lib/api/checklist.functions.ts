@@ -2,8 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import {
-  checklistFiltersSchema,
-  createChecklistSchema,
+  checklistClientFiltersSchema,
+  createChecklistClientSchema,
   updateChecklistSchema,
 } from "@/server/schemas/checklist.schema";
 import type { Result } from "@/server/responses";
@@ -37,6 +37,10 @@ async function getChecklistService() {
   const { checklistService } = await import("@/server/services/checklist.service");
 
   return checklistService;
+}
+
+async function getAuthSessionHelpers() {
+  return await import("@/server/auth/session");
 }
 
 function toJsonValue(value: unknown): JsonValue {
@@ -79,17 +83,29 @@ function toServerResult<TData>(result: Result<TData>): ServerResult<TData> {
 }
 
 export const createChecklist = createServerFn({ method: "POST" })
-  .inputValidator(createChecklistSchema)
+  .inputValidator(createChecklistClientSchema)
   .handler(async ({ data }) => {
     const service = await getChecklistService();
+    const { getAuthenticatedUser } = await getAuthSessionHelpers();
+    const userResult = await getAuthenticatedUser();
 
-    return toServerResult(await service.createChecklist(data));
+    if (!userResult.success) {
+      return toServerResult<never>(userResult);
+    }
+
+    return toServerResult(await service.createChecklist({ ...data, createdById: userResult.data.id }));
   });
 
 export const updateChecklist = createServerFn({ method: "POST" })
   .inputValidator(updateChecklistInputSchema)
   .handler(async ({ data }) => {
     const service = await getChecklistService();
+    const { getAuthenticatedUser } = await getAuthSessionHelpers();
+    const userResult = await getAuthenticatedUser();
+
+    if (!userResult.success) {
+      return toServerResult<never>(userResult);
+    }
 
     return toServerResult(await service.updateChecklist(data.id, data.data));
   });
@@ -98,6 +114,12 @@ export const deleteChecklist = createServerFn({ method: "POST" })
   .inputValidator(checklistIdSchema)
   .handler(async ({ data }) => {
     const service = await getChecklistService();
+    const { getAuthenticatedUser } = await getAuthSessionHelpers();
+    const userResult = await getAuthenticatedUser();
+
+    if (!userResult.success) {
+      return toServerResult<never>(userResult);
+    }
 
     return toServerResult(await service.deleteChecklist(data.id));
   });
@@ -106,14 +128,26 @@ export const getChecklistById = createServerFn({ method: "POST" })
   .inputValidator(checklistIdSchema)
   .handler(async ({ data }) => {
     const service = await getChecklistService();
+    const { getAuthenticatedUser } = await getAuthSessionHelpers();
+    const userResult = await getAuthenticatedUser();
+
+    if (!userResult.success) {
+      return toServerResult<never>(userResult);
+    }
 
     return toServerResult(await service.getChecklistById(data.id));
   });
 
 export const listChecklists = createServerFn({ method: "POST" })
-  .inputValidator(checklistFiltersSchema)
+  .inputValidator(checklistClientFiltersSchema)
   .handler(async ({ data }) => {
     const service = await getChecklistService();
+    const { getAuthenticatedUser } = await getAuthSessionHelpers();
+    const userResult = await getAuthenticatedUser();
+
+    if (!userResult.success) {
+      return toServerResult<never>(userResult);
+    }
 
     return toServerResult(await service.listChecklists(data));
   });

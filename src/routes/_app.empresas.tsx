@@ -1,11 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, Building2, MapPin } from "lucide-react";
-import { useCompanies } from "@/hooks/useCompanies";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Plus, Building2, MapPin, Pencil, Trash2 } from "lucide-react";
+import { useCompanies, useCreateCompany, useDeleteCompany, useUpdateCompany } from "@/hooks/useCompanies";
 import { fmtCnpj } from "@/lib/format";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/empresas")({
   head: () => ({ meta: [{ title: "Empresas — SST" }] }),
@@ -14,11 +27,80 @@ export const Route = createFileRoute("/_app/empresas")({
 
 function Empresas() {
   const { data: companiesResult, isLoading, isError } = useCompanies();
+  const createCompany = useCreateCompany();
+  const updateCompany = useUpdateCompany();
+  const deleteCompany = useDeleteCompany();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingCompanyId, setEditingCompanyId] = useState<string | null>(null);
+  const [form, setForm] = useState<CompanyFormState>(emptyCompanyForm);
   const companies = companiesResult?.success ? companiesResult.data.items : [];
   const errorMessage =
     companiesResult && !companiesResult.success
       ? companiesResult.message
       : "Não foi possível carregar as empresas.";
+
+  function openCreateDialog() {
+    setEditingCompanyId(null);
+    setForm(emptyCompanyForm);
+    setDialogOpen(true);
+  }
+
+  function openEditDialog(company: (typeof companies)[number]) {
+    setEditingCompanyId(company.id);
+    setForm({
+      corporateName: company.corporateName,
+      tradeName: company.tradeName ?? "",
+      cnpj: company.cnpj ?? "",
+      cnae: company.cnae,
+      riskLevel: String(company.riskLevel),
+      employeeCount: String(company.employeeCount),
+      address: company.address ?? "",
+      notes: company.notes ?? "",
+    });
+    setDialogOpen(true);
+  }
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const payload = {
+      corporateName: form.corporateName,
+      tradeName: form.tradeName,
+      cnpj: form.cnpj,
+      cnae: form.cnae,
+      riskLevel: Number(form.riskLevel),
+      employeeCount: Number(form.employeeCount),
+      address: form.address,
+      notes: form.notes,
+    };
+
+    const result = editingCompanyId
+      ? await updateCompany.mutateAsync({ id: editingCompanyId, data: payload })
+      : await createCompany.mutateAsync(payload);
+
+    if (!result.success) {
+      toast.error(result.message);
+      return;
+    }
+
+    toast.success(editingCompanyId ? "Empresa atualizada." : "Empresa cadastrada.");
+    setDialogOpen(false);
+  }
+
+  async function handleDelete(id: string) {
+    if (!window.confirm("Excluir esta empresa?")) {
+      return;
+    }
+
+    const result = await deleteCompany.mutateAsync(id);
+
+    if (!result.success) {
+      toast.error(result.message);
+      return;
+    }
+
+    toast.success("Empresa excluída.");
+  }
 
   return (
     <div>
@@ -26,7 +108,7 @@ function Empresas() {
         title="Empresas e unidades"
         description="Cadastro das empresas e unidades fiscalizadas."
         actions={
-          <Button>
+          <Button onClick={openCreateDialog}>
             <Plus className="h-4 w-4" />
             Nova empresa
           </Button>
@@ -107,10 +189,115 @@ function Empresas() {
                   Grau de risco {e.riskLevel}
                 </Badge>
               </div>
+
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" size="sm" onClick={() => openEditDialog(e)}>
+                  <Pencil className="h-3.5 w-3.5" />
+                  Editar
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleDelete(e.id)}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Excluir
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ))}
       </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{editingCompanyId ? "Editar empresa" : "Nova empresa"}</DialogTitle>
+            <DialogDescription>Preencha os dados cadastrais da empresa fiscalizada.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField label="Razão social" value={form.corporateName} onChange={(value) => setForm({ ...form, corporateName: value })} required />
+              <FormField label="Nome fantasia" value={form.tradeName} onChange={(value) => setForm({ ...form, tradeName: value })} />
+              <FormField label="CNPJ" value={form.cnpj} onChange={(value) => setForm({ ...form, cnpj: value })} />
+              <FormField label="CNAE" value={form.cnae} onChange={(value) => setForm({ ...form, cnae: value })} required />
+              <FormField label="Grau de risco" type="number" min="1" max="4" value={form.riskLevel} onChange={(value) => setForm({ ...form, riskLevel: value })} required />
+              <FormField label="Funcionários" type="number" min="0" value={form.employeeCount} onChange={(value) => setForm({ ...form, employeeCount: value })} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="company-address">Endereço</Label>
+              <Input id="company-address" value={form.address} onChange={(event) => setForm({ ...form, address: event.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="company-notes">Observações</Label>
+              <Textarea id="company-notes" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} rows={3} />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={createCompany.isPending || updateCompany.isPending}>
+                {editingCompanyId ? "Salvar alterações" : "Cadastrar empresa"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+interface CompanyFormState {
+  corporateName: string;
+  tradeName: string;
+  cnpj: string;
+  cnae: string;
+  riskLevel: string;
+  employeeCount: string;
+  address: string;
+  notes: string;
+}
+
+interface FormFieldProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+  min?: string;
+  max?: string;
+  required?: boolean;
+}
+
+const emptyCompanyForm: CompanyFormState = {
+  corporateName: "",
+  tradeName: "",
+  cnpj: "",
+  cnae: "",
+  riskLevel: "1",
+  employeeCount: "0",
+  address: "",
+  notes: "",
+};
+
+function FormField({
+  label,
+  value,
+  onChange,
+  type = "text",
+  min,
+  max,
+  required = false,
+}: FormFieldProps) {
+  const id = `company-${label.toLowerCase().replace(/\s+/g, "-")}`;
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id}>{label}</Label>
+      <Input
+        id={id}
+        type={type}
+        min={min}
+        max={max}
+        value={value}
+        required={required}
+        onChange={(event) => onChange(event.target.value)}
+      />
     </div>
   );
 }
