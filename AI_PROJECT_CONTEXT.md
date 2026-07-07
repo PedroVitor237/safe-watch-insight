@@ -128,9 +128,9 @@ The backend lives in `src/server` and is consumed through TanStack Start Server 
 Implemented layers:
 
 - Prisma singleton: `src/server/prisma/client.ts`.
-- Repositories: base, user, company, checklist, inspection, inspection-response.
-- Services: user, company, checklist, inspection, inspection-response.
-- Schemas: auth, pagination, company, checklist, inspection, inspection-response.
+- Repositories: base, user, company, checklist, checklist-item, inspection, inspection-response.
+- Services: user, company, checklist, checklist-item, inspection, inspection-response.
+- Schemas: auth, pagination, company, checklist, checklist-item, inspection, inspection-response.
 - Errors/responses: `ApiError`, `NotFoundError`, `ConflictError`, `UnauthorizedError`, `ValidationError`, `Result`, pagination.
 
 ## Database
@@ -148,9 +148,7 @@ Authentication is real, not simulated:
 - Session helpers use TanStack Start server sessions with an HTTP-only cookie named `safe_watch_session`.
 - Session max age is 8 hours.
 - `SESSION_SECRET` is required in production. A development fallback secret exists for non-production.
-- JWT is not implemented.
-
-Important current issue: login code logs the submitted payload, including password, with `console.info`. This should be removed before real use.
+- JWT is not implemented; the current implementation uses sessions.
 
 ## Sessions
 
@@ -169,6 +167,7 @@ Implemented Server Functions:
 - Auth: `login`, `getCurrentSession`, `logout`.
 - Companies: create, update, soft delete, get by id, list.
 - Checklists: create, update, soft delete, get by id, list.
+- Checklist items: create, update, delete, list by checklist.
 - Inspections: create, get by id, list, soft delete.
 - Inspection responses: list, save/upsert response, finish inspection.
 - Example: `getGreeting`.
@@ -276,7 +275,7 @@ Implemented APIs and behavior:
 
 Validations:
 
-- Zod schemas exist for login, pagination/list filters, companies, checklists, inspections, and inspection responses.
+- Zod schemas exist for login, pagination/list filters, companies, checklists, checklist items, inspections, and inspection responses.
 - Pagination defaults to page 1 and pageSize 20, capped at 100.
 
 Business rules implemented:
@@ -284,6 +283,7 @@ Business rules implemented:
 - No direct Prisma outside repositories in the implemented backend layers.
 - Company CNPJ uniqueness.
 - Soft delete for company/checklist/inspection service delete operations.
+- Checklist item deletion is blocked when the item already has inspection responses.
 - Inspection creation requires valid company/checklist.
 - Inspection response must refer to an item in the inspection's checklist.
 - Passwords are hashed in seed and checked with bcrypt.
@@ -291,7 +291,7 @@ Business rules implemented:
 Business rules not yet implemented:
 
 - User CRUD.
-- Checklist item CRUD/reordering/standard association.
+- Checklist item reordering UI and standard association.
 - Standards API.
 - Automatic NonConformity creation when a response is `NON_COMPLIANT`.
 - Corrective actions.
@@ -315,9 +315,9 @@ Implemented pages/routes:
 - `/inspecoes`: real inspection list via React Query/Server Functions.
 - `/inspecoes/nova`: real create-inspection flow using real companies/checklists.
 - `/inspecoes/$id`: real inspection detail and response saving against backend; signature is local UI only and not persisted.
-- `/checklists`: real checklist list, but without real item counts.
-- `/checklists/$id`: real checklist detail, but item display is placeholder.
-- `/empresas`: real company list.
+- `/checklists`: real checklist list with create/edit/delete UI.
+- `/checklists/$id`: real checklist detail with item create/edit/delete UI.
+- `/empresas`: real company list with create/edit/delete UI.
 - `/nao-conformidades`: mock Kanban/list from `mockStore`.
 - `/nao-conformidades/$id`: mock NC detail, 5W2H editing, status change, evidence mock.
 - `/relatorios`: mock report preview/print/PDF toast from `mockStore`.
@@ -328,15 +328,14 @@ Implemented pages/routes:
 Completed/integrated modules:
 
 - Real authentication/session-aware login and route guard.
-- Real list views for companies, checklists, inspections.
+- Real CRUD UI for companies, checklists, and checklist items.
 - Real inspection creation.
 - Real inspection response saving and completion status update.
 
 Unfinished modules:
 
-- Company creation/update/delete UI forms are not exposed, although hooks and Server Functions exist.
-- Checklist creation/update/delete UI forms are not exposed, although hooks and Server Functions exist.
-- Checklist items are not integrated in checklist list/detail. Inspection detail can render items only if seeded/created directly in the DB.
+- Checklist item ordering is supported by the backend field but has no dedicated drag/reorder UI.
+- Checklist items are not associated with standards yet.
 - Non-conformities are not backed by Prisma despite the model existing.
 - Reports are mock-only.
 - Dashboard is mock-only.
@@ -401,13 +400,9 @@ Estimated from current code, not from unchecked task boxes in `TASKS.md`:
 
 # Pending Features
 
-- Remove sensitive console logs from login/auth.
-- Add authorization checks to all Server Functions, not only create inspection.
-- Replace client-supplied `createdById` for company/checklist creation with authenticated session user.
+- Add role-based authorization checks; current Server Functions require authentication but do not enforce permissions by role.
 - User CRUD and role management.
-- Company create/edit/delete UI.
-- Checklist create/edit/delete UI.
-- Checklist item CRUD, ordering, and standard association.
+- Checklist item reordering UI and standard association.
 - Standards seed and API/UI integration.
 - Automatic non-conformity creation from non-compliant responses.
 - Non-conformity backend, services, repositories, hooks, UI integration.
@@ -428,14 +423,7 @@ Estimated from current code, not from unchecked task boxes in `TASKS.md`:
 
 Confirmed or strongly indicated by code:
 
-- Login logs credentials:
-  - `src/routes/login.tsx` logs the payload sent to the Server Function.
-  - `src/lib/api/auth.functions.ts` logs the payload received by the Server Function.
-  - This includes the password and is a security bug.
-- Several Server Functions do not require authenticated user/session:
-  - Company/checklist create/update/delete/list/get, inspection get/list/delete, response save/list/finish are callable without role checks at the function layer.
-  - The `_app` route guard protects normal UI navigation, but server-side authorization should not rely on frontend routing.
-- Company and checklist creation schemas accept `createdById` from the client. This can allow record attribution spoofing if called directly.
+- Server Functions require authenticated sessions for business modules, but do not enforce role-based authorization yet.
 - Non-compliant inspection responses do not create a `NonConformity` database record, despite documentation and older prototype behavior saying they should.
 - Finishing an inspection does not validate that required checklist items are answered.
 - Inspection completion does not persist the drawn signature.
@@ -462,7 +450,7 @@ Technical debt:
 
 # Technical Decisions
 
-- Keep TanStack Start for this delivery because the frontend was generated/built on this base; future migration to Next.js is planned but not current scope.
+- Keep TanStack Start for this delivery because the frontend was generated/built on this base; a future migration to Next.js may be evaluated later, but it is not current scope.
 - Use layered architecture: React Query -> Server Functions -> Services -> Repositories -> Prisma -> PostgreSQL.
 - Use Prisma ORM 7 as source of truth for the physical database model.
 - Use PostgreSQL, planned hosting on Neon.

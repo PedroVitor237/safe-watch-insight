@@ -34,13 +34,13 @@ Legenda
 
 ## Ambiente
 
-- [ ] Configurar arquivo `.env`
-- [ ] Configurar conexão com Neon PostgreSQL
-- [ ] Configurar Prisma ORM
-- [ ] Gerar Prisma Client
-- [ ] Executar primeira migration
-- [ ] Criar seed inicial
-- [ ] Testar conexão com o banco
+- [x] Configurar arquivo `.env.example`
+- [x] Configurar conexão com PostgreSQL/Neon via `DATABASE_URL`
+- [x] Configurar Prisma ORM
+- [x] Gerar Prisma Client
+- [x] Executar primeira migration
+- [x] Criar seed inicial
+- [x] Testar conexão com o banco por meio do fluxo Prisma/seed
 
 ---
 
@@ -48,18 +48,17 @@ Legenda
 
 ## Estrutura
 
-- [ ] Criar pasta `repositories`
-- [ ] Criar pasta `services`
-- [ ] Criar pasta `validators`
-- [ ] Criar pasta `schemas`
-- [ ] Criar pasta `types`
+- [x] Criar pasta `repositories`
+- [x] Criar pasta `services`
+- [x] Criar pasta `schemas`
+- [x] Criar pasta `types`
 
 ## Infraestrutura
 
-- [ ] Criar instância única do Prisma Client
-- [ ] Criar tratamento global de erros
-- [ ] Criar padrão de respostas da API
-- [ ] Criar utilitários compartilhados
+- [x] Criar instância única do Prisma Client
+- [x] Criar tratamento de erros padronizado
+- [x] Criar padrão de respostas da API
+- [x] Criar utilitários compartilhados
 
 ---
 
@@ -67,26 +66,26 @@ Legenda
 
 ## Modelagem
 
-- [ ] Implementar UserRepository
-- [ ] Implementar UserService
-- [ ] Criar schemas Zod
+- [x] Implementar UserRepository
+- [x] Implementar UserService para autenticação e consulta por sessão
+- [x] Criar schemas Zod para autenticação
 
 ## Funcionalidades
 
 - [ ] Criar usuário
 - [ ] Atualizar usuário
-- [ ] Consultar usuário
+- [x] Consultar usuário autenticado
 - [ ] Listar usuários
 
 ---
 
 # FASE 3 — Autenticação
 
-- [ ] Implementar login
-- [ ] Implementar logout
-- [ ] Implementar hash de senha
-- [ ] Validar credenciais
-- [ ] Preparar arquitetura para JWT
+- [x] Implementar login
+- [x] Implementar logout
+- [x] Implementar hash de senha
+- [x] Validar credenciais
+- [ ] Avaliar JWT futuramente, se necessário
 
 ---
 
@@ -94,23 +93,23 @@ Legenda
 
 ## Backend
 
-- [ ] Criar CompanyRepository
-- [ ] Criar CompanyService
-- [ ] Criar validações
+- [x] Criar CompanyRepository
+- [x] Criar CompanyService
+- [x] Criar validações
 
 ## CRUD
 
-- [ ] Criar empresa
-- [ ] Atualizar empresa
-- [ ] Consultar empresa
-- [ ] Listar empresas
-- [ ] Excluir empresa
+- [x] Criar empresa
+- [x] Atualizar empresa
+- [x] Consultar empresa
+- [x] Listar empresas
+- [x] Excluir empresa
 
 ## Frontend
 
-- [ ] Remover mocks
-- [ ] Integrar React Query
-- [ ] Validar formulários
+- [x] Remover mocks do fluxo de empresas
+- [x] Integrar React Query
+- [x] Validar formulários pelo backend com Zod
 
 ---
 
@@ -118,26 +117,26 @@ Legenda
 
 ## Backend
 
-- [ ] ChecklistRepository
-- [ ] ChecklistService
+- [x] ChecklistRepository
+- [x] ChecklistService
 
 ## CRUD
 
-- [ ] Criar checklist
-- [ ] Atualizar checklist
+- [x] Criar checklist
+- [x] Atualizar checklist
 - [ ] Duplicar checklist
-- [ ] Ativar checklist
-- [ ] Desativar checklist
-- [ ] Excluir checklist
+- [x] Ativar checklist
+- [x] Desativar checklist
+- [x] Excluir checklist
 
 ---
 
 # FASE 6 — Itens do Checklist
 
-- [ ] Criar item
-- [ ] Atualizar item
-- [ ] Excluir item
-- [ ] Reordenar item
+- [x] Criar item
+- [x] Atualizar item
+- [x] Excluir item
+- [/] Reordenar item
 - [ ] Associar normas
 
 ---
@@ -156,25 +155,25 @@ Legenda
 
 ## Backend
 
-- [ ] InspectionRepository
-- [ ] InspectionService
+- [x] InspectionRepository
+- [x] InspectionService
 
 ## Funcionalidades
 
-- [ ] Criar inspeção
+- [x] Criar inspeção
 - [ ] Editar inspeção
 - [ ] Salvar rascunho
-- [ ] Finalizar inspeção
-- [ ] Consultar inspeção
-- [ ] Listar inspeções
+- [x] Finalizar inspeção
+- [x] Consultar inspeção
+- [x] Listar inspeções
 
 ---
 
 # FASE 9 — Respostas da Inspeção
 
-- [ ] Registrar resposta
-- [ ] Editar resposta
-- [ ] Salvar observações
+- [x] Registrar resposta
+- [x] Editar resposta
+- [x] Salvar observações
 
 ---
 
@@ -249,10 +248,10 @@ Legenda
 
 # FASE 16 — Segurança
 
-- [ ] Validar entradas com Zod
+- [x] Validar entradas com Zod nos módulos implementados
 - [ ] Revisar permissões
 - [ ] Sanitizar entradas
-- [ ] Revisar tratamento de erros
+- [x] Revisar tratamento de erros base
 
 ---
 
@@ -299,12 +298,12 @@ Legenda
 
 ## Obrigatório
 
-- [ ] Backend funcional
-- [ ] Banco PostgreSQL integrado
-- [ ] Prisma funcionando
-- [ ] CRUD de empresas
-- [ ] CRUD de checklists
-- [ ] CRUD de inspeções
+- [x] Backend funcional para o fluxo principal da Atividade 2
+- [x] Banco PostgreSQL integrado
+- [x] Prisma funcionando
+- [x] CRUD de empresas
+- [x] CRUD de checklists
+- [x] CRUD de inspeções
 - [ ] Registro de não conformidades
 - [ ] Upload de evidências
 - [ ] Relatórios

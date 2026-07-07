@@ -26,9 +26,9 @@ O frontend foi inicialmente desenvolvido utilizando Lovable + TanStack Start.
 
 A prioridade é concluir a entrega da disciplina utilizando essa base, evitando uma migração durante o desenvolvimento do backend.
 
-Plano futuro:
+Planejamento futuro:
 
-Migrar para Next.js Full Stack quando houver tempo disponível, preservando toda a lógica de domínio implementada.
+Uma migração para Next.js Full Stack poderá ser avaliada posteriormente, preservando a lógica de domínio implementada caso a mudança seja tecnicamente justificável. Essa migração não faz parte da entrega atual.
 
 ---
 
@@ -174,11 +174,13 @@ Motivo:
 
 A autenticação faz parte da lógica da aplicação e deverá permanecer independente do provedor de banco de dados.
 
-Implementação prevista:
+Implementação atual:
 
 - Prisma
 - bcrypt
-- sessão/JWT
+- sessões HTTP-only do TanStack Start
+
+JWT não é utilizado nesta entrega. Caso haja necessidade futura, poderá ser avaliado sem acoplar a lógica de autenticação ao provedor de banco de dados.
 
 ---
 
@@ -297,13 +299,13 @@ Caso exista divergência entre código e documentação, a divergência deverá 
 
 Quando houver disponibilidade, priorizar:
 
-1. Migração para Next.js Full Stack.
-2. Autenticação completa.
-3. Funcionamento Offline First.
-4. Upload de evidências via Cloudinary.
-5. Geração de PDF.
-6. Dashboard com dados reais.
-7. PWA completo.
-8. Testes automatizados.
-9. CI/CD.
-10. Observabilidade e monitoramento.
+1. Autorização por perfil e gestão completa de usuários.
+2. Funcionamento Offline First.
+3. Upload de evidências via Cloudinary.
+4. Geração de PDF.
+5. Dashboard com dados reais.
+6. PWA completo.
+7. Testes automatizados.
+8. CI/CD.
+9. Observabilidade e monitoramento.
+10. Avaliação técnica de eventual migração de framework, sem compromisso nesta entrega.

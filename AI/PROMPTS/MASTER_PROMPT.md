@@ -123,7 +123,7 @@ O sistema deverá oferecer:
 
 - TanStack Start Server Functions
 
-Arquitetura preparada para futura migração para Next.js Full Stack.
+Arquitetura preparada para eventual avaliação futura de migração de framework.
 
 ---
 

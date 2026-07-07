@@ -11,7 +11,7 @@ Documento de especificação das interfaces que compõem o protótipo funcional 
 - **Rota:** `/login`
 
 ### Objetivo
-Constitui o ponto de entrada da aplicação, permitindo a autenticação simulada do usuário e a seleção do perfil operacional (Inspetor, Gestor SST ou Auditor), parâmetro que condiciona as permissões e elementos visuais apresentados nas demais telas. Apresenta também o posicionamento institucional da plataforma, contextualizando o usuário quanto às suas funcionalidades centrais.
+Constitui o ponto de entrada da aplicação. Na entrega atual, o login utiliza autenticação real por e-mail, senha e sessão HTTP-only; versões anteriores do protótipo utilizavam autenticação simulada e seleção manual de perfil. A tela apresenta também o posicionamento institucional da plataforma, contextualizando o usuário quanto às suas funcionalidades centrais.
 
 ### Componentes
 - **Campos:** entrada de *e-mail*, entrada de *senha* (mascarada) e seletor de *perfil* implementado por grupo de botões de rádio em formato de cartões selecionáveis (Inspetor, Gestor, Auditor).

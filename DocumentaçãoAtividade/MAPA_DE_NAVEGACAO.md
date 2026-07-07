@@ -1,6 +1,6 @@
 # Mapa de Navegação — Plataforma SST Inspeções
 
-Documento de apoio à entrega acadêmica que descreve, de forma textual e gráfica, o mapa de navegação do protótipo da plataforma de apoio a inspeções, auditorias e fiscalizações de Segurança e Saúde no Trabalho (SST). A descrição reflete as rotas implementadas em `src/routes/` e os vínculos de navegação reais entre as telas, considerando o protótipo de *frontend* com dados mockados, sem *backend* nem autenticação real.
+Documento de apoio à entrega acadêmica que descreve, de forma textual e gráfica, o mapa de navegação da plataforma de apoio a inspeções, auditorias e fiscalizações de Segurança e Saúde no Trabalho (SST). A descrição reflete as rotas implementadas em `src/routes/` e os vínculos de navegação reais entre as telas. Na entrega atual, o fluxo principal possui backend e autenticação real; alguns módulos secundários ainda mantêm dados mockados.
 
 ---
 

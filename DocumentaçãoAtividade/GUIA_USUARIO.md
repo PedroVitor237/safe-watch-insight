@@ -4,7 +4,7 @@
 
 O SST Inspeções é uma plataforma para apoiar atividades de Segurança e Saúde no Trabalho. O sistema reúne, em um só lugar, o cadastro de empresas, modelos de checklists, planejamento de inspeções, registro de não conformidades, acompanhamento de histórico e emissão de relatórios.
 
-Este guia apresenta as principais telas e explica como utilizar o sistema de forma simples. O protótipo utiliza dados de demonstração e algumas ações são simuladas, como anexar arquivos, exportar PDF e autenticar o usuário.
+Este guia apresenta as principais telas e explica como utilizar o sistema de forma simples. A entrega atual possui login real por sessão e fluxo principal integrado ao backend. Alguns módulos ainda utilizam dados de demonstração e ações simuladas, como anexar arquivos e exportar PDF.
 
 ## Objetivo do sistema
 

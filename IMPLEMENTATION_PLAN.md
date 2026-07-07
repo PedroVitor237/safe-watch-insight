@@ -30,7 +30,7 @@ A implementação deve:
 - integrar Prisma ORM;
 - integrar PostgreSQL (Neon);
 - preparar a aplicação para funcionamento offline;
-- manter compatibilidade com futura migração para Next.js.
+- manter a arquitetura desacoplada para permitir avaliação futura de migração de framework, se necessário.
 
 ---
 
@@ -118,7 +118,7 @@ Implementar autenticação básica.
 
 ### Futuro
 
-Preparar arquitetura para JWT.
+Avaliar JWT somente se houver necessidade em uma etapa posterior. A entrega atual utiliza sessões.
 
 ---
 
@@ -365,4 +365,4 @@ Nunca:
 
 # Objetivo Final
 
-Ao término deste plano, a plataforma deverá possuir um backend funcional, integrado ao banco de dados PostgreSQL, substituindo completamente os dados mockados do frontend e mantendo compatibilidade com futuras evoluções, incluindo sincronização offline, upload de imagens, autenticação avançada e migração para Next.js Full Stack.
+Ao término deste plano, a plataforma deverá possuir um backend funcional, integrado ao banco de dados PostgreSQL, substituindo completamente os dados mockados do frontend e mantendo compatibilidade com futuras evoluções, incluindo sincronização offline, upload de imagens, autenticação avançada e eventual avaliação de migração de framework.

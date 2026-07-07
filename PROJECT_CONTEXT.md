@@ -289,15 +289,27 @@ O frontend já está implementado.
 
 Grande parte das telas já existe.
 
-Atualmente utiliza dados mockados.
+O fluxo principal da Atividade 2 já utiliza dados reais integrados ao backend: login, empresas, checklists, itens de checklist, criação de inspeção, execução, respostas e conclusão.
+
+Alguns módulos secundários ainda utilizam dados mockados, como dashboard, não conformidades, relatórios, normas, equipe e simulação offline.
 
 ---
 
 ## Backend
 
-Ainda será implementado.
+O backend base já está implementado com TanStack Start Server Functions, Services, Repositories, Prisma ORM, PostgreSQL e validações Zod.
 
-O objetivo é substituir gradualmente todos os mocks por persistência real utilizando Prisma e PostgreSQL.
+Módulos integrados nesta etapa:
+
+- autenticação por sessão;
+- empresas;
+- checklists;
+- itens de checklist;
+- inspeções;
+- respostas de inspeção;
+- conclusão de inspeção.
+
+O objetivo continua sendo substituir gradualmente os mocks remanescentes por persistência real utilizando Prisma e PostgreSQL.
 
 ---
 

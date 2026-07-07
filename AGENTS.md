@@ -81,9 +81,9 @@ Upload de imagens
 
 O frontend já existe e possui diversas telas implementadas.
 
-Grande parte dessas telas utiliza dados mockados.
+O fluxo principal da Atividade 2 já utiliza integração real com o backend. Alguns módulos secundários ainda utilizam dados mockados.
 
-O objetivo principal é substituir gradualmente todos os mocks por integração real com o backend.
+O objetivo principal é substituir gradualmente os mocks remanescentes por integração real com o backend.
 
 Não reescrever o frontend existente sem necessidade.
 

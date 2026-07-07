@@ -19,7 +19,7 @@ A arquitetura deve:
 - permitir evolução futura;
 - manter compatibilidade com Prisma ORM;
 - manter compatibilidade com PostgreSQL;
-- facilitar futura migração para Next.js Full Stack.
+- facilitar eventual avaliação futura de migração de framework.
 
 ---
 
@@ -492,13 +492,13 @@ Evitar:
 
 ---
 
-# Compatibilidade com Next.js
+# Compatibilidade com Evolução de Framework
 
-Embora o frontend atual utilize TanStack Start, toda a arquitetura foi projetada para facilitar uma futura migração para Next.js Full Stack.
+Embora o frontend atual utilize TanStack Start, toda a arquitetura foi projetada para manter a camada de domínio desacoplada do framework de interface.
 
 A camada de domínio (Services, Repositories e Prisma) deve permanecer independente do framework utilizado no frontend.
 
-Essa decisão reduz o esforço de migração e preserva a maior parte da lógica de negócio.
+Essa decisão permite avaliar uma eventual migração futura com menor impacto e preserva a maior parte da lógica de negócio.
 
 ---
 

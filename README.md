@@ -1,369 +1,202 @@
-# 🛡️ SST Inspeções
+# Safe Watch Insight
 
-Plataforma web para apoio a inspeções, auditorias e fiscalizações de Segurança e Saúde no Trabalho (SST). O sistema permite planejar inspeções, executar checklists, registrar não conformidades, acompanhar planos de ação e visualizar relatórios consolidados.
+Plataforma web para apoio a inspeções, auditorias e fiscalizações de Segurança e Saúde no Trabalho (SST).
 
-# 📌 Sobre o Projeto
+O projeto é desenvolvido como Trabalho de Conclusão de Curso (TCC) em Análise e Desenvolvimento de Sistemas. A entrega atual corresponde à preparação para a Atividade 2, com foco no fluxo principal online: autenticação, cadastro de empresas, cadastro de checklists, itens de checklist, criação de inspeções, execução do checklist, persistência das respostas e conclusão da inspeção.
 
-O SST Inspeções é um protótipo funcional de frontend voltado ao contexto de Segurança e Saúde no Trabalho. A aplicação organiza o fluxo de fiscalização desde o acesso do usuário até a emissão de relatório, passando por cadastro de empresas, biblioteca de checklists, execução de inspeções e tratamento de não conformidades.
+## Objetivo Atual
 
-Atualmente, o projeto utiliza dados mockados em `src/mocks/data.ts` e persistência local no navegador por meio de `localStorage`, implementada em `src/lib/mockStore.ts`. Não há backend externo, banco de dados ou autenticação real configurados no código atual.
+Substituir formulários impressos e planilhas por uma base digital rastreável para inspeções de SST. Nesta etapa, o projeto prioriza o fluxo principal já integrado ao backend, mantendo a arquitetura preparada para futuras evoluções como não conformidades persistidas, evidências, relatórios reais, dashboard com dados reais e funcionamento offline.
 
-Principais funcionalidades disponíveis:
+## Tecnologias
 
-- Login simulado com seleção de perfil: Inspetor, Gestor ou Auditor.
-- Dashboard com indicadores, gráficos e listas operacionais.
-- Consulta e filtro de inspeções.
-- Assistente em três etapas para criação de nova inspeção.
-- Execução de checklist com respostas por item.
-- Geração automática de não conformidades ao marcar itens como NC.
-- Gestão de não conformidades em visão Kanban e Lista.
-- Plano de ação 5W2H para tratamento de NCs.
-- Timeline de eventos em inspeções e não conformidades.
-- Simulação de modo offline e sincronização pendente.
-- Relatórios de inspeções concluídas com impressão e exportação PDF simulada.
-- Telas de consulta para empresas, normas regulamentadoras e equipe.
+- React 19
+- TypeScript
+- TanStack Start
+- TanStack Router
+- TanStack React Query
+- Tailwind CSS 4
+- Radix UI
+- Lucide React
+- Recharts
+- TanStack Start Server Functions
+- Prisma ORM 7
+- PostgreSQL
+- Neon
+- Zod
+- bcrypt
+- TanStack Start sessions
+- Vite
+- Nitro com preset Vercel
 
-# 🧰 Tecnologias Utilizadas
+## Arquitetura
 
-Tecnologias identificadas a partir de `package.json`, `vite.config.ts`, `components.json` e arquivos de configuração:
-
-- **Framework frontend:** React `^19.2.0`
-- **Linguagem:** TypeScript `^5.8.3`
-- **Roteamento e aplicação:** TanStack Router `^1.168.25` e TanStack Start `^1.167.50`
-- **Data fetching/cache:** TanStack React Query `^5.83.0`
-- **Build/dev server:** Vite `^7.3.1`
-- **Configuração Vite/TanStack:** `@lovable.dev/vite-tanstack-config`
-- **Estilização:** Tailwind CSS `^4.2.1`
-- **Componentes de UI:** Radix UI, componentes locais em `src/components/ui` e configuração shadcn-style em `components.json`
-- **Ícones:** Lucide React `^0.575.0`
-- **Gráficos:** Recharts `^2.15.4`
-- **Formulários e validação:** React Hook Form, `@hookform/resolvers` e Zod
-- **Notificações:** Sonner
-- **Utilitários de estilo:** `class-variance-authority`, `clsx` e `tailwind-merge`
-- **Lint:** ESLint `^9.32.0` com TypeScript ESLint, React Hooks e React Refresh
-- **Formatação:** Prettier `^3.7.3`
-- **Gerenciador de pacotes indicado pelo lockfile:** Bun (`bun.lock` e `bunfig.toml`)
-
-# 📁 Estrutura do Projeto
-
-Árvore simplificada:
+O projeto usa arquitetura em camadas:
 
 ```text
-.
-├── src/
-│   ├── components/
-│   │   ├── common/
-│   │   ├── layout/
-│   │   └── ui/
-│   ├── hooks/
-│   ├── lib/
-│   │   └── api/
-│   ├── mocks/
-│   ├── routes/
-│   ├── types/
-│   ├── router.tsx
-│   ├── routeTree.gen.ts
-│   ├── server.ts
-│   ├── start.ts
-│   └── styles.css
-├── components.json
-├── eslint.config.js
-├── package.json
-├── tsconfig.json
-├── vite.config.ts
-├── bun.lock
-└── bunfig.toml
+Tela
+-> React Query
+-> TanStack Start Server Functions
+-> Services
+-> Repositories
+-> Prisma
+-> PostgreSQL
 ```
 
-Finalidade das principais pastas e arquivos:
+As telas nunca acessam Prisma diretamente. Regras de negócio ficam em `src/server/services`, persistência fica em `src/server/repositories`, validações ficam em `src/server/schemas`, e as Server Functions ficam em `src/lib/api`.
 
-- `src/components/common`: componentes compartilhados da aplicação, como cabeçalho de página e badges de status.
-- `src/components/layout`: layout principal autenticado, incluindo menu lateral e barra superior.
-- `src/components/ui`: componentes de interface reutilizáveis baseados em Radix UI/shadcn-style.
-- `src/hooks`: hooks utilitários, como detecção de dispositivo móvel.
-- `src/lib`: funções utilitárias, formatação, configuração server-only, tratamento de erros e store mockada.
-- `src/lib/api`: espaço para funções de API; atualmente contém um exemplo.
-- `src/mocks`: dados mockados usados pelas telas.
-- `src/routes`: rotas file-based da aplicação com as páginas principais.
-- `src/types`: tipos TypeScript do domínio SST.
-- `src/router.tsx`: configuração do router.
-- `src/routeTree.gen.ts`: árvore de rotas gerada pelo TanStack Router.
-- `src/server.ts`: entrada server-side usada pelo TanStack Start.
-- `src/start.ts`: configuração do TanStack Start e middleware de erro.
-- `src/styles.css`: estilos globais e configuração de tema.
-- `vite.config.ts`: configuração Vite usando `@lovable.dev/vite-tanstack-config`.
-- `components.json`: configuração dos componentes shadcn-style.
+## Organização
 
-# ✅ Pré-requisitos
+```text
+src/
+  components/        Componentes reutilizáveis, layout e UI
+  hooks/             Hooks React Query dos módulos integrados
+  lib/
+    api/             Server Functions e query keys
+    mockStore.ts     Store local ainda usada por módulos mockados
+  mocks/             Dados mockados remanescentes
+  routes/            Rotas TanStack Router
+  server/
+    auth/            Sessão autenticada
+    errors/          Erros padronizados
+    prisma/          Prisma Client singleton
+    repositories/    Acesso ao banco
+    responses/       Result e paginação
+    schemas/         Validações Zod
+    services/        Regras de negócio
+    types/           Tipos compartilhados do backend
+    utils/           Utilitários
+  generated/prisma/  Prisma Client gerado
+prisma/              Schema, migrations e seed
+AI/                  Documentação técnica para arquitetura e IA
+Documentation/       Documentação acadêmica
+DocumentaçãoAtividade/ Documentos da atividade/protótipo
+scripts/             Scripts utilitários
+```
 
-Para executar o projeto localmente, é necessário ter:
+## Pré-requisitos
 
-- **Node.js:** recomendado Node.js 22.12 ou superior para compatibilidade com TanStack Start/Vite atuais.
-- **Bun:** recomendado, pois o repositório possui `bun.lock` e `bunfig.toml`.
+- Node.js 22 ou superior recomendado.
+- npm disponível.
+- Bun é opcional; o repositório também possui `bun.lock`.
+- Um banco PostgreSQL. Para a entrega, a documentação considera Neon.
 
-Também é possível usar npm, já que os comandos estão definidos em `package.json` e há `package-lock.json` no repositório.
-
-Verifique as versões instaladas:
+## Instalação
 
 ```bash
-node --version
-bun --version
+npm install
 ```
 
-Opcionalmente, com npm:
-
-```bash
-npm --version
-```
-
-# ⚙️ Instalação
-
-Instale as dependências com Bun:
+Alternativa:
 
 ```bash
 bun install
 ```
 
-Alternativa com npm:
+## Variáveis de Ambiente
 
-```bash
-npm install
-```
-
-# Primeira execução
-
-Após clonar o projeto, configure um arquivo `.env` com base em `.env.example` e execute:
-
-1. Instalar dependências
-
-```bash
-npm install
-```
-
-2. Executar migrations
-
-```bash
-npx prisma migrate deploy
-```
-
-Em desenvolvimento, também é possível usar:
-
-```bash
-npx prisma migrate dev
-```
-
-3. Executar seed
-
-```bash
-npx prisma db seed
-```
-
-4. Iniciar o projeto
-
-```bash
-npm run dev
-```
-
-5. Acessar com o usuário administrador
-
-```text
-Email: admin@demo.com
-Senha: Admin@123
-```
-
-O seed é idempotente e pode ser executado mais de uma vez sem duplicar o usuário, a empresa, o checklist, os itens ou a inspeção demonstrativa.
-
-Para produção na Vercel, configure as variáveis de ambiente, faça o deploy e execute no banco de produção:
-
-```bash
-npx prisma migrate deploy
-npx prisma db seed
-```
-
-# 🚀 Execução em Ambiente de Desenvolvimento
-
-Para iniciar o servidor de desenvolvimento com Bun:
-
-```bash
-bun run dev
-```
-
-Alternativa com npm:
-
-```bash
-npm run dev
-```
-
-O script executa:
-
-```bash
-vite dev
-```
-
-Após iniciar, acesse a URL exibida no terminal, normalmente:
-
-```text
-http://localhost:5173
-```
-
-# 🏗️ Build para Produção
-
-Para gerar a build de produção:
-
-```bash
-bun run build
-```
-
-Alternativa com npm:
-
-```bash
-npm run build
-```
-
-O script executa:
-
-```bash
-vite build
-```
-
-Também existe um script de build em modo development:
-
-```bash
-bun run build:dev
-```
-
-Alternativa com npm:
-
-```bash
-npm run build:dev
-```
-
-# 🔎 Preview da Aplicação
-
-O projeto possui script de preview para visualizar a build localmente:
-
-```bash
-bun run preview
-```
-
-Alternativa com npm:
-
-```bash
-npm run preview
-```
-
-O script executa:
-
-```bash
-vite preview
-```
-
-# 🔐 Variáveis de Ambiente
-
-Crie um arquivo `.env` com base em `.env.example`.
-
-Variáveis necessárias:
+Crie um arquivo `.env` a partir de `.env.example`:
 
 ```env
 DATABASE_URL="postgresql://USER:PASSWORD@HOST/DATABASE?sslmode=require"
 SESSION_SECRET="replace-with-a-secure-random-string"
 ```
 
-- `DATABASE_URL`: conexão PostgreSQL/Neon usada pelo Prisma.
-- `SESSION_SECRET`: segredo usado para assinar/criptografar a sessão do TanStack Start.
+- `DATABASE_URL`: conexão PostgreSQL usada pelo Prisma.
+- `SESSION_SECRET`: segredo da sessão. Em desenvolvimento há fallback interno, mas em produção essa variável deve ser configurada.
 
-As variáveis `INITIAL_ADMIN_NAME`, `INITIAL_ADMIN_EMAIL` e `INITIAL_ADMIN_PASSWORD` não são utilizadas. O usuário administrador de demonstração é criado exclusivamente pelo seed.
+## Banco de Dados e Prisma
 
-# 🧭 Rotas e Páginas Principais
-
-Rotas identificadas em `src/routes`:
-
-- `/`: redireciona para `/login`.
-- `/login`: tela de acesso com autenticação simulada e seleção de perfil.
-- `/dashboard`: visão geral com KPIs, gráficos, NCs críticas e próximas inspeções.
-- `/inspecoes`: lista de inspeções com busca e filtro por status.
-- `/inspecoes/nova`: assistente para criação de inspeção em três etapas.
-- `/inspecoes/$id`: execução e detalhamento da inspeção.
-- `/checklists`: biblioteca de modelos de checklist.
-- `/checklists/$id`: visualizador/editor estrutural de checklist.
-- `/nao-conformidades`: gestão de NCs em Kanban e Lista.
-- `/nao-conformidades/$id`: detalhe da NC, plano 5W2H, status, evidências e timeline.
-- `/relatorios`: seleção e pré-visualização de relatórios de inspeções concluídas.
-- `/empresas`: empresas e unidades fiscalizadas.
-- `/normas`: normas regulamentadoras cadastradas.
-- `/equipe`: profissionais cadastrados e métricas operacionais.
-- `/configuracoes`: aparência, perfil ativo, modo offline, sincronização e restauração de dados mockados.
-
-# ✨ Funcionalidades Implementadas
-
-- Layout interno com menu lateral segmentado em Operação e Cadastros.
-- Barra superior com avatar, notificações, indicador offline e pendências de sincronização.
-- Persistência local de estado no `localStorage` com chave `sst-store-v1`.
-- Login simulado com credenciais livres.
-- Dashboard com cards de indicadores e gráficos em Recharts.
-- Listagem de inspeções com busca textual e filtro de status.
-- Criação de inspeção com seleção de empresa, unidade, checklist, título, data/hora e inspetor.
-- Execução de checklist por seções e itens.
-- Registro de respostas: Conforme, NC e N/A.
-- Campo de observação por item quando necessário.
-- Criação automática de NC quando um item é marcado como não conforme.
-- Simulação de anexo de foto/evidência com notificações toast.
-- Encerramento de inspeção com assinatura via canvas.
-- Timeline para rastreabilidade de inspeções.
-- Kanban de não conformidades por status.
-- Lista tabular de não conformidades.
-- Plano de ação 5W2H para NCs.
-- Alteração de status de NC.
-- Timeline de eventos em NCs.
-- Relatório consolidado de inspeção com dados cadastrais, resumo, detalhamento, NCs e assinatura.
-- Impressão do relatório pelo navegador.
-- Exportação PDF simulada.
-- Modo escuro nas configurações.
-- Modo offline simulado com contador de pendências.
-- Restauração dos dados mockados.
-- Páginas de estado para erro e rota não encontrada.
-
-# 📱 Responsividade
-
-A aplicação utiliza classes responsivas do Tailwind CSS em suas telas e componentes. A estrutura se adapta a diferentes larguras por meio de grids, colunas condicionais e elementos que mudam de disposição conforme o breakpoint.
-
-Exemplos observados no código:
-
-- O Login usa layout em duas colunas em telas grandes e card centralizado em telas menores.
-- O AppShell possui menu lateral recolhível.
-- Cards do Dashboard, Empresas, Normas, Equipe e Checklists usam grids responsivos.
-- A lista de inspeções apresenta cabeçalho tabular em desktop e linhas empilhadas em telas menores.
-- Formulários e painéis usam classes como `sm:`, `md:`, `lg:` e `xl:` para reorganização visual.
-
-# 🧪 Scripts Disponíveis
-
-Scripts definidos em `package.json`:
+Validar schema:
 
 ```bash
-bun run dev
+npm run prisma:validate
 ```
+
+Gerar Prisma Client:
 
 ```bash
-bun run build
+npm run prisma:generate
 ```
+
+Executar migration em desenvolvimento:
 
 ```bash
-bun run build:dev
+npm run prisma:migrate
 ```
+
+Aplicar migrations em ambiente de produção ou banco já preparado:
 
 ```bash
-bun run preview
+npx prisma migrate deploy
 ```
+
+Abrir Prisma Studio:
 
 ```bash
-bun run lint
+npm run prisma:studio
 ```
+
+## Seed
+
+Executar seed:
 
 ```bash
-bun run format
+npm run db:seed
 ```
 
-Equivalentes com npm:
+O seed é idempotente e cria:
+
+- usuário administrador de demonstração;
+- uma empresa;
+- um checklist demonstrativo;
+- quatro itens de checklist;
+- uma inspeção planejada.
+
+Credenciais de demonstração:
+
+```text
+Email: admin@demo.com
+Senha: Admin@123
+```
+
+## Desenvolvimento
+
+Iniciar servidor local:
+
+```bash
+npm run dev
+```
+
+URL padrão:
+
+```text
+http://localhost:5173
+```
+
+## Build
+
+Gerar build de produção:
+
+```bash
+npm run build
+```
+
+O script executa `prisma generate` antes do `vite build`.
+
+Build em modo development:
+
+```bash
+npm run build:dev
+```
+
+Visualizar build local:
+
+```bash
+npm run preview
+```
+
+## Scripts
 
 ```bash
 npm run dev
@@ -372,26 +205,77 @@ npm run build:dev
 npm run preview
 npm run lint
 npm run format
+npm run prisma:generate
+npm run prisma:validate
+npm run prisma:migrate
+npm run prisma:studio
+npm run db:seed
 ```
 
-# 🧭 Próximas Evoluções
+## Funcionalidades Implementadas
 
-Melhorias compatíveis com a arquitetura atual:
+- Login real com e-mail e senha.
+- Sessão HTTP-only com TanStack Start sessions.
+- Proteção das rotas autenticadas.
+- Logout.
+- CRUD de empresas integrado ao backend.
+- CRUD de checklists integrado ao backend.
+- CRUD de itens de checklist integrado ao backend.
+- Criação de inspeções vinculadas a empresa, checklist e usuário autenticado.
+- Listagem e detalhamento de inspeções reais.
+- Execução de checklist por item.
+- Persistência de respostas da inspeção.
+- Alteração automática da inspeção para `IN_PROGRESS` ao salvar resposta.
+- Finalização de inspeção com status `COMPLETED`.
+- Seed demonstrativo para apresentação do fluxo.
+- Dashboard, não conformidades, relatórios, normas, equipe e simulação offline ainda possuem partes mockadas.
 
-- Implementar backend real para autenticação, empresas, inspeções, checklists, NCs e relatórios.
-- Substituir dados mockados por chamadas de API com TanStack Query.
-- Criar formulários reais para cadastro de empresas e modelos de checklist.
-- Implementar upload real de evidências e fotos.
-- Gerar PDF real no fluxo de relatórios.
-- Adicionar controle de permissões por perfil.
-- Criar testes automatizados para fluxos principais.
-- Adicionar arquivo `.env.example` caso novas variáveis sejam introduzidas.
-- Implementar sincronização offline real com fila persistente e resolução de conflitos.
-- Melhorar validações dos formulários com React Hook Form e Zod.
-- Adicionar internacionalização ou padronização completa de textos em português.
+## Fluxo Principal
 
-# 👤 Autor
+```text
+Login
+-> Cadastro/edição de empresa
+-> Cadastro/edição de checklist
+-> Cadastro/edição de itens do checklist
+-> Criação de inspeção
+-> Execução do checklist
+-> Persistência das respostas
+-> Conclusão da inspeção
+```
 
-[Pedro Vitor](https://github.com/PedroVitor237) & [Felipe Ferreira](https://github.com/Fel1ph3)
+## Limitações Atuais
 
-Projeto acadêmico/protótipo de plataforma para inspeções de Segurança e Saúde no Trabalho.
+- Não conformidades ainda não são persistidas no banco quando uma resposta é marcada como não conforme.
+- Ações corretivas ainda não possuem backend integrado.
+- Evidências e upload Cloudinary ainda não foram implementados.
+- Relatórios ainda usam fluxo mockado/simulado.
+- Dashboard ainda usa indicadores mockados.
+- Normas e equipe ainda não estão integradas ao backend.
+- Funcionamento offline real com IndexedDB/Dexie ainda não foi implementado.
+- Assinatura no encerramento da inspeção é usada na tela, mas não é persistida.
+- Não há suíte automatizada de testes.
+
+## Roadmap
+
+- Persistir não conformidades e ações corretivas.
+- Integrar normas aos itens de checklist.
+- Implementar evidências e upload de imagens.
+- Gerar relatórios reais a partir das inspeções.
+- Integrar dashboard a consultas reais.
+- Preparar camada offline com IndexedDB/Dexie.
+- Adicionar testes automatizados para o fluxo principal.
+- Avaliar futuramente alternativas de arquitetura, sem migração prometida para esta entrega.
+
+## Documentação
+
+- `AI/API.md`: documentação das Server Functions implementadas.
+- `GUIA_DO_PROFESSOR.md`: guia em português para avaliação da Atividade 2.
+- `AI/Architecture.md`: arquitetura em camadas.
+- `AI/BusinessRules.md`: regras de negócio.
+- `AI/Database.md`: padrões de banco de dados.
+- `Documentation/`: documentos acadêmicos.
+- `DocumentaçãoAtividade/`: especificações, mapa de navegação, guia do usuário e wireframes.
+
+## Créditos
+
+Projeto acadêmico desenvolvido por Pedro Vitor e Felipe Ferreira para o TCC de Análise e Desenvolvimento de Sistemas.
