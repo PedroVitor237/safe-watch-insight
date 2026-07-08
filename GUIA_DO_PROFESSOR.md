@@ -141,7 +141,7 @@ Organização principal do repositório:
 - `src/mocks`: dados mockados ainda usados por módulos não finalizados.
 - `AI`: documentação técnica e instruções de arquitetura para desenvolvimento assistido por IA.
 - `Documentation`: documentação acadêmica do TCC.
-- `DocumentaçãoAtividade`: documentação visual e funcional da atividade.
+- `DocumentaçãoAtividade`: documentação visual e funcional da atividade 1 (Frontend).
 - `scripts`: scripts utilitários.
 
 # 4. Documentação da atividade
@@ -166,7 +166,7 @@ Principais documentos disponíveis:
 - `Documentation/ModeloConceitualDoBancoDeDados.md`: modelo conceitual.
 - `Documentation/ModeloLogico.md`: modelo lógico.
 - `Documentation/ModeloFisicoDB.md`: modelo físico.
-- `Documentation/EspecificacaoAPIREST`: documento acadêmico de API atualizado para o contexto da entrega.
+- `Documentation/EspecificacaoAPIREST.md`: documento acadêmico de API atualizado para o contexto da entrega.
 - `DocumentaçãoAtividade/ESPECIFICACAO_DE_TELAS.md`: especificação das telas.
 - `DocumentaçãoAtividade/MAPA_DE_NAVEGACAO.md`: mapa de navegação.
 - `DocumentaçãoAtividade/WIREFRAMES.md`: wireframes.
