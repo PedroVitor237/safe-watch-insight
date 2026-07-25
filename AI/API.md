@@ -589,14 +589,15 @@ await listChecklists({ data: { isActive: true } });
   "checklistId": "uuid",
   "description": "Verificar uso adequado de EPIs.",
   "orderIndex": 1,
-  "isRequired": true
+  "isRequired": true,
+  "standardIds": ["uuid-da-nr-6"]
 }
 ```
 
 - **Validação:** `createChecklistItemSchema`.
 - **Query parameters:** não se aplica.
 - **Path parameters:** não se aplica.
-- **Regras relacionadas:** checklist deve existir; se `orderIndex` não for informado, usa o próximo índice disponível.
+- **Regras relacionadas:** checklist deve existir; se `orderIndex` não for informado, usa o próximo índice disponível; todas as normas informadas devem existir e estar ativas.
 - **Exemplo de chamada:**
 
 ```ts
@@ -620,7 +621,8 @@ await createChecklistItem({ data: { checklistId, description, isRequired: true }
   "data": {
     "description": "Nova descrição",
     "isRequired": false,
-    "orderIndex": 2
+    "orderIndex": 2,
+    "standardIds": ["uuid-da-nr-6", "uuid-da-nr-1"]
   }
 }
 ```
@@ -628,7 +630,7 @@ await createChecklistItem({ data: { checklistId, description, isRequired: true }
 - **Validação:** `updateChecklistItemInputSchema`.
 - **Query parameters:** não se aplica.
 - **Path parameters:** `id` no body.
-- **Regras relacionadas:** item deve existir; exige ao menos um campo.
+- **Regras relacionadas:** item deve existir; exige ao menos um campo; quando `standardIds` é informado, substitui atomicamente as associações normativas do item.
 - **Exemplo de chamada:**
 
 ```ts
@@ -682,7 +684,7 @@ await deleteChecklistItem({ data: { id } });
 - **Validação:** `checklistItemsByChecklistIdSchema`.
 - **Query parameters:** não se aplica.
 - **Path parameters:** `checklistId` no body.
-- **Regras relacionadas:** checklist deve existir; itens são retornados ordenados por `orderIndex`.
+- **Regras relacionadas:** checklist deve existir; itens são retornados ordenados por `orderIndex`, incluindo suas normas relacionadas.
 - **Exemplo de chamada:**
 
 ```ts
@@ -869,7 +871,7 @@ await listInspectionResponses({ data: { inspectionId } });
 - **Query parameters:** não se aplica.
 - **Path parameters:** não se aplica.
 - **Status aceitos:** `COMPLIANT`, `NON_COMPLIANT`, `NOT_APPLICABLE`.
-- **Regras relacionadas:** item precisa pertencer ao checklist da inspeção; resposta é única por inspeção + item; inspeção `PLANNED` passa para `IN_PROGRESS` ao salvar resposta.
+- **Regras relacionadas:** item precisa pertencer ao checklist da inspeção; resposta é única por inspeção + item; inspeção `PLANNED` passa para `IN_PROGRESS` ao salvar resposta; `NON_COMPLIANT` cria ou restaura uma única não conformidade na mesma transação; `COMPLIANT` e `NOT_APPLICABLE` arquivam a não conformidade correspondente; inspeções concluídas ou canceladas não aceitam alterações.
 - **Exemplo de chamada:**
 
 ```ts
@@ -903,8 +905,8 @@ await saveInspectionResponse({
 - **Validação:** `inspectionResponseIdSchema`.
 - **Query parameters:** não se aplica.
 - **Path parameters:** `inspectionId` no body.
-- **Regras relacionadas:** inspeção deve existir; status passa para `COMPLETED`.
-- **Limitação atual:** não valida se todos os itens obrigatórios foram respondidos e não persiste assinatura.
+- **Regras relacionadas:** inspeção deve existir; todos os itens obrigatórios devem possuir resposta; status passa para `COMPLETED`; inspeções concluídas ou canceladas não podem ser concluídas novamente.
+- **Limitação atual:** não persiste assinatura.
 - **Exemplo de chamada:**
 
 ```ts
@@ -912,6 +914,135 @@ await finishInspection({ data: { inspectionId } });
 ```
 
 - **Exemplo de resposta:** inspeção atualizada para `COMPLETED`.
+- **Erros possíveis:** `401`, `404`, `422`, `500`.
+
+---
+
+## Standards
+
+### `getStandardById`
+
+- **Finalidade:** consultar uma norma por ID.
+- **Método:** `POST`
+- **Arquivo:** `src/lib/api/standard.functions.ts`
+- **Autenticação:** exige sessão.
+- **Body:** `{ "id": "uuid" }`.
+- **Validação:** `standardIdSchema`.
+- **Resposta:** norma com tipo, código, título, resumo, fonte oficial e vigência.
+- **Erros possíveis:** `401`, `404`, `422`, `500`.
+
+### `listStandards`
+
+- **Finalidade:** listar e pesquisar normas.
+- **Método:** `POST`
+- **Arquivo:** `src/lib/api/standard.functions.ts`
+- **Autenticação:** exige sessão.
+- **Filtros:** `search`, `type`, `isActive`, paginação e ordenação por `code`, `title` ou `type`.
+- **Validação:** `standardFiltersSchema`.
+- **Resposta:** resultado paginado.
+- **Erros possíveis:** `401`, `422`, `500`.
+
+---
+
+## Non-Conformities
+
+### `createNonConformity`
+
+- **Finalidade:** criar manualmente uma não conformidade para uma resposta não conforme que ainda não possua registro.
+- **Método:** `POST`
+- **Arquivo:** `src/lib/api/non-conformity.functions.ts`
+- **Autenticação:** exige sessão.
+- **Body:** `inspectionResponseId`, `description`, `severity`, `dueDate` opcional e `status`.
+- **Validação:** `createNonConformitySchema`.
+- **Regras relacionadas:** a resposta deve existir, estar `NON_COMPLIANT` e não pode possuir outra não conformidade.
+- **Erros possíveis:** `401`, `404`, `409`, `422`, `500`.
+
+### `getNonConformityById`
+
+- **Finalidade:** consultar uma não conformidade ativa com inspeção, empresa, usuário, item, normas, ações corretivas e evidências.
+- **Método:** `POST`
+- **Arquivo:** `src/lib/api/non-conformity.functions.ts`
+- **Autenticação:** exige sessão.
+- **Body:** `{ "id": "uuid" }`.
+- **Validação:** `nonConformityIdSchema`.
+- **Erros possíveis:** `401`, `404`, `422`, `500`.
+
+### `listNonConformities`
+
+- **Finalidade:** listar não conformidades ativas.
+- **Método:** `POST`
+- **Arquivo:** `src/lib/api/non-conformity.functions.ts`
+- **Autenticação:** exige sessão.
+- **Filtros:** `search`, `status`, `severity`, `companyId`, `inspectionId`, `standardId`, paginação e ordenação.
+- **Validação:** `nonConformityFiltersSchema`.
+- **Regras relacionadas:** registros vencidos ainda abertos são marcados como `OVERDUE`.
+- **Erros possíveis:** `401`, `422`, `500`.
+
+### `updateNonConformity`
+
+- **Finalidade:** editar descrição, severidade, prazo ou status.
+- **Método:** `POST`
+- **Arquivo:** `src/lib/api/non-conformity.functions.ts`
+- **Autenticação:** exige sessão.
+- **Body:** `{ "id": "uuid", "data": { ... } }`.
+- **Validação:** `updateNonConformityInputSchema`.
+- **Erros possíveis:** `401`, `404`, `422`, `500`.
+
+### `deleteNonConformity`
+
+- **Finalidade:** arquivar uma não conformidade por soft delete.
+- **Método:** `POST`
+- **Arquivo:** `src/lib/api/non-conformity.functions.ts`
+- **Autenticação:** exige sessão.
+- **Body:** `{ "id": "uuid" }`.
+- **Validação:** `nonConformityIdSchema`.
+- **Erros possíveis:** `401`, `404`, `422`, `500`.
+
+---
+
+## Corrective Actions
+
+### `createCorrectiveAction`
+
+- **Finalidade:** cadastrar ação corretiva para uma não conformidade.
+- **Método:** `POST`
+- **Arquivo:** `src/lib/api/corrective-action.functions.ts`
+- **Autenticação:** exige sessão.
+- **Body:** `nonConformityId`, `description` (o quê), `why` (por quê), `location` (onde), `responsible` (quem), `dueDate` (quando), `method` (como), `estimatedCost` (quanto) e `status`.
+- **Validação:** `createCorrectiveActionSchema`.
+- **Regras relacionadas:** a não conformidade deve existir; uma NC aberta passa para `IN_PROGRESS`.
+- **Erros possíveis:** `401`, `404`, `422`, `500`.
+
+### `listCorrectiveActions`
+
+- **Finalidade:** listar ações ativas de uma não conformidade.
+- **Método:** `POST`
+- **Arquivo:** `src/lib/api/corrective-action.functions.ts`
+- **Autenticação:** exige sessão.
+- **Body:** `{ "nonConformityId": "uuid" }`.
+- **Validação:** `correctiveActionsByNonConformitySchema`.
+- **Regras relacionadas:** ações vencidas ainda pendentes são marcadas como `OVERDUE`.
+- **Erros possíveis:** `401`, `404`, `422`, `500`.
+
+### `updateCorrectiveAction`
+
+- **Finalidade:** editar ou concluir uma ação corretiva.
+- **Método:** `POST`
+- **Arquivo:** `src/lib/api/corrective-action.functions.ts`
+- **Autenticação:** exige sessão.
+- **Body:** `{ "id": "uuid", "data": { ... } }`.
+- **Validação:** `updateCorrectiveActionInputSchema`.
+- **Regras relacionadas:** `COMPLETED` preenche `completedAt`; reabertura remove `completedAt`.
+- **Erros possíveis:** `401`, `404`, `422`, `500`.
+
+### `deleteCorrectiveAction`
+
+- **Finalidade:** arquivar uma ação por soft delete.
+- **Método:** `POST`
+- **Arquivo:** `src/lib/api/corrective-action.functions.ts`
+- **Autenticação:** exige sessão.
+- **Body:** `{ "id": "uuid" }`.
+- **Validação:** `correctiveActionIdSchema`.
 - **Erros possíveis:** `401`, `404`, `422`, `500`.
 
 ---
@@ -960,10 +1091,6 @@ await getGreeting({ data: { name: "Ada" } });
 Os modelos existem no Prisma ou estão previstos na documentação, mas ainda não possuem Server Functions completas nesta entrega:
 
 - Users CRUD.
-- Standards.
-- Associação de normas a itens.
-- NonConformities.
-- CorrectiveActions.
 - Evidence/upload.
 - Reports.
 - Dashboard real.

@@ -9,6 +9,8 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
+    "test": "tsx --test src/server/schemas/sprint.schemas.test.ts src/server/services/inspection-response.service.test.ts",
+    "validate:nc-flow": "tsx scripts/validate-non-conformity-flow.ts",
     "format": "prettier --write .",
     "prisma:generate": "prisma generate",
     "prisma:validate": "prisma validate",

@@ -95,8 +95,12 @@ class Evidence{
 class CorrectiveAction{
 +UUID id
 +String description
++String why
++String location
 +String responsible
 +Date dueDate
++String method
++String estimatedCost
 +CorrectiveActionStatus status
 +DateTime completedAt
 }

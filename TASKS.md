@@ -137,17 +137,17 @@ Legenda
 - [x] Atualizar item
 - [x] Excluir item
 - [/] Reordenar item
-- [ ] Associar normas
+- [x] Associar normas
 
 ---
 
 # FASE 7 — Normas
 
-- [ ] Popular banco com NRs
-- [ ] Criar consulta
-- [ ] Implementar busca
-- [ ] Implementar filtros
-- [ ] Exibir normas relacionadas aos itens
+- [x] Popular banco com NRs
+- [x] Criar consulta
+- [x] Implementar busca
+- [x] Implementar filtros
+- [x] Exibir normas relacionadas aos itens
 
 ---
 
@@ -179,20 +179,20 @@ Legenda
 
 # FASE 10 — Não Conformidades
 
-- [ ] Criar
-- [ ] Editar
-- [ ] Alterar status
-- [ ] Listar
-- [ ] Consultar
+- [x] Criar
+- [x] Editar
+- [x] Alterar status
+- [x] Listar
+- [x] Consultar
 
 ---
 
 # FASE 11 — Ações Corretivas
 
-- [ ] Criar
-- [ ] Atualizar
-- [ ] Concluir
-- [ ] Listar
+- [x] Criar
+- [x] Atualizar
+- [x] Concluir
+- [x] Listar
 
 ---
 
@@ -287,10 +287,10 @@ Legenda
 # FASE 19 — Documentação
 
 - [ ] Atualizar Documento de Requisitos
-- [ ] Atualizar Diagrama de Classes
-- [ ] Atualizar Modelo Físico
-- [ ] Atualizar Schema Prisma
-- [ ] Atualizar README
+- [x] Atualizar Diagrama de Classes
+- [x] Atualizar Modelo Físico
+- [x] Atualizar Schema Prisma
+- [x] Atualizar README
 
 ---
 
@@ -304,7 +304,7 @@ Legenda
 - [x] CRUD de empresas
 - [x] CRUD de checklists
 - [x] CRUD de inspeções
-- [ ] Registro de não conformidades
+- [x] Registro de não conformidades
 - [ ] Upload de evidências
 - [ ] Relatórios
 - [ ] Dashboard funcional

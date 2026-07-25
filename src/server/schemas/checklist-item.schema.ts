@@ -15,6 +15,7 @@ export const createChecklistItemSchema = z.object({
   description: z.string().trim().min(1).max(500),
   orderIndex: optionalOrderIndexSchema,
   isRequired: z.coerce.boolean().default(true),
+  standardIds: z.array(z.string().uuid()).max(50).default([]),
 });
 
 export const updateChecklistItemSchema = z
@@ -22,6 +23,7 @@ export const updateChecklistItemSchema = z
     description: z.string().trim().min(1).max(500).optional(),
     orderIndex: optionalOrderIndexSchema,
     isRequired: z.coerce.boolean().optional(),
+    standardIds: z.array(z.string().uuid()).max(50).optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: "At least one field must be provided.",

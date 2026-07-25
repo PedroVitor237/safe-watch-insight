@@ -243,8 +243,12 @@ model CorrectiveAction {
   id              String                 @id @default(uuid()) @db.Uuid
   nonConformityId String                 @db.Uuid
   description     String
+  why             String?
+  location        String?
   responsible     String?
   dueDate         DateTime?
+  method          String?
+  estimatedCost   String?
   status          CorrectiveActionStatus @default(PENDING)
   completedAt     DateTime?
   createdAt       DateTime               @default(now())

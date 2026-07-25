@@ -4,12 +4,19 @@ import {
   checklistItemRepository,
   ChecklistItemRepository,
 } from "@/server/repositories/checklist-item.repository";
+import {
+  standardRepository as defaultStandardRepository,
+  StandardRepository,
+} from "@/server/repositories/standard.repository";
 import type { Result } from "@/server/responses";
 
 import { BaseService } from "./base.service";
 
 type ChecklistItemEntity = NonNullable<
-  Awaited<ReturnType<ChecklistItemRepository["findById"]>>
+  Awaited<ReturnType<ChecklistItemRepository["findWithStandardsById"]>>
+>;
+type DeletedChecklistItemEntity = Awaited<
+  ReturnType<ChecklistItemRepository["deleteById"]>
 >;
 type ChecklistItemCreateData = Parameters<ChecklistItemRepository["create"]>[0];
 type ChecklistItemUpdateData = Parameters<ChecklistItemRepository["update"]>[1];
@@ -19,18 +26,22 @@ export interface CreateChecklistItemInput {
   description: string;
   orderIndex?: number;
   isRequired?: boolean;
+  standardIds?: string[];
 }
 
 export interface UpdateChecklistItemInput {
   description?: string;
   orderIndex?: number;
   isRequired?: boolean;
+  standardIds?: string[];
 }
 
 export class ChecklistItemService extends BaseService<ChecklistItemRepository> {
   constructor(
     repository: ChecklistItemRepository = checklistItemRepository,
     private readonly checklistRepository = new ChecklistRepository(),
+    private readonly standardRepository: StandardRepository =
+      defaultStandardRepository,
   ) {
     super(repository);
   }
@@ -38,10 +49,15 @@ export class ChecklistItemService extends BaseService<ChecklistItemRepository> {
   async createChecklistItem(input: CreateChecklistItemInput): Promise<Result<ChecklistItemEntity>> {
     return this.execute(async () => {
       await this.ensureChecklistExists(input.checklistId);
+      const standardIds = this.normalizeStandardIds(input.standardIds);
+      await this.ensureStandardsExist(standardIds);
 
       const orderIndex =
         input.orderIndex ?? (await this.repository.getNextOrderIndex(input.checklistId));
-      const item = await this.repository.create(this.toCreateData(input, orderIndex));
+      const item = await this.repository.createWithStandards(
+        this.toCreateData(input, orderIndex),
+        standardIds,
+      );
 
       return this.success(item);
     });
@@ -53,14 +69,23 @@ export class ChecklistItemService extends BaseService<ChecklistItemRepository> {
   ): Promise<Result<ChecklistItemEntity>> {
     return this.execute(async () => {
       await this.ensureChecklistItemExists(id);
+      const standardIds =
+        input.standardIds === undefined
+          ? undefined
+          : this.normalizeStandardIds(input.standardIds);
+      await this.ensureStandardsExist(standardIds ?? []);
 
-      const item = await this.repository.update({ id }, this.toUpdateData(input));
+      const item = await this.repository.updateWithStandards(
+        id,
+        this.toUpdateData(input),
+        standardIds,
+      );
 
       return this.success(item);
     });
   }
 
-  async deleteChecklistItem(id: string): Promise<Result<ChecklistItemEntity>> {
+  async deleteChecklistItem(id: string): Promise<Result<DeletedChecklistItemEntity>> {
     return this.execute(async () => {
       await this.ensureChecklistItemExists(id);
 
@@ -107,13 +132,29 @@ export class ChecklistItemService extends BaseService<ChecklistItemRepository> {
   }
 
   private async ensureChecklistItemExists(id: string): Promise<ChecklistItemEntity> {
-    const item = await this.repository.findById(id);
+    const item = await this.repository.findWithStandardsById(id);
 
     if (!item) {
       throw new NotFoundError("Checklist item not found.");
     }
 
     return item;
+  }
+
+  private async ensureStandardsExist(ids: string[]): Promise<void> {
+    if (ids.length === 0) {
+      return;
+    }
+
+    const standards = await this.standardRepository.findActiveByIds(ids);
+
+    if (standards.length !== ids.length) {
+      throw new NotFoundError("One or more active standards were not found.");
+    }
+  }
+
+  private normalizeStandardIds(ids: string[] | undefined): string[] {
+    return [...new Set(ids ?? [])];
   }
 
   private toCreateData(

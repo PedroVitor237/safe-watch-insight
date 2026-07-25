@@ -286,8 +286,12 @@ Representa uma ação para resolver uma não conformidade.
 
 - id
 - description
+- why
+- location
 - responsible
 - dueDate
+- method
+- estimatedCost
 - status
 - completedAt
 

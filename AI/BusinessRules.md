@@ -147,6 +147,33 @@ Uma não conformidade deve possuir:
 - situação;
 - prazo quando aplicável.
 
+Quando uma resposta de inspeção for registrada como `NON_COMPLIANT`, o sistema
+deve criar automaticamente uma única não conformidade vinculada à resposta.
+
+Na criação automática:
+
+- a descrição inicial utiliza a observação da resposta, quando informada, ou a
+  descrição do item do checklist;
+- a severidade inicial é `MEDIUM`;
+- o status inicial é `OPEN`;
+- o prazo inicial é de sete dias;
+- as normas relacionadas são obtidas pelas associações do item do checklist;
+- empresa, inspeção e usuário responsável pela inspeção permanecem rastreáveis
+  pelo relacionamento da resposta.
+
+Se a resposta for corrigida para `COMPLIANT` ou `NOT_APPLICABLE` antes da
+conclusão da inspeção, a não conformidade correspondente deve ser arquivada por
+soft delete. Se voltar a `NON_COMPLIANT`, o mesmo registro deve ser restaurado,
+preservando seu histórico.
+
+Respostas de inspeções concluídas ou canceladas não podem ser alteradas.
+
+Uma inspeção somente pode ser concluída quando todos os itens obrigatórios
+possuírem resposta.
+
+Não conformidades e ações corretivas com prazo vencido e ainda abertas devem
+ser identificadas com status de atraso.
+
 ---
 
 # Ações Corretivas
@@ -156,11 +183,18 @@ Uma não conformidade pode possuir nenhuma, uma ou várias ações corretivas.
 Cada ação corretiva deve possuir:
 
 - descrição;
+- justificativa, local, método e custo estimado quando informados no plano 5W2H;
 - responsável;
 - prazo;
 - situação.
 
 Uma ação corretiva pode ser concluída posteriormente.
+
+Ao cadastrar a primeira ação corretiva de uma não conformidade aberta, a não
+conformidade passa para `IN_PROGRESS`.
+
+Ao concluir uma ação corretiva, o sistema registra `completedAt`. Se a ação for
+reaberta, esse timestamp deve ser removido.
 
 ---
 

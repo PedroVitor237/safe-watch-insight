@@ -5,6 +5,7 @@ import { ArrowLeft, CheckCircle2, FileSignature, MinusCircle, Trash2, XCircle } 
 import { PageHeader } from "@/components/common/PageHeader";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -231,6 +232,15 @@ function DetalheInspecao() {
                               Item {item.orderIndex}
                               {item.isRequired ? " · obrigatório" : ""}
                             </div>
+                            {item.standards.length > 0 && (
+                              <div className="mt-2 flex flex-wrap gap-1">
+                                {item.standards.map(({ standard }) => (
+                                  <Badge key={standard.id} variant="outline">
+                                    {standard.code}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
                           </div>
                           <div className="flex shrink-0 flex-wrap gap-1.5">
                             <Button

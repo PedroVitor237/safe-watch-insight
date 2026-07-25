@@ -315,6 +315,24 @@ Cloudinary.
 
 ---
 
+# Plano de Ação 5W2H
+
+`CorrectiveAction` representa o plano 5W2H sem serialização ou duplicação de
+entidades:
+
+- `description`: o quê;
+- `why`: por quê;
+- `location`: onde;
+- `responsible`: quem;
+- `dueDate`: quando;
+- `method`: como;
+- `estimatedCost`: quanto.
+
+Os campos adicionais são opcionais para manter compatibilidade com ações
+corretivas simples e registros anteriores.
+
+---
+
 # Índices
 
 Criar índices para campos frequentemente utilizados.
@@ -386,6 +404,11 @@ Usuário administrador
 Templates básicos de Checklist
 
 As seeds devem ser idempotentes.
+
+O seed atual cadastra as NRs de `NR-1` a `NR-38`, mantém `NR-2` e `NR-27`
+inativas por estarem revogadas e associa normas aplicáveis aos itens do
+checklist demonstrativo. A fonte de consulta registrada é o catálogo oficial do
+Ministério do Trabalho e Emprego.
 
 ---
 

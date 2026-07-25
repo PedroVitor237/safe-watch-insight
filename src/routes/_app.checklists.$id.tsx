@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +25,7 @@ import {
   useUpdateChecklistItem,
 } from "@/hooks/useChecklistItems";
 import { useChecklist } from "@/hooks/useChecklists";
+import { useStandards } from "@/hooks/useStandards";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/checklists/$id")({
@@ -38,11 +40,12 @@ function EditorChecklist() {
   const createItem = useCreateChecklistItem();
   const updateItem = useUpdateChecklistItem();
   const deleteItem = useDeleteChecklistItem();
+  const standardsQuery = useStandards({ type: "NR", isActive: true });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [form, setForm] = useState<ChecklistItemFormState>(emptyChecklistItemForm);
   const checklist = checklistResult?.success ? checklistResult.data : null;
-  const items = itemsResult?.success ? itemsResult.data : checklist?.items ?? [];
+  const items = itemsResult?.success ? itemsResult.data : [];
 
   if (isLoading) {
     return <div className="p-8 text-sm text-muted-foreground">Carregando checklist...</div>;
@@ -63,6 +66,7 @@ function EditorChecklist() {
     setForm({
       description: item.description,
       isRequired: item.isRequired,
+      standardIds: item.standards.map((relation) => relation.standard.id),
     });
     setDialogOpen(true);
   }
@@ -80,6 +84,7 @@ function EditorChecklist() {
           checklistId: id,
           description: form.description,
           isRequired: form.isRequired,
+          standardIds: form.standardIds,
         });
 
     if (!result.success) {
@@ -168,6 +173,15 @@ function EditorChecklist() {
                     <div className="mt-1 text-xs text-muted-foreground">
                       {item.isRequired ? "Obrigatório" : "Opcional"}
                     </div>
+                    {item.standards.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {item.standards.map(({ standard }) => (
+                          <Badge key={standard.id} variant="outline">
+                            {standard.code}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={() => openEditDialog(item)}>
@@ -211,6 +225,43 @@ function EditorChecklist() {
                 onCheckedChange={(checked) => setForm({ ...form, isRequired: checked })}
               />
             </div>
+            <div className="space-y-2">
+              <Label>Normas aplicáveis</Label>
+              <div className="max-h-52 space-y-2 overflow-y-auto rounded-md border p-3">
+                {standardsQuery.isLoading && (
+                  <p className="text-sm text-muted-foreground">Carregando normas...</p>
+                )}
+                {standardsQuery.data?.success === false && (
+                  <p className="text-sm text-destructive">{standardsQuery.data.message}</p>
+                )}
+                {standardsQuery.data?.success &&
+                  standardsQuery.data.data.items.map((standard) => {
+                    const checked = form.standardIds.includes(standard.id);
+
+                    return (
+                      <label
+                        key={standard.id}
+                        className="flex cursor-pointer items-start gap-2 rounded p-1 hover:bg-muted"
+                      >
+                        <Checkbox
+                          checked={checked}
+                          onCheckedChange={(value) =>
+                            setForm({
+                              ...form,
+                              standardIds: value
+                                ? [...form.standardIds, standard.id]
+                                : form.standardIds.filter((id) => id !== standard.id),
+                            })
+                          }
+                        />
+                        <span className="text-sm">
+                          <strong>{standard.code}</strong> — {standard.title}
+                        </span>
+                      </label>
+                    );
+                  })}
+              </div>
+            </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                 Cancelar
@@ -229,9 +280,11 @@ function EditorChecklist() {
 interface ChecklistItemFormState {
   description: string;
   isRequired: boolean;
+  standardIds: string[];
 }
 
 const emptyChecklistItemForm: ChecklistItemFormState = {
   description: "",
   isRequired: true,
+  standardIds: [],
 };

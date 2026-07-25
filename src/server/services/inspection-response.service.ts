@@ -1,5 +1,10 @@
-import { InspectionStatus, type ResponseStatus } from "@/generated/prisma/client";
-import { ApiError, NotFoundError } from "@/server/errors";
+import {
+  InspectionStatus,
+  NonConformityStatus,
+  ResponseStatus,
+  Severity,
+} from "@/generated/prisma/client";
+import { ApiError, ConflictError, NotFoundError } from "@/server/errors";
 import {
   inspectionResponseRepository,
   InspectionResponseRepository,
@@ -46,15 +51,32 @@ export class InspectionResponseService extends BaseService<InspectionResponseRep
   ): Promise<Result<InspectionResponseWithRelations>> {
     return this.execute(async () => {
       const inspection = await this.ensureInspectionExists(input.inspectionId);
-      this.ensureChecklistItemBelongsToInspection(inspection, input.checklistItemId);
+      this.ensureInspectionCanBeEdited(inspection);
+      const checklistItem = this.getChecklistItem(
+        inspection,
+        input.checklistItemId,
+      );
 
-      const response = await this.repository.upsertByInspectionAndItem(
+      const response = await this.repository.saveWithNonConformity(
         input.inspectionId,
         input.checklistItemId,
         {
           status: input.status,
           observation: input.observation ?? null,
         },
+        input.status === ResponseStatus.NON_COMPLIANT
+          ? {
+              action: "ensure",
+              description:
+                input.observation?.trim() || checklistItem.description,
+              severity: Severity.MEDIUM,
+              dueDate: addDays(new Date(), 7),
+              status: NonConformityStatus.OPEN,
+            }
+          : {
+              action: "archive",
+              archivedAt: new Date(),
+            },
       );
 
       if (inspection.status === InspectionStatus.PLANNED) {
@@ -67,7 +89,9 @@ export class InspectionResponseService extends BaseService<InspectionResponseRep
 
   async finishInspection(inspectionId: string): Promise<Result<InspectionWithRelations>> {
     return this.execute(async () => {
-      await this.ensureInspectionExists(inspectionId);
+      const currentInspection = await this.ensureInspectionExists(inspectionId);
+      this.ensureInspectionCanBeEdited(currentInspection);
+      this.ensureRequiredItemsWereAnswered(currentInspection);
 
       const inspection = await this.inspectionRepository.updateStatus(
         inspectionId,
@@ -100,16 +124,55 @@ export class InspectionResponseService extends BaseService<InspectionResponseRep
     return inspection;
   }
 
-  private ensureChecklistItemBelongsToInspection(
+  private getChecklistItem(
     inspection: InspectionWithRelations,
     checklistItemId: string,
-  ): void {
-    const itemExists = inspection.checklist.items.some((item) => item.id === checklistItemId);
+  ): InspectionWithRelations["checklist"]["items"][number] {
+    const item = inspection.checklist.items.find(
+      (candidate) => candidate.id === checklistItemId,
+    );
 
-    if (!itemExists) {
+    if (!item) {
       throw new NotFoundError("Checklist item not found for this inspection.");
+    }
+
+    return item;
+  }
+
+  private ensureInspectionCanBeEdited(
+    inspection: InspectionWithRelations,
+  ): void {
+    if (
+      inspection.status === InspectionStatus.COMPLETED ||
+      inspection.status === InspectionStatus.CANCELLED
+    ) {
+      throw new ConflictError("Completed or cancelled inspections cannot be edited.");
+    }
+  }
+
+  private ensureRequiredItemsWereAnswered(
+    inspection: InspectionWithRelations,
+  ): void {
+    const answeredItemIds = new Set(
+      inspection.responses.map((response) => response.checklistItemId),
+    );
+    const missingRequiredItems = inspection.checklist.items.filter(
+      (item) => item.isRequired && !answeredItemIds.has(item.id),
+    );
+
+    if (missingRequiredItems.length > 0) {
+      throw new ConflictError(
+        `${missingRequiredItems.length} required checklist item(s) still need a response.`,
+      );
     }
   }
 }
 
 export const inspectionResponseService = new InspectionResponseService();
+
+function addDays(date: Date, days: number): Date {
+  const result = new Date(date);
+  result.setUTCDate(result.getUTCDate() + days);
+
+  return result;
+}

@@ -7,6 +7,7 @@ import {
 } from "@/lib/api/inspection-response.functions";
 import { inspectionResponseQueryKeys } from "@/lib/api/inspection-response.query-keys";
 import { inspectionQueryKeys } from "@/lib/api/inspection.query-keys";
+import { nonConformityQueryKeys } from "@/lib/api/non-conformity.query-keys";
 import type { SaveInspectionResponseSchemaInput } from "@/server/schemas/inspection-response.schema";
 
 export interface UseInspectionResponsesOptions {
@@ -45,6 +46,9 @@ export function useSaveInspectionResponse() {
         }),
         queryClient.invalidateQueries({
           queryKey: inspectionQueryKeys.lists(),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: nonConformityQueryKeys.lists(),
         }),
       ]);
     },

@@ -22,6 +22,13 @@ const inspectionRelations = {
         orderBy: {
           orderIndex: "asc",
         },
+        include: {
+          standards: {
+            include: {
+              standard: true,
+            },
+          },
+        },
       },
     },
   },
@@ -38,7 +45,16 @@ const inspectionRelations = {
   },
   responses: {
     include: {
-      checklistItem: true,
+      checklistItem: {
+        include: {
+          standards: {
+            include: {
+              standard: true,
+            },
+          },
+        },
+      },
+      nonConformity: true,
     },
   },
 } satisfies Prisma.InspectionInclude;

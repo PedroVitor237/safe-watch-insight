@@ -6,7 +6,7 @@ O projeto é desenvolvido como Trabalho de Conclusão de Curso (TCC) em Análise
 
 ## Objetivo Atual
 
-Substituir formulários impressos e planilhas por uma base digital rastreável para inspeções de SST. Nesta etapa, o projeto prioriza o fluxo principal já integrado ao backend, mantendo a arquitetura preparada para futuras evoluções como não conformidades persistidas, evidências, relatórios reais, dashboard com dados reais e funcionamento offline.
+Substituir formulários impressos e planilhas por uma base digital rastreável para inspeções de SST. Nesta etapa, o projeto integra o fluxo principal, normas, não conformidades e ações corretivas ao backend, mantendo a arquitetura preparada para futuras evoluções como evidências, relatórios reais, dashboard com dados reais e funcionamento offline.
 
 ## Tecnologias
 
@@ -151,6 +151,8 @@ O seed é idempotente e cria:
 - uma empresa;
 - um checklist demonstrativo;
 - quatro itens de checklist;
+- 38 Normas Regulamentadoras, mantendo as revogadas como inativas;
+- associações normativas dos itens demonstrativos;
 - uma inspeção planejada.
 
 Credenciais de demonstração:
@@ -204,6 +206,8 @@ npm run build
 npm run build:dev
 npm run preview
 npm run lint
+npm test
+npm run validate:nc-flow
 npm run format
 npm run prisma:generate
 npm run prisma:validate
@@ -221,14 +225,20 @@ npm run db:seed
 - CRUD de empresas integrado ao backend.
 - CRUD de checklists integrado ao backend.
 - CRUD de itens de checklist integrado ao backend.
+- Catálogo de NRs com busca, filtro de vigência e fonte oficial.
+- Associação de uma ou mais normas aos itens de checklist.
 - Criação de inspeções vinculadas a empresa, checklist e usuário autenticado.
 - Listagem e detalhamento de inspeções reais.
 - Execução de checklist por item.
 - Persistência de respostas da inspeção.
+- Criação e arquivamento automático de não conformidades conforme a resposta.
+- CRUD, filtros, Kanban, detalhe e alteração de status de não conformidades.
+- CRUD e conclusão de ações corretivas.
+- Bloqueio da conclusão enquanto itens obrigatórios estiverem sem resposta.
 - Alteração automática da inspeção para `IN_PROGRESS` ao salvar resposta.
 - Finalização de inspeção com status `COMPLETED`.
 - Seed demonstrativo para apresentação do fluxo.
-- Dashboard, não conformidades, relatórios, normas, equipe e simulação offline ainda possuem partes mockadas.
+- Dashboard, relatórios, equipe e simulação offline ainda possuem partes mockadas.
 
 ## Fluxo Principal
 
@@ -237,33 +247,31 @@ Login
 -> Cadastro/edição de empresa
 -> Cadastro/edição de checklist
 -> Cadastro/edição de itens do checklist
+-> Associação de normas aos itens
 -> Criação de inspeção
 -> Execução do checklist
 -> Persistência das respostas
+-> Criação automática e tratamento de não conformidades
 -> Conclusão da inspeção
 ```
 
 ## Limitações Atuais
 
-- Não conformidades ainda não são persistidas no banco quando uma resposta é marcada como não conforme.
-- Ações corretivas ainda não possuem backend integrado.
 - Evidências e upload Cloudinary ainda não foram implementados.
 - Relatórios ainda usam fluxo mockado/simulado.
 - Dashboard ainda usa indicadores mockados.
-- Normas e equipe ainda não estão integradas ao backend.
+- Equipe ainda não está integrada ao backend.
 - Funcionamento offline real com IndexedDB/Dexie ainda não foi implementado.
 - Assinatura no encerramento da inspeção é usada na tela, mas não é persistida.
-- Não há suíte automatizada de testes.
+- A cobertura automatizada ainda está concentrada nas regras deste sprint e precisa ser expandida para os demais módulos.
 
 ## Roadmap
 
-- Persistir não conformidades e ações corretivas.
-- Integrar normas aos itens de checklist.
 - Implementar evidências e upload de imagens.
 - Gerar relatórios reais a partir das inspeções.
 - Integrar dashboard a consultas reais.
 - Preparar camada offline com IndexedDB/Dexie.
-- Adicionar testes automatizados para o fluxo principal.
+- Expandir os testes automatizados para os demais fluxos.
 - Avaliar futuramente alternativas de arquitetura, sem migração prometida para esta entrega.
 
 ## Documentação

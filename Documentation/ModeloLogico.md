@@ -114,8 +114,12 @@ CORRECTIVE_ACTION {
     string id PK
     string nonConformityId FK
     string description
+    string why
+    string location
     string responsible
     date dueDate
+    string method
+    string estimatedCost
     string status
     datetime completedAt
 }
@@ -310,8 +314,12 @@ INSPECTION ||--|| REPORT : generates
 | id                | UUID     | PK        |
 | non_conformity_id | UUID     | FK        |
 | description       | TEXT     | NOT NULL  |
+| why               | TEXT     | NULL      |
+| location          | VARCHAR  | NULL      |
 | responsible       | VARCHAR  | NULL      |
 | due_date          | DATE     | NULL      |
+| method            | TEXT     | NULL      |
+| estimated_cost    | VARCHAR  | NULL      |
 | status            | ENUM     | NOT NULL  |
 | completed_at      | DATETIME | NULL      |
 

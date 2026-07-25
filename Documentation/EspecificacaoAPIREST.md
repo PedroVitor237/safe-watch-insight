@@ -124,6 +124,26 @@ Erro:
 - `saveInspectionResponse`
 - `finishInspection`
 
+### Normas
+
+- `getStandardById`
+- `listStandards`
+
+### Não Conformidades
+
+- `createNonConformity`
+- `getNonConformityById`
+- `listNonConformities`
+- `updateNonConformity`
+- `deleteNonConformity`
+
+### Ações Corretivas
+
+- `createCorrectiveAction`
+- `listCorrectiveActions`
+- `updateCorrectiveAction`
+- `deleteCorrectiveAction`
+
 ### Exemplo técnico
 
 - `getGreeting`
@@ -135,10 +155,6 @@ Erro:
 Os seguintes módulos estão previstos no projeto ou modelados parcialmente no banco, mas ainda não possuem API completa nesta entrega:
 
 - usuários administrativos;
-- normas;
-- associação de normas a itens;
-- não conformidades persistidas;
-- ações corretivas;
 - evidências e upload;
 - relatórios reais;
 - dashboard real;

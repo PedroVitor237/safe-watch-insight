@@ -15,16 +15,59 @@ export class ChecklistItemRepository extends BaseRepository<
     super(prisma.checklistItem);
   }
 
-  findByChecklistId(checklistId: string): Promise<ChecklistItem[]> {
+  findByChecklistId(checklistId: string): Promise<ChecklistItemWithStandards[]> {
     return prisma.checklistItem.findMany({
       where: { checklistId },
       orderBy: { orderIndex: "asc" },
+      include: checklistItemRelations,
     });
   }
 
-  findById(id: string): Promise<ChecklistItem | null> {
+  findWithStandardsById(id: string): Promise<ChecklistItemWithStandards | null> {
     return prisma.checklistItem.findUnique({
       where: { id },
+      include: checklistItemRelations,
+    });
+  }
+
+  createWithStandards(
+    data: Prisma.ChecklistItemCreateInput,
+    standardIds: string[],
+  ): Promise<ChecklistItemWithStandards> {
+    return prisma.checklistItem.create({
+      data: {
+        ...data,
+        standards: {
+          create: standardIds.map((standardId) => ({
+            standard: { connect: { id: standardId } },
+          })),
+        },
+      },
+      include: checklistItemRelations,
+    });
+  }
+
+  updateWithStandards(
+    id: string,
+    data: Prisma.ChecklistItemUpdateInput,
+    standardIds?: string[],
+  ): Promise<ChecklistItemWithStandards> {
+    return prisma.checklistItem.update({
+      where: { id },
+      data: {
+        ...data,
+        ...(standardIds
+          ? {
+              standards: {
+                deleteMany: {},
+                create: standardIds.map((standardId) => ({
+                  standard: { connect: { id: standardId } },
+                })),
+              },
+            }
+          : {}),
+      },
+      include: checklistItemRelations,
     });
   }
 
@@ -49,5 +92,17 @@ export class ChecklistItemRepository extends BaseRepository<
     });
   }
 }
+
+const checklistItemRelations = {
+  standards: {
+    include: {
+      standard: true,
+    },
+  },
+} satisfies Prisma.ChecklistItemInclude;
+
+export type ChecklistItemWithStandards = Prisma.ChecklistItemGetPayload<{
+  include: typeof checklistItemRelations;
+}>;
 
 export const checklistItemRepository = new ChecklistItemRepository();

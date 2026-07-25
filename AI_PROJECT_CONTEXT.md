@@ -2,7 +2,7 @@
 
 Primary context document for future AI assistants working on this repository.
 
-Last analyzed: 2026-07-07.
+Last analyzed: 2026-07-25.
 
 This document is based on the repository documentation and the current code implementation. When documentation and implementation diverge, the divergence is called out explicitly.
 
@@ -20,7 +20,7 @@ Current stage:
 - Backend architecture is partially implemented with TanStack Start Server Functions, services, repositories, Prisma, PostgreSQL, Zod, and sessions.
 - Some frontend modules already use real Server Functions and React Query.
 - Several modules still use `src/lib/mockStore.ts` and `src/mocks/data.ts`.
-- Offline, upload, reports, non-conformity persistence, corrective actions, standards API, and dashboard integration are not complete.
+- Offline, upload, reports, team/users, and dashboard integration are not complete.
 
 Technologies currently present:
 
@@ -128,9 +128,9 @@ The backend lives in `src/server` and is consumed through TanStack Start Server 
 Implemented layers:
 
 - Prisma singleton: `src/server/prisma/client.ts`.
-- Repositories: base, user, company, checklist, checklist-item, inspection, inspection-response.
-- Services: user, company, checklist, checklist-item, inspection, inspection-response.
-- Schemas: auth, pagination, company, checklist, checklist-item, inspection, inspection-response.
+- Repositories: base, user, company, checklist, checklist-item, standard, inspection, inspection-response, non-conformity, corrective-action.
+- Services: user, company, checklist, checklist-item, standard, inspection, inspection-response, non-conformity, corrective-action.
+- Schemas: auth, pagination, company, checklist, checklist-item, standard, inspection, inspection-response, non-conformity, corrective-action.
 - Errors/responses: `ApiError`, `NotFoundError`, `ConflictError`, `UnauthorizedError`, `ValidationError`, `Result`, pagination.
 
 ## Database
@@ -222,21 +222,24 @@ Relationships:
 
 Migrations:
 
-- One migration exists: `prisma/migrations/20260705165125_init/migration.sql`.
-- It creates the enums, tables, indexes, unique constraints, and foreign keys.
+- Two migrations exist: the initial schema in `20260705165125_init` and the
+  additive 5W2H fields for corrective actions in
+  `20260725180000_add_corrective_action_5w2h`.
+- They create the enums, tables, indexes, constraints, foreign keys, and the
+  optional `why`, `location`, `method`, and `estimatedCost` fields.
 - Migration lock provider is PostgreSQL.
 
 Seed:
 
-- `prisma/seed.ts` is idempotent for the demo admin, company, checklist, checklist items, and one planned inspection.
-- It does not seed standards, non-conformities, corrective actions, evidence, or reports.
+- `prisma/seed.ts` is idempotent for the demo admin, company, checklist, checklist items, one planned inspection, all 38 NRs, and the demo item-standard associations.
+- It does not seed non-conformities, corrective actions, evidence, or reports.
 
 Current status:
 
 - Schema is broadly aligned with the academic database documents.
 - `deletedAt` soft-delete fields are implemented on several models.
 - `ChecklistItem`, `Standard`, `ChecklistItemStandard`, `InspectionResponse`, and `Report` do not all have `updatedAt`; this mostly matches the current schema but should be checked before adding audit requirements.
-- The code has repositories/services only for users, companies, checklists, inspections, and inspection responses. Models for standards, non-conformities, corrective actions, evidence, and reports exist but lack complete backend modules.
+- The code has repositories/services for users/authentication, companies, checklists/items, standards, inspections/responses, non-conformities, and corrective actions. Evidence and reports remain without complete backend modules.
 
 ---
 
@@ -271,11 +274,23 @@ Implemented APIs and behavior:
   - Upsert response by inspection + checklist item.
   - Verifies the checklist item belongs to the inspection checklist.
   - Moves inspection from `PLANNED` to `IN_PROGRESS` on first saved response.
-  - Finishes inspection by setting status to `COMPLETED`.
+  - Creates/restores or archives the related non-conformity transactionally according to the response status.
+  - Rejects changes to completed or cancelled inspections.
+  - Finishes inspection only after all required items have answers.
+- Standards:
+  - Get by ID and paginated list/search/filter.
+  - Active standard association and retrieval through checklist items.
+- Non-conformities:
+  - Create, update, soft delete, get by ID, list/search/filter, and status changes.
+  - Includes inspection, company, user, checklist item, standards, corrective actions, and evidence.
+  - Marks overdue open records.
+- Corrective actions:
+  - Create, update, complete, soft delete, and list by non-conformity.
+  - Maintains `completedAt` and marks overdue actions.
 
 Validations:
 
-- Zod schemas exist for login, pagination/list filters, companies, checklists, checklist items, inspections, and inspection responses.
+- Zod schemas exist for login, pagination/list filters, companies, checklists, checklist items, standards, inspections, inspection responses, non-conformities, and corrective actions.
 - Pagination defaults to page 1 and pageSize 20, capped at 100.
 
 Business rules implemented:
@@ -286,21 +301,20 @@ Business rules implemented:
 - Checklist item deletion is blocked when the item already has inspection responses.
 - Inspection creation requires valid company/checklist.
 - Inspection response must refer to an item in the inspection's checklist.
+- Non-compliant responses automatically create one non-conformity; corrected responses archive it.
+- Completed/cancelled inspections are immutable and required items must be answered before completion.
+- Corrective actions are linked to active non-conformities and record completion timestamps.
 - Passwords are hashed in seed and checked with bcrypt.
 
 Business rules not yet implemented:
 
 - User CRUD.
-- Checklist item reordering UI and standard association.
-- Standards API.
-- Automatic NonConformity creation when a response is `NON_COMPLIANT`.
-- Corrective actions.
+- Checklist item reordering UI.
 - Evidence upload/storage workflow.
 - Report generation/persistence/download.
 - Dashboard real aggregate queries.
 - Authorization/role-based access control.
 - Offline sync.
-- Required-item enforcement before finishing inspection.
 
 ---
 
@@ -318,10 +332,10 @@ Implemented pages/routes:
 - `/checklists`: real checklist list with create/edit/delete UI.
 - `/checklists/$id`: real checklist detail with item create/edit/delete UI.
 - `/empresas`: real company list with create/edit/delete UI.
-- `/nao-conformidades`: mock Kanban/list from `mockStore`.
-- `/nao-conformidades/$id`: mock NC detail, 5W2H editing, status change, evidence mock.
+- `/nao-conformidades`: real Prisma-backed Kanban/list with search and severity filter.
+- `/nao-conformidades/$id`: real NC detail/edit/status, related standards, corrective-action CRUD, evidence read-only state, and derived history.
 - `/relatorios`: mock report preview/print/PDF toast from `mockStore`.
-- `/normas`: mock standards from `src/mocks/data.ts`.
+- `/normas`: real standards catalog with search and vigency filter.
 - `/equipe`: mock users plus mock workload metrics.
 - `/configuracoes`: mock dark-mode toggle, profile selection, offline simulation, mock reset.
 
@@ -331,17 +345,17 @@ Completed/integrated modules:
 - Real CRUD UI for companies, checklists, and checklist items.
 - Real inspection creation.
 - Real inspection response saving and completion status update.
+- Real standards catalog and checklist-item associations.
+- Real non-conformity and corrective-action management.
 
 Unfinished modules:
 
 - Checklist item ordering is supported by the backend field but has no dedicated drag/reorder UI.
-- Checklist items are not associated with standards yet.
-- Non-conformities are not backed by Prisma despite the model existing.
 - Reports are mock-only.
 - Dashboard is mock-only.
-- Norms and team are mock-only.
+- Team is mock-only.
 - Offline is simulated only with `localStorage`.
-- Evidence upload is simulated only.
+- Evidence upload is not implemented; persisted evidence is read-only in the NC detail.
 
 ---
 
@@ -389,9 +403,9 @@ Estimated from current code, not from unchecked task boxes in `TASKS.md`:
 - Inspection create/list/detail backend and UI.
 - Inspection response upsert and completion flow.
 - Mock dashboard with charts.
-- Mock NC Kanban/list/detail with 5W2H.
+- Prisma-backed NC Kanban/list/detail and corrective actions.
 - Mock report preview/print/PDF toast.
-- Mock norms, team, settings/offline simulation.
+- Real standards catalog; mock team and settings/offline simulation.
 - Shared formatters for dates and CNPJ.
 - Shared status badge mapping for legacy UI statuses.
 - Custom SSR error wrapper in `src/server.ts` and request middleware in `src/start.ts`.
@@ -402,19 +416,14 @@ Estimated from current code, not from unchecked task boxes in `TASKS.md`:
 
 - Add role-based authorization checks; current Server Functions require authentication but do not enforce permissions by role.
 - User CRUD and role management.
-- Checklist item reordering UI and standard association.
-- Standards seed and API/UI integration.
-- Automatic non-conformity creation from non-compliant responses.
-- Non-conformity backend, services, repositories, hooks, UI integration.
-- Corrective action backend/UI.
+- Checklist item reordering UI.
 - Evidence upload architecture and Cloudinary integration.
 - Report generation, persistence, and PDF/download implementation.
 - Dashboard aggregate backend and integration.
 - Real team/users screen.
 - Offline IndexedDB/Dexie layer, queue, conflict handling, PWA/service worker.
-- Required item validation before finishing an inspection.
 - Persist signature if signature is part of final scope.
-- Tests. No automated test suite was found.
+- Broader automated coverage beyond the sprint tests and integrated validation script.
 - Documentation updates to reflect backend progress and remaining mock modules.
 
 ---
@@ -424,8 +433,6 @@ Estimated from current code, not from unchecked task boxes in `TASKS.md`:
 Confirmed or strongly indicated by code:
 
 - Server Functions require authenticated sessions for business modules, but do not enforce role-based authorization yet.
-- Non-compliant inspection responses do not create a `NonConformity` database record, despite documentation and older prototype behavior saying they should.
-- Finishing an inspection does not validate that required checklist items are answered.
 - Inspection completion does not persist the drawn signature.
 - Dashboard "Proximas inspeções" links use mock IDs against the real `/inspecoes/$id` route, which can lead to "Inspeção não encontrada" when mock IDs do not exist in the database.
 - Reports still read mock inspections, so real completed inspections do not appear in `/relatorios`.
@@ -507,23 +514,11 @@ According to `IMPLEMENTATION_PLAN.md`, `TASKS.md`, and the actual code state, th
    - Remove credential logs.
    - Require authenticated user in server mutations and sensitive reads.
    - Stop accepting `createdById` from the client.
-2. Finish real integration for existing partially integrated modules:
-   - Company create/edit/delete UI.
-   - Checklist create/edit/delete UI.
-   - Checklist items CRUD and rendering.
-3. Implement standards:
-   - Seed official NRs.
-   - Add repository/service/schema/functions/hooks.
-   - Associate standards to checklist items.
-4. Complete inspection flow:
-   - Required item validation.
-   - Create NC records from `NON_COMPLIANT` responses.
-   - Decide whether/how to persist signatures.
-5. Implement non-conformities and corrective actions with Prisma.
-6. Replace dashboard and reports mocks with real backend data.
-7. Prepare evidence upload structure and then Cloudinary if time allows.
-8. Add tests or at least repeatable validation scripts for critical flows.
-9. Update outdated documentation.
+2. Finish checklist item reordering and decide whether/how to persist signatures.
+3. Replace dashboard and reports mocks with real backend data.
+4. Prepare evidence upload structure and then Cloudinary if time allows.
+5. Expand automated and browser-level coverage for the remaining critical flows.
+6. Update remaining outdated prototype documentation.
 
 ---
 
@@ -533,33 +528,21 @@ According to `IMPLEMENTATION_PLAN.md`, `TASKS.md`, and the actual code state, th
    - Remove `console.info` credential logs.
    - Add `requireAuthenticatedUser()` to mutating Server Functions.
    - Derive `createdById` from session in company/checklist creation.
-2. Company UI:
-   - Add create/edit dialogs/forms using React Hook Form + Zod.
-   - Wire `useCreateCompany`, `useUpdateCompany`, `useDeleteCompany`.
-3. Checklist items:
-   - Add Prisma-backed repository/service/schema/functions/hooks for `ChecklistItem`.
-   - Render checklist items in `/checklists/$id`.
-   - Support create/update/delete/reorder.
-4. Standards:
-   - Seed standards.
-   - Add list/search API.
-   - Add item-standard association.
-5. Inspection completion:
-   - Validate required responses.
-   - Persist non-conformities from non-compliant responses.
-6. Non-conformities:
-   - Implement backend CRUD/status changes.
-   - Replace `/nao-conformidades` mock store.
-7. Corrective actions:
-   - Implement 5W2H/corrective action persistence.
-8. Reports:
+2. Checklist refinements:
+   - Persist checklist item reordering.
+   - Define and document the signature persistence strategy.
+3. Reports:
    - Generate report from real inspection/response/NC data.
    - Persist `Report` and add PDF/export strategy.
-9. Dashboard:
+4. Dashboard:
    - Add aggregate service and React Query hook.
-10. Offline preparation:
+5. Evidence:
+   - Implement upload and persistence using the modeled metadata fields.
+6. Offline preparation:
    - Introduce IndexedDB/Dexie abstraction only after core online flow is stable.
-11. Documentation:
+7. Quality:
+   - Add browser-level regression tests for the standards, inspection, non-conformity, and corrective-action flow.
+8. Documentation:
    - Update README and user docs to distinguish real integrated flows from remaining prototype flows.
 
 ---

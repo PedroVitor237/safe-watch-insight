@@ -127,8 +127,12 @@ entity "CORRECTIVE_ACTION" as CorrectiveAction {
     --
     nonConformityId : UUID <<FK>>
     description : TEXT
+    why : TEXT
+    location : VARCHAR
     responsible : VARCHAR
     dueDate : DATE
+    method : TEXT
+    estimatedCost : VARCHAR
     status : ENUM
     completedAt : TIMESTAMP
 }
@@ -331,8 +335,12 @@ A seguir são apresentadas as estruturas físicas previstas para as principais t
 | id                | UUID            | PK         |
 | non_conformity_id | UUID            | FK         |
 | description       | TEXT            | NOT NULL   |
+| why               | TEXT            | NULL       |
+| location          | VARCHAR(255)    | NULL       |
 | responsible       | VARCHAR(255)    | NULL       |
 | due_date          | DATE            | NULL       |
+| method            | TEXT            | NULL       |
+| estimated_cost    | VARCHAR(255)    | NULL       |
 | status            | VARCHAR(30)     | NOT NULL   |
 | completed_at      | TIMESTAMP       | NULL       |
 

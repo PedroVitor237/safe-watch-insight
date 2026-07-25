@@ -291,7 +291,10 @@ Grande parte das telas já existe.
 
 O fluxo principal da Atividade 2 já utiliza dados reais integrados ao backend: login, empresas, checklists, itens de checklist, criação de inspeção, execução, respostas e conclusão.
 
-Alguns módulos secundários ainda utilizam dados mockados, como dashboard, não conformidades, relatórios, normas, equipe e simulação offline.
+Alguns módulos secundários ainda utilizam dados mockados, como dashboard, relatórios, equipe e simulação offline.
+
+Normas, associação normativa aos itens, criação automática de não
+conformidades e ações corretivas já utilizam persistência real.
 
 ---
 
@@ -308,6 +311,9 @@ Módulos integrados nesta etapa:
 - inspeções;
 - respostas de inspeção;
 - conclusão de inspeção.
+- normas e associação aos itens;
+- não conformidades;
+- ações corretivas.
 
 O objetivo continua sendo substituir gradualmente os mocks remanescentes por persistência real utilizando Prisma e PostgreSQL.
 
