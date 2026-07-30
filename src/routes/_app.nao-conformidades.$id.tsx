@@ -39,11 +39,7 @@ function NonConformityDetail() {
   const nonConformity = result?.success ? result.data : null;
 
   if (nonConformityQuery.isLoading) {
-    return (
-      <div className="p-8 text-sm text-muted-foreground">
-        Carregando não conformidade...
-      </div>
-    );
+    return <div className="p-8 text-sm text-muted-foreground">Carregando não conformidade...</div>;
   }
 
   if (!nonConformity) {
@@ -56,9 +52,7 @@ function NonConformityDetail() {
           </Link>
         </Button>
         <p className="mt-4 text-muted-foreground">
-          {result?.success === false
-            ? result.message
-            : "Não conformidade não encontrada."}
+          {result?.success === false ? result.message : "Não conformidade não encontrada."}
         </p>
       </div>
     );
@@ -67,24 +61,27 @@ function NonConformityDetail() {
   const response = nonConformity.inspectionResponse;
   const inspection = response.inspection;
   const item = response.checklistItem;
-  const companyName =
-    inspection.company.tradeName ?? inspection.company.corporateName;
+  const companyName = inspection.company.tradeName ?? inspection.company.corporateName;
   const code = `NC-${new Date(nonConformity.createdAt).getFullYear()}-${nonConformity.id
     .slice(0, 8)
     .toUpperCase()}`;
 
   async function changeStatus(status: NonConformityStatus) {
-    const updateResult = await updateNonConformity.mutateAsync({
-      id,
-      data: { status },
-    });
+    try {
+      const updateResult = await updateNonConformity.mutateAsync({
+        id,
+        data: { status },
+      });
 
-    if (!updateResult.success) {
-      toast.error(updateResult.message);
-      return;
+      if (!updateResult.success) {
+        toast.error(updateResult.message);
+        return;
+      }
+
+      toast.success("Status atualizado.");
+    } catch {
+      toast.error("Não foi possível atualizar o status. Tente novamente.");
     }
-
-    toast.success("Status atualizado.");
   }
 
   async function archiveNonConformity() {
@@ -96,15 +93,19 @@ function NonConformityDetail() {
       return;
     }
 
-    const deleteResult = await deleteNonConformity.mutateAsync(id);
+    try {
+      const deleteResult = await deleteNonConformity.mutateAsync(id);
 
-    if (!deleteResult.success) {
-      toast.error(deleteResult.message);
-      return;
+      if (!deleteResult.success) {
+        toast.error(deleteResult.message);
+        return;
+      }
+
+      toast.success("Não conformidade arquivada.");
+      navigate({ to: "/nao-conformidades" });
+    } catch {
+      toast.error("Não foi possível arquivar a não conformidade. Tente novamente.");
     }
-
-    toast.success("Não conformidade arquivada.");
-    navigate({ to: "/nao-conformidades" });
   }
 
   return (
@@ -160,8 +161,7 @@ function NonConformityDetail() {
                   date={nonConformity.createdAt}
                   author={inspection.user.name}
                 />
-                {String(nonConformity.updatedAt) !==
-                  String(nonConformity.createdAt) && (
+                {String(nonConformity.updatedAt) !== String(nonConformity.createdAt) && (
                   <TimelineItem
                     title="Não conformidade atualizada"
                     date={nonConformity.updatedAt}
@@ -196,18 +196,14 @@ function NonConformityDetail() {
             </CardHeader>
             <CardContent className="space-y-2">
               {item.standards.length === 0 && (
-                <p className="text-sm text-muted-foreground">
-                  Nenhuma norma associada ao item.
-                </p>
+                <p className="text-sm text-muted-foreground">Nenhuma norma associada ao item.</p>
               )}
               {item.standards.map(({ standard }) => (
                 <div key={standard.id} className="rounded-md border p-3">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <div className="text-sm font-medium">{standard.code}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {standard.title}
-                      </div>
+                      <div className="text-xs text-muted-foreground">{standard.title}</div>
                     </div>
                     {standard.officialUrl && (
                       <a
@@ -233,9 +229,7 @@ function NonConformityDetail() {
             <CardContent>
               <Select
                 value={nonConformity.status}
-                onValueChange={(value) =>
-                  changeStatus(value as NonConformityStatus)
-                }
+                onValueChange={(value) => changeStatus(value as NonConformityStatus)}
                 disabled={updateNonConformity.isPending}
               >
                 <SelectTrigger>
@@ -312,9 +306,7 @@ function EvidenceCard({
         <CardTitle className="text-base">Evidências</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        {evidence.length === 0 && (
-          <div className="text-sm text-muted-foreground">Sem anexos</div>
-        )}
+        {evidence.length === 0 && <div className="text-sm text-muted-foreground">Sem anexos</div>}
         {evidence.map((item) => (
           <a
             key={item.id}
@@ -337,9 +329,7 @@ function EvidenceCard({
           <Paperclip className="h-4 w-4" />
           Anexar evidência
         </Button>
-        <p className="text-xs text-muted-foreground">
-          Upload previsto para a etapa de evidências.
-        </p>
+        <p className="text-xs text-muted-foreground">Upload previsto para a etapa de evidências.</p>
       </CardContent>
     </Card>
   );

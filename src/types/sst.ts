@@ -65,10 +65,7 @@ export interface Checklist {
 }
 
 export type StatusInspecao =
-  | "planejada"
-  | "em_andamento"
-  | "concluida"
-  | "pendente_sync";
+  "planejada" | "em_andamento" | "concluida" | "cancelada" | "pendente_sync";
 
 export interface EventoTimeline {
   id: string;

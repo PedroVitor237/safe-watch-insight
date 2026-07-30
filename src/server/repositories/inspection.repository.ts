@@ -135,11 +135,34 @@ export class InspectionRepository extends BaseRepository<
     });
   }
 
-  updateStatus(id: string, status: InspectionStatus): Promise<InspectionWithRelations> {
-    return prisma.inspection.update({
-      where: { id },
-      data: { status },
-      include: inspectionRelations,
+  updateStatusIfCurrent(
+    id: string,
+    allowedStatuses: InspectionStatus[],
+    status: InspectionStatus,
+  ): Promise<InspectionWithRelations | null> {
+    return prisma.$transaction(async (transaction) => {
+      const update = await transaction.inspection.updateMany({
+        where: {
+          id,
+          deletedAt: null,
+          status: {
+            in: allowedStatuses,
+          },
+        },
+        data: { status },
+      });
+
+      if (update.count !== 1) {
+        return null;
+      }
+
+      return transaction.inspection.findFirst({
+        where: {
+          id,
+          deletedAt: null,
+        },
+        include: inspectionRelations,
+      });
     });
   }
 

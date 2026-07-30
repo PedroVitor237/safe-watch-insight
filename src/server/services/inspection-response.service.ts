@@ -8,6 +8,7 @@ import { ApiError, ConflictError, NotFoundError } from "@/server/errors";
 import {
   inspectionResponseRepository,
   InspectionResponseRepository,
+  InspectionStatePersistenceConflictError,
   type InspectionResponseWithRelations,
 } from "@/server/repositories/inspection-response.repository";
 import {
@@ -52,35 +53,41 @@ export class InspectionResponseService extends BaseService<InspectionResponseRep
     return this.execute(async () => {
       const inspection = await this.ensureInspectionExists(input.inspectionId);
       this.ensureInspectionCanBeEdited(inspection);
-      const checklistItem = this.getChecklistItem(
-        inspection,
-        input.checklistItemId,
-      );
+      const checklistItem = this.getChecklistItem(inspection, input.checklistItemId);
 
-      const response = await this.repository.saveWithNonConformity(
-        input.inspectionId,
-        input.checklistItemId,
-        {
-          status: input.status,
-          observation: input.observation ?? null,
-        },
-        input.status === ResponseStatus.NON_COMPLIANT
-          ? {
-              action: "ensure",
-              description:
-                input.observation?.trim() || checklistItem.description,
-              severity: Severity.MEDIUM,
-              dueDate: addDays(new Date(), 7),
-              status: NonConformityStatus.OPEN,
-            }
-          : {
-              action: "archive",
-              archivedAt: new Date(),
-            },
-      );
+      let response: InspectionResponseWithRelations;
 
-      if (inspection.status === InspectionStatus.PLANNED) {
-        await this.inspectionRepository.updateStatus(input.inspectionId, InspectionStatus.IN_PROGRESS);
+      try {
+        response = await this.repository.saveWithNonConformity(
+          input.inspectionId,
+          input.checklistItemId,
+          {
+            status: input.status,
+            observation: input.observation ?? null,
+          },
+          input.status === ResponseStatus.NON_COMPLIANT
+            ? {
+                action: "ensure",
+                description: input.observation?.trim() || checklistItem.description,
+                severity: Severity.MEDIUM,
+                dueDate: addDays(new Date(), 7),
+                status: NonConformityStatus.OPEN,
+              }
+            : {
+                action: "archive",
+                archivedAt: new Date(),
+              },
+          {
+            allowedStatuses: [InspectionStatus.PLANNED, InspectionStatus.IN_PROGRESS],
+            nextStatus: InspectionStatus.IN_PROGRESS,
+          },
+        );
+      } catch (error) {
+        if (error instanceof InspectionStatePersistenceConflictError) {
+          throw new ConflictError("Completed or cancelled inspections cannot be edited.");
+        }
+
+        throw error;
       }
 
       return this.success(response);
@@ -93,10 +100,15 @@ export class InspectionResponseService extends BaseService<InspectionResponseRep
       this.ensureInspectionCanBeEdited(currentInspection);
       this.ensureRequiredItemsWereAnswered(currentInspection);
 
-      const inspection = await this.inspectionRepository.updateStatus(
+      const inspection = await this.inspectionRepository.updateStatusIfCurrent(
         inspectionId,
+        [InspectionStatus.PLANNED, InspectionStatus.IN_PROGRESS],
         InspectionStatus.COMPLETED,
       );
+
+      if (!inspection) {
+        throw new ConflictError("Completed or cancelled inspections cannot be completed again.");
+      }
 
       return this.success(inspection);
     });
@@ -128,9 +140,7 @@ export class InspectionResponseService extends BaseService<InspectionResponseRep
     inspection: InspectionWithRelations,
     checklistItemId: string,
   ): InspectionWithRelations["checklist"]["items"][number] {
-    const item = inspection.checklist.items.find(
-      (candidate) => candidate.id === checklistItemId,
-    );
+    const item = inspection.checklist.items.find((candidate) => candidate.id === checklistItemId);
 
     if (!item) {
       throw new NotFoundError("Checklist item not found for this inspection.");
@@ -139,9 +149,7 @@ export class InspectionResponseService extends BaseService<InspectionResponseRep
     return item;
   }
 
-  private ensureInspectionCanBeEdited(
-    inspection: InspectionWithRelations,
-  ): void {
+  private ensureInspectionCanBeEdited(inspection: InspectionWithRelations): void {
     if (
       inspection.status === InspectionStatus.COMPLETED ||
       inspection.status === InspectionStatus.CANCELLED
@@ -150,9 +158,7 @@ export class InspectionResponseService extends BaseService<InspectionResponseRep
     }
   }
 
-  private ensureRequiredItemsWereAnswered(
-    inspection: InspectionWithRelations,
-  ): void {
+  private ensureRequiredItemsWereAnswered(inspection: InspectionWithRelations): void {
     const answeredItemIds = new Set(
       inspection.responses.map((response) => response.checklistItemId),
     );

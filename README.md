@@ -238,7 +238,10 @@ npm run db:seed
 - Alteração automática da inspeção para `IN_PROGRESS` ao salvar resposta.
 - Finalização de inspeção com status `COMPLETED`.
 - Seed demonstrativo para apresentação do fluxo.
-- Dashboard, relatórios, equipe e simulação offline ainda possuem partes mockadas.
+- Dashboard, relatórios e equipe permanecem como prévias claramente identificadas com dados
+  demonstrativos.
+- Controles de offline/sincronização e assinatura ficam indisponíveis até possuírem persistência
+  real.
 
 ## Fluxo Principal
 
@@ -258,11 +261,11 @@ Login
 ## Limitações Atuais
 
 - Evidências e upload Cloudinary ainda não foram implementados.
-- Relatórios ainda usam fluxo mockado/simulado.
-- Dashboard ainda usa indicadores mockados.
+- Relatórios ainda usam uma prévia demonstrativa; impressão e exportação PDF estão desabilitadas.
+- Dashboard ainda usa indicadores mockados, identificados explicitamente na tela.
 - Equipe ainda não está integrada ao backend.
 - Funcionamento offline real com IndexedDB/Dexie ainda não foi implementado.
-- Assinatura no encerramento da inspeção é usada na tela, mas não é persistida.
+- A assinatura digital ainda não está disponível nem é persistida.
 - A cobertura automatizada ainda está concentrada nas regras deste sprint e precisa ser expandida para os demais módulos.
 
 ## Roadmap

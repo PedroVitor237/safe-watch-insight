@@ -1,6 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, CheckCircle2, FileSignature, MinusCircle, Trash2, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, MinusCircle, XCircle } from "lucide-react";
 
 import { PageHeader } from "@/components/common/PageHeader";
 import { StatusBadge } from "@/components/common/StatusBadge";
@@ -14,7 +13,7 @@ import { useInspection } from "@/hooks/useInspections";
 import { fmtDataHora } from "@/lib/format";
 import { toast } from "sonner";
 
-type UiInspectionStatus = "planejada" | "em_andamento" | "concluida" | "pendente_sync";
+type UiInspectionStatus = "planejada" | "em_andamento" | "concluida" | "cancelada";
 type UiResponseStatus = "conforme" | "nao_conforme" | "na";
 type BackendResponseStatus = "COMPLIANT" | "NON_COMPLIANT" | "NOT_APPLICABLE";
 
@@ -41,10 +40,10 @@ function toUiInspectionStatus(status: string): UiInspectionStatus {
     PLANNED: "planejada",
     IN_PROGRESS: "em_andamento",
     COMPLETED: "concluida",
-    CANCELLED: "pendente_sync",
+    CANCELLED: "cancelada",
   };
 
-  return map[status] ?? "pendente_sync";
+  return map[status] ?? "cancelada";
 }
 
 function DetalheInspecao() {
@@ -66,26 +65,30 @@ function DetalheInspecao() {
   const respondidos = responses.length;
   const ncCount = responses.filter((response) => response.status === "NON_COMPLIANT").length;
   const progresso = totalItens ? Math.round((respondidos / totalItens) * 100) : 0;
-  const isCompleted = inspection?.status === "COMPLETED";
+  const isReadOnly = inspection?.status === "COMPLETED" || inspection?.status === "CANCELLED";
 
   async function setResposta(
     checklistItemId: string,
     status: UiResponseStatus,
     observation?: string | null,
   ) {
-    const result = await saveResponse.mutateAsync({
-      inspectionId: id,
-      checklistItemId,
-      status: uiResponseStatusToBackend[status],
-      observation,
-    });
+    try {
+      const result = await saveResponse.mutateAsync({
+        inspectionId: id,
+        checklistItemId,
+        status: uiResponseStatusToBackend[status],
+        observation,
+      });
 
-    if (!result.success) {
-      toast.error(result.message);
-      return;
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success("Resposta salva.");
+    } catch {
+      toast.error("Não foi possível salvar a resposta. Tente novamente.");
     }
-
-    toast.success("Resposta salva.");
   }
 
   async function setObservacao(
@@ -93,28 +96,36 @@ function DetalheInspecao() {
     status: BackendResponseStatus,
     observation: string,
   ) {
-    const result = await saveResponse.mutateAsync({
-      inspectionId: id,
-      checklistItemId,
-      status,
-      observation,
-    });
+    try {
+      const result = await saveResponse.mutateAsync({
+        inspectionId: id,
+        checklistItemId,
+        status,
+        observation,
+      });
 
-    if (!result.success) {
-      toast.error(result.message);
+      if (!result.success) {
+        toast.error(result.message);
+      }
+    } catch {
+      toast.error("Não foi possível salvar a observação. Tente novamente.");
     }
   }
 
   async function concluir() {
-    const result = await finishInspection.mutateAsync(id);
+    try {
+      const result = await finishInspection.mutateAsync(id);
 
-    if (!result.success) {
-      toast.error(result.message);
-      return;
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success("Inspeção concluída!");
+      navigate({ to: "/inspecoes" });
+    } catch {
+      toast.error("Não foi possível concluir a inspeção. Tente novamente.");
     }
-
-    toast.success("Inspeção concluída!");
-    navigate({ to: "/inspecoes" });
   }
 
   if (inspectionQuery.isLoading) {
@@ -249,7 +260,7 @@ function DetalheInspecao() {
                               className={
                                 uiStatus === "conforme" ? "bg-success hover:bg-success/90" : ""
                               }
-                              disabled={isCompleted || saveResponse.isPending}
+                              disabled={isReadOnly || saveResponse.isPending}
                               onClick={() =>
                                 setResposta(item.id, "conforme", response?.observation ?? null)
                               }
@@ -260,7 +271,7 @@ function DetalheInspecao() {
                             <Button
                               size="sm"
                               variant={uiStatus === "nao_conforme" ? "destructive" : "outline"}
-                              disabled={isCompleted || saveResponse.isPending}
+                              disabled={isReadOnly || saveResponse.isPending}
                               onClick={() =>
                                 setResposta(item.id, "nao_conforme", response?.observation ?? null)
                               }
@@ -271,7 +282,7 @@ function DetalheInspecao() {
                             <Button
                               size="sm"
                               variant={uiStatus === "na" ? "secondary" : "outline"}
-                              disabled={isCompleted || saveResponse.isPending}
+                              disabled={isReadOnly || saveResponse.isPending}
                               onClick={() =>
                                 setResposta(item.id, "na", response?.observation ?? null)
                               }
@@ -286,7 +297,7 @@ function DetalheInspecao() {
                             <Textarea
                               placeholder="Observações, evidências verbais, contexto..."
                               defaultValue={response.observation ?? ""}
-                              disabled={isCompleted || saveResponse.isPending}
+                              disabled={isReadOnly || saveResponse.isPending}
                               rows={2}
                               onBlur={(event) =>
                                 setObservacao(item.id, response.status, event.target.value)
@@ -310,7 +321,7 @@ function DetalheInspecao() {
           <TabsContent value="encerrar">
             <EncerrarInspecao
               onConcluir={concluir}
-              disabled={isCompleted || finishInspection.isPending}
+              disabled={isReadOnly || finishInspection.isPending}
             />
           </TabsContent>
         </Tabs>
@@ -320,90 +331,23 @@ function DetalheInspecao() {
 }
 
 function EncerrarInspecao({ onConcluir, disabled }: { onConcluir: () => void; disabled: boolean }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [drawing, setDrawing] = useState(false);
-  const [hasSig, setHasSig] = useState(false);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) {
-      return;
-    }
-
-    const ctx = canvas.getContext("2d");
-    if (ctx) {
-      ctx.strokeStyle = "#0f172a";
-      ctx.lineWidth = 2;
-      ctx.lineCap = "round";
-    }
-  }, []);
-
-  function pos(e: React.PointerEvent) {
-    const rect = canvasRef.current!.getBoundingClientRect();
-
-    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
-  }
-
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Encerramento e assinatura</CardTitle>
+        <CardTitle className="text-base">Encerramento</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Após encerrar, a inspeção será marcada como concluída.
+          Após encerrar, a inspeção será marcada como concluída e não poderá mais receber respostas.
         </p>
-        <div className="rounded-md border bg-white">
-          <canvas
-            ref={canvasRef}
-            width={600}
-            height={180}
-            className="block w-full touch-none rounded-md"
-            onPointerDown={(e) => {
-              if (disabled) {
-                return;
-              }
-
-              setDrawing(true);
-              const ctx = canvasRef.current!.getContext("2d")!;
-              const point = pos(e);
-              ctx.beginPath();
-              ctx.moveTo(point.x, point.y);
-            }}
-            onPointerMove={(e) => {
-              if (!drawing) {
-                return;
-              }
-
-              const ctx = canvasRef.current!.getContext("2d")!;
-              const point = pos(e);
-              ctx.lineTo(point.x, point.y);
-              ctx.stroke();
-              setHasSig(true);
-            }}
-            onPointerUp={() => setDrawing(false)}
-            onPointerLeave={() => setDrawing(false)}
-          />
+        <div className="rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">
+          A assinatura digital ainda não está disponível. Ela será habilitada somente quando houver
+          persistência segura, vínculo com o signatário e trilha de auditoria.
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={disabled}
-            onClick={() => {
-              const canvas = canvasRef.current!;
-              canvas.getContext("2d")!.clearRect(0, 0, canvas.width, canvas.height);
-              setHasSig(false);
-            }}
-          >
-            <Trash2 className="h-4 w-4" />
-            Limpar
-          </Button>
-          <Button disabled={disabled || !hasSig} onClick={onConcluir}>
-            <FileSignature className="h-4 w-4" />
-            Concluir e assinar
-          </Button>
-        </div>
+        <Button disabled={disabled} onClick={onConcluir}>
+          <CheckCircle2 className="h-4 w-4" />
+          Concluir inspeção
+        </Button>
       </CardContent>
     </Card>
   );

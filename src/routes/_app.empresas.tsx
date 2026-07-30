@@ -16,7 +16,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Building2, MapPin, Pencil, Trash2 } from "lucide-react";
-import { useCompanies, useCreateCompany, useDeleteCompany, useUpdateCompany } from "@/hooks/useCompanies";
+import {
+  useCompanies,
+  useCreateCompany,
+  useDeleteCompany,
+  useUpdateCompany,
+} from "@/hooks/useCompanies";
 import { fmtCnpj } from "@/lib/format";
 import { toast } from "sonner";
 
@@ -74,17 +79,21 @@ function Empresas() {
       notes: form.notes,
     };
 
-    const result = editingCompanyId
-      ? await updateCompany.mutateAsync({ id: editingCompanyId, data: payload })
-      : await createCompany.mutateAsync(payload);
+    try {
+      const result = editingCompanyId
+        ? await updateCompany.mutateAsync({ id: editingCompanyId, data: payload })
+        : await createCompany.mutateAsync(payload);
 
-    if (!result.success) {
-      toast.error(result.message);
-      return;
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success(editingCompanyId ? "Empresa atualizada." : "Empresa cadastrada.");
+      setDialogOpen(false);
+    } catch {
+      toast.error("Não foi possível salvar a empresa. Verifique os dados e tente novamente.");
     }
-
-    toast.success(editingCompanyId ? "Empresa atualizada." : "Empresa cadastrada.");
-    setDialogOpen(false);
   }
 
   async function handleDelete(id: string) {
@@ -92,14 +101,18 @@ function Empresas() {
       return;
     }
 
-    const result = await deleteCompany.mutateAsync(id);
+    try {
+      const result = await deleteCompany.mutateAsync(id);
 
-    if (!result.success) {
-      toast.error(result.message);
-      return;
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success("Empresa excluída.");
+    } catch {
+      toast.error("Não foi possível excluir a empresa. Tente novamente.");
     }
-
-    toast.success("Empresa excluída.");
   }
 
   return (
@@ -209,24 +222,68 @@ function Empresas() {
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editingCompanyId ? "Editar empresa" : "Nova empresa"}</DialogTitle>
-            <DialogDescription>Preencha os dados cadastrais da empresa fiscalizada.</DialogDescription>
+            <DialogDescription>
+              Preencha os dados cadastrais da empresa fiscalizada.
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <FormField label="Razão social" value={form.corporateName} onChange={(value) => setForm({ ...form, corporateName: value })} required />
-              <FormField label="Nome fantasia" value={form.tradeName} onChange={(value) => setForm({ ...form, tradeName: value })} />
-              <FormField label="CNPJ" value={form.cnpj} onChange={(value) => setForm({ ...form, cnpj: value })} />
-              <FormField label="CNAE" value={form.cnae} onChange={(value) => setForm({ ...form, cnae: value })} required />
-              <FormField label="Grau de risco" type="number" min="1" max="4" value={form.riskLevel} onChange={(value) => setForm({ ...form, riskLevel: value })} required />
-              <FormField label="Funcionários" type="number" min="0" value={form.employeeCount} onChange={(value) => setForm({ ...form, employeeCount: value })} required />
+              <FormField
+                label="Razão social"
+                value={form.corporateName}
+                onChange={(value) => setForm({ ...form, corporateName: value })}
+                required
+              />
+              <FormField
+                label="Nome fantasia"
+                value={form.tradeName}
+                onChange={(value) => setForm({ ...form, tradeName: value })}
+              />
+              <FormField
+                label="CNPJ"
+                value={form.cnpj}
+                onChange={(value) => setForm({ ...form, cnpj: value })}
+              />
+              <FormField
+                label="CNAE"
+                value={form.cnae}
+                onChange={(value) => setForm({ ...form, cnae: value })}
+                required
+              />
+              <FormField
+                label="Grau de risco"
+                type="number"
+                min="1"
+                max="4"
+                value={form.riskLevel}
+                onChange={(value) => setForm({ ...form, riskLevel: value })}
+                required
+              />
+              <FormField
+                label="Funcionários"
+                type="number"
+                min="0"
+                value={form.employeeCount}
+                onChange={(value) => setForm({ ...form, employeeCount: value })}
+                required
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="company-address">Endereço</Label>
-              <Input id="company-address" value={form.address} onChange={(event) => setForm({ ...form, address: event.target.value })} />
+              <Input
+                id="company-address"
+                value={form.address}
+                onChange={(event) => setForm({ ...form, address: event.target.value })}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="company-notes">Observações</Label>
-              <Textarea id="company-notes" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} rows={3} />
+              <Textarea
+                id="company-notes"
+                value={form.notes}
+                onChange={(event) => setForm({ ...form, notes: event.target.value })}
+                rows={3}
+              />
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>

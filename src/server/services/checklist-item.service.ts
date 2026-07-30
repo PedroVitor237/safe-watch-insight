@@ -15,9 +15,7 @@ import { BaseService } from "./base.service";
 type ChecklistItemEntity = NonNullable<
   Awaited<ReturnType<ChecklistItemRepository["findWithStandardsById"]>>
 >;
-type DeletedChecklistItemEntity = Awaited<
-  ReturnType<ChecklistItemRepository["deleteById"]>
->;
+type DeletedChecklistItemEntity = Awaited<ReturnType<ChecklistItemRepository["deleteById"]>>;
 type ChecklistItemCreateData = Parameters<ChecklistItemRepository["create"]>[0];
 type ChecklistItemUpdateData = Parameters<ChecklistItemRepository["update"]>[1];
 
@@ -40,8 +38,7 @@ export class ChecklistItemService extends BaseService<ChecklistItemRepository> {
   constructor(
     repository: ChecklistItemRepository = checklistItemRepository,
     private readonly checklistRepository = new ChecklistRepository(),
-    private readonly standardRepository: StandardRepository =
-      defaultStandardRepository,
+    private readonly standardRepository: StandardRepository = defaultStandardRepository,
   ) {
     super(repository);
   }
@@ -70,9 +67,7 @@ export class ChecklistItemService extends BaseService<ChecklistItemRepository> {
     return this.execute(async () => {
       await this.ensureChecklistItemExists(id);
       const standardIds =
-        input.standardIds === undefined
-          ? undefined
-          : this.normalizeStandardIds(input.standardIds);
+        input.standardIds === undefined ? undefined : this.normalizeStandardIds(input.standardIds);
       await this.ensureStandardsExist(standardIds ?? []);
 
       const item = await this.repository.updateWithStandards(

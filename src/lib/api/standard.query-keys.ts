@@ -2,9 +2,7 @@ import type { StandardFiltersSchemaInput } from "@/server/schemas/standard.schem
 
 export type StandardQueryFilters = Partial<StandardFiltersSchemaInput>;
 
-export function getStandardListFilters(
-  filters: StandardQueryFilters,
-): StandardFiltersSchemaInput {
+export function getStandardListFilters(filters: StandardQueryFilters): StandardFiltersSchemaInput {
   return {
     page: filters.page ?? 1,
     pageSize: filters.pageSize ?? 100,
@@ -19,8 +17,7 @@ export function getStandardListFilters(
 export const standardQueryKeys = {
   all: ["standards"] as const,
   lists: () => [...standardQueryKeys.all, "list"] as const,
-  list: (filters: StandardFiltersSchemaInput) =>
-    [...standardQueryKeys.lists(), filters] as const,
+  list: (filters: StandardFiltersSchemaInput) => [...standardQueryKeys.lists(), filters] as const,
   details: () => [...standardQueryKeys.all, "detail"] as const,
   detail: (id: string) => [...standardQueryKeys.details(), id] as const,
 };

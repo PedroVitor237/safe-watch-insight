@@ -7,7 +7,6 @@ import {
   InspectionStatus,
   ResponseStatus,
   Severity,
-  SyncStatus,
 } from "@/generated/prisma/client";
 import { prisma } from "@/server/prisma/client";
 import type { Result } from "@/server/responses";
@@ -34,9 +33,7 @@ interface CreatedIds {
 const createdIds: CreatedIds = {};
 
 async function main(): Promise<void> {
-  const authenticatedUser = unwrap(
-    await userService.authenticate("admin@demo.com", "Admin@123"),
-  );
+  const authenticatedUser = unwrap(await userService.authenticate("admin@demo.com", "Admin@123"));
   const standards = unwrap(
     await standardService.listStandards({
       page: 1,
@@ -106,8 +103,6 @@ async function main(): Promise<void> {
       companyId: company.id,
       checklistId: checklist.id,
       inspectionDate: new Date(),
-      status: InspectionStatus.PLANNED,
-      syncStatus: SyncStatus.SYNCED,
       notes: "Inspeção temporária da validação integrada.",
     }),
   );
@@ -139,12 +134,9 @@ async function main(): Promise<void> {
   }
 
   unwrap(
-    await nonConformityService.updateNonConformity(
-      response.nonConformity.id,
-      {
-        severity: Severity.HIGH,
-      },
-    ),
+    await nonConformityService.updateNonConformity(response.nonConformity.id, {
+      severity: Severity.HIGH,
+    }),
   );
 
   const correctiveAction = unwrap(
@@ -164,20 +156,16 @@ async function main(): Promise<void> {
   if (
     correctiveAction.why !== "Eliminar a exposição sem proteção adequada." ||
     correctiveAction.location !== "Área operacional" ||
-    correctiveAction.method !==
-      "Comprar, entregar e registrar o recebimento do EPI." ||
+    correctiveAction.method !== "Comprar, entregar e registrar o recebimento do EPI." ||
     correctiveAction.estimatedCost !== "R$ 500,00"
   ) {
     throw new Error("The 5W2H fields were not persisted correctly.");
   }
 
   unwrap(
-    await correctiveActionService.updateCorrectiveAction(
-      correctiveAction.id,
-      {
-        status: CorrectiveActionStatus.COMPLETED,
-      },
-    ),
+    await correctiveActionService.updateCorrectiveAction(correctiveAction.id, {
+      status: CorrectiveActionStatus.COMPLETED,
+    }),
   );
 
   const completedInspection = unwrap(
@@ -192,6 +180,20 @@ async function main(): Promise<void> {
   unwrap(await checklistService.deleteChecklist(checklist.id));
   unwrap(await companyService.deleteCompany(company.id));
 
+  const duplicateDeletedCompany = await companyService.createCompany({
+    corporateName: `Validação NC duplicada ${uniqueSuffix} Ltda.`,
+    tradeName: "Validação NC duplicada",
+    cnpj: uniqueSuffix.padStart(14, "8"),
+    cnae: "0000-0/00",
+    riskLevel: 2,
+    employeeCount: 10,
+    createdById: authenticatedUser.id,
+  });
+
+  if (duplicateDeletedCompany.success || duplicateDeletedCompany.code !== "CONFLICT") {
+    throw new Error("A soft-deleted company's CNPJ should remain reserved.");
+  }
+
   console.log(
     JSON.stringify({
       authenticated: true,
@@ -204,6 +206,7 @@ async function main(): Promise<void> {
       plan5w2h: true,
       correctiveActionCompleted: true,
       softDeleteValidated: true,
+      deletedCompanyCnpjReserved: true,
     }),
   );
 }

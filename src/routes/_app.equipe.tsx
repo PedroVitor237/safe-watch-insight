@@ -16,7 +16,11 @@ function Equipe() {
 
   return (
     <div>
-      <PageHeader title="Equipe" description="Inspetores, gestores e auditores cadastrados." />
+      <PageHeader
+        title="Equipe"
+        description="Prévia demonstrativa de inspetores, gestores e auditores."
+        actions={<Badge variant="outline">Dados demonstrativos</Badge>}
+      />
       <div className="grid gap-4 p-4 sm:p-8 md:grid-cols-2 xl:grid-cols-3">
         {usuarios.map((u) => {
           const insCount = inspecoes.filter((i) => i.inspetorId === u.id).length;
@@ -29,7 +33,11 @@ function Equipe() {
                     className="grid h-12 w-12 shrink-0 place-items-center rounded-full text-sm font-semibold text-white"
                     style={{ backgroundColor: u.avatarColor }}
                   >
-                    {u.nome.split(" ").map((s) => s[0]).slice(0, 2).join("")}
+                    {u.nome
+                      .split(" ")
+                      .map((s) => s[0])
+                      .slice(0, 2)
+                      .join("")}
                   </div>
                   <div className="min-w-0">
                     <div className="truncate font-semibold">{u.nome}</div>
@@ -37,9 +45,13 @@ function Equipe() {
                   </div>
                 </div>
                 <div className="mt-3 flex items-center gap-2">
-                  <Badge variant="outline" className="capitalize">{u.perfil}</Badge>
+                  <Badge variant="outline" className="capitalize">
+                    {u.perfil}
+                  </Badge>
                   {u.registroProfissional && (
-                    <span className="font-mono text-xs text-muted-foreground">{u.registroProfissional}</span>
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {u.registroProfissional}
+                    </span>
                   )}
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-2 text-center">
@@ -49,7 +61,9 @@ function Equipe() {
                   </div>
                   <div className="rounded-md border p-2">
                     <div className="text-lg font-bold">{ncCount}</div>
-                    <div className="text-[10px] uppercase text-muted-foreground">NCs sob responsa.</div>
+                    <div className="text-[10px] uppercase text-muted-foreground">
+                      NCs sob responsa.
+                    </div>
                   </div>
                 </div>
               </CardContent>

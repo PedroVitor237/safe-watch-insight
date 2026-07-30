@@ -17,15 +17,15 @@
 
 //____________________________________________________________________________
 
-import { defineConfig } from '@lovable.dev/vite-tanstack-config'
-import { nitro } from 'nitro/vite'
+import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { nitro } from "nitro/vite";
 
 export default defineConfig({
   vite: {
     plugins: [
       nitro({
-        preset: 'vercel', // <--- ISSO DIZ AO NITRO PARA GERAR O FORMATO VERCEL
+        preset: "vercel", // <--- ISSO DIZ AO NITRO PARA GERAR O FORMATO VERCEL
       }),
     ],
   },
-})
+});

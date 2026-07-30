@@ -17,4 +17,3 @@ export function normalizePagination(page?: number, pageSize?: number): Paginatio
 export function getPaginationOffset(params: PaginationParams): number {
   return (params.page - 1) * params.pageSize;
 }
-

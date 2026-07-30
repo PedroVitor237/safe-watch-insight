@@ -23,9 +23,8 @@ type ServerResult<TData> =
     };
 
 async function getInspectionResponseService() {
-  const { inspectionResponseService } = await import(
-    "@/server/services/inspection-response.service"
-  );
+  const { inspectionResponseService } =
+    await import("@/server/services/inspection-response.service");
 
   return inspectionResponseService;
 }

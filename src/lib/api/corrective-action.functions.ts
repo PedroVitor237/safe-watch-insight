@@ -9,9 +9,7 @@ import {
 } from "@/server/schemas/corrective-action.schema";
 
 async function getCorrectiveActionService() {
-  const { correctiveActionService } = await import(
-    "@/server/services/corrective-action.service"
-  );
+  const { correctiveActionService } = await import("@/server/services/corrective-action.service");
 
   return correctiveActionService;
 }
@@ -48,9 +46,7 @@ export const listCorrectiveActions = createServerFn({ method: "POST" })
 
     const service = await getCorrectiveActionService();
 
-    return toServerResult(
-      await service.listCorrectiveActions(data.nonConformityId),
-    );
+    return toServerResult(await service.listCorrectiveActions(data.nonConformityId));
   });
 
 export const updateCorrectiveAction = createServerFn({ method: "POST" })
@@ -64,9 +60,7 @@ export const updateCorrectiveAction = createServerFn({ method: "POST" })
 
     const service = await getCorrectiveActionService();
 
-    return toServerResult(
-      await service.updateCorrectiveAction(data.id, data.data),
-    );
+    return toServerResult(await service.updateCorrectiveAction(data.id, data.data));
   });
 
 export const deleteCorrectiveAction = createServerFn({ method: "POST" })

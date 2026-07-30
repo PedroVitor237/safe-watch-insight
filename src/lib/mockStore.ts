@@ -1,17 +1,12 @@
 import { useEffect, useState } from "react";
 import type { Inspecao, NaoConformidade, PerfilUsuario } from "@/types/sst";
-import {
-  inspecoes as inspecoesSeed,
-  ncs as ncsSeed,
-} from "@/mocks/data";
+import { inspecoes as inspecoesSeed, ncs as ncsSeed } from "@/mocks/data";
 
 type Listener = () => void;
 
 interface State {
   inspecoes: Inspecao[];
   ncs: NaoConformidade[];
-  offline: boolean;
-  pendingSync: number;
   perfil: PerfilUsuario;
   usuarioLogado: string;
 }
@@ -25,7 +20,9 @@ function load(): State {
   try {
     const raw = localStorage.getItem(KEY);
     if (raw) return { ...base(), ...JSON.parse(raw) };
-  } catch {}
+  } catch {
+    // Invalid or unavailable local demo data falls back to the seed.
+  }
   return base();
 }
 
@@ -33,8 +30,6 @@ function base(): State {
   return {
     inspecoes: inspecoesSeed,
     ncs: ncsSeed,
-    offline: false,
-    pendingSync: 1,
     perfil: "inspetor",
     usuarioLogado: "u1",
   };
@@ -55,7 +50,9 @@ function persist() {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
-  } catch {}
+  } catch {
+    // Demo-only persistence must not prevent the application from rendering.
+  }
 }
 
 function emit() {
@@ -72,20 +69,12 @@ export const store = {
     listeners.add(l);
     return () => listeners.delete(l);
   },
-  setOffline(v: boolean) {
-    state = { ...state, offline: v };
-    emit();
-  },
   setPerfil(p: PerfilUsuario) {
     state = { ...state, perfil: p };
     emit();
   },
   setUsuario(id: string) {
     state = { ...state, usuarioLogado: id };
-    emit();
-  },
-  sync() {
-    state = { ...state, pendingSync: 0 };
     emit();
   },
   upsertInspecao(ins: Inspecao) {
@@ -95,7 +84,6 @@ export const store = {
       inspecoes: exists
         ? state.inspecoes.map((i) => (i.id === ins.id ? ins : i))
         : [ins, ...state.inspecoes],
-      pendingSync: state.offline ? state.pendingSync + 1 : state.pendingSync,
     };
     emit();
   },
@@ -103,10 +91,7 @@ export const store = {
     const exists = state.ncs.find((n) => n.id === nc.id);
     state = {
       ...state,
-      ncs: exists
-        ? state.ncs.map((n) => (n.id === nc.id ? nc : n))
-        : [nc, ...state.ncs],
-      pendingSync: state.offline ? state.pendingSync + 1 : state.pendingSync,
+      ncs: exists ? state.ncs.map((n) => (n.id === nc.id ? nc : n)) : [nc, ...state.ncs],
     };
     emit();
   },

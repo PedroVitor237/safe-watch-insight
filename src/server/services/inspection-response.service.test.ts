@@ -13,7 +13,9 @@ import {
 } from "@/generated/prisma/client";
 import {
   InspectionResponseRepository,
+  InspectionStatePersistenceConflictError,
   type InspectionResponseWithRelations,
+  type InspectionStatePersistenceDirective,
   type NonConformityPersistenceDirective,
 } from "@/server/repositories/inspection-response.repository";
 import {
@@ -28,16 +30,22 @@ const ITEM_ID = "22222222-2222-4222-8222-222222222222";
 
 class FakeInspectionResponseRepository extends InspectionResponseRepository {
   directive: NonConformityPersistenceDirective | null = null;
+  inspectionState: InspectionStatePersistenceDirective | null = null;
+  failWithStateConflict = false;
 
   override saveWithNonConformity(
     inspectionId: string,
     checklistItemId: string,
-    data: Parameters<
-      InspectionResponseRepository["saveWithNonConformity"]
-    >[2],
+    data: Parameters<InspectionResponseRepository["saveWithNonConformity"]>[2],
     nonConformity: NonConformityPersistenceDirective,
+    inspectionState: InspectionStatePersistenceDirective,
   ): Promise<InspectionResponseWithRelations> {
     this.directive = nonConformity;
+    this.inspectionState = inspectionState;
+
+    if (this.failWithStateConflict) {
+      return Promise.reject(new InspectionStatePersistenceConflictError());
+    }
 
     return Promise.resolve({
       id: "33333333-3333-4333-8333-333333333333",
@@ -62,10 +70,11 @@ class FakeInspectionRepository extends InspectionRepository {
     return Promise.resolve(this.currentInspection);
   }
 
-  override updateStatus(
+  override updateStatusIfCurrent(
     _id: string,
+    _allowedStatuses: InspectionStatus[],
     status: InspectionStatus,
-  ): Promise<InspectionWithRelations> {
+  ): Promise<InspectionWithRelations | null> {
     this.updatedStatus = status;
     this.currentInspection = {
       ...this.currentInspection,
@@ -78,13 +87,8 @@ class FakeInspectionRepository extends InspectionRepository {
 
 test("a non-compliant response creates a default non-conformity directive", async () => {
   const responseRepository = new FakeInspectionResponseRepository();
-  const inspectionRepository = new FakeInspectionRepository(
-    createInspection(),
-  );
-  const service = new InspectionResponseService(
-    responseRepository,
-    inspectionRepository,
-  );
+  const inspectionRepository = new FakeInspectionRepository(createInspection());
+  const service = new InspectionResponseService(responseRepository, inspectionRepository);
 
   const result = await service.saveInspectionResponse({
     inspectionId: INSPECTION_ID,
@@ -102,15 +106,10 @@ test("a non-compliant response creates a default non-conformity directive", asyn
 
   assert.equal(responseRepository.directive.description, "Proteção removida");
   assert.equal(responseRepository.directive.severity, Severity.MEDIUM);
-  assert.equal(
-    responseRepository.directive.status,
-    NonConformityStatus.OPEN,
-  );
+  assert.equal(responseRepository.directive.status, NonConformityStatus.OPEN);
   assert.ok(responseRepository.directive.dueDate instanceof Date);
-  assert.equal(
-    inspectionRepository.updatedStatus,
-    InspectionStatus.IN_PROGRESS,
-  );
+  assert.equal(responseRepository.inspectionState?.nextStatus, InspectionStatus.IN_PROGRESS);
+  assert.equal(inspectionRepository.updatedStatus, null);
 });
 
 test("a compliant response archives an existing non-conformity", async () => {
@@ -118,10 +117,7 @@ test("a compliant response archives an existing non-conformity", async () => {
   const inspectionRepository = new FakeInspectionRepository(
     createInspection(InspectionStatus.IN_PROGRESS),
   );
-  const service = new InspectionResponseService(
-    responseRepository,
-    inspectionRepository,
-  );
+  const service = new InspectionResponseService(responseRepository, inspectionRepository);
 
   const result = await service.saveInspectionResponse({
     inspectionId: INSPECTION_ID,
@@ -139,10 +135,7 @@ test("finishing is rejected while a required item is unanswered", async () => {
   const inspectionRepository = new FakeInspectionRepository(
     createInspection(InspectionStatus.IN_PROGRESS),
   );
-  const service = new InspectionResponseService(
-    responseRepository,
-    inspectionRepository,
-  );
+  const service = new InspectionResponseService(responseRepository, inspectionRepository);
 
   const result = await service.finishInspection(INSPECTION_ID);
 
@@ -161,10 +154,7 @@ test("a completed inspection cannot receive new responses", async () => {
   const inspectionRepository = new FakeInspectionRepository(
     createInspection(InspectionStatus.COMPLETED),
   );
-  const service = new InspectionResponseService(
-    responseRepository,
-    inspectionRepository,
-  );
+  const service = new InspectionResponseService(responseRepository, inspectionRepository);
 
   const result = await service.saveInspectionResponse({
     inspectionId: INSPECTION_ID,
@@ -174,6 +164,29 @@ test("a completed inspection cannot receive new responses", async () => {
 
   assert.equal(result.success, false);
   assert.equal(responseRepository.directive, null);
+});
+
+test("a concurrent completion conflict is returned without accepting a response", async () => {
+  const responseRepository = new FakeInspectionResponseRepository();
+  responseRepository.failWithStateConflict = true;
+  const inspectionRepository = new FakeInspectionRepository(
+    createInspection(InspectionStatus.IN_PROGRESS),
+  );
+  const service = new InspectionResponseService(responseRepository, inspectionRepository);
+
+  const result = await service.saveInspectionResponse({
+    inspectionId: INSPECTION_ID,
+    checklistItemId: ITEM_ID,
+    status: ResponseStatus.COMPLIANT,
+  });
+
+  assert.equal(result.success, false);
+
+  if (result.success) {
+    assert.fail("Expected a failed result.");
+  }
+
+  assert.equal(result.code, "CONFLICT");
 });
 
 function createInspection(

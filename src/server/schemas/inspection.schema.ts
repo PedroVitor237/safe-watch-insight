@@ -25,8 +25,6 @@ export const createInspectionSchema = z.object({
   companyId: z.string().uuid(),
   checklistId: z.string().uuid(),
   inspectionDate: z.coerce.date(),
-  status: inspectionStatusSchema.default(InspectionStatus.PLANNED),
-  syncStatus: syncStatusSchema.default(SyncStatus.SYNCED),
   notes: optionalNullableTextSchema,
 });
 

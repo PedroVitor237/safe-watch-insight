@@ -1,11 +1,13 @@
 import {
   CorrectiveActionStatus,
+  NonConformityStatus,
   type Prisma,
 } from "@/generated/prisma/client";
-import { ApiError, NotFoundError } from "@/server/errors";
+import { ApiError, ConflictError, NotFoundError } from "@/server/errors";
 import {
   correctiveActionRepository,
   CorrectiveActionRepository,
+  NonConformityStatePersistenceConflictError,
 } from "@/server/repositories/corrective-action.repository";
 import {
   nonConformityRepository as defaultNonConformityRepository,
@@ -18,12 +20,8 @@ import { BaseService } from "./base.service";
 type CorrectiveActionEntity = NonNullable<
   Awaited<ReturnType<CorrectiveActionRepository["findActiveById"]>>
 >;
-type CorrectiveActionCreateData = Parameters<
-  CorrectiveActionRepository["create"]
->[0];
-type CorrectiveActionUpdateData = Parameters<
-  CorrectiveActionRepository["update"]
->[1];
+type CorrectiveActionCreateData = Parameters<CorrectiveActionRepository["create"]>[0];
+type CorrectiveActionUpdateData = Parameters<CorrectiveActionRepository["update"]>[1];
 
 export interface CreateCorrectiveActionInput {
   nonConformityId: string;
@@ -51,8 +49,7 @@ export interface UpdateCorrectiveActionInput {
 export class CorrectiveActionService extends BaseService<CorrectiveActionRepository> {
   constructor(
     repository: CorrectiveActionRepository = correctiveActionRepository,
-    private readonly nonConformityRepository: NonConformityRepository =
-      defaultNonConformityRepository,
+    private readonly nonConformityRepository: NonConformityRepository = defaultNonConformityRepository,
   ) {
     super(repository);
   }
@@ -69,34 +66,43 @@ export class CorrectiveActionService extends BaseService<CorrectiveActionReposit
         throw new NotFoundError("Non-conformity not found.");
       }
 
-      const action = await this.repository.create(this.toCreateData(input));
+      let action: CorrectiveActionEntity;
 
-      if (nonConformity.status === "OPEN") {
-        await this.nonConformityRepository.updateWithRelations(
-          nonConformity.id,
-          { status: "IN_PROGRESS" },
+      try {
+        action = await this.repository.createWithNonConformityTransition(
+          this.toCreateData(input),
+          nonConformity.status === NonConformityStatus.OPEN
+            ? {
+                id: nonConformity.id,
+                from: NonConformityStatus.OPEN,
+                to: NonConformityStatus.IN_PROGRESS,
+              }
+            : undefined,
         );
+      } catch (error) {
+        if (error instanceof NonConformityStatePersistenceConflictError) {
+          throw new ConflictError(
+            "The non-conformity changed while the corrective action was being created. Try again.",
+          );
+        }
+
+        throw error;
       }
 
       return this.success(action);
     });
   }
 
-  async listCorrectiveActions(
-    nonConformityId: string,
-  ): Promise<Result<CorrectiveActionEntity[]>> {
+  async listCorrectiveActions(nonConformityId: string): Promise<Result<CorrectiveActionEntity[]>> {
     return this.execute(async () => {
-      const nonConformity =
-        await this.nonConformityRepository.findActiveById(nonConformityId);
+      const nonConformity = await this.nonConformityRepository.findActiveById(nonConformityId);
 
       if (!nonConformity) {
         throw new NotFoundError("Non-conformity not found.");
       }
 
       await this.repository.markOverdue(new Date());
-      const actions = await this.repository.findByNonConformityId(
-        nonConformityId,
-      );
+      const actions = await this.repository.findByNonConformityId(nonConformityId);
 
       return this.success(actions);
     });
@@ -108,18 +114,13 @@ export class CorrectiveActionService extends BaseService<CorrectiveActionReposit
   ): Promise<Result<CorrectiveActionEntity>> {
     return this.execute(async () => {
       await this.ensureCorrectiveActionExists(id);
-      const action = await this.repository.update(
-        { id },
-        this.toUpdateData(input),
-      );
+      const action = await this.repository.update({ id }, this.toUpdateData(input));
 
       return this.success(action);
     });
   }
 
-  async deleteCorrectiveAction(
-    id: string,
-  ): Promise<Result<CorrectiveActionEntity>> {
+  async deleteCorrectiveAction(id: string): Promise<Result<CorrectiveActionEntity>> {
     return this.execute(async () => {
       await this.ensureCorrectiveActionExists(id);
       const action = await this.repository.softDelete(id);
@@ -128,9 +129,7 @@ export class CorrectiveActionService extends BaseService<CorrectiveActionReposit
     });
   }
 
-  private async execute<TData>(
-    operation: () => Promise<Result<TData>>,
-  ): Promise<Result<TData>> {
+  private async execute<TData>(operation: () => Promise<Result<TData>>): Promise<Result<TData>> {
     try {
       return await operation();
     } catch (error) {
@@ -142,9 +141,7 @@ export class CorrectiveActionService extends BaseService<CorrectiveActionReposit
     }
   }
 
-  private async ensureCorrectiveActionExists(
-    id: string,
-  ): Promise<CorrectiveActionEntity> {
+  private async ensureCorrectiveActionExists(id: string): Promise<CorrectiveActionEntity> {
     const action = await this.repository.findActiveById(id);
 
     if (!action) {
@@ -154,9 +151,7 @@ export class CorrectiveActionService extends BaseService<CorrectiveActionReposit
     return action;
   }
 
-  private toCreateData(
-    input: CreateCorrectiveActionInput,
-  ): CorrectiveActionCreateData {
+  private toCreateData(input: CreateCorrectiveActionInput): CorrectiveActionCreateData {
     return {
       description: input.description,
       why: input.why ?? null,
@@ -166,8 +161,7 @@ export class CorrectiveActionService extends BaseService<CorrectiveActionReposit
       method: input.method ?? null,
       estimatedCost: input.estimatedCost ?? null,
       status: input.status,
-      completedAt:
-        input.status === CorrectiveActionStatus.COMPLETED ? new Date() : null,
+      completedAt: input.status === CorrectiveActionStatus.COMPLETED ? new Date() : null,
       nonConformity: {
         connect: {
           id: input.nonConformityId,
@@ -176,30 +170,19 @@ export class CorrectiveActionService extends BaseService<CorrectiveActionReposit
     };
   }
 
-  private toUpdateData(
-    input: UpdateCorrectiveActionInput,
-  ): CorrectiveActionUpdateData {
+  private toUpdateData(input: UpdateCorrectiveActionInput): CorrectiveActionUpdateData {
     const data: Prisma.CorrectiveActionUpdateInput = {
-      ...(input.description !== undefined
-        ? { description: input.description }
-        : {}),
+      ...(input.description !== undefined ? { description: input.description } : {}),
       ...(input.why !== undefined ? { why: input.why } : {}),
       ...(input.location !== undefined ? { location: input.location } : {}),
-      ...(input.responsible !== undefined
-        ? { responsible: input.responsible }
-        : {}),
+      ...(input.responsible !== undefined ? { responsible: input.responsible } : {}),
       ...(input.dueDate !== undefined ? { dueDate: input.dueDate } : {}),
       ...(input.method !== undefined ? { method: input.method } : {}),
-      ...(input.estimatedCost !== undefined
-        ? { estimatedCost: input.estimatedCost }
-        : {}),
+      ...(input.estimatedCost !== undefined ? { estimatedCost: input.estimatedCost } : {}),
       ...(input.status !== undefined
         ? {
             status: input.status,
-            completedAt:
-              input.status === CorrectiveActionStatus.COMPLETED
-                ? new Date()
-                : null,
+            completedAt: input.status === CorrectiveActionStatus.COMPLETED ? new Date() : null,
           }
         : {}),
     };

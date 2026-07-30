@@ -13,4 +13,3 @@ export abstract class BaseService<TRepository> {
     return failure(error);
   }
 }
-

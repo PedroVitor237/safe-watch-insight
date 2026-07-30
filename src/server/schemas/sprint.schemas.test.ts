@@ -5,10 +5,7 @@ import {
   createCorrectiveActionSchema,
   updateCorrectiveActionSchema,
 } from "./corrective-action.schema";
-import {
-  createNonConformitySchema,
-  nonConformityFiltersSchema,
-} from "./non-conformity.schema";
+import { createNonConformitySchema, nonConformityFiltersSchema } from "./non-conformity.schema";
 import { standardFiltersSchema } from "./standard.schema";
 
 const UUID = "11111111-1111-4111-8111-111111111111";
@@ -64,10 +61,7 @@ test("corrective action schemas normalize optional fields and require updates", 
   assert.equal(created.dueDate, null);
   assert.equal(created.why, "Reduzir o risco de contato");
   assert.equal(created.location, "Linha 1");
-  assert.equal(
-    created.method,
-    "Instalação durante a parada programada",
-  );
+  assert.equal(created.method, "Instalação durante a parada programada");
   assert.equal(created.estimatedCost, "R$ 1.000,00");
   assert.equal(created.status, "PENDING");
   assert.equal(updateCorrectiveActionSchema.safeParse({}).success, false);

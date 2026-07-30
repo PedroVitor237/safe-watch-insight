@@ -70,17 +70,21 @@ function ListaChecklists() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const result = editingChecklistId
-      ? await updateChecklist.mutateAsync({ id: editingChecklistId, data: form })
-      : await createChecklist.mutateAsync(form);
+    try {
+      const result = editingChecklistId
+        ? await updateChecklist.mutateAsync({ id: editingChecklistId, data: form })
+        : await createChecklist.mutateAsync(form);
 
-    if (!result.success) {
-      toast.error(result.message);
-      return;
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success(editingChecklistId ? "Checklist atualizado." : "Checklist cadastrado.");
+      setDialogOpen(false);
+    } catch {
+      toast.error("Não foi possível salvar o checklist. Verifique os dados e tente novamente.");
     }
-
-    toast.success(editingChecklistId ? "Checklist atualizado." : "Checklist cadastrado.");
-    setDialogOpen(false);
   }
 
   async function handleDelete(id: string) {
@@ -88,14 +92,18 @@ function ListaChecklists() {
       return;
     }
 
-    const result = await deleteChecklist.mutateAsync(id);
+    try {
+      const result = await deleteChecklist.mutateAsync(id);
 
-    if (!result.success) {
-      toast.error(result.message);
-      return;
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success("Checklist excluído.");
+    } catch {
+      toast.error("Não foi possível excluir o checklist. Tente novamente.");
     }
-
-    toast.success("Checklist excluído.");
   }
 
   return (
@@ -142,40 +150,40 @@ function ListaChecklists() {
 
         {checklists.map((c) => (
           <Card key={c.id} className="h-full transition hover:border-primary hover:shadow-sm">
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between">
-                  <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary">
-                    <ListChecks className="h-5 w-5" />
-                  </div>
-                  <Badge variant="outline">{c.isTemplate ? "Template" : "Personalizado"}</Badge>
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between">
+                <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary">
+                  <ListChecks className="h-5 w-5" />
                 </div>
-                <div className="mt-3 font-semibold">{c.title}</div>
-                <div className="mt-1 text-xs text-muted-foreground">
-                  {c.isActive ? "Ativo" : "Inativo"}
-                </div>
-                <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
-                  {c.description ?? "Sem descrição cadastrada."}
-                </p>
-                <div className="mt-4 flex gap-3 text-xs text-muted-foreground">
-                  <span>{c.items.length} itens cadastrados</span>
-                </div>
-                <div className="mt-4 flex flex-wrap justify-end gap-2">
-                  <Button asChild variant="outline" size="sm">
-                    <Link to="/checklists/$id" params={{ id: c.id }}>
-                      Abrir
-                    </Link>
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => openEditDialog(c)}>
-                    <Pencil className="h-3.5 w-3.5" />
-                    Editar
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleDelete(c.id)}>
-                    <Trash2 className="h-3.5 w-3.5" />
-                    Excluir
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                <Badge variant="outline">{c.isTemplate ? "Template" : "Personalizado"}</Badge>
+              </div>
+              <div className="mt-3 font-semibold">{c.title}</div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                {c.isActive ? "Ativo" : "Inativo"}
+              </div>
+              <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
+                {c.description ?? "Sem descrição cadastrada."}
+              </p>
+              <div className="mt-4 flex gap-3 text-xs text-muted-foreground">
+                <span>{c.items.length} itens cadastrados</span>
+              </div>
+              <div className="mt-4 flex flex-wrap justify-end gap-2">
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/checklists/$id" params={{ id: c.id }}>
+                    Abrir
+                  </Link>
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => openEditDialog(c)}>
+                  <Pencil className="h-3.5 w-3.5" />
+                  Editar
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleDelete(c.id)}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Excluir
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
@@ -224,7 +232,10 @@ function ListaChecklists() {
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={createChecklist.isPending || updateChecklist.isPending}>
+              <Button
+                type="submit"
+                disabled={createChecklist.isPending || updateChecklist.isPending}
+              >
                 {editingChecklistId ? "Salvar alterações" : "Cadastrar checklist"}
               </Button>
             </DialogFooter>

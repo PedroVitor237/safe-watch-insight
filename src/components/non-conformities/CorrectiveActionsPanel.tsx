@@ -36,11 +36,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-type CorrectiveActionStatus =
-  | "PENDING"
-  | "IN_PROGRESS"
-  | "COMPLETED"
-  | "OVERDUE";
+type CorrectiveActionStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "OVERDUE";
 
 const formSchema = z.object({
   description: z.string().trim().min(1, "Informe a descrição.").max(2000),
@@ -115,35 +111,33 @@ export function CorrectiveActionsPanel({
       why: values.why || null,
       location: values.location || null,
       responsible: values.responsible || null,
-      dueDate: values.dueDate
-        ? new Date(`${values.dueDate}T12:00:00.000Z`)
-        : null,
+      dueDate: values.dueDate ? new Date(`${values.dueDate}T12:00:00.000Z`) : null,
       method: values.method || null,
       estimatedCost: values.estimatedCost || null,
       status: values.status,
     };
-    const saveResult = editingActionId
-      ? await updateAction.mutateAsync({
-          id: editingActionId,
-          nonConformityId,
-          data,
-        })
-      : await createAction.mutateAsync({
-          nonConformityId,
-          ...data,
-        });
+    try {
+      const saveResult = editingActionId
+        ? await updateAction.mutateAsync({
+            id: editingActionId,
+            nonConformityId,
+            data,
+          })
+        : await createAction.mutateAsync({
+            nonConformityId,
+            ...data,
+          });
 
-    if (!saveResult.success) {
-      toast.error(saveResult.message);
-      return;
+      if (!saveResult.success) {
+        toast.error(saveResult.message);
+        return;
+      }
+
+      toast.success(editingActionId ? "Ação corretiva atualizada." : "Ação corretiva cadastrada.");
+      setDialogOpen(false);
+    } catch {
+      toast.error("Não foi possível salvar a ação corretiva. Tente novamente.");
     }
-
-    toast.success(
-      editingActionId
-        ? "Ação corretiva atualizada."
-        : "Ação corretiva cadastrada.",
-    );
-    setDialogOpen(false);
   }
 
   async function removeAction(id: string) {
@@ -151,17 +145,21 @@ export function CorrectiveActionsPanel({
       return;
     }
 
-    const deleteResult = await deleteAction.mutateAsync({
-      id,
-      nonConformityId,
-    });
+    try {
+      const deleteResult = await deleteAction.mutateAsync({
+        id,
+        nonConformityId,
+      });
 
-    if (!deleteResult.success) {
-      toast.error(deleteResult.message);
-      return;
+      if (!deleteResult.success) {
+        toast.error(deleteResult.message);
+        return;
+      }
+
+      toast.success("Ação corretiva excluída.");
+    } catch {
+      toast.error("Não foi possível excluir a ação corretiva. Tente novamente.");
     }
-
-    toast.success("Ação corretiva excluída.");
   }
 
   return (
@@ -184,9 +182,7 @@ export function CorrectiveActionsPanel({
             <p className="text-sm text-destructive">{result.message}</p>
           )}
           {!actionsQuery.isLoading && actions.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              Nenhuma ação corretiva cadastrada.
-            </p>
+            <p className="text-sm text-muted-foreground">Nenhuma ação corretiva cadastrada.</p>
           )}
           {actions.map((action) => (
             <CorrectiveActionCard
@@ -205,9 +201,7 @@ export function CorrectiveActionsPanel({
             <DialogTitle>
               {editingActionId ? "Editar ação corretiva" : "Nova ação corretiva"}
             </DialogTitle>
-            <DialogDescription>
-              Preencha o plano 5W2H e acompanhe seu andamento.
-            </DialogDescription>
+            <DialogDescription>Preencha o plano 5W2H e acompanhe seu andamento.</DialogDescription>
           </DialogHeader>
           <form onSubmit={form.handleSubmit(saveAction)} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
@@ -224,11 +218,7 @@ export function CorrectiveActionsPanel({
               />
               <div className="space-y-2 sm:col-span-2">
                 <Label htmlFor="action-method">Como?</Label>
-                <Textarea
-                  id="action-method"
-                  rows={4}
-                  {...form.register("method")}
-                />
+                <Textarea id="action-method" rows={4} {...form.register("method")} />
               </div>
             </div>
             <div className="space-y-2">
@@ -252,17 +242,10 @@ export function CorrectiveActionsPanel({
               />
             </div>
             <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setDialogOpen(false)}
-              >
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                 Cancelar
               </Button>
-              <Button
-                type="submit"
-                disabled={createAction.isPending || updateAction.isPending}
-              >
+              <Button type="submit" disabled={createAction.isPending || updateAction.isPending}>
                 {editingActionId ? "Salvar alterações" : "Cadastrar ação"}
               </Button>
             </DialogFooter>
@@ -290,19 +273,12 @@ function CorrectiveActionCard({
           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
             <span>Responsável: {action.responsible ?? "Não definido"}</span>
             <span>Prazo: {fmtData(action.dueDate)}</span>
-            {action.completedAt && (
-              <span>Concluída em {fmtData(action.completedAt)}</span>
-            )}
+            {action.completedAt && <span>Concluída em {fmtData(action.completedAt)}</span>}
           </div>
         </div>
-        <Badge variant={statusVariant(action.status)}>
-          {statusLabel(action.status)}
-        </Badge>
+        <Badge variant={statusVariant(action.status)}>{statusLabel(action.status)}</Badge>
       </div>
-      {(action.why ||
-        action.location ||
-        action.method ||
-        action.estimatedCost) && (
+      {(action.why || action.location || action.method || action.estimatedCost) && (
         <dl className="mt-3 grid gap-2 rounded-md bg-muted/40 p-3 text-xs sm:grid-cols-2">
           <PlanDetail label="Por quê?" value={action.why} />
           <PlanDetail label="Onde?" value={action.location} />
@@ -332,13 +308,7 @@ function TextField({
   placeholder,
 }: {
   form: ReturnType<typeof useForm<FormState>>;
-  name:
-    | "description"
-    | "why"
-    | "location"
-    | "responsible"
-    | "dueDate"
-    | "estimatedCost";
+  name: "description" | "why" | "location" | "responsible" | "dueDate" | "estimatedCost";
   label: string;
   type?: string;
   placeholder?: string;
@@ -349,24 +319,13 @@ function TextField({
   return (
     <div className="space-y-2">
       <Label htmlFor={fieldId}>{label}</Label>
-      <Input
-        id={fieldId}
-        type={type}
-        placeholder={placeholder}
-        {...form.register(name)}
-      />
+      <Input id={fieldId} type={type} placeholder={placeholder} {...form.register(name)} />
       {error && <p className="text-xs text-destructive">{error.message}</p>}
     </div>
   );
 }
 
-function PlanDetail({
-  label,
-  value,
-}: {
-  label: string;
-  value: string | null;
-}) {
+function PlanDetail({ label, value }: { label: string; value: string | null }) {
   if (!value) {
     return null;
   }

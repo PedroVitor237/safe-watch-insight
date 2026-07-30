@@ -9,4 +9,3 @@ export class ConflictError extends ApiError {
     });
   }
 }
-

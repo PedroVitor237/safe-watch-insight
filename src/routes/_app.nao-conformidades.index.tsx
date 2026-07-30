@@ -14,12 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNonConformities } from "@/hooks/useNonConformities";
 import { fmtData } from "@/lib/format";
 import type { NonConformityWithRelations } from "@/server/repositories/non-conformity.repository";
@@ -44,20 +39,14 @@ function ListaNCs() {
   const [severity, setSeverity] = useState("all");
   const nonConformitiesQuery = useNonConformities({
     search: search || undefined,
-    severity:
-      severity === "all"
-        ? undefined
-        : (severity as "LOW" | "MEDIUM" | "HIGH" | "CRITICAL"),
+    severity: severity === "all" ? undefined : (severity as "LOW" | "MEDIUM" | "HIGH" | "CRITICAL"),
   });
   const result = nonConformitiesQuery.data;
   const nonConformities = result?.success ? result.data.items : [];
 
   return (
     <div>
-      <PageHeader
-        title="Não conformidades"
-        description="Gestão de NCs e ações corretivas."
-      />
+      <PageHeader title="Não conformidades" description="Gestão de NCs e ações corretivas." />
       <div className="space-y-4 p-4 sm:p-8">
         <div className="grid gap-3 rounded-lg border bg-card p-4 sm:grid-cols-[minmax(0,1fr)_220px]">
           <div className="relative">
@@ -93,21 +82,17 @@ function ListaNCs() {
 
         {result?.success === false && (
           <Card>
-            <CardContent className="p-6 text-sm text-destructive">
-              {result.message}
-            </CardContent>
+            <CardContent className="p-6 text-sm text-destructive">{result.message}</CardContent>
           </Card>
         )}
 
-        {!nonConformitiesQuery.isLoading &&
-          result?.success &&
-          nonConformities.length === 0 && (
-            <Card>
-              <CardContent className="p-8 text-center text-sm text-muted-foreground">
-                Nenhuma não conformidade encontrada.
-              </CardContent>
-            </Card>
-          )}
+        {!nonConformitiesQuery.isLoading && result?.success && nonConformities.length === 0 && (
+          <Card>
+            <CardContent className="p-8 text-center text-sm text-muted-foreground">
+              Nenhuma não conformidade encontrada.
+            </CardContent>
+          </Card>
+        )}
 
         {nonConformities.length > 0 && (
           <Tabs value={view} onValueChange={setView}>
@@ -128,17 +113,12 @@ function ListaNCs() {
                       <div className="flex items-center justify-between px-1">
                         <div className="flex items-center gap-2">
                           <StatusBadge value={column.id} />
-                          <span className="text-xs text-muted-foreground">
-                            {items.length}
-                          </span>
+                          <span className="text-xs text-muted-foreground">{items.length}</span>
                         </div>
                       </div>
                       <div className="min-h-[200px] space-y-2 rounded-lg bg-muted/40 p-2">
                         {items.map((nonConformity) => (
-                          <NonConformityCard
-                            key={nonConformity.id}
-                            nonConformity={nonConformity}
-                          />
+                          <NonConformityCard key={nonConformity.id} nonConformity={nonConformity} />
                         ))}
                         {items.length === 0 && (
                           <div className="py-8 text-center text-xs text-muted-foreground">
@@ -156,8 +136,7 @@ function ListaNCs() {
               <Card>
                 <CardContent className="divide-y p-0">
                   {nonConformities.map((nonConformity) => {
-                    const inspection =
-                      nonConformity.inspectionResponse.inspection;
+                    const inspection = nonConformity.inspectionResponse.inspection;
 
                     return (
                       <Link
@@ -173,13 +152,10 @@ function ListaNCs() {
                           </div>
                           <div className="truncate text-xs text-muted-foreground">
                             {getNonConformityCode(nonConformity)} ·{" "}
-                            {inspection.company.tradeName ??
-                              inspection.company.corporateName}
+                            {inspection.company.tradeName ?? inspection.company.corporateName}
                           </div>
                         </div>
-                        <StatusBadge
-                          value={toUiSeverity(nonConformity.severity)}
-                        />
+                        <StatusBadge value={toUiSeverity(nonConformity.severity)} />
                         <StatusBadge value={toUiStatus(nonConformity.status)} />
                       </Link>
                     );
@@ -194,18 +170,11 @@ function ListaNCs() {
   );
 }
 
-function NonConformityCard({
-  nonConformity,
-}: {
-  nonConformity: NonConformityWithRelations;
-}) {
+function NonConformityCard({ nonConformity }: { nonConformity: NonConformityWithRelations }) {
   const inspection = nonConformity.inspectionResponse.inspection;
 
   return (
-    <Link
-      to="/nao-conformidades/$id"
-      params={{ id: nonConformity.id }}
-    >
+    <Link to="/nao-conformidades/$id" params={{ id: nonConformity.id }}>
       <Card className="transition hover:border-primary hover:shadow-sm">
         <CardContent className="space-y-2 p-3">
           <div className="flex items-start justify-between gap-2">
@@ -221,9 +190,7 @@ function NonConformityCard({
             {inspection.company.tradeName ?? inspection.company.corporateName}
           </div>
           <div className="flex items-center justify-between gap-2 text-xs">
-            <span className="text-muted-foreground">
-              Prazo {fmtData(nonConformity.dueDate)}
-            </span>
+            <span className="text-muted-foreground">Prazo {fmtData(nonConformity.dueDate)}</span>
             <span className="truncate text-muted-foreground">
               {inspection.user.name.split(" ")[0]}
             </span>
@@ -234,15 +201,11 @@ function NonConformityCard({
   );
 }
 
-function getNonConformityTitle(
-  nonConformity: NonConformityWithRelations,
-): string {
+function getNonConformityTitle(nonConformity: NonConformityWithRelations): string {
   return nonConformity.inspectionResponse.checklistItem.description;
 }
 
-function getNonConformityCode(
-  nonConformity: NonConformityWithRelations,
-): string {
+function getNonConformityCode(nonConformity: NonConformityWithRelations): string {
   return `NC-${new Date(nonConformity.createdAt).getFullYear()}-${nonConformity.id
     .slice(0, 8)
     .toUpperCase()}`;

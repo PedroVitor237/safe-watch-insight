@@ -59,23 +59,25 @@ export function NonConformityEditForm({
   }, [description, dueDate, form, severity]);
 
   async function handleSubmit(values: FormState) {
-    const result = await updateNonConformity.mutateAsync({
-      id,
-      data: {
-        description: values.description,
-        severity: values.severity,
-        dueDate: values.dueDate
-          ? new Date(`${values.dueDate}T12:00:00.000Z`)
-          : null,
-      },
-    });
+    try {
+      const result = await updateNonConformity.mutateAsync({
+        id,
+        data: {
+          description: values.description,
+          severity: values.severity,
+          dueDate: values.dueDate ? new Date(`${values.dueDate}T12:00:00.000Z`) : null,
+        },
+      });
 
-    if (!result.success) {
-      toast.error(result.message);
-      return;
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success("Não conformidade atualizada.");
+    } catch {
+      toast.error("Não foi possível atualizar a não conformidade. Tente novamente.");
     }
-
-    toast.success("Não conformidade atualizada.");
   }
 
   return (
@@ -87,11 +89,7 @@ export function NonConformityEditForm({
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="nc-description">Descrição</Label>
-            <Textarea
-              id="nc-description"
-              rows={5}
-              {...form.register("description")}
-            />
+            <Textarea id="nc-description" rows={5} {...form.register("description")} />
             {form.formState.errors.description && (
               <p className="text-xs text-destructive">
                 {form.formState.errors.description.message}
@@ -121,11 +119,7 @@ export function NonConformityEditForm({
             </div>
             <div className="space-y-2">
               <Label htmlFor="nc-due-date">Prazo</Label>
-              <Input
-                id="nc-due-date"
-                type="date"
-                {...form.register("dueDate")}
-              />
+              <Input id="nc-due-date" type="date" {...form.register("dueDate")} />
             </div>
           </div>
           <div className="flex justify-end">

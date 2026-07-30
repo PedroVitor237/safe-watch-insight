@@ -1,12 +1,7 @@
 import type { Result } from "@/server/responses";
 
 export type JsonValue =
-  | string
-  | number
-  | boolean
-  | null
-  | JsonValue[]
-  | { [key: string]: JsonValue };
+  string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
 export type ServerResult<TData> =
   | {
@@ -41,9 +36,7 @@ function toJsonValue(value: unknown): JsonValue {
   }
 
   if (typeof value === "object") {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, item]) => [key, toJsonValue(item)]),
-    );
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, toJsonValue(item)]));
   }
 
   return String(value);

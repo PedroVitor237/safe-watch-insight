@@ -276,7 +276,7 @@ await logout();
 - **Validação:** `createCompanyClientSchema`.
 - **Query parameters:** não se aplica.
 - **Path parameters:** não se aplica.
-- **Regras relacionadas:** `createdById` vem da sessão; CNPJ é normalizado para dígitos; CNPJ ativo deve ser único.
+- **Regras relacionadas:** `createdById` vem da sessão; CNPJ é normalizado para dígitos; o CNPJ deve ser único inclusive entre registros excluídos logicamente, preservando a identidade e o histórico da empresa.
 - **Exemplo de chamada:**
 
 ```ts
@@ -711,8 +711,6 @@ await listChecklistItems({ data: { checklistId } });
   "companyId": "uuid",
   "checklistId": "uuid",
   "inspectionDate": "2026-07-07T10:00:00.000Z",
-  "status": "PLANNED",
-  "syncStatus": "SYNCED",
   "notes": "Observações iniciais"
 }
 ```
@@ -720,7 +718,7 @@ await listChecklistItems({ data: { checklistId } });
 - **Validação:** `createInspectionSchema`.
 - **Query parameters:** não se aplica.
 - **Path parameters:** não se aplica.
-- **Regras relacionadas:** usuário vem da sessão; empresa e checklist devem existir.
+- **Regras relacionadas:** usuário vem da sessão; empresa e checklist devem existir; o checklist precisa estar ativo; o servidor define toda nova inspeção online como `PLANNED` e `SYNCED`, sem aceitar esses estados do cliente.
 - **Exemplo de chamada:**
 
 ```ts
@@ -728,7 +726,7 @@ await createInspection({ data: payload });
 ```
 
 - **Exemplo de resposta:** inspeção criada com relações de usuário, empresa, checklist e respostas.
-- **Erros possíveis:** `401`, `404` empresa/checklist não encontrado, `422`, `500`.
+- **Erros possíveis:** `401`, `404` empresa/checklist não encontrado, `409` checklist inativo, `422`, `500`.
 
 ### `getInspectionById`
 
@@ -871,7 +869,7 @@ await listInspectionResponses({ data: { inspectionId } });
 - **Query parameters:** não se aplica.
 - **Path parameters:** não se aplica.
 - **Status aceitos:** `COMPLIANT`, `NON_COMPLIANT`, `NOT_APPLICABLE`.
-- **Regras relacionadas:** item precisa pertencer ao checklist da inspeção; resposta é única por inspeção + item; inspeção `PLANNED` passa para `IN_PROGRESS` ao salvar resposta; `NON_COMPLIANT` cria ou restaura uma única não conformidade na mesma transação; `COMPLIANT` e `NOT_APPLICABLE` arquivam a não conformidade correspondente; inspeções concluídas ou canceladas não aceitam alterações.
+- **Regras relacionadas:** item precisa pertencer ao checklist da inspeção; resposta é única por inspeção + item; inspeção `PLANNED` passa para `IN_PROGRESS` ao salvar resposta; a validação/transição do estado da inspeção, a resposta e a criação/restauração/remoção lógica da não conformidade são atômicas; `NON_COMPLIANT` cria ou restaura uma única não conformidade; `COMPLIANT` e `NOT_APPLICABLE` arquivam a não conformidade correspondente; inspeções concluídas ou canceladas não aceitam alterações.
 - **Exemplo de chamada:**
 
 ```ts
@@ -880,13 +878,13 @@ await saveInspectionResponse({
     inspectionId,
     checklistItemId,
     status: "NON_COMPLIANT",
-    observation: "Extintor vencido"
-  }
+    observation: "Extintor vencido",
+  },
 });
 ```
 
 - **Exemplo de resposta:** resposta criada ou atualizada.
-- **Erros possíveis:** `401`, `404` inspeção ou item não encontrado para a inspeção, `422`, `500`.
+- **Erros possíveis:** `401`, `404` inspeção ou item não encontrado para a inspeção, `409` inspeção não editável ou conflito concorrente, `422`, `500`.
 
 ### `finishInspection`
 
@@ -906,7 +904,7 @@ await saveInspectionResponse({
 - **Query parameters:** não se aplica.
 - **Path parameters:** `inspectionId` no body.
 - **Regras relacionadas:** inspeção deve existir; todos os itens obrigatórios devem possuir resposta; status passa para `COMPLETED`; inspeções concluídas ou canceladas não podem ser concluídas novamente.
-- **Limitação atual:** não persiste assinatura.
+- **Limitação atual:** assinatura digital ainda não está disponível na interface nem é persistida.
 - **Exemplo de chamada:**
 
 ```ts
@@ -1010,8 +1008,8 @@ await finishInspection({ data: { inspectionId } });
 - **Autenticação:** exige sessão.
 - **Body:** `nonConformityId`, `description` (o quê), `why` (por quê), `location` (onde), `responsible` (quem), `dueDate` (quando), `method` (como), `estimatedCost` (quanto) e `status`.
 - **Validação:** `createCorrectiveActionSchema`.
-- **Regras relacionadas:** a não conformidade deve existir; uma NC aberta passa para `IN_PROGRESS`.
-- **Erros possíveis:** `401`, `404`, `422`, `500`.
+- **Regras relacionadas:** a não conformidade deve existir; a criação da primeira ação e a transição de uma NC aberta para `IN_PROGRESS` ocorrem na mesma transação.
+- **Erros possíveis:** `401`, `404`, `409` alteração concorrente da NC, `422`, `500`.
 
 ### `listCorrectiveActions`
 

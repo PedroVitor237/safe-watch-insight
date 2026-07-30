@@ -48,22 +48,24 @@ function NovaInspecao() {
       return;
     }
 
-    const result = await createInspection.mutateAsync({
-      companyId: empresaId,
-      checklistId,
-      inspectionDate: agendada ? new Date(agendada) : new Date(),
-      status: "PLANNED",
-      syncStatus: "SYNCED",
-      notes: obs,
-    });
+    try {
+      const result = await createInspection.mutateAsync({
+        companyId: empresaId,
+        checklistId,
+        inspectionDate: agendada ? new Date(agendada) : new Date(),
+        notes: obs,
+      });
 
-    if (!result.success) {
-      toast.error(result.message);
-      return;
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success("Inspeção criada com sucesso!");
+      navigate({ to: "/inspecoes" });
+    } catch {
+      toast.error("Não foi possível criar a inspeção. Verifique os dados e tente novamente.");
     }
-
-    toast.success("Inspeção criada com sucesso!");
-    navigate({ to: "/inspecoes" });
   }
 
   return (

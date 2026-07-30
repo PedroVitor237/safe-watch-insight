@@ -23,10 +23,7 @@ export interface UpdateChecklistItemVariables {
   data: UpdateChecklistItemSchemaInput;
 }
 
-export function useChecklistItems(
-  checklistId: string,
-  options: UseChecklistItemsOptions = {},
-) {
+export function useChecklistItems(checklistId: string, options: UseChecklistItemsOptions = {}) {
   const { enabled = true } = options;
 
   return useQuery({

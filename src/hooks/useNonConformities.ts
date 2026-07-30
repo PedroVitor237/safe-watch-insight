@@ -17,9 +17,7 @@ import type {
   UpdateNonConformitySchemaInput,
 } from "@/server/schemas/non-conformity.schema";
 
-export function useNonConformities(
-  filters: NonConformityQueryFilters = {},
-) {
+export function useNonConformities(filters: NonConformityQueryFilters = {}) {
   const listFilters = getNonConformityListFilters(filters);
 
   return useQuery({
@@ -40,8 +38,7 @@ export function useCreateNonConformity() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateNonConformitySchemaInput) =>
-      createNonConformity({ data }),
+    mutationFn: (data: CreateNonConformitySchemaInput) => createNonConformity({ data }),
     onSuccess: async (result) => {
       if (result.success) {
         await queryClient.invalidateQueries({
@@ -56,13 +53,8 @@ export function useUpdateNonConformity() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: UpdateNonConformitySchemaInput;
-    }) => updateNonConformity({ data: { id, data } }),
+    mutationFn: ({ id, data }: { id: string; data: UpdateNonConformitySchemaInput }) =>
+      updateNonConformity({ data: { id, data } }),
     onSuccess: async (result, variables) => {
       if (!result.success) {
         return;

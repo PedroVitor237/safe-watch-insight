@@ -92,9 +92,7 @@ export class NonConformityRepository extends BaseRepository<
     super(prisma.nonConformity);
   }
 
-  createWithRelations(
-    data: Prisma.NonConformityCreateInput,
-  ): Promise<NonConformityWithRelations> {
+  createWithRelations(data: Prisma.NonConformityCreateInput): Promise<NonConformityWithRelations> {
     return prisma.nonConformity.create({
       data,
       include: nonConformityRelations,
@@ -111,9 +109,7 @@ export class NonConformityRepository extends BaseRepository<
     });
   }
 
-  findByInspectionResponseId(
-    inspectionResponseId: string,
-  ): Promise<NonConformity | null> {
+  findByInspectionResponseId(inspectionResponseId: string): Promise<NonConformity | null> {
     return prisma.nonConformity.findUnique({
       where: { inspectionResponseId },
     });
@@ -168,9 +164,7 @@ export class NonConformityRepository extends BaseRepository<
       .then((result) => result.count);
   }
 
-  private buildWhere(
-    filters: NonConformityFindManyFilters,
-  ): Prisma.NonConformityWhereInput {
+  private buildWhere(filters: NonConformityFindManyFilters): Prisma.NonConformityWhereInput {
     const conditions: Prisma.NonConformityWhereInput[] = [];
 
     if (!filters.includeDeleted) {
@@ -262,8 +256,7 @@ export class NonConformityRepository extends BaseRepository<
     sortBy?: NonConformitySortField,
     sortOrder: SortOrder = "desc",
   ): Prisma.NonConformityOrderByWithRelationInput {
-    const field =
-      sortBy && sortBy in NON_CONFORMITY_SORT_FIELDS ? sortBy : "createdAt";
+    const field = sortBy && sortBy in NON_CONFORMITY_SORT_FIELDS ? sortBy : "createdAt";
 
     return { [field]: sortOrder };
   }

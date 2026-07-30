@@ -75,7 +75,7 @@ function LoginPage() {
           </h2>
           <p className="mt-4 max-w-md text-sm text-sidebar-foreground/70">
             Execução de checklists em campo, registro de não conformidades, planos de ação 5W2H e
-            relatórios — com suporte offline.
+            relatórios, com arquitetura preparada para futuro suporte offline.
           </p>
         </div>
         <div className="text-xs text-sidebar-foreground/50">

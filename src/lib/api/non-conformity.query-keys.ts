@@ -1,7 +1,6 @@
 import type { NonConformityFiltersSchemaInput } from "@/server/schemas/non-conformity.schema";
 
-export type NonConformityQueryFilters =
-  Partial<NonConformityFiltersSchemaInput>;
+export type NonConformityQueryFilters = Partial<NonConformityFiltersSchemaInput>;
 
 export function getNonConformityListFilters(
   filters: NonConformityQueryFilters,

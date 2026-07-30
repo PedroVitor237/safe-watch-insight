@@ -6,7 +6,13 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useStandards } from "@/hooks/useStandards";
 
@@ -27,9 +33,7 @@ function Normas() {
   const standards = useMemo(() => {
     const items = result?.success ? [...result.data.items] : [];
 
-    return items.sort(
-      (left, right) => standardNumber(left.code) - standardNumber(right.code),
-    );
+    return items.sort((left, right) => standardNumber(left.code) - standardNumber(right.code));
   }, [result]);
 
   return (
@@ -82,36 +86,36 @@ function Normas() {
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {standards.map((standard) => (
-          <Card key={standard.id}>
-            <CardContent className="p-5 space-y-3">
-              <div className="flex items-start justify-between gap-2">
-                <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary">
-                  <BookOpen className="h-5 w-5" />
+            <Card key={standard.id}>
+              <CardContent className="p-5 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary">
+                    <BookOpen className="h-5 w-5" />
+                  </div>
+                  <div className="flex gap-2">
+                    {!standard.isActive && <Badge variant="destructive">Revogada</Badge>}
+                    <Badge>{standard.code}</Badge>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  {!standard.isActive && <Badge variant="destructive">Revogada</Badge>}
-                  <Badge>{standard.code}</Badge>
+                <div>
+                  <div className="font-semibold">{standard.title}</div>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {standard.summary ?? "Sem resumo cadastrado."}
+                  </p>
                 </div>
-              </div>
-              <div>
-                <div className="font-semibold">{standard.title}</div>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {standard.summary ?? "Sem resumo cadastrado."}
-                </p>
-              </div>
-              {standard.officialUrl && (
-                <a
-                  href={standard.officialUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                >
-                  Consultar fonte oficial
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              )}
-            </CardContent>
-          </Card>
+                {standard.officialUrl && (
+                  <a
+                    href={standard.officialUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                  >
+                    Consultar fonte oficial
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                )}
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>

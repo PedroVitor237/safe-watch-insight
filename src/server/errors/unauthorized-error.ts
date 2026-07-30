@@ -9,4 +9,3 @@ export class UnauthorizedError extends ApiError {
     });
   }
 }
-

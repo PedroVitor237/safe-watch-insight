@@ -64,10 +64,7 @@ export type {
   UpdateCompanySchemaInput,
 } from "./company.schema";
 export type { ListQueryInput, PaginationInput } from "./pagination.schema";
-export type {
-  StandardFiltersSchemaInput,
-  StandardSortFieldSchemaInput,
-} from "./standard.schema";
+export type { StandardFiltersSchemaInput, StandardSortFieldSchemaInput } from "./standard.schema";
 export type {
   CreateNonConformitySchemaInput,
   NonConformityFiltersSchemaInput,

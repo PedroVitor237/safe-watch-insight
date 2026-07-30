@@ -9,9 +9,7 @@ import {
 } from "@/server/schemas/non-conformity.schema";
 
 async function getNonConformityService() {
-  const { nonConformityService } = await import(
-    "@/server/services/non-conformity.service"
-  );
+  const { nonConformityService } = await import("@/server/services/non-conformity.service");
 
   return nonConformityService;
 }
@@ -76,9 +74,7 @@ export const updateNonConformity = createServerFn({ method: "POST" })
 
     const service = await getNonConformityService();
 
-    return toServerResult(
-      await service.updateNonConformity(data.id, data.data),
-    );
+    return toServerResult(await service.updateNonConformity(data.id, data.data));
   });
 
 export const deleteNonConformity = createServerFn({ method: "POST" })

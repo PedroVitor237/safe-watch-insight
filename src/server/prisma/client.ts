@@ -25,10 +25,8 @@ function createPrismaClient(): PrismaClientInstance {
   });
 }
 
-export const prisma: PrismaClientInstance =
-  globalForPrisma.safeWatchPrisma ?? createPrismaClient();
+export const prisma: PrismaClientInstance = globalForPrisma.safeWatchPrisma ?? createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.safeWatchPrisma = prisma;
 }
-

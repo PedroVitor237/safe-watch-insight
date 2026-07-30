@@ -37,11 +37,7 @@ const REGULATORY_STANDARDS = [
   ["NR-10", "Segurança em Instalações e Serviços em Eletricidade", true],
   ["NR-11", "Transporte, Movimentação, Armazenagem e Manuseio de Materiais", true],
   ["NR-12", "Segurança no Trabalho em Máquinas e Equipamentos", true],
-  [
-    "NR-13",
-    "Caldeiras, Vasos de Pressão e Tubulações e Tanques Metálicos de Armazenamento",
-    true,
-  ],
+  ["NR-13", "Caldeiras, Vasos de Pressão e Tubulações e Tanques Metálicos de Armazenamento", true],
   ["NR-14", "Fornos", true],
   ["NR-15", "Atividades e Operações Insalubres", true],
   ["NR-16", "Atividades e Operações Perigosas", true],

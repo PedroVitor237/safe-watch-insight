@@ -29,9 +29,7 @@ export const correctiveActionsByNonConformitySchema = z.object({
   nonConformityId: z.string().uuid(),
 });
 
-export const correctiveActionStatusSchema = z.nativeEnum(
-  CorrectiveActionStatus,
-);
+export const correctiveActionStatusSchema = z.nativeEnum(CorrectiveActionStatus);
 
 export const createCorrectiveActionSchema = z.object({
   nonConformityId: z.string().uuid(),
@@ -42,9 +40,7 @@ export const createCorrectiveActionSchema = z.object({
   dueDate: optionalNullableDateSchema,
   method: optionalNullableLongTextSchema,
   estimatedCost: optionalNullableTextSchema,
-  status: correctiveActionStatusSchema.default(
-    CorrectiveActionStatus.PENDING,
-  ),
+  status: correctiveActionStatusSchema.default(CorrectiveActionStatus.PENDING),
 });
 
 export const updateCorrectiveActionSchema = z
@@ -67,9 +63,5 @@ export const updateCorrectiveActionInputSchema = z.object({
   data: updateCorrectiveActionSchema,
 });
 
-export type CreateCorrectiveActionSchemaInput = z.infer<
-  typeof createCorrectiveActionSchema
->;
-export type UpdateCorrectiveActionSchemaInput = z.infer<
-  typeof updateCorrectiveActionSchema
->;
+export type CreateCorrectiveActionSchemaInput = z.infer<typeof createCorrectiveActionSchema>;
+export type UpdateCorrectiveActionSchemaInput = z.infer<typeof updateCorrectiveActionSchema>;

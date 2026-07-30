@@ -15,7 +15,6 @@ import { useStore } from "@/lib/mockStore";
 import { checklists, empresas, usuarios } from "@/mocks/data";
 import { fmtData, fmtDataHora } from "@/lib/format";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/relatorios")({
   head: () => ({ meta: [{ title: "Relatórios — SST" }] }),
@@ -34,21 +33,28 @@ function Relatorios() {
     <div>
       <PageHeader
         title="Relatórios"
-        description="Geração e visualização de relatórios de inspeção."
+        description="Prévia demonstrativa do módulo de relatórios."
         actions={
           <>
-            <Button variant="outline" onClick={() => window.print()}>
+            <Button variant="outline" disabled>
               <Printer className="h-4 w-4" />
-              Imprimir
+              Impressão indisponível
             </Button>
-            <Button onClick={() => toast.success("PDF gerado (mock)")}>
+            <Button disabled>
               <Download className="h-4 w-4" />
-              Exportar PDF
+              PDF indisponível
             </Button>
           </>
         }
       />
       <div className="space-y-4 p-4 sm:p-8">
+        <Card className="border-info/40 bg-info/10">
+          <CardContent className="p-4 text-sm">
+            Esta tela usa dados demonstrativos locais e não representa inspeções persistidas. A
+            geração, impressão e exportação de relatórios reais serão implementadas em um sprint
+            futuro.
+          </CardContent>
+        </Card>
         <Card className="p-3">
           <Select value={id} onValueChange={setId}>
             <SelectTrigger>
@@ -160,13 +166,6 @@ function PreviewRelatorio({ insId }: { insId: string }) {
                 </div>
               ))}
             </div>
-          </section>
-        )}
-
-        {ins.assinaturaResponsavel && (
-          <section className="border-t pt-4">
-            <div className="text-xs text-muted-foreground">Assinatura do responsável</div>
-            <img src={ins.assinaturaResponsavel} alt="Assinatura" className="mt-2 h-24 border-b" />
           </section>
         )}
       </CardContent>

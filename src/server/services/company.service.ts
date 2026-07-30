@@ -1,3 +1,4 @@
+import { Prisma } from "@/generated/prisma/client";
 import { ApiError, ConflictError, NotFoundError } from "@/server/errors";
 import { companyRepository, CompanyRepository } from "@/server/repositories";
 import type { CompanyFindManyFilters } from "@/server/repositories";
@@ -114,6 +115,10 @@ export class CompanyService extends BaseService<CompanyRepository> {
     } catch (error) {
       if (error instanceof ApiError) {
         return this.failure(error);
+      }
+
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+        return this.failure(new ConflictError("A company with this CNPJ already exists."));
       }
 
       throw error;

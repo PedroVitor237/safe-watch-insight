@@ -13,4 +13,3 @@ export const listQuerySchema = paginationSchema.extend({
 
 export type PaginationInput = z.infer<typeof paginationSchema>;
 export type ListQueryInput = z.infer<typeof listQuerySchema>;
-

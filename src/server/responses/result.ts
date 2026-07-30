@@ -50,4 +50,3 @@ export function resultFromError(error: unknown): ErrorResult {
 
   return internalErrorResult();
 }
-

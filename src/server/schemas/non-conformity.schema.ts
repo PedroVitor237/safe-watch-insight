@@ -55,12 +55,6 @@ export const nonConformityFiltersSchema = listQuerySchema.extend({
   standardId: z.string().uuid().optional(),
 });
 
-export type CreateNonConformitySchemaInput = z.infer<
-  typeof createNonConformitySchema
->;
-export type UpdateNonConformitySchemaInput = z.infer<
-  typeof updateNonConformitySchema
->;
-export type NonConformityFiltersSchemaInput = z.infer<
-  typeof nonConformityFiltersSchema
->;
+export type CreateNonConformitySchemaInput = z.infer<typeof createNonConformitySchema>;
+export type UpdateNonConformitySchemaInput = z.infer<typeof updateNonConformitySchema>;
+export type NonConformityFiltersSchemaInput = z.infer<typeof nonConformityFiltersSchema>;

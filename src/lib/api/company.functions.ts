@@ -93,7 +93,9 @@ export const createCompany = createServerFn({ method: "POST" })
       return toServerResult<never>(userResult);
     }
 
-    return toServerResult(await service.createCompany({ ...data, createdById: userResult.data.id }));
+    return toServerResult(
+      await service.createCompany({ ...data, createdById: userResult.data.id }),
+    );
   });
 
 export const updateCompany = createServerFn({ method: "POST" })

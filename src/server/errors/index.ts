@@ -5,4 +5,3 @@ export { UnauthorizedError } from "./unauthorized-error";
 export { ValidationError } from "./validation-error";
 export type { ApiErrorOptions } from "./api-error";
 export type { ValidationIssue } from "./validation-error";
-

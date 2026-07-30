@@ -57,4 +57,3 @@ export abstract class BaseRepository<
     return this.delegate.count(args);
   }
 }
-

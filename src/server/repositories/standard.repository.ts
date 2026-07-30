@@ -45,9 +45,7 @@ export class StandardRepository extends BaseRepository<
     });
   }
 
-  findManyPaginated(
-    filters: StandardFindManyFilters = {},
-  ): Promise<PaginatedResult<Standard>> {
+  findManyPaginated(filters: StandardFindManyFilters = {}): Promise<PaginatedResult<Standard>> {
     const pagination = normalizePagination(filters.page, filters.pageSize);
     const where = this.buildWhere(filters);
     const orderBy = this.buildOrderBy(filters.sortBy, filters.sortOrder);

@@ -1,5 +1,5 @@
-import type { InspectionStatus, SyncStatus } from "@/generated/prisma/client";
-import { ApiError, NotFoundError } from "@/server/errors";
+import { InspectionStatus, SyncStatus } from "@/generated/prisma/client";
+import { ApiError, ConflictError, NotFoundError } from "@/server/errors";
 import { ChecklistRepository } from "@/server/repositories/checklist.repository";
 import { CompanyRepository } from "@/server/repositories/company.repository";
 import {
@@ -20,8 +20,6 @@ export interface CreateInspectionInput {
   companyId: string;
   checklistId: string;
   inspectionDate: Date;
-  status?: InspectionStatus;
-  syncStatus?: SyncStatus;
   notes?: string | null;
 }
 
@@ -116,13 +114,17 @@ export class InspectionService extends BaseService<InspectionRepository> {
     if (!checklist) {
       throw new NotFoundError("Checklist not found.");
     }
+
+    if (!checklist.isActive) {
+      throw new ConflictError("Inactive checklists cannot be used in new inspections.");
+    }
   }
 
   private toCreateData(input: CreateInspectionInput): InspectionCreateData {
     return {
       inspectionDate: input.inspectionDate,
-      status: input.status,
-      syncStatus: input.syncStatus,
+      status: InspectionStatus.PLANNED,
+      syncStatus: SyncStatus.SYNCED,
       notes: input.notes,
       user: {
         connect: {

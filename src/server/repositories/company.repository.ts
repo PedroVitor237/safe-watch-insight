@@ -63,7 +63,6 @@ export class CompanyRepository extends BaseRepository<
       .count({
         where: {
           cnpj,
-          deletedAt: null,
           ...(excludeId ? { NOT: { id: excludeId } } : {}),
         },
       })
@@ -86,7 +85,9 @@ export class CompanyRepository extends BaseRepository<
     ]).then(([items, totalItems]) => paginate(items, totalItems, pagination));
   }
 
-  countActive(filters: Omit<CompanyFindManyFilters, "page" | "pageSize" | "sortBy" | "sortOrder"> = {}): Promise<number> {
+  countActive(
+    filters: Omit<CompanyFindManyFilters, "page" | "pageSize" | "sortBy" | "sortOrder"> = {},
+  ): Promise<number> {
     return prisma.company.count({
       where: this.buildWhere(filters),
     });

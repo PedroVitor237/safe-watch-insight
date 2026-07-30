@@ -13,14 +13,10 @@ import type {
   UpdateCorrectiveActionSchemaInput,
 } from "@/server/schemas/corrective-action.schema";
 
-export function useCorrectiveActions(
-  nonConformityId: string,
-  enabled = true,
-) {
+export function useCorrectiveActions(nonConformityId: string, enabled = true) {
   return useQuery({
     queryKey: correctiveActionQueryKeys.list(nonConformityId),
-    queryFn: () =>
-      listCorrectiveActions({ data: { nonConformityId } }),
+    queryFn: () => listCorrectiveActions({ data: { nonConformityId } }),
     enabled: enabled && nonConformityId.length > 0,
   });
 }
@@ -29,8 +25,7 @@ export function useCreateCorrectiveAction() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateCorrectiveActionSchemaInput) =>
-      createCorrectiveAction({ data }),
+    mutationFn: (data: CreateCorrectiveActionSchemaInput) => createCorrectiveAction({ data }),
     onSuccess: async (result, variables) => {
       if (!result.success) {
         return;
@@ -38,14 +33,10 @@ export function useCreateCorrectiveAction() {
 
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: correctiveActionQueryKeys.list(
-            variables.nonConformityId,
-          ),
+          queryKey: correctiveActionQueryKeys.list(variables.nonConformityId),
         }),
         queryClient.invalidateQueries({
-          queryKey: nonConformityQueryKeys.detail(
-            variables.nonConformityId,
-          ),
+          queryKey: nonConformityQueryKeys.detail(variables.nonConformityId),
         }),
         queryClient.invalidateQueries({
           queryKey: nonConformityQueryKeys.lists(),
@@ -75,14 +66,10 @@ export function useUpdateCorrectiveAction() {
 
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: correctiveActionQueryKeys.list(
-            variables.nonConformityId,
-          ),
+          queryKey: correctiveActionQueryKeys.list(variables.nonConformityId),
         }),
         queryClient.invalidateQueries({
-          queryKey: nonConformityQueryKeys.detail(
-            variables.nonConformityId,
-          ),
+          queryKey: nonConformityQueryKeys.detail(variables.nonConformityId),
         }),
       ]);
     },
@@ -107,14 +94,10 @@ export function useDeleteCorrectiveAction() {
 
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: correctiveActionQueryKeys.list(
-            variables.nonConformityId,
-          ),
+          queryKey: correctiveActionQueryKeys.list(variables.nonConformityId),
         }),
         queryClient.invalidateQueries({
-          queryKey: nonConformityQueryKeys.detail(
-            variables.nonConformityId,
-          ),
+          queryKey: nonConformityQueryKeys.detail(variables.nonConformityId),
         }),
       ]);
     },

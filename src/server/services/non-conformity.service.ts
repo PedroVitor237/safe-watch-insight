@@ -20,12 +20,8 @@ import type { PaginatedResult } from "@/server/types";
 
 import { BaseService } from "./base.service";
 
-type NonConformityCreateData = Parameters<
-  NonConformityRepository["createWithRelations"]
->[0];
-type NonConformityUpdateData = Parameters<
-  NonConformityRepository["updateWithRelations"]
->[1];
+type NonConformityCreateData = Parameters<NonConformityRepository["createWithRelations"]>[0];
+type NonConformityUpdateData = Parameters<NonConformityRepository["updateWithRelations"]>[1];
 
 export interface CreateNonConformityInput {
   inspectionResponseId: string;
@@ -45,8 +41,7 @@ export interface UpdateNonConformityInput {
 export class NonConformityService extends BaseService<NonConformityRepository> {
   constructor(
     repository: NonConformityRepository = nonConformityRepository,
-    private readonly responseRepository: InspectionResponseRepository =
-      inspectionResponseRepository,
+    private readonly responseRepository: InspectionResponseRepository = inspectionResponseRepository,
   ) {
     super(repository);
   }
@@ -69,27 +64,19 @@ export class NonConformityService extends BaseService<NonConformityRepository> {
         );
       }
 
-      const existing = await this.repository.findByInspectionResponseId(
-        input.inspectionResponseId,
-      );
+      const existing = await this.repository.findByInspectionResponseId(input.inspectionResponseId);
 
       if (existing) {
-        throw new ConflictError(
-          "This inspection response already has a non-conformity.",
-        );
+        throw new ConflictError("This inspection response already has a non-conformity.");
       }
 
-      const nonConformity = await this.repository.createWithRelations(
-        this.toCreateData(input),
-      );
+      const nonConformity = await this.repository.createWithRelations(this.toCreateData(input));
 
       return this.success(nonConformity);
     });
   }
 
-  async getNonConformityById(
-    id: string,
-  ): Promise<Result<NonConformityWithRelations>> {
+  async getNonConformityById(id: string): Promise<Result<NonConformityWithRelations>> {
     return this.execute(async () => {
       await this.repository.markOverdue(new Date());
       const nonConformity = await this.ensureNonConformityExists(id);
@@ -118,18 +105,13 @@ export class NonConformityService extends BaseService<NonConformityRepository> {
   ): Promise<Result<NonConformityWithRelations>> {
     return this.execute(async () => {
       await this.ensureNonConformityExists(id);
-      const nonConformity = await this.repository.updateWithRelations(
-        id,
-        this.toUpdateData(input),
-      );
+      const nonConformity = await this.repository.updateWithRelations(id, this.toUpdateData(input));
 
       return this.success(nonConformity);
     });
   }
 
-  async deleteNonConformity(
-    id: string,
-  ): Promise<Result<NonConformityWithRelations>> {
+  async deleteNonConformity(id: string): Promise<Result<NonConformityWithRelations>> {
     return this.execute(async () => {
       await this.ensureNonConformityExists(id);
       const nonConformity = await this.repository.softDelete(id);
@@ -138,9 +120,7 @@ export class NonConformityService extends BaseService<NonConformityRepository> {
     });
   }
 
-  private async execute<TData>(
-    operation: () => Promise<Result<TData>>,
-  ): Promise<Result<TData>> {
+  private async execute<TData>(operation: () => Promise<Result<TData>>): Promise<Result<TData>> {
     try {
       return await operation();
     } catch (error) {
@@ -152,9 +132,7 @@ export class NonConformityService extends BaseService<NonConformityRepository> {
     }
   }
 
-  private async ensureNonConformityExists(
-    id: string,
-  ): Promise<NonConformityWithRelations> {
+  private async ensureNonConformityExists(id: string): Promise<NonConformityWithRelations> {
     const nonConformity = await this.repository.findActiveById(id);
 
     if (!nonConformity) {
@@ -164,9 +142,7 @@ export class NonConformityService extends BaseService<NonConformityRepository> {
     return nonConformity;
   }
 
-  private toCreateData(
-    input: CreateNonConformityInput,
-  ): NonConformityCreateData {
+  private toCreateData(input: CreateNonConformityInput): NonConformityCreateData {
     return {
       description: input.description,
       severity: input.severity,
@@ -180,13 +156,9 @@ export class NonConformityService extends BaseService<NonConformityRepository> {
     };
   }
 
-  private toUpdateData(
-    input: UpdateNonConformityInput,
-  ): NonConformityUpdateData {
+  private toUpdateData(input: UpdateNonConformityInput): NonConformityUpdateData {
     const data: Prisma.NonConformityUpdateInput = {
-      ...(input.description !== undefined
-        ? { description: input.description }
-        : {}),
+      ...(input.description !== undefined ? { description: input.description } : {}),
       ...(input.severity !== undefined ? { severity: input.severity } : {}),
       ...(input.dueDate !== undefined ? { dueDate: input.dueDate } : {}),
       ...(input.status !== undefined ? { status: input.status } : {}),

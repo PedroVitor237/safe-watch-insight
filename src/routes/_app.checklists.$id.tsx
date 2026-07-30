@@ -74,26 +74,30 @@ function EditorChecklist() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const result = editingItemId
-      ? await updateItem.mutateAsync({
-          id: editingItemId,
-          checklistId: id,
-          data: form,
-        })
-      : await createItem.mutateAsync({
-          checklistId: id,
-          description: form.description,
-          isRequired: form.isRequired,
-          standardIds: form.standardIds,
-        });
+    try {
+      const result = editingItemId
+        ? await updateItem.mutateAsync({
+            id: editingItemId,
+            checklistId: id,
+            data: form,
+          })
+        : await createItem.mutateAsync({
+            checklistId: id,
+            description: form.description,
+            isRequired: form.isRequired,
+            standardIds: form.standardIds,
+          });
 
-    if (!result.success) {
-      toast.error(result.message);
-      return;
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success(editingItemId ? "Item atualizado." : "Item cadastrado.");
+      setDialogOpen(false);
+    } catch {
+      toast.error("Não foi possível salvar o item. Verifique os dados e tente novamente.");
     }
-
-    toast.success(editingItemId ? "Item atualizado." : "Item cadastrado.");
-    setDialogOpen(false);
   }
 
   async function handleDelete(itemId: string) {
@@ -101,14 +105,18 @@ function EditorChecklist() {
       return;
     }
 
-    const result = await deleteItem.mutateAsync({ id: itemId, checklistId: id });
+    try {
+      const result = await deleteItem.mutateAsync({ id: itemId, checklistId: id });
 
-    if (!result.success) {
-      toast.error(result.message);
-      return;
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success("Item excluído.");
+    } catch {
+      toast.error("Não foi possível excluir o item. Tente novamente.");
     }
-
-    toast.success("Item excluído.");
   }
 
   return (
@@ -204,7 +212,9 @@ function EditorChecklist() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{editingItemId ? "Editar item" : "Novo item"}</DialogTitle>
-            <DialogDescription>Cadastre uma verificação objetiva para este checklist.</DialogDescription>
+            <DialogDescription>
+              Cadastre uma verificação objetiva para este checklist.
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">

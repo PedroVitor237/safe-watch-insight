@@ -6,6 +6,7 @@ const styles: Record<string, string> = {
   planejada: "bg-info/15 text-info border-info/40",
   em_andamento: "bg-warning/20 text-warning-foreground border-warning/50",
   concluida: "bg-success/15 text-success border-success/40",
+  cancelada: "bg-muted text-muted-foreground border-border",
   pendente_sync: "bg-muted text-muted-foreground border-border",
   aberta: "bg-destructive/15 text-destructive border-destructive/40",
   em_tratativa: "bg-warning/20 text-warning-foreground border-warning/50",

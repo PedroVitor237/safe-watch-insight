@@ -93,7 +93,9 @@ export const createChecklist = createServerFn({ method: "POST" })
       return toServerResult<never>(userResult);
     }
 
-    return toServerResult(await service.createChecklist({ ...data, createdById: userResult.data.id }));
+    return toServerResult(
+      await service.createChecklist({ ...data, createdById: userResult.data.id }),
+    );
   });
 
 export const updateChecklist = createServerFn({ method: "POST" })

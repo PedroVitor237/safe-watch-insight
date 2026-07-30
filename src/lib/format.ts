@@ -38,6 +38,7 @@ export const labelStatus: Record<string, string> = {
   planejada: "Planejada",
   em_andamento: "Em andamento",
   concluida: "Concluída",
+  cancelada: "Cancelada",
   pendente_sync: "Sync pendente",
   aberta: "Aberta",
   em_tratativa: "Em tratativa",

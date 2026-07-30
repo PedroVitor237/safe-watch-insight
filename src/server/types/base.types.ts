@@ -33,4 +33,3 @@ export interface ListQuery {
 }
 
 export type MaybePromise<TValue> = TValue | Promise<TValue>;
-
