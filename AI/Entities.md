@@ -81,9 +81,9 @@ Uma empresa possui:
 
 # CHECKLIST
 
-Representa um modelo de checklist.
-
-Pode ser reutilizado em diversas inspeções.
+Representa a identidade reutilizável de um modelo de checklist. O conteúdo que
+pode ser executado pertence às suas versões, e não deve ser lido diretamente
+desta entidade para reconstruir uma inspeção histórica.
 
 ## Principais atributos
 
@@ -98,7 +98,9 @@ Pode ser reutilizado em diversas inspeções.
 
 Possui:
 
-- vários itens
+- várias versões;
+- no máximo uma versão `DRAFT` por vez;
+- várias inspeções e snapshots que preservam sua identidade de origem.
 
 É utilizado em:
 
@@ -106,9 +108,41 @@ Possui:
 
 ---
 
-# CHECKLIST_ITEM
+# CHECKLIST_VERSION
 
-Representa um item individual do checklist.
+Representa uma revisão numerada do conteúdo de um checklist.
+
+## Principais atributos
+
+- id
+- checklistId
+- versionNumber
+- status (`DRAFT`, `PUBLISHED` ou `RETIRED`)
+- title
+- description
+- contentSchemaVersion
+- contentHash
+- createdById
+- publishedById
+- publishedAt
+- createdAt
+- updatedAt
+
+## Regras e relacionamentos
+
+- pertence a um checklist;
+- possui vários itens de versão;
+- uma versão `DRAFT` pode ser editada;
+- uma versão `PUBLISHED` ou `RETIRED` é imutável;
+- somente uma versão `PUBLISHED` pode iniciar uma inspeção;
+- versões publicadas preservam autoria, momento e hash do conteúdo;
+- novas alterações derivam o próximo draft, mantendo a linhagem entre itens.
+
+---
+
+# CHECKLIST_VERSION_ITEM
+
+Representa um item pertencente a uma revisão específica do checklist.
 
 Exemplos:
 
@@ -119,22 +153,27 @@ Exemplos:
 ## Principais atributos
 
 - id
-- checklistId
+- checklistVersionId
+- sourceVersionItemId
+- sourceChecklistItemId, apenas para rastreabilidade legada
 - description
 - orderIndex
 - isRequired
+- createdAt
+- updatedAt
 
 ## Relacionamentos
 
 Pertence a:
 
-- um checklist
+- uma versão do checklist
 
 Pode estar relacionado a:
 
-- várias normas
+- várias normas por `ChecklistVersionItemStandard`
 
-Recebe respostas durante uma inspeção.
+Pode originar itens de versões posteriores e itens de snapshot. Não recebe
+diretamente as respostas da inspeção.
 
 ---
 
@@ -182,17 +221,74 @@ NR-35
 
 ---
 
-# CHECKLIST_ITEM_STANDARD
+# CHECKLIST_VERSION_ITEM_STANDARD
 
-Tabela de associação.
+Associação entre um item de versão e uma norma. Além de `standardId`, copia os
+metadados `type`, `code`, `title`, `summary` e `officialUrl` necessários para
+preservar o conteúdo publicado caso o catálogo normativo seja alterado.
 
-Resolve relacionamento N:N entre:
+`ChecklistItem` e `ChecklistItemStandard` permanecem no schema somente para
+compatibilidade com os dados anteriores à arquitetura de versões.
 
-ChecklistItem
+---
 
-e
+# INSPECTION_CHECKLIST_SNAPSHOT
 
-Standard
+Representa o conteúdo histórico, autocontido e imutável que pertence a uma
+única inspeção.
+
+## Principais atributos
+
+- id
+- inspectionId
+- sourceChecklistId
+- sourceChecklistVersionId
+- sourceVersionNumber
+- title
+- description
+- isTemplate
+- snapshotSchemaVersion
+- contentHash
+- origin (`INSPECTION_CREATION` ou `LEGACY_BACKFILL`)
+- integrityStatus (`VERIFIED` ou `UNVERIFIED_LEGACY`)
+- capturedAt
+
+## Relacionamentos
+
+- pertence a exatamente uma inspeção;
+- referencia o checklist e a versão publicada de origem;
+- possui vários itens de snapshot.
+
+---
+
+# INSPECTION_SNAPSHOT_ITEM
+
+Representa a pergunta exatamente como foi capturada para uma inspeção.
+
+## Principais atributos
+
+- id
+- snapshotId
+- sourceVersionItemId
+- sourceChecklistItemId, quando houver origem legada
+- description
+- orderIndex
+- isRequired
+
+## Relacionamentos
+
+- pertence a um snapshot;
+- possui metadados normativos copiados por `InspectionSnapshotItemStandard`;
+- recebe a resposta da inspeção.
+
+---
+
+# INSPECTION_SNAPSHOT_ITEM_STANDARD
+
+Associação histórica entre item de snapshot e norma. A referência ao catálogo
+permite rastreabilidade, enquanto a cópia de tipo, código, título, resumo e URL
+é a fonte usada para exibição histórica.
+
 
 ---
 
@@ -217,9 +313,11 @@ Pertence a:
 - usuário
 - empresa
 - checklist
+- versão publicada do checklist
 
 Possui:
 
+- um snapshot histórico obrigatório para execução
 - respostas
 - evidências
 - relatório
@@ -228,15 +326,22 @@ Possui:
 
 # INSPECTION_RESPONSE
 
-Representa a resposta dada para um item do checklist.
+Representa a resposta dada para um item do snapshot da inspeção.
 
 ## Principais atributos
 
 - id
 - inspectionId
-- checklistItemId
+- snapshotItemId
+- checklistItemId opcional, somente para compatibilidade legada
 - status
 - observation
+- createdAt
+- updatedAt
+
+Cada resposta pertence a um item do snapshot da mesma inspeção. Esse vínculo é
+a fonte de verdade para identificar o que foi respondido e para criar ou exibir
+uma não conformidade sem consultar itens mutáveis.
 
 Pode gerar:
 

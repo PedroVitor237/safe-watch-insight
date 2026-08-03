@@ -64,6 +64,28 @@ Itens podem ser adicionados, removidos ou reorganizados.
 
 O sistema deve permitir reutilizar um checklist em diversas inspeções.
 
+O conteúdo executável de um checklist é organizado em versões numeradas:
+
+- uma versão `DRAFT` é editável;
+- uma versão `PUBLISHED` está disponível para novas inspeções e é imutável;
+- uma versão `RETIRED` deixa de estar disponível para novas inspeções e continua
+  imutável para preservar histórico;
+- cada checklist pode possuir no máximo um draft;
+- várias versões publicadas podem coexistir;
+- quando não for informada uma versão na criação da inspeção, o backend escolhe
+  a versão publicada mais recente;
+- ao alterar um checklist que não possui draft, o sistema deriva automaticamente
+  um novo draft da versão publicada ou retirada mais recente;
+- publicação sem draft é rejeitada.
+
+Título e descrição fazem parte do conteúdo versionado. Os campos de catálogo
+`isTemplate` e `isActive` permanecem na identidade `Checklist`; um checklist
+inativo não pode iniciar novas inspeções.
+
+Na publicação, o backend gera um hash SHA-256 do conteúdo canônico. A operação
+usa controle otimista e não pode concluir se o draft for editado
+concorrentemente.
+
 ---
 
 # Itens do Checklist
@@ -78,6 +100,11 @@ Exemplos:
 - Brigada treinada.
 
 Cada item pode estar associado a uma ou mais normas.
+
+Itens editáveis pertencem à versão `DRAFT`. Criar, editar, remover ou reordenar
+um item nunca altera uma versão já publicada. A troca de associações normativas
+ocorre atomicamente no draft. Versões derivadas mantêm referência de linhagem ao
+item da versão anterior quando aplicável.
 
 ---
 
@@ -96,6 +123,12 @@ As normas devem ser reutilizáveis.
 
 Nunca duplicar uma mesma norma.
 
+O catálogo `Standard` continua único e reutilizável. Versões publicadas e
+snapshots, porém, copiam somente os metadados normativos necessários para a
+representação histórica. Essa duplicação controlada é obrigatória: mudanças
+posteriores no catálogo não podem reescrever a fundamentação exibida em uma
+inspeção antiga.
+
 ---
 
 # Inspeções
@@ -104,7 +137,9 @@ Uma inspeção sempre deve estar vinculada a:
 
 - usuário;
 - empresa;
-- checklist.
+- checklist;
+- versão publicada do checklist;
+- snapshot histórico próprio.
 
 Uma inspeção registra exatamente o estado observado durante sua execução.
 
@@ -112,11 +147,27 @@ Após concluída, uma inspeção não deve perder seu histórico.
 
 Alterações posteriores devem preservar rastreabilidade.
 
+Somente checklists ativos e versões `PUBLISHED` podem iniciar inspeções. A
+criação da inspeção e a captura do snapshot acontecem na mesma transação. Uma
+falha em qualquer item ou associação normativa desfaz toda a operação.
+
+O snapshot contém título, descrição, número da versão, indicação de template,
+itens, ordem, obrigatoriedade e metadados normativos. Ele é a fonte de verdade
+desde a criação da inspeção, inclusive enquanto a inspeção está planejada ou em
+andamento. Alterações futuras do checklist jamais adicionam, removem ou modificam
+itens do snapshot existente.
+
+Snapshots normais são `VERIFIED` e possuem origem `INSPECTION_CREATION`.
+Snapshots produzidos pela migration para inspeções antigas são
+`UNVERIFIED_LEGACY`, pois representam o melhor estado disponível no momento do
+backfill, não uma reconstrução comprovada do passado.
+
 ---
 
 # Respostas da Inspeção
 
-Cada item do checklist recebe exatamente uma resposta durante uma inspeção.
+Cada item aplicável do snapshot recebe no máximo uma resposta durante a
+inspeção; a conclusão exige resposta para todos os itens obrigatórios.
 
 Uma resposta pode conter:
 
@@ -126,6 +177,11 @@ Uma resposta pode conter:
 A resposta pode gerar uma não conformidade.
 
 Nem toda resposta gera uma não conformidade.
+
+A resposta deve identificar o item do snapshot da própria inspeção. O contrato
+aceita temporariamente `checklistItemId` para clientes legados, mas o Service o
+mapeia para o snapshot antes de persistir; novas telas enviam `snapshotItemId`.
+É obrigatório enviar exatamente um desses identificadores.
 
 ---
 
@@ -153,11 +209,11 @@ deve criar automaticamente uma única não conformidade vinculada à resposta.
 Na criação automática:
 
 - a descrição inicial utiliza a observação da resposta, quando informada, ou a
-  descrição do item do checklist;
+  descrição histórica do item do snapshot;
 - a severidade inicial é `MEDIUM`;
 - o status inicial é `OPEN`;
 - o prazo inicial é de sete dias;
-- as normas relacionadas são obtidas pelas associações do item do checklist;
+- as normas relacionadas são obtidas pelas cópias normativas do snapshot;
 - empresa, inspeção e usuário responsável pela inspeção permanecem rastreáveis
   pelo relacionamento da resposta.
 
@@ -230,8 +286,8 @@ Nunca armazenar informações duplicadas que possam ser obtidas diretamente da i
 Sempre que possível, o relatório deve referenciar:
 
 - empresa;
-- checklist;
-- normas;
+- snapshot do checklist e versão de origem;
+- normas copiadas no snapshot;
 - não conformidades;
 - ações corretivas.
 

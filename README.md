@@ -150,10 +150,10 @@ O seed é idempotente e cria:
 - usuário administrador de demonstração;
 - uma empresa;
 - um checklist demonstrativo;
-- quatro itens de checklist;
+- uma versão publicada demonstrativa com quatro itens;
 - 38 Normas Regulamentadoras, mantendo as revogadas como inativas;
-- associações normativas dos itens demonstrativos;
-- uma inspeção planejada.
+- associações normativas copiadas na versão;
+- uma inspeção planejada com snapshot histórico próprio.
 
 Credenciais de demonstração:
 
@@ -208,6 +208,7 @@ npm run preview
 npm run lint
 npm test
 npm run validate:nc-flow
+npm run validate:checklist-versioning
 npm run format
 npm run prisma:generate
 npm run prisma:validate
@@ -224,13 +225,15 @@ npm run db:seed
 - Logout.
 - CRUD de empresas integrado ao backend.
 - CRUD de checklists integrado ao backend.
-- CRUD de itens de checklist integrado ao backend.
+- Versões numeradas com ciclo `DRAFT`, `PUBLISHED` e `RETIRED`.
+- Publicação imutável com autoria, data, hash SHA-256 e proteção contra edição concorrente.
+- CRUD de itens e associações normativas no draft, criando nova versão sem alterar publicações anteriores.
 - Catálogo de NRs com busca, filtro de vigência e fonte oficial.
 - Associação de uma ou mais normas aos itens de checklist.
-- Criação de inspeções vinculadas a empresa, checklist e usuário autenticado.
+- Criação de inspeções vinculadas a empresa, checklist, versão publicada e usuário autenticado.
+- Snapshot relacional e imutável de título, descrição, itens e normas criado atomicamente com a inspeção.
 - Listagem e detalhamento de inspeções reais.
-- Execução de checklist por item.
-- Persistência de respostas da inspeção.
+- Execução e persistência de respostas por item do snapshot histórico.
 - Criação e arquivamento automático de não conformidades conforme a resposta.
 - CRUD, filtros, Kanban, detalhe e alteração de status de não conformidades.
 - CRUD e conclusão de ações corretivas.
@@ -251,11 +254,13 @@ Login
 -> Cadastro/edição de checklist
 -> Cadastro/edição de itens do checklist
 -> Associação de normas aos itens
--> Criação de inspeção
+-> Publicação da versão
+-> Criação de inspeção e snapshot
 -> Execução do checklist
 -> Persistência das respostas
 -> Criação automática e tratamento de não conformidades
 -> Conclusão da inspeção
+-> Evolução do checklist em um novo draft/versão sem alterar a inspeção anterior
 ```
 
 ## Limitações Atuais
@@ -266,6 +271,8 @@ Login
 - Equipe ainda não está integrada ao backend.
 - Funcionamento offline real com IndexedDB/Dexie ainda não foi implementado.
 - A assinatura digital ainda não está disponível nem é persistida.
+- A tela expõe publicação e seleção de versões; uma interface completa de histórico e retirada de versões permanece futura.
+- Inspeções migradas do modelo anterior são identificadas como backfill legado não verificável.
 - A cobertura automatizada ainda está concentrada nas regras deste sprint e precisa ser expandida para os demais módulos.
 
 ## Roadmap
@@ -284,6 +291,7 @@ Login
 - `AI/Architecture.md`: arquitetura em camadas.
 - `AI/BusinessRules.md`: regras de negócio.
 - `AI/Database.md`: padrões de banco de dados.
+- `CHECKLIST_VERSIONING_ARCHITECTURE.md`: estudo e registro da decisão híbrida de versão + snapshot.
 - `Documentation/`: documentos acadêmicos.
 - `DocumentaçãoAtividade/`: especificações, mapa de navegação, guia do usuário e wireframes.
 

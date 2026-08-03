@@ -109,7 +109,10 @@ function ListaInspecoes() {
               >
                 <div className="font-mono text-xs text-muted-foreground">{i.id.slice(0, 8)}</div>
                 <div className="min-w-0">
-                  <div className="truncate text-sm font-medium">{i.checklist.title}</div>
+                  <div className="truncate text-sm font-medium">
+                    {i.snapshot?.title ?? "Snapshot indisponível"}
+                    {i.snapshot ? ` · v${i.snapshot.sourceVersionNumber}` : ""}
+                  </div>
                 </div>
                 <div className="min-w-0 truncate text-sm text-muted-foreground">
                   {i.company.tradeName ?? i.company.corporateName}

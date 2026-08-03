@@ -234,6 +234,32 @@ Implementar:
 
 ---
 
+# Fase 10.1 — Integridade Histórica de Checklists
+
+Etapa arquitetural prioritária concluída antes das funcionalidades que dependem
+de registros históricos confiáveis.
+
+Implementar:
+
+- identidade reutilizável de checklist e versões numeradas;
+- ciclo `DRAFT`, `PUBLISHED` e `RETIRED`;
+- itens e associações normativas por versão;
+- publicação imutável com autoria, data e hash SHA-256;
+- próximo draft derivado para manutenção de conteúdo já publicado;
+- snapshot relacional e imutável criado atomicamente com a inspeção;
+- respostas e não conformidades baseadas em itens do snapshot;
+- migration expansiva e backfill legado explicitamente não verificável;
+- integração mínima do fluxo de edição, publicação, seleção e execução;
+- testes automatizados e integração direcionados às invariantes históricas.
+
+Resultado alcançado:
+
+checklists podem evoluir sem alterar título, itens, ordem, obrigatoriedade ou
+normas de inspeções existentes. A fase geral de testes permanece aberta para
+ampliar cobertura dos demais módulos.
+
+---
+
 # Fase 11 — Evidências
 
 Primeira implementação.
@@ -316,15 +342,16 @@ A substituição dos mocks deve ocorrer na seguinte ordem:
 
 1. Empresas
 2. Checklists
-3. Itens
-4. Normas
-5. Inspeções
-6. Respostas
-7. Não conformidades
-8. Ações corretivas
-9. Evidências
-10. Relatórios
-11. Dashboard
+3. Versões publicadas
+4. Itens de versão
+5. Normas
+6. Inspeções e snapshots
+7. Respostas
+8. Não conformidades
+9. Ações corretivas
+10. Evidências
+11. Relatórios
+12. Dashboard
 
 ---
 

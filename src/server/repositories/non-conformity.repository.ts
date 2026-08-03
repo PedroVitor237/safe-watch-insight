@@ -17,19 +17,16 @@ const NON_CONFORMITY_SORT_FIELDS = {
 const nonConformityRelations = {
   inspectionResponse: {
     include: {
-      checklistItem: {
+      snapshotItem: {
         include: {
-          standards: {
-            include: {
-              standard: true,
-            },
-          },
+          standards: true,
         },
       },
+      checklistItem: true,
       inspection: {
         include: {
           company: true,
-          checklist: true,
+          snapshot: true,
           user: {
             select: {
               id: true,
@@ -200,7 +197,7 @@ export class NonConformityRepository extends BaseRepository<
     if (filters.standardId) {
       conditions.push({
         inspectionResponse: {
-          checklistItem: {
+          snapshotItem: {
             standards: {
               some: {
                 standardId: filters.standardId,
@@ -218,7 +215,7 @@ export class NonConformityRepository extends BaseRepository<
           { description: { contains: search, mode: "insensitive" } },
           {
             inspectionResponse: {
-              checklistItem: {
+              snapshotItem: {
                 description: { contains: search, mode: "insensitive" },
               },
             },

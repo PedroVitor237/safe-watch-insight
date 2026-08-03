@@ -40,6 +40,22 @@ enum SyncStatus {
   ERROR
 }
 
+enum ChecklistVersionStatus {
+  DRAFT
+  PUBLISHED
+  RETIRED
+}
+
+enum InspectionSnapshotOrigin {
+  INSPECTION_CREATION
+  LEGACY_BACKFILL
+}
+
+enum InspectionSnapshotIntegrityStatus {
+  VERIFIED
+  UNVERIFIED_LEGACY
+}
+
 enum ResponseStatus {
   COMPLIANT
   NON_COMPLIANT
@@ -82,6 +98,9 @@ model User {
   inspections Inspection[]
   reports     Report[]
 
+  checklistVersionsCreated   ChecklistVersion[] @relation("ChecklistVersionCreatedBy")
+  checklistVersionsPublished ChecklistVersion[] @relation("ChecklistVersionPublishedBy")
+
   @@index([role])
   @@index([deletedAt])
 }
@@ -120,9 +139,11 @@ model Checklist {
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
 
-  createdBy   User            @relation(fields: [createdById], references: [id])
+  createdBy   User                          @relation(fields: [createdById], references: [id])
   items       ChecklistItem[]
+  versions    ChecklistVersion[]
   inspections Inspection[]
+  snapshots   InspectionChecklistSnapshot[] @relation("SnapshotSourceChecklist")
 
   @@index([createdById])
   @@index([isTemplate])
@@ -137,12 +158,14 @@ model ChecklistItem {
   orderIndex  Int
   isRequired  Boolean @default(true)
 
-  checklist Checklist               @relation(fields: [checklistId], references: [id])
-  standards ChecklistItemStandard[]
-  responses InspectionResponse[]
+  checklist     Checklist                @relation(fields: [checklistId], references: [id])
+  standards     ChecklistItemStandard[]
+  responses     InspectionResponse[]
+  versionItems  ChecklistVersionItem[]   @relation("VersionItemSourceChecklistItem")
+  snapshotItems InspectionSnapshotItem[] @relation("SnapshotItemSourceChecklistItem")
 
-  @@index([checklistId])
   @@unique([checklistId, orderIndex])
+  @@index([checklistId])
 }
 
 model Standard {
@@ -154,7 +177,9 @@ model Standard {
   officialUrl String?
   isActive    Boolean      @default(true)
 
-  checklistItems ChecklistItemStandard[]
+  checklistItems          ChecklistItemStandard[]
+  checklistVersionItems   ChecklistVersionItemStandard[]
+  inspectionSnapshotItems InspectionSnapshotItemStandard[]
 
   @@index([type])
   @@index([code])
@@ -172,29 +197,103 @@ model ChecklistItemStandard {
   @@index([standardId])
 }
 
-model Inspection {
-  id             String           @id @default(uuid()) @db.Uuid
-  userId         String           @db.Uuid
-  companyId      String           @db.Uuid
-  checklistId    String           @db.Uuid
-  inspectionDate DateTime
-  status         InspectionStatus @default(PLANNED)
-  syncStatus     SyncStatus       @default(SYNCED)
-  notes          String?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  deletedAt      DateTime?
+model ChecklistVersion {
+  id                   String                 @id @default(uuid()) @db.Uuid
+  checklistId          String                 @db.Uuid
+  versionNumber        Int
+  status               ChecklistVersionStatus @default(DRAFT)
+  title                String
+  description          String?
+  contentSchemaVersion Int                    @default(1)
+  contentHash          String?                @db.Char(64)
+  createdById          String                 @db.Uuid
+  publishedById        String?                @db.Uuid
+  publishedAt          DateTime?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
 
-  user      User                 @relation(fields: [userId], references: [id])
-  company   Company              @relation(fields: [companyId], references: [id])
-  checklist Checklist            @relation(fields: [checklistId], references: [id])
-  responses InspectionResponse[]
-  evidence  Evidence[]
-  report    Report?
+  checklist   Checklist @relation(fields: [checklistId], references: [id], onDelete: Restrict)
+  createdBy   User      @relation("ChecklistVersionCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  publishedBy User?     @relation("ChecklistVersionPublishedBy", fields: [publishedById], references: [id], onDelete: Restrict)
+
+  items       ChecklistVersionItem[]
+  inspections Inspection[]
+  snapshots   InspectionChecklistSnapshot[]
+
+  @@unique([checklistId, versionNumber])
+  @@index([checklistId, status])
+  @@index([status])
+  @@index([publishedAt])
+}
+
+model ChecklistVersionItem {
+  id                    String   @id @default(uuid()) @db.Uuid
+  checklistVersionId    String   @db.Uuid
+  sourceVersionItemId   String?  @db.Uuid
+  sourceChecklistItemId String?  @db.Uuid
+  description           String
+  orderIndex            Int
+  isRequired            Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  checklistVersion    ChecklistVersion               @relation(fields: [checklistVersionId], references: [id], onDelete: Restrict)
+  sourceVersionItem   ChecklistVersionItem?          @relation("VersionItemLineage", fields: [sourceVersionItemId], references: [id], onDelete: Restrict)
+  derivedVersionItems ChecklistVersionItem[]         @relation("VersionItemLineage")
+  sourceChecklistItem ChecklistItem?                 @relation("VersionItemSourceChecklistItem", fields: [sourceChecklistItemId], references: [id], onDelete: Restrict)
+  standards           ChecklistVersionItemStandard[]
+  snapshotItems       InspectionSnapshotItem[]
+
+  @@unique([checklistVersionId, orderIndex])
+  @@index([checklistVersionId])
+  @@index([sourceVersionItemId])
+  @@index([sourceChecklistItemId])
+}
+
+model ChecklistVersionItemStandard {
+  checklistVersionItemId String       @db.Uuid
+  standardId             String       @db.Uuid
+  type                   StandardType
+  code                   String
+  title                  String
+  summary                String?
+  officialUrl            String?
+
+  checklistVersionItem ChecklistVersionItem @relation(fields: [checklistVersionItemId], references: [id], onDelete: Restrict)
+  standard             Standard             @relation(fields: [standardId], references: [id], onDelete: Restrict)
+
+  @@id([checklistVersionItemId, standardId])
+  @@index([standardId])
+  @@index([code])
+}
+
+model Inspection {
+  id                 String           @id @default(uuid()) @db.Uuid
+  userId             String           @db.Uuid
+  companyId          String           @db.Uuid
+  checklistId        String           @db.Uuid
+  checklistVersionId String?          @db.Uuid
+  inspectionDate     DateTime
+  status             InspectionStatus @default(PLANNED)
+  syncStatus         SyncStatus       @default(SYNCED)
+  notes              String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  deletedAt          DateTime?
+
+  user             User                         @relation(fields: [userId], references: [id])
+  company          Company                      @relation(fields: [companyId], references: [id])
+  checklist        Checklist                    @relation(fields: [checklistId], references: [id])
+  checklistVersion ChecklistVersion?            @relation(fields: [checklistVersionId], references: [id], onDelete: Restrict)
+  snapshot         InspectionChecklistSnapshot?
+  responses        InspectionResponse[]
+  evidence         Evidence[]
+  report           Report?
 
   @@index([userId])
   @@index([companyId])
   @@index([checklistId])
+  @@index([checklistVersionId])
   @@index([inspectionDate])
   @@index([status])
   @@index([syncStatus])
@@ -204,18 +303,88 @@ model Inspection {
 model InspectionResponse {
   id              String         @id @default(uuid()) @db.Uuid
   inspectionId    String         @db.Uuid
-  checklistItemId String         @db.Uuid
+  checklistItemId String?        @db.Uuid
+  snapshotItemId  String?        @db.Uuid
   status          ResponseStatus
   observation     String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
-  inspection     Inspection     @relation(fields: [inspectionId], references: [id])
-  checklistItem  ChecklistItem  @relation(fields: [checklistItemId], references: [id])
-  nonConformity  NonConformity?
+  inspection    Inspection              @relation(fields: [inspectionId], references: [id])
+  checklistItem ChecklistItem?          @relation(fields: [checklistItemId], references: [id], onDelete: Restrict)
+  snapshotItem  InspectionSnapshotItem? @relation(fields: [snapshotItemId], references: [id], onDelete: Restrict)
+  nonConformity NonConformity?
 
+  @@unique([inspectionId, checklistItemId])
+  @@unique([inspectionId, snapshotItemId])
   @@index([inspectionId])
   @@index([checklistItemId])
+  @@index([snapshotItemId])
   @@index([status])
-  @@unique([inspectionId, checklistItemId])
+}
+
+model InspectionChecklistSnapshot {
+  id                       String                            @id @default(uuid()) @db.Uuid
+  inspectionId             String                            @unique @db.Uuid
+  sourceChecklistId        String                            @db.Uuid
+  sourceChecklistVersionId String                            @db.Uuid
+  sourceVersionNumber      Int
+  title                    String
+  description              String?
+  isTemplate               Boolean
+  snapshotSchemaVersion    Int                               @default(1)
+  contentHash              String                            @db.Char(64)
+  origin                   InspectionSnapshotOrigin
+  integrityStatus          InspectionSnapshotIntegrityStatus
+  capturedAt               DateTime                          @default(now())
+
+  inspection             Inspection               @relation(fields: [inspectionId], references: [id], onDelete: Restrict)
+  sourceChecklist        Checklist                @relation("SnapshotSourceChecklist", fields: [sourceChecklistId], references: [id], onDelete: Restrict)
+  sourceChecklistVersion ChecklistVersion         @relation(fields: [sourceChecklistVersionId], references: [id], onDelete: Restrict)
+  items                  InspectionSnapshotItem[]
+
+  @@index([sourceChecklistId])
+  @@index([sourceChecklistVersionId])
+  @@index([origin])
+  @@index([integrityStatus])
+}
+
+model InspectionSnapshotItem {
+  id                    String  @id @default(uuid()) @db.Uuid
+  snapshotId            String  @db.Uuid
+  sourceVersionItemId   String  @db.Uuid
+  sourceChecklistItemId String? @db.Uuid
+  description           String
+  orderIndex            Int
+  isRequired            Boolean @default(true)
+
+  snapshot            InspectionChecklistSnapshot      @relation(fields: [snapshotId], references: [id], onDelete: Restrict)
+  sourceVersionItem   ChecklistVersionItem             @relation(fields: [sourceVersionItemId], references: [id], onDelete: Restrict)
+  sourceChecklistItem ChecklistItem?                   @relation("SnapshotItemSourceChecklistItem", fields: [sourceChecklistItemId], references: [id], onDelete: Restrict)
+  standards           InspectionSnapshotItemStandard[]
+  responses           InspectionResponse[]
+
+  @@unique([snapshotId, orderIndex])
+  @@index([snapshotId])
+  @@index([sourceVersionItemId])
+  @@index([sourceChecklistItemId])
+}
+
+model InspectionSnapshotItemStandard {
+  snapshotItemId String       @db.Uuid
+  standardId     String       @db.Uuid
+  type           StandardType
+  code           String
+  title          String
+  summary        String?
+  officialUrl    String?
+
+  snapshotItem InspectionSnapshotItem @relation(fields: [snapshotItemId], references: [id], onDelete: Restrict)
+  standard     Standard               @relation(fields: [standardId], references: [id], onDelete: Restrict)
+
+  @@id([snapshotItemId, standardId])
+  @@index([standardId])
+  @@index([code])
 }
 
 model NonConformity {

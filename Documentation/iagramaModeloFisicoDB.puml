@@ -1,177 +1,224 @@
 @startuml
-title Modelo Físico do Banco de Dados - Plataforma SST
+title Modelo Físico - Safe Watch Insight
 
 hide circle
 skinparam linetype ortho
 skinparam shadowing false
 skinparam classAttributeIconSize 0
 
-entity "USER" as User {
-    * id : UUID <<PK>>
-    --
-    name : VARCHAR
-    email : VARCHAR <<UNIQUE>>
-    password : VARCHAR
-    role : ENUM
-    createdAt : TIMESTAMP
-    updatedAt : TIMESTAMP
+entity "User" as User {
+  * id : UUID <<PK>>
+  --
+  email : TEXT <<UNIQUE>>
+  password : TEXT
+  role : UserRole
 }
 
-entity "COMPANY" as Company {
-    * id : UUID <<PK>>
-    --
-    corporateName : VARCHAR
-    tradeName : VARCHAR
-    cnpj : VARCHAR <<UNIQUE>>
-    cnae : VARCHAR
-    riskLevel : INTEGER
-    employeeCount : INTEGER
-    address : TEXT
-    notes : TEXT
-    createdById : UUID <<FK>>
-    createdAt : TIMESTAMP
-    updatedAt : TIMESTAMP
+entity "Company" as Company {
+  * id : UUID <<PK>>
+  --
+  createdById : UUID <<FK>>
+  corporateName : TEXT
+  cnpj : TEXT <<UNIQUE>>
 }
 
-entity "CHECKLIST" as Checklist {
-    * id : UUID <<PK>>
-    --
-    title : VARCHAR
-    description : TEXT
-    isTemplate : BOOLEAN
-    isActive : BOOLEAN
-    createdById : UUID <<FK>>
-    createdAt : TIMESTAMP
-    updatedAt : TIMESTAMP
+entity "Checklist" as Checklist {
+  * id : UUID <<PK>>
+  --
+  createdById : UUID <<FK>>
+  title : TEXT
+  description : TEXT
+  isTemplate : BOOLEAN
+  isActive : BOOLEAN
+  deletedAt : TIMESTAMP
 }
 
-entity "CHECKLIST_ITEM" as ChecklistItem {
-    * id : UUID <<PK>>
-    --
-    checklistId : UUID <<FK>>
-    description : TEXT
-    orderIndex : INTEGER
-    isRequired : BOOLEAN
+entity "ChecklistVersion" as ChecklistVersion {
+  * id : UUID <<PK>>
+  --
+  checklistId : UUID <<FK>>
+  versionNumber : INTEGER
+  status : ChecklistVersionStatus
+  title : TEXT
+  description : TEXT
+  contentSchemaVersion : INTEGER
+  contentHash : CHAR(64)
+  createdById : UUID <<FK>>
+  publishedById : UUID <<FK>>
+  publishedAt : TIMESTAMP
 }
 
-entity "STANDARD" as Standard {
-    * id : UUID <<PK>>
-    --
-    type : ENUM
-    code : VARCHAR
-    title : VARCHAR
-    summary : TEXT
-    officialUrl : VARCHAR
-    isActive : BOOLEAN
+entity "ChecklistVersionItem" as ChecklistVersionItem {
+  * id : UUID <<PK>>
+  --
+  checklistVersionId : UUID <<FK>>
+  sourceVersionItemId : UUID <<FK, NULL>>
+  sourceChecklistItemId : UUID <<FK, NULL>>
+  description : TEXT
+  orderIndex : INTEGER
+  isRequired : BOOLEAN
 }
 
-entity "CHECKLIST_ITEM_STANDARD" as ChecklistItemStandard {
-    * checklistItemId : UUID <<PK, FK>>
-    * standardId : UUID <<PK, FK>>
+entity "ChecklistVersionItemStandard" as ChecklistVersionItemStandard {
+  * checklistVersionItemId : UUID <<PK, FK>>
+  * standardId : UUID <<PK, FK>>
+  --
+  type : StandardType
+  code : TEXT
+  title : TEXT
+  summary : TEXT
+  officialUrl : TEXT
 }
 
-entity "INSPECTION" as Inspection {
-    * id : UUID <<PK>>
-    --
-    userId : UUID <<FK>>
-    companyId : UUID <<FK>>
-    checklistId : UUID <<FK>>
-    inspectionDate : TIMESTAMP
-    status : ENUM
-    syncStatus : ENUM
-    notes : TEXT
-    createdAt : TIMESTAMP
-    updatedAt : TIMESTAMP
+entity "Standard" as Standard {
+  * id : UUID <<PK>>
+  --
+  type : StandardType
+  code : TEXT <<UNIQUE>>
+  title : TEXT
+  summary : TEXT
+  officialUrl : TEXT
+  isActive : BOOLEAN
 }
 
-entity "INSPECTION_RESPONSE" as InspectionResponse {
-    * id : UUID <<PK>>
-    --
-    inspectionId : UUID <<FK>>
-    checklistItemId : UUID <<FK>>
-    status : ENUM
-    observation : TEXT
+entity "Inspection" as Inspection {
+  * id : UUID <<PK>>
+  --
+  userId : UUID <<FK>>
+  companyId : UUID <<FK>>
+  checklistId : UUID <<FK>>
+  checklistVersionId : UUID <<FK, NULL>>
+  inspectionDate : TIMESTAMP
+  status : InspectionStatus
+  syncStatus : SyncStatus
+  notes : TEXT
+  deletedAt : TIMESTAMP
 }
 
-entity "NON_CONFORMITY" as NonConformity {
-    * id : UUID <<PK>>
-    --
-    inspectionResponseId : UUID <<FK>>
-    description : TEXT
-    severity : ENUM
-    dueDate : DATE
-    status : ENUM
-    createdAt : TIMESTAMP
+entity "InspectionChecklistSnapshot" as InspectionChecklistSnapshot {
+  * id : UUID <<PK>>
+  --
+  inspectionId : UUID <<UNIQUE, FK>>
+  sourceChecklistId : UUID <<FK>>
+  sourceChecklistVersionId : UUID <<FK>>
+  sourceVersionNumber : INTEGER
+  title : TEXT
+  description : TEXT
+  isTemplate : BOOLEAN
+  snapshotSchemaVersion : INTEGER
+  contentHash : CHAR(64)
+  origin : InspectionSnapshotOrigin
+  integrityStatus : InspectionSnapshotIntegrityStatus
+  capturedAt : TIMESTAMP
 }
 
-entity "CORRECTIVE_ACTION" as CorrectiveAction {
-    * id : UUID <<PK>>
-    --
-    nonConformityId : UUID <<FK>>
-    description : TEXT
-    why : TEXT
-    location : VARCHAR
-    responsible : VARCHAR
-    dueDate : DATE
-    method : TEXT
-    estimatedCost : VARCHAR
-    status : ENUM
-    completedAt : TIMESTAMP
+entity "InspectionSnapshotItem" as InspectionSnapshotItem {
+  * id : UUID <<PK>>
+  --
+  snapshotId : UUID <<FK>>
+  sourceVersionItemId : UUID <<FK>>
+  sourceChecklistItemId : UUID <<FK, NULL>>
+  description : TEXT
+  orderIndex : INTEGER
+  isRequired : BOOLEAN
 }
 
-entity "EVIDENCE" as Evidence {
-    * id : UUID <<PK>>
-    --
-    inspectionId : UUID <<FK>>
-    nonConformityId : UUID <<FK>>
-    storageUrl : TEXT
-    fileName : VARCHAR
-    mimeType : VARCHAR
-    fileSize : BIGINT
-    caption : TEXT
-    createdAt : TIMESTAMP
+entity "InspectionSnapshotItemStandard" as InspectionSnapshotItemStandard {
+  * snapshotItemId : UUID <<PK, FK>>
+  * standardId : UUID <<PK, FK>>
+  --
+  type : StandardType
+  code : TEXT
+  title : TEXT
+  summary : TEXT
+  officialUrl : TEXT
 }
 
-entity "REPORT" as Report {
-    * id : UUID <<PK>>
-    --
-    inspectionId : UUID <<FK>>
-    generatedById : UUID <<FK>>
-    version : INTEGER
-    generatedAt : TIMESTAMP
-    observations : TEXT
+entity "InspectionResponse" as InspectionResponse {
+  * id : UUID <<PK>>
+  --
+  inspectionId : UUID <<FK>>
+  snapshotItemId : UUID <<FK, NULL>>
+  checklistItemId : UUID <<FK, NULL, LEGACY>>
+  status : ResponseStatus
+  observation : TEXT
+  createdAt : TIMESTAMP
+  updatedAt : TIMESTAMP
 }
 
-User ||--o{ Company : registers
+entity "NonConformity" as NonConformity {
+  * id : UUID <<PK>>
+  --
+  inspectionResponseId : UUID <<UNIQUE, FK>>
+  description : TEXT
+  severity : Severity
+  status : NonConformityStatus
+}
 
-User ||--o{ Checklist : creates
+entity "CorrectiveAction" as CorrectiveAction {
+  * id : UUID <<PK>>
+  --
+  nonConformityId : UUID <<FK>>
+  description : TEXT
+  status : CorrectiveActionStatus
+}
 
-User ||--o{ Inspection : performs
+entity "Evidence" as Evidence {
+  * id : UUID <<PK>>
+  --
+  inspectionId : UUID <<FK, NULL>>
+  nonConformityId : UUID <<FK, NULL>>
+  storageUrl : TEXT
+}
 
-User ||--o{ Report : generates
+entity "Report" as Report {
+  * id : UUID <<PK>>
+  --
+  inspectionId : UUID <<UNIQUE, FK>>
+  generatedById : UUID <<FK>>
+  version : INTEGER
+}
 
-Company ||--o{ Inspection : has
+User ||--o{ Company
+User ||--o{ Checklist
+User ||--o{ ChecklistVersion : creates/publishes
+User ||--o{ Inspection
+Company ||--o{ Inspection
+Checklist ||--|{ ChecklistVersion
+ChecklistVersion ||--o{ ChecklistVersionItem
+ChecklistVersionItem ||--o{ ChecklistVersionItemStandard
+Standard ||--o{ ChecklistVersionItemStandard
+Checklist ||--o{ Inspection
+ChecklistVersion ||--o{ Inspection
+Inspection ||--|| InspectionChecklistSnapshot
+Checklist ||--o{ InspectionChecklistSnapshot
+ChecklistVersion ||--o{ InspectionChecklistSnapshot
+InspectionChecklistSnapshot ||--o{ InspectionSnapshotItem
+ChecklistVersionItem ||--o{ InspectionSnapshotItem
+InspectionSnapshotItem ||--o{ InspectionSnapshotItemStandard
+Standard ||--o{ InspectionSnapshotItemStandard
+Inspection ||--o{ InspectionResponse
+InspectionSnapshotItem ||--o{ InspectionResponse
+InspectionResponse ||--o| NonConformity
+NonConformity ||--o{ CorrectiveAction
+Inspection ||--o{ Evidence
+NonConformity ||--o{ Evidence
+Inspection ||--o| Report
 
-Checklist ||--o{ ChecklistItem : contains
+note right of ChecklistVersion
+  UNIQUE(checklistId, versionNumber)
+  UNIQUE parcial: um DRAFT/checklist
+  CHECK de estado de publicação
+end note
 
-Checklist ||--o{ Inspection : used_in
+note right of InspectionChecklistSnapshot
+  UNIQUE(inspectionId)
+  conteúdo histórico imutável
+end note
 
-ChecklistItem ||--o{ ChecklistItemStandard
-
-Standard ||--o{ ChecklistItemStandard
-
-Inspection ||--o{ InspectionResponse : contains
-
-ChecklistItem ||--o{ InspectionResponse : answered
-
-InspectionResponse ||--|| NonConformity : generates
-
-NonConformity ||--o{ CorrectiveAction : requires
-
-Inspection ||--o{ Evidence : has
-
-NonConformity ||--o{ Evidence : documents
-
-Inspection ||--|| Report : generates
+note right of InspectionResponse
+  UNIQUE(inspectionId, snapshotItemId)
+  snapshotItemId é autoritativo
+end note
 
 @enduml

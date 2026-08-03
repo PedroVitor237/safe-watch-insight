@@ -109,7 +109,7 @@ export const updateChecklist = createServerFn({ method: "POST" })
       return toServerResult<never>(userResult);
     }
 
-    return toServerResult(await service.updateChecklist(data.id, data.data));
+    return toServerResult(await service.updateChecklist(data.id, data.data, userResult.data.id));
   });
 
 export const deleteChecklist = createServerFn({ method: "POST" })

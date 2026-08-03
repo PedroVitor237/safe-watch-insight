@@ -60,7 +60,7 @@ function NonConformityDetail() {
 
   const response = nonConformity.inspectionResponse;
   const inspection = response.inspection;
-  const item = response.checklistItem;
+  const item = response.snapshotItem;
   const companyName = inspection.company.tradeName ?? inspection.company.corporateName;
   const code = `NC-${new Date(nonConformity.createdAt).getFullYear()}-${nonConformity.id
     .slice(0, 8)
@@ -111,7 +111,7 @@ function NonConformityDetail() {
   return (
     <div>
       <PageHeader
-        title={item.description}
+        title={item?.description ?? "Item histórico indisponível"}
         description={`${code} · ${companyName}`}
         actions={
           <>
@@ -195,11 +195,11 @@ function NonConformityDetail() {
               <CardTitle className="text-base">Normas relacionadas</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {item.standards.length === 0 && (
+              {(!item || item.standards.length === 0) && (
                 <p className="text-sm text-muted-foreground">Nenhuma norma associada ao item.</p>
               )}
-              {item.standards.map(({ standard }) => (
-                <div key={standard.id} className="rounded-md border p-3">
+              {item?.standards.map((standard) => (
+                <div key={standard.standardId} className="rounded-md border p-3">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <div className="text-sm font-medium">{standard.code}</div>

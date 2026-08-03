@@ -442,19 +442,19 @@ await listCompanies({ data: { page: 1, pageSize: 20 } });
 - **Validação:** `createChecklistClientSchema`.
 - **Query parameters:** não se aplica.
 - **Path parameters:** não se aplica.
-- **Regras relacionadas:** `createdById` vem da sessão; checklist pode ser template ou personalizado.
+- **Regras relacionadas:** `createdById` vem da sessão; checklist pode ser template ou personalizado; a criação é atômica e também cria a versão `DRAFT` número 1 com o mesmo título e descrição.
 - **Exemplo de chamada:**
 
 ```ts
 await createChecklist({ data: payload });
 ```
 
-- **Exemplo de resposta:** checklist criado com `items`.
+- **Exemplo de resposta:** checklist criado com sua versão draft inicial.
 - **Erros possíveis:** `401`, `422`, `500`.
 
 ### `updateChecklist`
 
-- **Finalidade:** atualizar dados do checklist.
+- **Finalidade:** atualizar catálogo e/ou conteúdo versionado do checklist.
 - **Método:** `POST`
 - **Arquivo:** `src/lib/api/checklist.functions.ts`
 - **Autenticação:** exige sessão.
@@ -473,7 +473,7 @@ await createChecklist({ data: payload });
 - **Validação:** `updateChecklistInputSchema`.
 - **Query parameters:** não se aplica.
 - **Path parameters:** `id` no body.
-- **Regras relacionadas:** exige ao menos um campo; valida existência.
+- **Regras relacionadas:** exige ao menos um campo e valida existência. `title` e `description` são gravados no draft; se ele não existir, o Service clona a versão publicada ou retirada mais recente para o próximo número. `isTemplate` e `isActive` atualizam a identidade do checklist. Uma versão publicada nunca é alterada.
 - **Exemplo de chamada:**
 
 ```ts
@@ -527,7 +527,7 @@ await deleteChecklist({ data: { id } });
 - **Validação:** `checklistIdSchema`.
 - **Query parameters:** não se aplica.
 - **Path parameters:** `id` no body.
-- **Regras relacionadas:** retorna checklist com itens.
+- **Regras relacionadas:** retorna a identidade do checklist, suas versões e os itens/metadados normativos de cada versão. O frontend usa o draft para manutenção e versões publicadas para seleção.
 - **Exemplo de chamada:**
 
 ```ts
@@ -562,7 +562,7 @@ await getChecklistById({ data: { id } });
 - **Path parameters:** não se aplica.
 - **Filtros:** `search`, `isTemplate`, `isActive`, paginação e ordenação.
 - **Ordenação:** `title`, `isTemplate`, `isActive`, `createdAt`, `updatedAt`.
-- **Regras relacionadas:** lista apenas registros não excluídos.
+- **Regras relacionadas:** lista apenas registros não excluídos; inclui resumo das versões, status e contagem de itens sem carregar todo o conteúdo de cada item.
 - **Exemplo de chamada:**
 
 ```ts
@@ -574,11 +574,51 @@ await listChecklists({ data: { isActive: true } });
 
 ---
 
+## Checklist Versions
+
+### `listChecklistVersions`
+
+- **Finalidade:** listar, em ordem decrescente, todas as versões de um checklist.
+- **Método:** `POST`
+- **Arquivo:** `src/lib/api/checklist-version.functions.ts`
+- **Autenticação:** exige sessão.
+- **Body:** `{ "checklistId": "uuid" }`.
+- **Validação:** `checklistVersionsByChecklistSchema`.
+- **Resposta:** versões com itens, linhagem e metadados normativos copiados.
+- **Regras relacionadas:** o checklist deve existir e não estar excluído.
+- **Erros possíveis:** `401`, `404`, `422`, `500`.
+
+### `publishChecklistVersion`
+
+- **Finalidade:** publicar o draft atual de um checklist.
+- **Método:** `POST`
+- **Arquivo:** `src/lib/api/checklist-version.functions.ts`
+- **Autenticação:** exige sessão.
+- **Body:** `{ "checklistId": "uuid" }`.
+- **Validação:** `publishChecklistVersionSchema`.
+- **Regras relacionadas:** exige draft; calcula SHA-256 do conteúdo canônico; registra autor e data; usa controle otimista para impedir corrida entre edição e publicação; a versão publicada torna-se imutável.
+- **Resposta:** versão publicada com seus itens.
+- **Erros possíveis:** `401`, `404`, `409` draft ausente ou conflito concorrente, `422`, `500`.
+
+### `retireChecklistVersion`
+
+- **Finalidade:** retirar uma versão publicada de uso futuro.
+- **Método:** `POST`
+- **Arquivo:** `src/lib/api/checklist-version.functions.ts`
+- **Autenticação:** exige sessão.
+- **Body:** `{ "checklistId": "uuid", "versionId": "uuid" }`.
+- **Validação:** `checklistVersionIdSchema`.
+- **Regras relacionadas:** somente versões `PUBLISHED` podem ser retiradas; a retirada não altera snapshots nem inspeções existentes.
+- **Resposta:** versão com status `RETIRED`.
+- **Erros possíveis:** `401`, `404`, `409`, `422`, `500`.
+
+---
+
 ## Checklist Items
 
 ### `createChecklistItem`
 
-- **Finalidade:** criar item em um checklist.
+- **Finalidade:** criar item na versão draft de um checklist.
 - **Método:** `POST`
 - **Arquivo:** `src/lib/api/checklist-item.functions.ts`
 - **Autenticação:** exige sessão.
@@ -597,7 +637,7 @@ await listChecklists({ data: { isActive: true } });
 - **Validação:** `createChecklistItemSchema`.
 - **Query parameters:** não se aplica.
 - **Path parameters:** não se aplica.
-- **Regras relacionadas:** checklist deve existir; se `orderIndex` não for informado, usa o próximo índice disponível; todas as normas informadas devem existir e estar ativas.
+- **Regras relacionadas:** checklist deve existir; o Service usa ou cria o próximo draft; se `orderIndex` não for informado, usa o próximo índice disponível; todas as normas devem existir e estar ativas; tipo, código, título, resumo e URL são copiados para a associação da versão.
 - **Exemplo de chamada:**
 
 ```ts
@@ -609,7 +649,7 @@ await createChecklistItem({ data: { checklistId, description, isRequired: true }
 
 ### `updateChecklistItem`
 
-- **Finalidade:** atualizar item de checklist.
+- **Finalidade:** atualizar um item da versão de trabalho.
 - **Método:** `POST`
 - **Arquivo:** `src/lib/api/checklist-item.functions.ts`
 - **Autenticação:** exige sessão.
@@ -630,7 +670,7 @@ await createChecklistItem({ data: { checklistId, description, isRequired: true }
 - **Validação:** `updateChecklistItemInputSchema`.
 - **Query parameters:** não se aplica.
 - **Path parameters:** `id` no body.
-- **Regras relacionadas:** item deve existir; exige ao menos um campo; quando `standardIds` é informado, substitui atomicamente as associações normativas do item.
+- **Regras relacionadas:** `id` identifica um `ChecklistVersionItem`. Se o item recebido pertence a versão publicada/retirada, o Service cria o próximo draft e localiza o item derivado pela linhagem antes de editar. Exige ao menos um campo; `standardIds` substitui atomicamente as cópias normativas; a versão é tocada para proteger publicação concorrente.
 - **Exemplo de chamada:**
 
 ```ts
@@ -642,7 +682,7 @@ await updateChecklistItem({ data: { id, data: { description: "Nova descrição" 
 
 ### `deleteChecklistItem`
 
-- **Finalidade:** excluir fisicamente item de checklist.
+- **Finalidade:** remover item do draft sem afetar versões ou inspeções anteriores.
 - **Método:** `POST`
 - **Arquivo:** `src/lib/api/checklist-item.functions.ts`
 - **Autenticação:** exige sessão.
@@ -657,7 +697,7 @@ await updateChecklistItem({ data: { id, data: { description: "Nova descrição" 
 - **Validação:** `checklistItemIdSchema`.
 - **Query parameters:** não se aplica.
 - **Path parameters:** `id` no body.
-- **Regras relacionadas:** impede exclusão se o item já possui respostas de inspeção.
+- **Regras relacionadas:** `id` identifica um `ChecklistVersionItem`; se necessário, o Service deriva o próximo draft e remove o item correspondente somente nele. Versões publicadas, snapshots e respostas permanecem intactos.
 - **Exemplo de chamada:**
 
 ```ts
@@ -665,7 +705,7 @@ await deleteChecklistItem({ data: { id } });
 ```
 
 - **Exemplo de resposta:** item excluído.
-- **Erros possíveis:** `401`, `404`, `409` item possui respostas, `422`, `500`.
+- **Erros possíveis:** `401`, `404`, `409` conflito de versão/ordem, `422`, `500`.
 
 ### `listChecklistItems`
 
@@ -684,7 +724,7 @@ await deleteChecklistItem({ data: { id } });
 - **Validação:** `checklistItemsByChecklistIdSchema`.
 - **Query parameters:** não se aplica.
 - **Path parameters:** `checklistId` no body.
-- **Regras relacionadas:** checklist deve existir; itens são retornados ordenados por `orderIndex`, incluindo suas normas relacionadas.
+- **Regras relacionadas:** checklist deve existir; retorna os itens do draft atual ou, se não houver draft, da versão publicada/retirada mais recente, ordenados por `orderIndex` e com metadados normativos copiados.
 - **Exemplo de chamada:**
 
 ```ts
@@ -710,6 +750,7 @@ await listChecklistItems({ data: { checklistId } });
 {
   "companyId": "uuid",
   "checklistId": "uuid",
+  "checklistVersionId": "uuid-publicada-opcional",
   "inspectionDate": "2026-07-07T10:00:00.000Z",
   "notes": "Observações iniciais"
 }
@@ -718,15 +759,15 @@ await listChecklistItems({ data: { checklistId } });
 - **Validação:** `createInspectionSchema`.
 - **Query parameters:** não se aplica.
 - **Path parameters:** não se aplica.
-- **Regras relacionadas:** usuário vem da sessão; empresa e checklist devem existir; o checklist precisa estar ativo; o servidor define toda nova inspeção online como `PLANNED` e `SYNCED`, sem aceitar esses estados do cliente.
+- **Regras relacionadas:** usuário vem da sessão; empresa e checklist devem existir; o checklist precisa estar ativo; a versão informada deve pertencer ao checklist e estar `PUBLISHED`. Sem `checklistVersionId`, usa a versão publicada mais recente. O hash do formato atual é conferido antes da gravação. Inspeção, snapshot, itens e normas são criados atomicamente. O servidor define `PLANNED`, `SYNCED`, origem `INSPECTION_CREATION` e integridade `VERIFIED`.
 - **Exemplo de chamada:**
 
 ```ts
 await createInspection({ data: payload });
 ```
 
-- **Exemplo de resposta:** inspeção criada com relações de usuário, empresa, checklist e respostas.
-- **Erros possíveis:** `401`, `404` empresa/checklist não encontrado, `409` checklist inativo, `422`, `500`.
+- **Exemplo de resposta:** inspeção com usuário, empresa, identidade do checklist, versão publicada, snapshot completo e respostas.
+- **Erros possíveis:** `401`, `404` empresa/checklist/versão não encontrado, `409` checklist inativo, versão não publicada ou hash inválido, `422`, `500`.
 
 ### `getInspectionById`
 
@@ -745,15 +786,15 @@ await createInspection({ data: payload });
 - **Validação:** `inspectionIdSchema`.
 - **Query parameters:** não se aplica.
 - **Path parameters:** `id` no body.
-- **Regras relacionadas:** retorna inspeção com usuário, empresa, checklist, itens e respostas.
+- **Regras relacionadas:** retorna inspeção com usuário, empresa, identidade do checklist, versão de origem, snapshot, itens do snapshot, metadados normativos copiados e respostas. Snapshot e versão ausentes geram conflito, pois o backend não reconstrói histórico a partir do catálogo mutável.
 - **Exemplo de chamada:**
 
 ```ts
 await getInspectionById({ data: { id } });
 ```
 
-- **Exemplo de resposta:** inspeção encontrada.
-- **Erros possíveis:** `401`, `404`, `422`, `500`.
+- **Exemplo de resposta:** inspeção encontrada com contexto histórico.
+- **Erros possíveis:** `401`, `404`, `409` snapshot histórico indisponível, `422`, `500`.
 
 ### `listInspections`
 
@@ -780,7 +821,7 @@ await getInspectionById({ data: { id } });
 - **Path parameters:** não se aplica.
 - **Filtros:** `userId`, `companyId`, `checklistId`, `status`, `syncStatus`, `search`, paginação e ordenação.
 - **Ordenação:** `inspectionDate`, `status`, `syncStatus`, `createdAt`, `updatedAt`.
-- **Regras relacionadas:** lista apenas inspeções não excluídas.
+- **Regras relacionadas:** lista apenas inspeções não excluídas; pesquisa por empresa, título capturado no snapshot e notas. A representação do checklist vem do snapshot, não do título atual do catálogo.
 - **Exemplo de chamada:**
 
 ```ts
@@ -845,7 +886,7 @@ await deleteInspection({ data: { id } });
 await listInspectionResponses({ data: { inspectionId } });
 ```
 
-- **Exemplo de resposta:** lista de respostas com item de checklist.
+- **Exemplo de resposta:** lista de respostas com item e normas do snapshot.
 - **Erros possíveis:** `401`, `404`, `422`, `500`.
 
 ### `saveInspectionResponse`
@@ -859,7 +900,7 @@ await listInspectionResponses({ data: { inspectionId } });
 ```json
 {
   "inspectionId": "uuid",
-  "checklistItemId": "uuid",
+  "snapshotItemId": "uuid",
   "status": "COMPLIANT",
   "observation": "Observação opcional"
 }
@@ -869,14 +910,14 @@ await listInspectionResponses({ data: { inspectionId } });
 - **Query parameters:** não se aplica.
 - **Path parameters:** não se aplica.
 - **Status aceitos:** `COMPLIANT`, `NON_COMPLIANT`, `NOT_APPLICABLE`.
-- **Regras relacionadas:** item precisa pertencer ao checklist da inspeção; resposta é única por inspeção + item; inspeção `PLANNED` passa para `IN_PROGRESS` ao salvar resposta; a validação/transição do estado da inspeção, a resposta e a criação/restauração/remoção lógica da não conformidade são atômicas; `NON_COMPLIANT` cria ou restaura uma única não conformidade; `COMPLIANT` e `NOT_APPLICABLE` arquivam a não conformidade correspondente; inspeções concluídas ou canceladas não aceitam alterações.
+- **Regras relacionadas:** deve ser enviado exatamente um entre `snapshotItemId` e o `checklistItemId` legado. O item precisa pertencer ao snapshot da inspeção; o identificador legado é resolvido para esse snapshot antes da persistência. A resposta é única por inspeção + item do snapshot; inspeção `PLANNED` passa para `IN_PROGRESS`; validação de estado, resposta e criação/restauração/arquivamento da não conformidade são atômicos. A descrição e as normas históricas vêm do snapshot. Inspeções concluídas ou canceladas não aceitam alterações.
 - **Exemplo de chamada:**
 
 ```ts
 await saveInspectionResponse({
   data: {
     inspectionId,
-    checklistItemId,
+    snapshotItemId,
     status: "NON_COMPLIANT",
     observation: "Extintor vencido",
   },
@@ -903,7 +944,7 @@ await saveInspectionResponse({
 - **Validação:** `inspectionResponseIdSchema`.
 - **Query parameters:** não se aplica.
 - **Path parameters:** `inspectionId` no body.
-- **Regras relacionadas:** inspeção deve existir; todos os itens obrigatórios devem possuir resposta; status passa para `COMPLETED`; inspeções concluídas ou canceladas não podem ser concluídas novamente.
+- **Regras relacionadas:** inspeção e snapshot devem existir; todos os itens obrigatórios do snapshot devem possuir resposta por `snapshotItemId`; status passa para `COMPLETED`; inspeções concluídas ou canceladas não podem ser concluídas novamente.
 - **Limitação atual:** assinatura digital ainda não está disponível na interface nem é persistida.
 - **Exemplo de chamada:**
 

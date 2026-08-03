@@ -12,6 +12,7 @@ import { prisma } from "@/server/prisma/client";
 import type { Result } from "@/server/responses";
 import { checklistItemService } from "@/server/services/checklist-item.service";
 import { checklistService } from "@/server/services/checklist.service";
+import { checklistVersionService } from "@/server/services/checklist-version.service";
 import { companyService } from "@/server/services/company.service";
 import { correctiveActionService } from "@/server/services/corrective-action.service";
 import { inspectionResponseService } from "@/server/services/inspection-response.service";
@@ -24,6 +25,8 @@ interface CreatedIds {
   companyId?: string;
   checklistId?: string;
   checklistItemId?: string;
+  checklistVersionId?: string;
+  snapshotItemId?: string;
   inspectionId?: string;
   inspectionResponseId?: string;
   nonConformityId?: string;
@@ -82,9 +85,13 @@ async function main(): Promise<void> {
   createdIds.checklistId = checklist.id;
 
   unwrap(
-    await checklistService.updateChecklist(checklist.id, {
-      description: "Checklist atualizado durante a validação integrada.",
-    }),
+    await checklistService.updateChecklist(
+      checklist.id,
+      {
+        description: "Checklist atualizado durante a validação integrada.",
+      },
+      authenticatedUser.id,
+    ),
   );
 
   const checklistItem = unwrap(
@@ -93,25 +100,39 @@ async function main(): Promise<void> {
       description: "Verificar entrega e utilização adequada de EPI.",
       isRequired: true,
       standardIds: [standard.id],
+      updatedById: authenticatedUser.id,
     }),
   );
   createdIds.checklistItemId = checklistItem.id;
+
+  const checklistVersion = unwrap(
+    await checklistVersionService.publishDraft(checklist.id, authenticatedUser.id),
+  );
+  createdIds.checklistVersionId = checklistVersion.id;
 
   const inspection = unwrap(
     await inspectionService.createInspection({
       userId: authenticatedUser.id,
       companyId: company.id,
       checklistId: checklist.id,
+      checklistVersionId: checklistVersion.id,
       inspectionDate: new Date(),
       notes: "Inspeção temporária da validação integrada.",
     }),
   );
   createdIds.inspectionId = inspection.id;
 
+  const snapshotItem = inspection.snapshot?.items[0];
+
+  if (!snapshotItem) {
+    throw new Error("The inspection snapshot item was not created.");
+  }
+  createdIds.snapshotItemId = snapshotItem.id;
+
   const response = unwrap(
     await inspectionResponseService.saveInspectionResponse({
       inspectionId: inspection.id,
-      checklistItemId: checklistItem.id,
+      snapshotItemId: snapshotItem.id,
       status: ResponseStatus.NON_COMPLIANT,
       observation: "EPI obrigatório não disponibilizado.",
     }),
@@ -200,6 +221,8 @@ async function main(): Promise<void> {
       standards: standards.totalItems,
       companyCrud: true,
       checklistCrud: true,
+      checklistVersionPublished: true,
+      inspectionSnapshotCreated: true,
       standardAssociation: checklistItem.standards.length === 1,
       inspectionCompleted: true,
       automaticNonConformity: true,
@@ -248,21 +271,50 @@ async function cleanup(): Promise<void> {
     await prisma.report.deleteMany({
       where: { inspectionId: createdIds.inspectionId },
     });
+    const snapshot = await prisma.inspectionChecklistSnapshot.findUnique({
+      where: { inspectionId: createdIds.inspectionId },
+    });
+
+    if (snapshot) {
+      await prisma.inspectionSnapshotItemStandard.deleteMany({
+        where: {
+          snapshotItem: {
+            snapshotId: snapshot.id,
+          },
+        },
+      });
+      await prisma.inspectionSnapshotItem.deleteMany({
+        where: { snapshotId: snapshot.id },
+      });
+      await prisma.inspectionChecklistSnapshot.delete({
+        where: { id: snapshot.id },
+      });
+    }
     await prisma.inspection.deleteMany({
       where: { id: createdIds.inspectionId },
     });
   }
 
-  if (createdIds.checklistItemId) {
-    await prisma.checklistItemStandard.deleteMany({
-      where: { checklistItemId: createdIds.checklistItemId },
-    });
-    await prisma.checklistItem.deleteMany({
-      where: { id: createdIds.checklistItemId },
-    });
-  }
-
   if (createdIds.checklistId) {
+    await prisma.checklistVersionItemStandard.deleteMany({
+      where: {
+        checklistVersionItem: {
+          checklistVersion: {
+            checklistId: createdIds.checklistId,
+          },
+        },
+      },
+    });
+    await prisma.checklistVersionItem.deleteMany({
+      where: {
+        checklistVersion: {
+          checklistId: createdIds.checklistId,
+        },
+      },
+    });
+    await prisma.checklistVersion.deleteMany({
+      where: { checklistId: createdIds.checklistId },
+    });
     await prisma.checklist.deleteMany({
       where: { id: createdIds.checklistId },
     });

@@ -202,7 +202,9 @@ function NonConformityCard({ nonConformity }: { nonConformity: NonConformityWith
 }
 
 function getNonConformityTitle(nonConformity: NonConformityWithRelations): string {
-  return nonConformity.inspectionResponse.checklistItem.description;
+  return (
+    nonConformity.inspectionResponse.snapshotItem?.description ?? "Item histórico indisponível"
+  );
 }
 
 function getNonConformityCode(nonConformity: NonConformityWithRelations): string {

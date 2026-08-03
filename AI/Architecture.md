@@ -127,6 +127,51 @@ Nunca implementar regras de negócio nesta camada.
 
 ---
 
+# Integridade Histórica de Checklists
+
+O fluxo de inspeções usa uma arquitetura híbrida de versão publicada e snapshot:
+
+```text
+Checklist (identidade reutilizável)
+  -> ChecklistVersion (DRAFT/PUBLISHED/RETIRED)
+    -> ChecklistVersionItem
+      -> ChecklistVersionItemStandard (metadados normativos copiados)
+
+Inspection
+  -> ChecklistVersion publicada usada como origem
+  -> InspectionChecklistSnapshot (1:1)
+    -> InspectionSnapshotItem
+      -> InspectionSnapshotItemStandard (metadados normativos copiados)
+      -> InspectionResponse
+```
+
+As fontes de verdade são separadas por contexto:
+
+- manutenção do modelo: versão `DRAFT`;
+- início de nova inspeção: versão `PUBLISHED`;
+- execução, conclusão, não conformidades e consultas históricas: snapshot da inspeção;
+- catálogo normativo atual: `Standard`;
+- norma exibida no histórico: cópia contida no snapshot.
+
+Uma versão publicada é imutável. Alterar título, descrição, itens, ordem,
+obrigatoriedade ou associações normativas após a publicação cria, quando
+necessário, o próximo draft derivado. A publicação calcula um hash SHA-256 do
+conteúdo canônico e usa controle otimista para impedir publicação concorrente
+com uma edição.
+
+A criação da inspeção e do snapshot ocorre em uma única transação Prisma. A
+inspeção somente pode usar uma versão `PUBLISHED`; título, descrição, itens e
+metadados das normas são copiados para o snapshot. Respostas referenciam
+`InspectionSnapshotItem`, de forma que nenhuma leitura histórica depende do
+checklist, item ou norma mutável. A relação legada opcional com
+`ChecklistItem` existe apenas para transição de dados e contratos antigos.
+
+As consultas React Query de versões e do catálogo podem ser invalidadas após
+edições ou publicação. Um snapshot de inspeção já criado não deve ser
+invalidado nem reconstruído quando o checklist evolui.
+
+---
+
 ## Services
 
 Esta é a principal camada do sistema.

@@ -155,7 +155,10 @@ function ListaChecklists() {
                 <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary">
                   <ListChecks className="h-5 w-5" />
                 </div>
-                <Badge variant="outline">{c.isTemplate ? "Template" : "Personalizado"}</Badge>
+                <div className="flex flex-wrap justify-end gap-1">
+                  <Badge variant="outline">{c.isTemplate ? "Template" : "Personalizado"}</Badge>
+                  <ChecklistVersionBadge versions={c.versions} />
+                </div>
               </div>
               <div className="mt-3 font-semibold">{c.title}</div>
               <div className="mt-1 text-xs text-muted-foreground">
@@ -165,7 +168,7 @@ function ListaChecklists() {
                 {c.description ?? "Sem descrição cadastrada."}
               </p>
               <div className="mt-4 flex gap-3 text-xs text-muted-foreground">
-                <span>{c.items.length} itens cadastrados</span>
+                <span>{getWorkingItemCount(c.versions)} itens cadastrados</span>
               </div>
               <div className="mt-4 flex flex-wrap justify-end gap-2">
                 <Button asChild variant="outline" size="sm">
@@ -259,3 +262,33 @@ const emptyChecklistForm: ChecklistFormState = {
   isTemplate: false,
   isActive: true,
 };
+
+function ChecklistVersionBadge({
+  versions,
+}: {
+  versions: Array<{ versionNumber: number; status: string }>;
+}) {
+  const draft = versions.find((version) => version.status === "DRAFT");
+  const published = versions.find((version) => version.status === "PUBLISHED");
+
+  if (draft) {
+    return <Badge variant="secondary">Rascunho v{draft.versionNumber}</Badge>;
+  }
+
+  if (published) {
+    return <Badge variant="secondary">Publicada v{published.versionNumber}</Badge>;
+  }
+
+  return <Badge variant="secondary">Sem versão publicada</Badge>;
+}
+
+function getWorkingItemCount(
+  versions: Array<{ status: string; _count: { items: number } }>,
+): number {
+  const workingVersion =
+    versions.find((version) => version.status === "DRAFT") ??
+    versions.find((version) => version.status === "PUBLISHED") ??
+    versions[0];
+
+  return workingVersion?._count.items ?? 0;
+}

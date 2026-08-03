@@ -33,25 +33,33 @@ function NovaInspecao() {
   const createInspection = useCreateInspection();
   const [passo, setPasso] = useState(1);
   const [empresaId, setEmpresaId] = useState("");
-  const [checklistId, setChecklistId] = useState("");
+  const [checklistVersionId, setChecklistVersionId] = useState("");
   const [agendada, setAgendada] = useState("");
   const [obs, setObs] = useState("");
 
   const companies = companiesResult?.success ? companiesResult.data.items : [];
   const checklists = checklistsResult?.success ? checklistsResult.data.items : [];
+  const publishedVersions = checklists.flatMap((checklist) =>
+    checklist.versions
+      .filter((version) => version.status === "PUBLISHED")
+      .map((version) => ({ checklist, version })),
+  );
   const selectedCompany = companies.find((company) => company.id === empresaId);
-  const selectedChecklist = checklists.find((checklist) => checklist.id === checklistId);
+  const selectedPublishedVersion = publishedVersions.find(
+    ({ version }) => version.id === checklistVersionId,
+  );
 
   async function finalizar() {
-    if (!selectedChecklist) {
-      toast.error("Selecione um checklist antes de criar a inspeção.");
+    if (!selectedPublishedVersion) {
+      toast.error("Selecione uma versão publicada antes de criar a inspeção.");
       return;
     }
 
     try {
       const result = await createInspection.mutateAsync({
         companyId: empresaId,
-        checklistId,
+        checklistId: selectedPublishedVersion.checklist.id,
+        checklistVersionId,
         inspectionDate: agendada ? new Date(agendada) : new Date(),
         notes: obs,
       });
@@ -122,14 +130,14 @@ function NovaInspecao() {
                 <h3 className="font-semibold">2. Checklist e observações</h3>
                 <div className="space-y-2">
                   <Label>Checklist</Label>
-                  <Select value={checklistId} onValueChange={setChecklistId}>
+                  <Select value={checklistVersionId} onValueChange={setChecklistVersionId}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione…" />
                     </SelectTrigger>
                     <SelectContent>
-                      {checklists.map((checklist) => (
-                        <SelectItem key={checklist.id} value={checklist.id}>
-                          {checklist.title}
+                      {publishedVersions.map(({ checklist, version }) => (
+                        <SelectItem key={version.id} value={version.id}>
+                          {version.title} · v{version.versionNumber}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -142,7 +150,9 @@ function NovaInspecao() {
                 <div className="text-sm text-muted-foreground">
                   {isLoadingChecklists
                     ? "Carregando checklists..."
-                    : "Os itens serão executados na próxima etapa."}
+                    : publishedVersions.length === 0
+                      ? "Nenhuma versão publicada está disponível. Publique um checklist primeiro."
+                      : "A versão selecionada será congelada nesta inspeção."}
                 </div>
               </>
             )}
@@ -164,7 +174,12 @@ function NovaInspecao() {
                     <li>
                       Empresa: {selectedCompany?.tradeName ?? selectedCompany?.corporateName ?? "—"}
                     </li>
-                    <li>Checklist: {selectedChecklist?.title ?? "—"}</li>
+                    <li>
+                      Checklist: {selectedPublishedVersion?.version.title ?? "—"}
+                      {selectedPublishedVersion
+                        ? ` · v${selectedPublishedVersion.version.versionNumber}`
+                        : ""}
+                    </li>
                     <li>Data: {agendada || "Agora"}</li>
                   </ul>
                 </div>
@@ -183,7 +198,7 @@ function NovaInspecao() {
               {passo < 3 ? (
                 <Button
                   onClick={() => setPasso((p) => p + 1)}
-                  disabled={(passo === 1 && !empresaId) || (passo === 2 && !checklistId)}
+                  disabled={(passo === 1 && !empresaId) || (passo === 2 && !checklistVersionId)}
                 >
                   Avançar
                   <ChevronRight className="h-4 w-4" />

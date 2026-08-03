@@ -114,10 +114,10 @@ Objetivos:
 Inicialmente deverão ser armazenados:
 
 - empresas consultadas;
-- checklists;
-- itens dos checklists;
+- identidades de checklists;
+- versões publicadas e seus itens/metadados normativos;
 - normas;
-- inspeções em andamento;
+- inspeções em andamento com seu snapshot completo;
 - respostas;
 - evidências pendentes;
 - fila de sincronização.
@@ -194,11 +194,11 @@ Ordem sugerida:
 
 1. Empresas
 
-2. Checklists
+2. Checklists e versões draft, quando a manutenção offline for implementada
 
-3. Itens do Checklist
+3. Itens e normas das versões
 
-4. Inspeções
+4. Inspeções com snapshot
 
 5. Respostas
 
@@ -248,11 +248,42 @@ Exemplo:
 
 Mesmo registro alterado em dispositivos diferentes.
 
-Estratégia inicialmente prevista:
+`Last Write Wins` poderá ser usado apenas em campos mutáveis de baixo risco.
+Nunca deverá sobrescrever uma versão publicada nem reconstruir ou substituir um
+snapshot já aceito pelo servidor.
 
-Last Write Wins (última alteração prevalece).
+Para conteúdo versionado, conflitos devem resultar em novo draft, rejeição com
+reconciliação explícita ou outra estratégia que preserve ambas as revisões. Para
+respostas, o servidor deve validar a identidade da inspeção e do item do
+snapshot antes de aceitar o evento sincronizado.
 
-No futuro poderão ser implementadas estratégias mais avançadas.
+---
+
+# Versionamento e Snapshot no Dispositivo
+
+O pacote local necessário para iniciar uma inspeção deve conter uma versão
+`PUBLISHED` completa e identificada por `checklistVersionId`,
+`contentSchemaVersion` e `contentHash`. A criação offline deve congelar desse
+pacote o mesmo conteúdo relacional usado pelo servidor:
+
+- título e descrição;
+- número da versão;
+- descrição, ordem e obrigatoriedade dos itens;
+- IDs de linhagem;
+- metadados normativos copiados.
+
+Respostas locais devem referenciar `snapshotItemId`, nunca apenas um item do
+catálogo. IDs da inspeção, snapshot e itens devem ser estáveis e gerados antes da
+sincronização para permitir repetição idempotente.
+
+Na sincronização, o servidor deverá conferir versão, hash e formato do snapshot.
+Se uma inspeção já existir, o cliente não poderá trocar seu snapshot por uma
+versão mais recente. Edições futuras do checklist e invalidações do cache não
+alteram o pacote histórico de uma inspeção em andamento.
+
+A implementação online atual já fornece as fronteiras de domínio e os IDs
+necessários, mas IndexedDB, Dexie, fila, idempotência completa e protocolo de
+conflitos continuam fora da entrega atual.
 
 ---
 

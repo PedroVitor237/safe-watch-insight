@@ -1,4 +1,11 @@
-import type { Inspection, InspectionStatus, Prisma } from "@/generated/prisma/client";
+import type {
+  Inspection,
+  InspectionSnapshotIntegrityStatus,
+  InspectionSnapshotOrigin,
+  InspectionStatus,
+  Prisma,
+  StandardType,
+} from "@/generated/prisma/client";
 import { prisma } from "@/server/prisma/client";
 import { paginate } from "@/server/responses/pagination";
 import type { PaginatedResult, SortOrder } from "@/server/types";
@@ -14,21 +21,21 @@ const INSPECTION_SORT_FIELDS = {
   updatedAt: "updatedAt",
 } as const;
 
+const snapshotItemRelations = {
+  standards: {
+    orderBy: [{ type: "asc" }, { code: "asc" }],
+  },
+} satisfies Prisma.InspectionSnapshotItemInclude;
+
 const inspectionRelations = {
   company: true,
-  checklist: {
+  checklist: true,
+  checklistVersion: true,
+  snapshot: {
     include: {
       items: {
-        orderBy: {
-          orderIndex: "asc",
-        },
-        include: {
-          standards: {
-            include: {
-              standard: true,
-            },
-          },
-        },
+        orderBy: [{ orderIndex: "asc" }, { id: "asc" }],
+        include: snapshotItemRelations,
       },
     },
   },
@@ -45,15 +52,10 @@ const inspectionRelations = {
   },
   responses: {
     include: {
-      checklistItem: {
-        include: {
-          standards: {
-            include: {
-              standard: true,
-            },
-          },
-        },
+      snapshotItem: {
+        include: snapshotItemRelations,
       },
+      checklistItem: true,
       nonConformity: true,
     },
   },
@@ -79,6 +81,48 @@ export interface InspectionFindManyFilters {
   includeDeleted?: boolean;
 }
 
+export interface InspectionSnapshotStandardPersistenceInput {
+  standardId: string;
+  type: StandardType;
+  code: string;
+  title: string;
+  summary: string | null;
+  officialUrl: string | null;
+}
+
+export interface InspectionSnapshotItemPersistenceInput {
+  sourceVersionItemId: string;
+  sourceChecklistItemId: string | null;
+  description: string;
+  orderIndex: number;
+  isRequired: boolean;
+  standards: InspectionSnapshotStandardPersistenceInput[];
+}
+
+export interface CreateInspectionWithSnapshotPersistenceInput {
+  id?: string;
+  userId: string;
+  companyId: string;
+  checklistId: string;
+  checklistVersionId: string;
+  inspectionDate: Date;
+  status: Prisma.InspectionCreateInput["status"];
+  syncStatus: Prisma.InspectionCreateInput["syncStatus"];
+  notes: string | null;
+  snapshot: {
+    sourceVersionNumber: number;
+    title: string;
+    description: string | null;
+    isTemplate: boolean;
+    snapshotSchemaVersion: number;
+    contentHash: string;
+    origin: InspectionSnapshotOrigin;
+    integrityStatus: InspectionSnapshotIntegrityStatus;
+    capturedAt: Date;
+    items: InspectionSnapshotItemPersistenceInput[];
+  };
+}
+
 export class InspectionRepository extends BaseRepository<
   Inspection,
   Prisma.InspectionCreateInput,
@@ -96,6 +140,88 @@ export class InspectionRepository extends BaseRepository<
       data,
       include: inspectionRelations,
     });
+  }
+
+  createWithSnapshot(
+    input: CreateInspectionWithSnapshotPersistenceInput,
+  ): Promise<InspectionWithRelations> {
+    return prisma.$transaction(
+      (transaction) =>
+        transaction.inspection.create({
+          data: {
+            ...(input.id ? { id: input.id } : {}),
+            inspectionDate: input.inspectionDate,
+            status: input.status,
+            syncStatus: input.syncStatus,
+            notes: input.notes,
+            user: {
+              connect: { id: input.userId },
+            },
+            company: {
+              connect: { id: input.companyId },
+            },
+            checklist: {
+              connect: { id: input.checklistId },
+            },
+            checklistVersion: {
+              connect: { id: input.checklistVersionId },
+            },
+            snapshot: {
+              create: {
+                sourceChecklist: {
+                  connect: { id: input.checklistId },
+                },
+                sourceChecklistVersion: {
+                  connect: { id: input.checklistVersionId },
+                },
+                sourceVersionNumber: input.snapshot.sourceVersionNumber,
+                title: input.snapshot.title,
+                description: input.snapshot.description,
+                isTemplate: input.snapshot.isTemplate,
+                snapshotSchemaVersion: input.snapshot.snapshotSchemaVersion,
+                contentHash: input.snapshot.contentHash,
+                origin: input.snapshot.origin,
+                integrityStatus: input.snapshot.integrityStatus,
+                capturedAt: input.snapshot.capturedAt,
+                items: {
+                  create: input.snapshot.items.map((item) => ({
+                    sourceVersionItem: {
+                      connect: { id: item.sourceVersionItemId },
+                    },
+                    ...(item.sourceChecklistItemId
+                      ? {
+                          sourceChecklistItem: {
+                            connect: { id: item.sourceChecklistItemId },
+                          },
+                        }
+                      : {}),
+                    description: item.description,
+                    orderIndex: item.orderIndex,
+                    isRequired: item.isRequired,
+                    standards: {
+                      create: item.standards.map((standard) => ({
+                        standard: {
+                          connect: { id: standard.standardId },
+                        },
+                        type: standard.type,
+                        code: standard.code,
+                        title: standard.title,
+                        summary: standard.summary,
+                        officialUrl: standard.officialUrl,
+                      })),
+                    },
+                  })),
+                },
+              },
+            },
+          },
+          include: inspectionRelations,
+        }),
+      {
+        maxWait: 10_000,
+        timeout: 15_000,
+      },
+    );
   }
 
   findActiveById(id: string): Promise<InspectionWithRelations | null> {
@@ -200,7 +326,7 @@ export class InspectionRepository extends BaseRepository<
           { notes: { contains: search, mode: "insensitive" } },
           { company: { corporateName: { contains: search, mode: "insensitive" } } },
           { company: { tradeName: { contains: search, mode: "insensitive" } } },
-          { checklist: { title: { contains: search, mode: "insensitive" } } },
+          { snapshot: { title: { contains: search, mode: "insensitive" } } },
           { user: { name: { contains: search, mode: "insensitive" } } },
         ],
       });
@@ -210,11 +336,7 @@ export class InspectionRepository extends BaseRepository<
       return {};
     }
 
-    if (conditions.length === 1) {
-      return conditions[0];
-    }
-
-    return { AND: conditions };
+    return conditions.length === 1 ? conditions[0] : { AND: conditions };
   }
 
   private buildOrderBy(

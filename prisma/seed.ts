@@ -1,17 +1,25 @@
 import "dotenv/config";
 
 import bcrypt from "bcrypt";
+import { createHash } from "node:crypto";
 import process from "node:process";
 
 import { PrismaPg } from "@prisma/adapter-pg";
 
 import {
+  ChecklistVersionStatus,
+  InspectionSnapshotIntegrityStatus,
+  InspectionSnapshotOrigin,
   InspectionStatus,
   PrismaClient,
   StandardType,
   SyncStatus,
   UserRole,
 } from "../src/generated/prisma/client";
+import {
+  CHECKLIST_CONTENT_SCHEMA_VERSION,
+  createChecklistContentHash,
+} from "../src/server/utils/checklist-content-hash";
 
 const DEMO_ADMIN_ID = "11111111-1111-4111-8111-111111111111";
 const DEMO_COMPANY_ID = "22222222-2222-4222-8222-222222222222";
@@ -284,7 +292,95 @@ async function main() {
     }
   }
 
-  await prisma.inspection.upsert({
+  const legacyItems = await prisma.checklistItem.findMany({
+    where: { checklistId: checklist.id },
+    orderBy: [{ orderIndex: "asc" }, { id: "asc" }],
+    include: {
+      standards: {
+        include: {
+          standard: true,
+        },
+      },
+    },
+  });
+  const versionHash = createChecklistContentHash({
+    title: checklist.title,
+    description: checklist.description,
+    items: legacyItems.map((item) => ({
+      description: item.description,
+      orderIndex: item.orderIndex,
+      isRequired: item.isRequired,
+      standards: item.standards.map(({ standard }) => ({
+        standardId: standard.id,
+        type: standard.type,
+        code: standard.code,
+        title: standard.title,
+        summary: standard.summary,
+        officialUrl: standard.officialUrl,
+      })),
+    })),
+  });
+  const checklistVersion = await prisma.checklistVersion.upsert({
+    where: {
+      checklistId_versionNumber: {
+        checklistId: checklist.id,
+        versionNumber: 1,
+      },
+    },
+    update: {},
+    create: {
+      id: checklist.id,
+      checklist: {
+        connect: { id: checklist.id },
+      },
+      versionNumber: 1,
+      status: ChecklistVersionStatus.PUBLISHED,
+      title: checklist.title,
+      description: checklist.description,
+      contentSchemaVersion: CHECKLIST_CONTENT_SCHEMA_VERSION,
+      contentHash: versionHash,
+      createdBy: {
+        connect: { id: admin.id },
+      },
+      publishedBy: {
+        connect: { id: admin.id },
+      },
+      publishedAt: new Date(),
+      items: {
+        create: legacyItems.map((item) => ({
+          id: item.id,
+          sourceChecklistItem: {
+            connect: { id: item.id },
+          },
+          description: item.description,
+          orderIndex: item.orderIndex,
+          isRequired: item.isRequired,
+          standards: {
+            create: item.standards.map(({ standard }) => ({
+              standard: {
+                connect: { id: standard.id },
+              },
+              type: standard.type,
+              code: standard.code,
+              title: standard.title,
+              summary: standard.summary,
+              officialUrl: standard.officialUrl,
+            })),
+          },
+        })),
+      },
+    },
+    include: {
+      items: {
+        orderBy: [{ orderIndex: "asc" }, { id: "asc" }],
+        include: {
+          standards: true,
+        },
+      },
+    },
+  });
+
+  const inspection = await prisma.inspection.upsert({
     where: { id: DEMO_INSPECTION_ID },
     update: {
       inspectionDate: new Date(),
@@ -304,6 +400,11 @@ async function main() {
       checklist: {
         connect: {
           id: checklist.id,
+        },
+      },
+      checklistVersion: {
+        connect: {
+          id: checklistVersion.id,
         },
       },
       deletedAt: null,
@@ -329,8 +430,79 @@ async function main() {
           id: checklist.id,
         },
       },
+      checklistVersion: {
+        connect: {
+          id: checklistVersion.id,
+        },
+      },
     },
   });
+
+  const existingSnapshot = await prisma.inspectionChecklistSnapshot.findUnique({
+    where: { inspectionId: inspection.id },
+  });
+
+  if (!existingSnapshot) {
+    await prisma.inspectionChecklistSnapshot.create({
+      data: {
+        id: inspection.id,
+        inspection: {
+          connect: { id: inspection.id },
+        },
+        sourceChecklist: {
+          connect: { id: checklist.id },
+        },
+        sourceChecklistVersion: {
+          connect: { id: checklistVersion.id },
+        },
+        sourceVersionNumber: checklistVersion.versionNumber,
+        title: checklistVersion.title,
+        description: checklistVersion.description,
+        isTemplate: checklist.isTemplate,
+        snapshotSchemaVersion: checklistVersion.contentSchemaVersion,
+        contentHash: checklistVersion.contentHash ?? versionHash,
+        origin: InspectionSnapshotOrigin.INSPECTION_CREATION,
+        integrityStatus: InspectionSnapshotIntegrityStatus.VERIFIED,
+        capturedAt: new Date(),
+        items: {
+          create: checklistVersion.items.map((item) => ({
+            id: deterministicUuid(`snapshot-item:${inspection.id}:${item.id}`),
+            sourceVersionItem: {
+              connect: { id: item.id },
+            },
+            ...(item.sourceChecklistItemId
+              ? {
+                  sourceChecklistItem: {
+                    connect: { id: item.sourceChecklistItemId },
+                  },
+                }
+              : {}),
+            description: item.description,
+            orderIndex: item.orderIndex,
+            isRequired: item.isRequired,
+            standards: {
+              create: item.standards.map((standard) => ({
+                standard: {
+                  connect: { id: standard.standardId },
+                },
+                type: standard.type,
+                code: standard.code,
+                title: standard.title,
+                summary: standard.summary,
+                officialUrl: standard.officialUrl,
+              })),
+            },
+          })),
+        },
+      },
+    });
+  }
+}
+
+function deterministicUuid(value: string): string {
+  const hash = createHash("md5").update(value, "utf8").digest("hex");
+
+  return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-4${hash.slice(13, 16)}-a${hash.slice(17, 20)}-${hash.slice(20, 32)}`;
 }
 
 main()

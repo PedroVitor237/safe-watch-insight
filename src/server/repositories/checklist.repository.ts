@@ -5,17 +5,38 @@ import type { PaginatedResult, SortOrder } from "@/server/types";
 import { getPaginationOffset, normalizePagination } from "@/server/utils/pagination.utils";
 
 import { BaseRepository } from "./base.repository";
+import { checklistVersionRelations } from "./checklist-version.repository";
 
 const checklistRelations = {
-  items: {
+  versions: {
     orderBy: {
-      orderIndex: "asc",
+      versionNumber: "desc",
+    },
+    include: checklistVersionRelations,
+  },
+} satisfies Prisma.ChecklistInclude;
+
+const checklistListRelations = {
+  versions: {
+    orderBy: {
+      versionNumber: "desc",
+    },
+    include: {
+      _count: {
+        select: {
+          items: true,
+        },
+      },
     },
   },
 } satisfies Prisma.ChecklistInclude;
 
 export type ChecklistWithItems = Prisma.ChecklistGetPayload<{
   include: typeof checklistRelations;
+}>;
+
+export type ChecklistWithVersionSummaries = Prisma.ChecklistGetPayload<{
+  include: typeof checklistListRelations;
 }>;
 
 const CHECKLIST_SORT_FIELDS = {
@@ -40,6 +61,12 @@ export interface ChecklistFindManyFilters {
   includeDeleted?: boolean;
 }
 
+export interface InitialChecklistDraftInput {
+  title: string;
+  description: string | null;
+  createdById: string;
+}
+
 export class ChecklistRepository extends BaseRepository<
   Checklist,
   Prisma.ChecklistCreateInput,
@@ -55,6 +82,28 @@ export class ChecklistRepository extends BaseRepository<
   createWithItems(data: Prisma.ChecklistCreateInput): Promise<ChecklistWithItems> {
     return prisma.checklist.create({
       data,
+      include: checklistRelations,
+    });
+  }
+
+  createWithDraft(
+    data: Prisma.ChecklistCreateInput,
+    draft: InitialChecklistDraftInput,
+  ): Promise<ChecklistWithItems> {
+    return prisma.checklist.create({
+      data: {
+        ...data,
+        versions: {
+          create: {
+            versionNumber: 1,
+            title: draft.title,
+            description: draft.description,
+            createdBy: {
+              connect: { id: draft.createdById },
+            },
+          },
+        },
+      },
       include: checklistRelations,
     });
   }
@@ -82,7 +131,7 @@ export class ChecklistRepository extends BaseRepository<
 
   findManyPaginated(
     filters: ChecklistFindManyFilters = {},
-  ): Promise<PaginatedResult<ChecklistWithItems>> {
+  ): Promise<PaginatedResult<ChecklistWithVersionSummaries>> {
     const pagination = normalizePagination(filters.page, filters.pageSize);
     const where = this.buildWhere(filters);
     const orderBy = this.buildOrderBy(filters.sortBy, filters.sortOrder);
@@ -93,7 +142,7 @@ export class ChecklistRepository extends BaseRepository<
         orderBy,
         skip: getPaginationOffset(pagination),
         take: pagination.pageSize,
-        include: checklistRelations,
+        include: checklistListRelations,
       }),
       prisma.checklist.count({ where }),
     ]).then(([items, totalItems]) => paginate(items, totalItems, pagination));

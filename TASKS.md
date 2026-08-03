@@ -129,6 +129,17 @@ Legenda
 - [x] Desativar checklist
 - [x] Excluir checklist
 
+## Versionamento publicado
+
+- [x] Criar versão `DRAFT` junto com o checklist
+- [x] Publicar versão imutável com autoria, data e hash SHA-256
+- [x] Derivar o próximo draft ao editar conteúdo já publicado
+- [x] Manter ciclo `DRAFT`, `PUBLISHED` e `RETIRED` no backend
+- [x] Garantir no máximo um draft e número único por checklist no banco
+- [x] Listar versões e selecionar versão publicada para nova inspeção
+- [x] Exibir status da versão e ação de publicação no frontend
+- [ ] Implementar interface completa de histórico e retirada de versões
+
 ---
 
 # FASE 6 — Itens do Checklist
@@ -138,6 +149,8 @@ Legenda
 - [x] Excluir item
 - [/] Reordenar item
 - [x] Associar normas
+- [x] Persistir itens e metadados normativos por versão
+- [x] Preservar linhagem de itens ao derivar uma nova versão
 
 ---
 
@@ -161,6 +174,10 @@ Legenda
 ## Funcionalidades
 
 - [x] Criar inspeção
+- [x] Criar snapshot relacional atomicamente com a inspeção
+- [x] Usar apenas versão publicada para iniciar inspeção
+- [x] Preservar título, descrição, itens, ordem, obrigatoriedade e normas no snapshot
+- [x] Migrar inspeções existentes com backfill `UNVERIFIED_LEGACY`
 - [ ] Editar inspeção
 - [ ] Salvar rascunho
 - [x] Finalizar inspeção
@@ -174,6 +191,8 @@ Legenda
 - [x] Registrar resposta
 - [x] Editar resposta
 - [x] Salvar observações
+- [x] Vincular respostas ao item histórico do snapshot
+- [x] Manter compatibilidade temporária com identificadores legados
 
 ---
 
@@ -184,6 +203,7 @@ Legenda
 - [x] Alterar status
 - [x] Listar
 - [x] Consultar
+- [x] Usar descrição e normas históricas do snapshot
 
 ---
 
@@ -275,6 +295,15 @@ Legenda
 - [ ] Testar upload
 - [ ] Testar relatórios
 
+## Integridade histórica direcionada
+
+- [x] Testar isolamento de item editado, adicionado e removido
+- [x] Testar isolamento de associações normativas entre versões
+- [x] Testar inspeções em versões publicadas diferentes
+- [x] Testar contexto histórico da não conformidade
+- [x] Testar rollback transacional sem registros parciais
+- [x] Validar migration e backfill dos dados existentes
+
 ## Frontend
 
 - [ ] Validar formulários
@@ -291,6 +320,7 @@ Legenda
 - [x] Atualizar Modelo Físico
 - [x] Atualizar Schema Prisma
 - [x] Atualizar README
+- [x] Documentar versões publicadas, snapshots e compatibilidade legada
 
 ---
 

@@ -2,6 +2,15 @@ export { BaseRepository } from "./base.repository";
 export type { RepositoryDelegate } from "./base.repository";
 export { CompanyRepository, companyRepository } from "./company.repository";
 export { ChecklistItemRepository, checklistItemRepository } from "./checklist-item.repository";
+export {
+  ChecklistVersionRepository,
+  checklistVersionRepository,
+} from "./checklist-version.repository";
+export type { ChecklistVersionWithItems } from "./checklist-version.repository";
+export {
+  ChecklistVersionItemRepository,
+  checklistVersionItemRepository,
+} from "./checklist-version-item.repository";
 export { UserRepository, userRepository } from "./user.repository";
 export {
   InspectionResponseRepository,

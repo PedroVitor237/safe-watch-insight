@@ -24,6 +24,7 @@ export const inspectionSortFieldSchema = z.enum([
 export const createInspectionSchema = z.object({
   companyId: z.string().uuid(),
   checklistId: z.string().uuid(),
+  checklistVersionId: z.string().uuid().optional(),
   inspectionDate: z.coerce.date(),
   notes: optionalNullableTextSchema,
 });

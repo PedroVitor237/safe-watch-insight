@@ -55,10 +55,12 @@ function DetalheInspecao() {
 
   const inspectionResult = inspectionQuery.data;
   const inspection = inspectionResult?.success ? inspectionResult.data : null;
-  const items = inspection?.checklist.items ?? [];
+  const items = inspection?.snapshot?.items ?? [];
   const responses = inspection?.responses ?? [];
   const responseByItemId = new Map(
-    responses.map((response) => [response.checklistItemId, response]),
+    responses
+      .filter((response) => response.snapshotItemId !== null)
+      .map((response) => [response.snapshotItemId as string, response]),
   );
 
   const totalItens = items.length;
@@ -68,14 +70,14 @@ function DetalheInspecao() {
   const isReadOnly = inspection?.status === "COMPLETED" || inspection?.status === "CANCELLED";
 
   async function setResposta(
-    checklistItemId: string,
+    snapshotItemId: string,
     status: UiResponseStatus,
     observation?: string | null,
   ) {
     try {
       const result = await saveResponse.mutateAsync({
         inspectionId: id,
-        checklistItemId,
+        snapshotItemId,
         status: uiResponseStatusToBackend[status],
         observation,
       });
@@ -92,14 +94,14 @@ function DetalheInspecao() {
   }
 
   async function setObservacao(
-    checklistItemId: string,
+    snapshotItemId: string,
     status: BackendResponseStatus,
     observation: string,
   ) {
     try {
       const result = await saveResponse.mutateAsync({
         inspectionId: id,
-        checklistItemId,
+        snapshotItemId,
         status,
         observation,
       });
@@ -157,7 +159,7 @@ function DetalheInspecao() {
   return (
     <div>
       <PageHeader
-        title={inspection.checklist.title}
+        title={inspection.snapshot?.title ?? "Snapshot indisponível"}
         description={`${inspection.id.slice(0, 8)} · ${
           inspection.company.tradeName ?? inspection.company.corporateName
         }`}
@@ -175,6 +177,15 @@ function DetalheInspecao() {
       />
 
       <div className="space-y-4 p-4 sm:p-8">
+        {inspection.snapshot?.integrityStatus === "UNVERIFIED_LEGACY" && (
+          <Card className="border-amber-500/40 bg-amber-500/5">
+            <CardContent className="p-4 text-sm text-muted-foreground">
+              Este registro foi estabilizado a partir dos dados legados disponíveis. O conteúdo não
+              pode ser certificado como a versão exata existente na data original, mas não será mais
+              alterado por edições no checklist.
+            </CardContent>
+          </Card>
+        )}
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardContent className="p-4">
@@ -220,7 +231,12 @@ function DetalheInspecao() {
           <TabsContent value="execucao" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">{inspection.checklist.title}</CardTitle>
+                <CardTitle className="flex flex-wrap items-center gap-2 text-base">
+                  {inspection.snapshot?.title ?? "Snapshot indisponível"}
+                  {inspection.snapshot && (
+                    <Badge variant="secondary">v{inspection.snapshot.sourceVersionNumber}</Badge>
+                  )}
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {items.length === 0 ? (
@@ -245,8 +261,8 @@ function DetalheInspecao() {
                             </div>
                             {item.standards.length > 0 && (
                               <div className="mt-2 flex flex-wrap gap-1">
-                                {item.standards.map(({ standard }) => (
-                                  <Badge key={standard.id} variant="outline">
+                                {item.standards.map((standard) => (
+                                  <Badge key={standard.standardId} variant="outline">
                                     {standard.code}
                                   </Badge>
                                 ))}

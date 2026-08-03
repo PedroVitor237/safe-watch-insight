@@ -173,7 +173,8 @@ user User @relation(fields: [userId], references: [id])
 userId String
 ```
 
-Nunca armazenar informações duplicadas.
+Evitar informações duplicadas, exceto cópias históricas deliberadas e
+documentadas em versões publicadas e snapshots de inspeção.
 
 ---
 
@@ -201,21 +202,53 @@ As seguintes cardinalidades devem ser preservadas.
 
 ## Checklist
 
-1:N ChecklistItem
+1:N ChecklistVersion
 
 1:N Inspection
 
+1:N InspectionChecklistSnapshot como identidade de origem
+
+`ChecklistItem` permanece somente como estrutura legada de compatibilidade.
+
 ---
 
-## ChecklistItem
+## ChecklistVersion
 
-N:N Standard
+1:N ChecklistVersionItem
+
+1:N Inspection
+
+1:N InspectionChecklistSnapshot como versão de origem
+
+---
+
+## ChecklistVersionItem
+
+N:N Standard por `ChecklistVersionItemStandard`
+
+1:N InspectionSnapshotItem como linhagem
+
+---
+
+## InspectionChecklistSnapshot
+
+1:1 Inspection
+
+1:N InspectionSnapshotItem
+
+---
+
+## InspectionSnapshotItem
+
+N:N Standard por `InspectionSnapshotItemStandard`
 
 1:N InspectionResponse
 
 ---
 
 ## Inspection
+
+1:1 InspectionChecklistSnapshot
 
 1:N InspectionResponse
 
@@ -355,9 +388,94 @@ Checklist
 
 - createdById
 
+ChecklistVersion
+
+- checklistId + versionNumber (unique)
+
+- checklistId + status
+
+- status
+
+- publishedAt
+
+ChecklistVersionItem
+
+- checklistVersionId + orderIndex (unique)
+
+- sourceVersionItemId
+
+InspectionChecklistSnapshot
+
+- inspectionId (unique)
+
+- sourceChecklistId
+
+- sourceChecklistVersionId
+
+- integrityStatus
+
+InspectionSnapshotItem
+
+- snapshotId + orderIndex (unique)
+
+- sourceVersionItemId
+
 Standard
 
 - code
+
+---
+
+# Versionamento e Snapshot de Inspeção
+
+`Checklist` representa a identidade reutilizável. O conteúdo editável pertence
+a `ChecklistVersion`; cada versão possui número monotônico dentro do checklist e
+estado `DRAFT`, `PUBLISHED` ou `RETIRED`. Há no máximo um draft por checklist,
+garantido por índice único parcial da migration. Versões publicadas possuem
+`publishedAt`, `publishedById`, `contentSchemaVersion` e `contentHash` SHA-256.
+
+Itens de versão e suas associações normativas são registros próprios. A tabela
+de associação copia `type`, `code`, `title`, `summary` e `officialUrl`, além de
+manter a referência ao catálogo `Standard`. Isso preserva o conteúdo regulatório
+da versão mesmo se o catálogo for atualizado.
+
+Cada `Inspection` nova possui uma `InspectionChecklistSnapshot` exclusiva,
+criada na mesma transação da inspeção. O snapshot registra:
+
+- checklist e versão de origem;
+- número da versão, título, descrição e indicador de template;
+- versão do formato, hash, origem e situação de integridade;
+- descrição, ordem e obrigatoriedade dos itens;
+- metadados das normas relevantes para exibição histórica.
+
+`InspectionResponse.snapshotItemId` é a referência histórica autoritativa. Os
+campos opcionais `Inspection.checklistVersionId`,
+`InspectionResponse.checklistItemId` e as tabelas antigas de item foram mantidos
+na expansão do schema para compatibilidade. Novas gravações sempre preenchem a
+versão e o snapshot; o backend não executa inspeções sem snapshot.
+
+As FKs do modelo histórico usam `ON DELETE RESTRICT`. Ordens são únicas dentro
+da versão e do snapshot, versões são únicas por checklist/número, snapshots são
+únicos por inspeção e respostas são únicas por inspeção/item do snapshot.
+
+## Backfill legado
+
+A migration `20260803150000_add_checklist_versions_and_inspection_snapshots`
+cria uma versão inicial a partir do melhor estado disponível de cada checklist,
+gera um snapshot para cada inspeção existente e remapeia respostas para os itens
+do snapshot. O processo é determinístico e aborta se alguma resposta não puder
+ser mapeada.
+
+Como o banco antigo não permite provar qual conteúdo existia na data da
+inspeção, esses snapshots são identificados por:
+
+- `origin = LEGACY_BACKFILL`;
+- `integrityStatus = UNVERIFIED_LEGACY`;
+- `snapshotSchemaVersion = 0`.
+
+Snapshots criados normalmente usam `INSPECTION_CREATION`, `VERIFIED` e o formato
+canônico atual. O marcador legado não deve ser promovido para `VERIFIED` sem uma
+fonte histórica externa confiável.
 
 ---
 
@@ -370,6 +488,18 @@ User.email
 Company.cnpj
 
 Standard.code
+
+ChecklistVersion(checklistId, versionNumber)
+
+Um único ChecklistVersion `DRAFT` por checklist (índice único parcial)
+
+ChecklistVersionItem(checklistVersionId, orderIndex)
+
+InspectionChecklistSnapshot.inspectionId
+
+InspectionSnapshotItem(snapshotId, orderIndex)
+
+InspectionResponse(inspectionId, snapshotItemId)
 
 ---
 

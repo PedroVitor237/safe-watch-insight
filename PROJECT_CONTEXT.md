@@ -93,6 +93,7 @@ O sistema permite:
 - criação de templates;
 - checklists personalizados;
 - reutilização de modelos;
+- manutenção em draft e publicação de versões imutáveis;
 - associação de itens às Normas Regulamentadoras.
 
 ---
@@ -104,6 +105,7 @@ Cada inspeção deve registrar:
 - empresa;
 - responsável;
 - checklist utilizado;
+- versão publicada e snapshot histórico do checklist;
 - respostas;
 - observações;
 - não conformidades;
@@ -296,6 +298,12 @@ Alguns módulos secundários ainda utilizam dados mockados, como dashboard, rela
 Normas, associação normativa aos itens, criação automática de não
 conformidades e ações corretivas já utilizam persistência real.
 
+Checklists agora possuem versões `DRAFT`, `PUBLISHED` e `RETIRED`. Toda nova
+inspeção captura atomicamente um snapshot relacional da versão publicada; itens,
+normas, respostas e não conformidades históricas não dependem do checklist
+mutável. Inspeções anteriores à migration foram estabilizadas como backfill
+legado não verificável.
+
 ---
 
 ## Backend
@@ -307,9 +315,9 @@ Módulos integrados nesta etapa:
 - autenticação por sessão;
 - empresas;
 - checklists;
-- itens de checklist;
-- inspeções;
-- respostas de inspeção;
+- versões e itens de checklist;
+- inspeções com snapshot histórico;
+- respostas vinculadas a itens do snapshot;
 - conclusão de inspeção.
 - normas e associação aos itens;
 - não conformidades;
@@ -372,6 +380,10 @@ Cadastro da empresa
 ↓
 
 Seleção ou criação de checklist
+
+↓
+
+Publicação da versão
 
 ↓
 

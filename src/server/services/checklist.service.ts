@@ -8,8 +8,12 @@ import type { Result } from "@/server/responses";
 import type { PaginatedResult } from "@/server/types";
 
 import { BaseService } from "./base.service";
+import { checklistVersionService, ChecklistVersionService } from "./checklist-version.service";
 
 type ChecklistEntity = NonNullable<Awaited<ReturnType<ChecklistRepository["findActiveById"]>>>;
+type ChecklistListEntity = Awaited<
+  ReturnType<ChecklistRepository["findManyPaginated"]>
+>["items"][number];
 type ChecklistCreateData = Parameters<ChecklistRepository["create"]>[0];
 type ChecklistUpdateData = Parameters<ChecklistRepository["update"]>[1];
 
@@ -29,23 +33,44 @@ export interface UpdateChecklistInput {
 }
 
 export class ChecklistService extends BaseService<ChecklistRepository> {
-  constructor(repository: ChecklistRepository = checklistRepository) {
+  constructor(
+    repository: ChecklistRepository = checklistRepository,
+    private readonly versionService: ChecklistVersionService = checklistVersionService,
+  ) {
     super(repository);
   }
 
   async createChecklist(input: CreateChecklistInput): Promise<Result<ChecklistEntity>> {
     return this.execute(async () => {
-      const checklist = await this.repository.createWithItems(this.toCreateData(input));
+      const checklist = await this.repository.createWithDraft(this.toCreateData(input), {
+        title: input.title,
+        description: input.description ?? null,
+        createdById: input.createdById,
+      });
 
       return this.success(checklist);
     });
   }
 
-  async updateChecklist(id: string, input: UpdateChecklistInput): Promise<Result<ChecklistEntity>> {
+  async updateChecklist(
+    id: string,
+    input: UpdateChecklistInput,
+    updatedById: string,
+  ): Promise<Result<ChecklistEntity>> {
     return this.execute(async () => {
       await this.ensureChecklistExists(id);
 
-      const checklist = await this.repository.updateWithItems({ id }, this.toUpdateData(input));
+      if (input.title !== undefined || input.description !== undefined) {
+        await this.versionService.updateDraftAndChecklist(id, updatedById, input);
+      } else {
+        await this.repository.updateWithItems({ id }, this.toUpdateData(input));
+      }
+
+      const checklist = await this.repository.findActiveById(id);
+
+      if (!checklist) {
+        throw new NotFoundError("Checklist not found.");
+      }
 
       return this.success(checklist);
     });
@@ -75,7 +100,7 @@ export class ChecklistService extends BaseService<ChecklistRepository> {
 
   async listChecklists(
     filters: ChecklistFindManyFilters = {},
-  ): Promise<Result<PaginatedResult<ChecklistEntity>>> {
+  ): Promise<Result<PaginatedResult<ChecklistListEntity>>> {
     return this.execute(async () => {
       const checklists = await this.repository.findManyPaginated({
         ...filters,

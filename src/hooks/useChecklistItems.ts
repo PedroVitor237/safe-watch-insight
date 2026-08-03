@@ -7,6 +7,7 @@ import {
   updateChecklistItem,
 } from "@/lib/api/checklist-item.functions";
 import { checklistItemQueryKeys } from "@/lib/api/checklist-item.query-keys";
+import { checklistVersionQueryKeys } from "@/lib/api/checklist-version.query-keys";
 import { checklistQueryKeys } from "@/lib/api/checklist.query-keys";
 import type {
   CreateChecklistItemSchemaInput,
@@ -51,6 +52,9 @@ export function useCreateChecklistItem() {
           queryKey: checklistQueryKeys.detail(variables.checklistId),
         }),
         queryClient.invalidateQueries({ queryKey: checklistQueryKeys.lists() }),
+        queryClient.invalidateQueries({
+          queryKey: checklistVersionQueryKeys.list(variables.checklistId),
+        }),
       ]);
     },
   });
@@ -75,6 +79,9 @@ export function useUpdateChecklistItem() {
           queryKey: checklistQueryKeys.detail(variables.checklistId),
         }),
         queryClient.invalidateQueries({ queryKey: checklistQueryKeys.lists() }),
+        queryClient.invalidateQueries({
+          queryKey: checklistVersionQueryKeys.list(variables.checklistId),
+        }),
       ]);
     },
   });
@@ -99,6 +106,9 @@ export function useDeleteChecklistItem() {
           queryKey: checklistQueryKeys.detail(variables.checklistId),
         }),
         queryClient.invalidateQueries({ queryKey: checklistQueryKeys.lists() }),
+        queryClient.invalidateQueries({
+          queryKey: checklistVersionQueryKeys.list(variables.checklistId),
+        }),
       ]);
     },
   });

@@ -22,7 +22,8 @@ import { BaseService } from "./base.service";
 
 export interface SaveInspectionResponseInput {
   inspectionId: string;
-  checklistItemId: string;
+  snapshotItemId?: string;
+  checklistItemId?: string;
   status: ResponseStatus;
   observation?: string | null;
 }
@@ -53,14 +54,18 @@ export class InspectionResponseService extends BaseService<InspectionResponseRep
     return this.execute(async () => {
       const inspection = await this.ensureInspectionExists(input.inspectionId);
       this.ensureInspectionCanBeEdited(inspection);
-      const checklistItem = this.getChecklistItem(inspection, input.checklistItemId);
+      const snapshotItem = this.getSnapshotItem(
+        inspection,
+        input.snapshotItemId,
+        input.checklistItemId,
+      );
 
       let response: InspectionResponseWithRelations;
 
       try {
         response = await this.repository.saveWithNonConformity(
           input.inspectionId,
-          input.checklistItemId,
+          snapshotItem.id,
           {
             status: input.status,
             observation: input.observation ?? null,
@@ -68,7 +73,7 @@ export class InspectionResponseService extends BaseService<InspectionResponseRep
           input.status === ResponseStatus.NON_COMPLIANT
             ? {
                 action: "ensure",
-                description: input.observation?.trim() || checklistItem.description,
+                description: input.observation?.trim() || snapshotItem.description,
                 severity: Severity.MEDIUM,
                 dueDate: addDays(new Date(), 7),
                 status: NonConformityStatus.OPEN,
@@ -136,14 +141,23 @@ export class InspectionResponseService extends BaseService<InspectionResponseRep
     return inspection;
   }
 
-  private getChecklistItem(
+  private getSnapshotItem(
     inspection: InspectionWithRelations,
-    checklistItemId: string,
-  ): InspectionWithRelations["checklist"]["items"][number] {
-    const item = inspection.checklist.items.find((candidate) => candidate.id === checklistItemId);
+    snapshotItemId?: string,
+    checklistItemId?: string,
+  ): NonNullable<InspectionWithRelations["snapshot"]>["items"][number] {
+    if (!inspection.snapshot) {
+      throw new ConflictError("Inspection historical snapshot is unavailable.");
+    }
+
+    const item = inspection.snapshot.items.find(
+      (candidate) =>
+        candidate.id === snapshotItemId ||
+        (checklistItemId !== undefined && candidate.sourceChecklistItemId === checklistItemId),
+    );
 
     if (!item) {
-      throw new NotFoundError("Checklist item not found for this inspection.");
+      throw new NotFoundError("Snapshot item not found for this inspection.");
     }
 
     return item;
@@ -159,10 +173,16 @@ export class InspectionResponseService extends BaseService<InspectionResponseRep
   }
 
   private ensureRequiredItemsWereAnswered(inspection: InspectionWithRelations): void {
+    if (!inspection.snapshot) {
+      throw new ConflictError("Inspection historical snapshot is unavailable.");
+    }
+
     const answeredItemIds = new Set(
-      inspection.responses.map((response) => response.checklistItemId),
+      inspection.responses
+        .map((response) => response.snapshotItemId)
+        .filter((snapshotItemId): snapshotItemId is string => snapshotItemId !== null),
     );
-    const missingRequiredItems = inspection.checklist.items.filter(
+    const missingRequiredItems = inspection.snapshot.items.filter(
       (item) => item.isRequired && !answeredItemIds.has(item.id),
     );
 

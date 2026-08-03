@@ -1,202 +1,210 @@
+# Diagrama de Classes — versão técnica
+
+O diagrama representa o domínio persistido após a adoção de versões publicadas
+e snapshot relacional por inspeção. `ChecklistItem` e
+`ChecklistItemStandard` aparecem apenas como estruturas legadas de
+compatibilidade; novas inspeções não dependem delas.
+
 ```mermaid
 classDiagram
 
-class User{
-+UUID id
-+String name
-+String email
-+String password
-+UserRole role
-+DateTime createdAt
-+DateTime updatedAt
+class User {
+  +UUID id
+  +String name
+  +String email
+  +UserRole role
 }
 
-class Company{
-+UUID id
-+String corporateName
-+String tradeName
-+String cnpj
-+String cnae
-+Int riskLevel
-+Int employeeCount
-+String address
-+String notes
-+DateTime createdAt
-+DateTime updatedAt
+class Company {
+  +UUID id
+  +String corporateName
+  +String cnpj
+  +String cnae
+  +Int riskLevel
 }
 
-class Checklist{
-+UUID id
-+String title
-+String description
-+Boolean isTemplate
-+Boolean isActive
-+DateTime createdAt
-+DateTime updatedAt
+class Checklist {
+  +UUID id
+  +String title
+  +String description
+  +Boolean isTemplate
+  +Boolean isActive
 }
 
-class ChecklistItem{
-+UUID id
-+String description
-+Int order
-+Boolean isRequired
+class ChecklistVersion {
+  +UUID id
+  +Int versionNumber
+  +ChecklistVersionStatus status
+  +String title
+  +String description
+  +Int contentSchemaVersion
+  +String contentHash
+  +DateTime publishedAt
 }
 
-class Standard{
-+UUID id
-+StandardType type
-+String code
-+String title
-+String summary
-+String officialUrl
-+Boolean isActive
+class ChecklistVersionItem {
+  +UUID id
+  +UUID sourceVersionItemId
+  +UUID sourceChecklistItemId
+  +String description
+  +Int orderIndex
+  +Boolean isRequired
 }
 
-class ChecklistItemStandard{
-+UUID checklistItemId
-+UUID standardId
+class ChecklistVersionItemStandard {
+  +UUID standardId
+  +StandardType type
+  +String code
+  +String title
+  +String summary
+  +String officialUrl
 }
 
-class Inspection{
-+UUID id
-+Date inspectionDate
-+InspectionStatus status
-+SyncStatus syncStatus
-+String notes
-+DateTime createdAt
-+DateTime updatedAt
+class ChecklistItem {
+  <<legacy>>
+  +UUID id
+  +String description
+  +Int orderIndex
+  +Boolean isRequired
 }
 
-class InspectionResponse{
-+UUID id
-+ResponseStatus status
-+String observation
+class Standard {
+  +UUID id
+  +StandardType type
+  +String code
+  +String title
+  +String summary
+  +String officialUrl
+  +Boolean isActive
 }
 
-class NonConformity{
-+UUID id
-+String description
-+Severity severity
-+Date dueDate
-+CorrectiveActionStatus status
-+DateTime createdAt
+class Inspection {
+  +UUID id
+  +DateTime inspectionDate
+  +InspectionStatus status
+  +SyncStatus syncStatus
+  +String notes
 }
 
-class Evidence{
-+UUID id
-+String storageUrl
-+String fileName
-+String mimeType
-+BigInt fileSize
-+String caption
-+DateTime createdAt
+class InspectionChecklistSnapshot {
+  +UUID id
+  +Int sourceVersionNumber
+  +String title
+  +String description
+  +Boolean isTemplate
+  +Int snapshotSchemaVersion
+  +String contentHash
+  +InspectionSnapshotOrigin origin
+  +InspectionSnapshotIntegrityStatus integrityStatus
+  +DateTime capturedAt
 }
 
-class CorrectiveAction{
-+UUID id
-+String description
-+String why
-+String location
-+String responsible
-+Date dueDate
-+String method
-+String estimatedCost
-+CorrectiveActionStatus status
-+DateTime completedAt
+class InspectionSnapshotItem {
+  +UUID id
+  +UUID sourceVersionItemId
+  +UUID sourceChecklistItemId
+  +String description
+  +Int orderIndex
+  +Boolean isRequired
 }
 
-class Report{
-+UUID id
-+Int version
-+DateTime generatedAt
-+String observations
+class InspectionSnapshotItemStandard {
+  +UUID standardId
+  +StandardType type
+  +String code
+  +String title
+  +String summary
+  +String officialUrl
 }
 
-class UserRole{
-<<enumeration>>
-ADMIN
-TECHNICIAN
-SUPERVISOR
+class InspectionResponse {
+  +UUID id
+  +UUID snapshotItemId
+  +UUID checklistItemId
+  +ResponseStatus status
+  +String observation
 }
 
-class StandardType{
-<<enumeration>>
-NR
-NBR
-NT
+class NonConformity {
+  +UUID id
+  +String description
+  +Severity severity
+  +DateTime dueDate
+  +NonConformityStatus status
 }
 
-class InspectionStatus{
-<<enumeration>>
-IN_PROGRESS
-COMPLETED
-CANCELLED
+class CorrectiveAction {
+  +UUID id
+  +String description
+  +String responsible
+  +DateTime dueDate
+  +CorrectiveActionStatus status
+  +DateTime completedAt
 }
 
-class SyncStatus{
-<<enumeration>>
-PENDING
-SYNCED
-ERROR
+class Evidence {
+  +UUID id
+  +String storageUrl
+  +String fileName
+  +String mimeType
+  +BigInt fileSize
 }
 
-class ResponseStatus{
-<<enumeration>>
-COMPLIANT
-NON_COMPLIANT
-NOT_APPLICABLE
+class Report {
+  +UUID id
+  +Int version
+  +DateTime generatedAt
 }
 
-class Severity{
-<<enumeration>>
-LOW
-MEDIUM
-HIGH
-CRITICAL
+class ChecklistVersionStatus {
+  <<enumeration>>
+  DRAFT
+  PUBLISHED
+  RETIRED
 }
 
-class CorrectiveActionStatus{
-<<enumeration>>
-PENDING
-IN_PROGRESS
-COMPLETED
-OVERDUE
+class InspectionSnapshotOrigin {
+  <<enumeration>>
+  INSPECTION_CREATION
+  LEGACY_BACKFILL
+}
+
+class InspectionSnapshotIntegrityStatus {
+  <<enumeration>>
+  VERIFIED
+  UNVERIFIED_LEGACY
 }
 
 User "1" --> "0..*" Company : creates
 User "1" --> "0..*" Checklist : creates
+User "1" --> "0..*" ChecklistVersion : creates/publishes
 User "1" --> "0..*" Inspection : performs
 
-Company --> User : createdBy
-
-Checklist --> User : createdBy
-
 Company "1" --> "0..*" Inspection
+Checklist "1" *-- "1..*" ChecklistVersion
+ChecklistVersion "1" *-- "0..*" ChecklistVersionItem
+ChecklistVersionItem "1" *-- "0..*" ChecklistVersionItemStandard
+Standard "1" --> "0..*" ChecklistVersionItemStandard
+ChecklistVersionItem "1" --> "0..*" ChecklistVersionItem : lineage
 
-Checklist "1" *-- "1..*" ChecklistItem
-
-Checklist "1" --> "0..*" Inspection
-
-ChecklistItem "1" --> "0..*" ChecklistItemStandard
-Standard "1" --> "0..*" ChecklistItemStandard
-
-Inspection --> User
-Inspection --> Company
 Inspection --> Checklist
+Inspection --> ChecklistVersion : source
+Inspection "1" *-- "1" InspectionChecklistSnapshot
+InspectionChecklistSnapshot --> Checklist : source
+InspectionChecklistSnapshot --> ChecklistVersion : source
+InspectionChecklistSnapshot "1" *-- "0..*" InspectionSnapshotItem
+InspectionSnapshotItem --> ChecklistVersionItem : lineage
+InspectionSnapshotItem "1" *-- "0..*" InspectionSnapshotItemStandard
+Standard "1" --> "0..*" InspectionSnapshotItemStandard
 
-Inspection "1" *-- "1..*" InspectionResponse
-
-Inspection "1" --> "0..*" Evidence
-
-Inspection "1" --> "1" Report
-
-Report --> User : generatedBy
-
-InspectionResponse --> ChecklistItem
-
+Inspection "1" *-- "0..*" InspectionResponse
+InspectionResponse --> InspectionSnapshotItem : answers
 InspectionResponse "1" --> "0..1" NonConformity
-
 NonConformity "1" --> "0..*" CorrectiveAction
-
+Inspection "1" --> "0..*" Evidence
 NonConformity "1" --> "0..*" Evidence
+Inspection "1" --> "0..1" Report
+
+Checklist "1" --> "0..*" ChecklistItem : legacy
+ChecklistItem "1" --> "0..*" InspectionResponse : legacy compatibility
 ```

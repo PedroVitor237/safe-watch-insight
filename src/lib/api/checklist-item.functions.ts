@@ -87,43 +87,53 @@ async function ensureAuthenticated(): Promise<ServerResult<never> | null> {
 export const createChecklistItem = createServerFn({ method: "POST" })
   .inputValidator(createChecklistItemSchema)
   .handler(async ({ data }) => {
-    const authError = await ensureAuthenticated();
+    const { getAuthenticatedUser } = await getAuthSessionHelpers();
+    const userResult = await getAuthenticatedUser();
 
-    if (authError) {
-      return authError;
+    if (!userResult.success) {
+      return toServerResult<never>(userResult);
     }
 
     const service = await getChecklistItemService();
 
-    return toServerResult(await service.createChecklistItem(data));
+    return toServerResult(
+      await service.createChecklistItem({ ...data, updatedById: userResult.data.id }),
+    );
   });
 
 export const updateChecklistItem = createServerFn({ method: "POST" })
   .inputValidator(updateChecklistItemInputSchema)
   .handler(async ({ data }) => {
-    const authError = await ensureAuthenticated();
+    const { getAuthenticatedUser } = await getAuthSessionHelpers();
+    const userResult = await getAuthenticatedUser();
 
-    if (authError) {
-      return authError;
+    if (!userResult.success) {
+      return toServerResult<never>(userResult);
     }
 
     const service = await getChecklistItemService();
 
-    return toServerResult(await service.updateChecklistItem(data.id, data.data));
+    return toServerResult(
+      await service.updateChecklistItem(data.id, {
+        ...data.data,
+        updatedById: userResult.data.id,
+      }),
+    );
   });
 
 export const deleteChecklistItem = createServerFn({ method: "POST" })
   .inputValidator(checklistItemIdSchema)
   .handler(async ({ data }) => {
-    const authError = await ensureAuthenticated();
+    const { getAuthenticatedUser } = await getAuthSessionHelpers();
+    const userResult = await getAuthenticatedUser();
 
-    if (authError) {
-      return authError;
+    if (!userResult.success) {
+      return toServerResult<never>(userResult);
     }
 
     const service = await getChecklistItemService();
 
-    return toServerResult(await service.deleteChecklistItem(data.id));
+    return toServerResult(await service.deleteChecklistItem(data.id, userResult.data.id));
   });
 
 export const listChecklistItems = createServerFn({ method: "POST" })

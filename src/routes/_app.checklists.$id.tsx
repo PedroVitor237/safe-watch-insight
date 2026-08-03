@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Pencil, Plus, Send, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ import {
   useUpdateChecklistItem,
 } from "@/hooks/useChecklistItems";
 import { useChecklist } from "@/hooks/useChecklists";
+import { usePublishChecklistVersion } from "@/hooks/useChecklistVersions";
 import { useStandards } from "@/hooks/useStandards";
 import { toast } from "sonner";
 
@@ -40,12 +41,15 @@ function EditorChecklist() {
   const createItem = useCreateChecklistItem();
   const updateItem = useUpdateChecklistItem();
   const deleteItem = useDeleteChecklistItem();
+  const publishVersion = usePublishChecklistVersion();
   const standardsQuery = useStandards({ type: "NR", isActive: true });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [form, setForm] = useState<ChecklistItemFormState>(emptyChecklistItemForm);
   const checklist = checklistResult?.success ? checklistResult.data : null;
   const items = itemsResult?.success ? itemsResult.data : [];
+  const draftVersion = checklist?.versions.find((version) => version.status === "DRAFT");
+  const publishedVersion = checklist?.versions.find((version) => version.status === "PUBLISHED");
 
   if (isLoading) {
     return <div className="p-8 text-sm text-muted-foreground">Carregando checklist...</div>;
@@ -66,7 +70,7 @@ function EditorChecklist() {
     setForm({
       description: item.description,
       isRequired: item.isRequired,
-      standardIds: item.standards.map((relation) => relation.standard.id),
+      standardIds: item.standards.map((relation) => relation.standardId),
     });
     setDialogOpen(true);
   }
@@ -119,6 +123,33 @@ function EditorChecklist() {
     }
   }
 
+  async function handlePublish() {
+    if (!draftVersion) {
+      return;
+    }
+
+    if (
+      !window.confirm(
+        `Publicar a versão ${draftVersion.versionNumber}? O conteúdo publicado ficará imutável.`,
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const result = await publishVersion.mutateAsync(id);
+
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success(`Versão ${result.data.versionNumber} publicada.`);
+    } catch {
+      toast.error("Não foi possível publicar a versão. Tente novamente.");
+    }
+  }
+
   return (
     <div>
       <PageHeader
@@ -141,6 +172,13 @@ function EditorChecklist() {
           <CardContent className="flex flex-wrap gap-2">
             <Badge variant="outline">{checklist.isTemplate ? "Template" : "Personalizado"}</Badge>
             <StatusBadge value={checklist.isActive ? "ativo" : "inativo"} />
+            {draftVersion ? (
+              <Badge variant="secondary">Rascunho v{draftVersion.versionNumber}</Badge>
+            ) : publishedVersion ? (
+              <Badge variant="secondary">Publicada v{publishedVersion.versionNumber}</Badge>
+            ) : (
+              <Badge variant="secondary">Sem versão publicada</Badge>
+            )}
           </CardContent>
         </Card>
 
@@ -148,13 +186,30 @@ function EditorChecklist() {
           <CardHeader>
             <div className="flex items-center justify-between gap-3">
               <CardTitle className="text-base">Itens do checklist</CardTitle>
-              <Button size="sm" onClick={openCreateDialog}>
-                <Plus className="h-4 w-4" />
-                Novo item
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                {draftVersion && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handlePublish}
+                    disabled={publishVersion.isPending}
+                  >
+                    <Send className="h-4 w-4" />
+                    Publicar v{draftVersion.versionNumber}
+                  </Button>
+                )}
+                <Button size="sm" onClick={openCreateDialog}>
+                  <Plus className="h-4 w-4" />
+                  Novo item
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
+            <p className="mb-4 text-xs text-muted-foreground">
+              Versões publicadas são imutáveis. Ao editar uma versão publicada, o sistema cria o
+              próximo rascunho automaticamente.
+            </p>
             {isLoadingItems && (
               <div className="py-8 text-center text-sm text-muted-foreground">
                 Carregando itens...
@@ -183,8 +238,8 @@ function EditorChecklist() {
                     </div>
                     {item.standards.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1">
-                        {item.standards.map(({ standard }) => (
-                          <Badge key={standard.id} variant="outline">
+                        {item.standards.map((standard) => (
+                          <Badge key={standard.standardId} variant="outline">
                             {standard.code}
                           </Badge>
                         ))}

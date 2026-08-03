@@ -2,7 +2,14 @@
 
 **Projeto:** Safe Watch Insight  
 **Data do estudo:** 30 de julho de 2026  
-**Status:** proposta arquitetural; nenhuma implementação, migration ou alteração de banco foi realizada
+**Status:** Opção C aprovada e implementada em 3 de agosto de 2026
+
+> Nota de leitura: as seções de “arquitetura atual” e de alternativas registram
+> o diagnóstico existente na data do estudo. A implementação posterior adotou a
+> recomendação híbrida enxuta, com migration expansiva, versões publicadas e
+> snapshot relacional por inspeção. O modelo operacional vigente está descrito
+> em `AI/Architecture.md`, `AI/Database.md`, `AI/Entities.md`,
+> `AI/BusinessRules.md` e `AI/API.md`.
 
 ## 1. Resumo executivo
 

@@ -276,6 +276,43 @@ Evitar grandes alterações simultâneas.
 
 ---
 
+# Versionamento de Checklist e Integridade Histórica
+
+Decisão aprovada e implementada em 3 de agosto de 2026:
+
+**Checklist Version publicada + snapshot relacional por inspeção.**
+
+Motivos:
+
+- um checklist reutilizável precisa evoluir sem reescrever inspeções antigas;
+- versões publicadas fornecem ciclo editorial, reutilização e comparação;
+- o snapshot torna cada inspeção independente de consultas a entidades mutáveis;
+- a separação prepara PDF, evidências, assinatura e sincronização sem exigir
+  event sourcing no escopo do TCC.
+
+Regras da decisão:
+
+- `Checklist` é identidade e catálogo;
+- conteúdo vive em `ChecklistVersion` e `ChecklistVersionItem`;
+- o ciclo é `DRAFT`, `PUBLISHED` e `RETIRED`;
+- versões publicadas/retiradas são imutáveis;
+- somente versões publicadas iniciam inspeções;
+- edição posterior cria ou reutiliza o próximo draft;
+- a publicação registra autor, data, versão do formato e SHA-256 canônico;
+- inspeção e snapshot são criados na mesma transação;
+- execução, respostas, não conformidades e histórico leem o snapshot;
+- dados normativos de versão e snapshot são cópias controladas do catálogo;
+- backfill antigo é marcado como `UNVERIFIED_LEGACY` e nunca apresentado como
+  reconstrução historicamente comprovada.
+
+Foram intencionalmente adiados audit log completo, event sourcing, interface
+completa de histórico/retirada, offline, assinatura, evidências e relatórios.
+
+O estudo que fundamentou a decisão está em
+`CHECKLIST_VERSIONING_ARCHITECTURE.md`.
+
+---
+
 # Uso de Inteligência Artificial
 
 Este projeto foi estruturado para desenvolvimento assistido por IA.

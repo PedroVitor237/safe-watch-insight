@@ -15,6 +15,11 @@ export {
   updateChecklistItemSchema,
 } from "./checklist-item.schema";
 export {
+  checklistVersionIdSchema,
+  checklistVersionsByChecklistSchema,
+  publishChecklistVersionSchema,
+} from "./checklist-version.schema";
+export {
   inspectionResponseIdSchema,
   responseStatusSchema,
   saveInspectionResponseSchema,

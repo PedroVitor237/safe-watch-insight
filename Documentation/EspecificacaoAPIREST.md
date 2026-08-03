@@ -111,6 +111,12 @@ Erro:
 - `deleteChecklistItem`
 - `listChecklistItems`
 
+### Versões de Checklist
+
+- `listChecklistVersions`
+- `publishChecklistVersion`
+- `retireChecklistVersion`
+
 ### Inspeções
 
 - `createInspection`
@@ -123,6 +129,16 @@ Erro:
 - `listInspectionResponses`
 - `saveInspectionResponse`
 - `finishInspection`
+
+Os contratos de inspeção preservam compatibilidade progressiva:
+
+- `createInspection` aceita `checklistVersionId` publicado e, quando omitido,
+  resolve a publicação mais recente no servidor;
+- a criação persiste inspeção e snapshot histórico na mesma transação;
+- `saveInspectionResponse` usa `snapshotItemId` e aceita temporariamente o
+  `checklistItemId` legado, nunca os dois ao mesmo tempo;
+- consultas de inspeção e não conformidade retornam o conteúdo do snapshot, não
+  o estado atual do checklist.
 
 ### Normas
 

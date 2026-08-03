@@ -10,15 +10,12 @@ import { prisma } from "@/server/prisma/client";
 import { BaseRepository } from "./base.repository";
 
 const inspectionResponseRelations = {
-  checklistItem: {
+  snapshotItem: {
     include: {
-      standards: {
-        include: {
-          standard: true,
-        },
-      },
+      standards: true,
     },
   },
+  checklistItem: true,
   nonConformity: true,
 } satisfies Prisma.InspectionResponseInclude;
 
@@ -67,7 +64,7 @@ export class InspectionResponseRepository extends BaseRepository<
     return prisma.inspectionResponse.findMany({
       where: { inspectionId },
       orderBy: {
-        checklistItem: {
+        snapshotItem: {
           orderIndex: "asc",
         },
       },
@@ -77,7 +74,7 @@ export class InspectionResponseRepository extends BaseRepository<
 
   saveWithNonConformity(
     inspectionId: string,
-    checklistItemId: string,
+    snapshotItemId: string,
     data: Pick<Prisma.InspectionResponseCreateInput, "status" | "observation">,
     nonConformity: NonConformityPersistenceDirective,
     inspectionState: InspectionStatePersistenceDirective,
@@ -103,9 +100,9 @@ export class InspectionResponseRepository extends BaseRepository<
 
         const response = await transaction.inspectionResponse.upsert({
           where: {
-            inspectionId_checklistItemId: {
+            inspectionId_snapshotItemId: {
               inspectionId,
-              checklistItemId,
+              snapshotItemId,
             },
           },
           create: {
@@ -114,9 +111,9 @@ export class InspectionResponseRepository extends BaseRepository<
                 id: inspectionId,
               },
             },
-            checklistItem: {
+            snapshotItem: {
               connect: {
-                id: checklistItemId,
+                id: snapshotItemId,
               },
             },
             status: data.status,

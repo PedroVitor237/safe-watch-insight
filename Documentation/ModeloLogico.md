@@ -2,375 +2,279 @@
 
 ## 7.1 Objetivo
 
-O Modelo Lógico do Banco de Dados descreve a estrutura lógica das tabelas que compõem a plataforma, especificando seus atributos, chaves primárias, chaves estrangeiras e relacionamentos.
-
-Sua finalidade é representar a organização dos dados de forma independente do Sistema Gerenciador de Banco de Dados (SGBD), servindo como base para a implementação física utilizando PostgreSQL e Prisma ORM.
-
-A modelagem foi elaborada a partir do Modelo Conceitual, preservando os requisitos funcionais e as regras de negócio definidas para a plataforma.
-
----
+Este modelo descreve as entidades lógicas, chaves e relacionamentos vigentes no
+Safe Watch Insight. O schema Prisma é a fonte oficial do modelo implementado.
 
 ## 7.2 Modelo Lógico
 
-A Figura 9 apresenta o Modelo Lógico do Banco de Dados da plataforma.
-
 > **Figura 9 – Modelo Lógico do Banco de Dados da Plataforma SST**
-(Provisoriamente em Mermaid)
 
 ```mermaid
 erDiagram
-
-USER {
-    string id PK
+  USER {
+    uuid id PK
     string name
-    string email
+    string email UK
     string password
-    string role
-    datetime createdAt
-    datetime updatedAt
-}
-
-COMPANY {
-    string id PK
+    enum role
+  }
+  COMPANY {
+    uuid id PK
+    uuid createdById FK
     string corporateName
-    string tradeName
-    string cnpj
-    string cnae
-    int riskLevel
-    int employeeCount
-    string address
-    string notes
-    string createdById FK
-    datetime createdAt
-    datetime updatedAt
-}
-
-CHECKLIST {
-    string id PK
+    string cnpj UK
+  }
+  CHECKLIST {
+    uuid id PK
+    uuid createdById FK
     string title
     string description
     boolean isTemplate
     boolean isActive
-    string createdById FK
-    datetime createdAt
-    datetime updatedAt
-}
-
-CHECKLIST_ITEM {
-    string id PK
-    string checklistId FK
+  }
+  CHECKLIST_VERSION {
+    uuid id PK
+    uuid checklistId FK
+    int versionNumber UK
+    enum status
+    string title
     string description
-    int order
+    int contentSchemaVersion
+    char contentHash
+    uuid createdById FK
+    uuid publishedById FK
+    datetime publishedAt
+  }
+  CHECKLIST_VERSION_ITEM {
+    uuid id PK
+    uuid checklistVersionId FK
+    uuid sourceVersionItemId FK
+    uuid sourceChecklistItemId FK
+    string description
+    int orderIndex UK
     boolean isRequired
-}
-
-STANDARD {
-    string id PK
-    string type
+  }
+  CHECKLIST_VERSION_ITEM_STANDARD {
+    uuid checklistVersionItemId PK_FK
+    uuid standardId PK_FK
+    enum type
     string code
     string title
     string summary
     string officialUrl
+  }
+  STANDARD {
+    uuid id PK
+    enum type
+    string code UK
+    string title
     boolean isActive
-}
-
-CHECKLIST_ITEM_STANDARD {
-    string checklistItemId PK
-    string standardId PK
-}
-
-INSPECTION {
-    string id PK
-    string userId FK
-    string companyId FK
-    string checklistId FK
-    date inspectionDate
-    string status
-    string syncStatus
-    string notes
-    datetime createdAt
-    datetime updatedAt
-}
-
-INSPECTION_RESPONSE {
-    string id PK
-    string inspectionId FK
-    string checklistItemId FK
-    string status
+  }
+  INSPECTION {
+    uuid id PK
+    uuid userId FK
+    uuid companyId FK
+    uuid checklistId FK
+    uuid checklistVersionId FK
+    datetime inspectionDate
+    enum status
+    enum syncStatus
+  }
+  INSPECTION_CHECKLIST_SNAPSHOT {
+    uuid id PK
+    uuid inspectionId UK_FK
+    uuid sourceChecklistId FK
+    uuid sourceChecklistVersionId FK
+    int sourceVersionNumber
+    string title
+    string description
+    boolean isTemplate
+    int snapshotSchemaVersion
+    char contentHash
+    enum origin
+    enum integrityStatus
+    datetime capturedAt
+  }
+  INSPECTION_SNAPSHOT_ITEM {
+    uuid id PK
+    uuid snapshotId FK
+    uuid sourceVersionItemId FK
+    uuid sourceChecklistItemId FK
+    string description
+    int orderIndex UK
+    boolean isRequired
+  }
+  INSPECTION_SNAPSHOT_ITEM_STANDARD {
+    uuid snapshotItemId PK_FK
+    uuid standardId PK_FK
+    enum type
+    string code
+    string title
+    string summary
+    string officialUrl
+  }
+  INSPECTION_RESPONSE {
+    uuid id PK
+    uuid inspectionId FK
+    uuid snapshotItemId FK
+    uuid checklistItemId FK
+    enum status
     string observation
-}
-
-NON_CONFORMITY {
-    string id PK
-    string inspectionResponseId FK
+  }
+  NON_CONFORMITY {
+    uuid id PK
+    uuid inspectionResponseId UK_FK
     string description
-    string severity
-    date dueDate
-    string status
-    datetime createdAt
-}
-
-CORRECTIVE_ACTION {
-    string id PK
-    string nonConformityId FK
+    enum severity
+    enum status
+  }
+  CORRECTIVE_ACTION {
+    uuid id PK
+    uuid nonConformityId FK
     string description
-    string why
-    string location
-    string responsible
-    date dueDate
-    string method
-    string estimatedCost
-    string status
-    datetime completedAt
-}
-
-EVIDENCE {
-    string id PK
-    string inspectionId FK
-    string nonConformityId FK
+    enum status
+  }
+  EVIDENCE {
+    uuid id PK
+    uuid inspectionId FK
+    uuid nonConformityId FK
     string storageUrl
-    string fileName
-    string mimeType
-    long fileSize
-    string caption
-    datetime createdAt
-}
-
-REPORT {
-    string id PK
-    string inspectionId FK
-    string generatedById FK
+  }
+  REPORT {
+    uuid id PK
+    uuid inspectionId UK_FK
+    uuid generatedById FK
     int version
-    datetime generatedAt
-    string observations
-}
+  }
 
-USER ||--o{ COMPANY : registers
-USER ||--o{ CHECKLIST : creates
-USER ||--o{ INSPECTION : performs
-
-COMPANY ||--o{ INSPECTION : has
-
-CHECKLIST ||--|{ CHECKLIST_ITEM : contains
-
-CHECKLIST ||--o{ INSPECTION : used_in
-
-CHECKLIST_ITEM ||--o{ CHECKLIST_ITEM_STANDARD : references
-STANDARD ||--o{ CHECKLIST_ITEM_STANDARD : referenced_by
-
-INSPECTION ||--|{ INSPECTION_RESPONSE : contains
-
-CHECKLIST_ITEM ||--o{ INSPECTION_RESPONSE : answered
-
-INSPECTION_RESPONSE ||--o| NON_CONFORMITY : generates
-
-NON_CONFORMITY ||--o{ CORRECTIVE_ACTION : requires
-
-INSPECTION ||--o{ EVIDENCE : has
-
-NON_CONFORMITY ||--o{ EVIDENCE : documents
-
-INSPECTION ||--|| REPORT : generates
+  USER ||--o{ COMPANY : registers
+  USER ||--o{ CHECKLIST : creates
+  USER ||--o{ CHECKLIST_VERSION : creates_and_publishes
+  USER ||--o{ INSPECTION : performs
+  COMPANY ||--o{ INSPECTION : has
+  CHECKLIST ||--|{ CHECKLIST_VERSION : has
+  CHECKLIST_VERSION ||--o{ CHECKLIST_VERSION_ITEM : contains
+  CHECKLIST_VERSION_ITEM ||--o{ CHECKLIST_VERSION_ITEM_STANDARD : preserves
+  STANDARD ||--o{ CHECKLIST_VERSION_ITEM_STANDARD : identifies
+  CHECKLIST ||--o{ INSPECTION : contextualizes
+  CHECKLIST_VERSION ||--o{ INSPECTION : selected_for
+  INSPECTION ||--|| INSPECTION_CHECKLIST_SNAPSHOT : captures
+  INSPECTION_CHECKLIST_SNAPSHOT ||--o{ INSPECTION_SNAPSHOT_ITEM : contains
+  INSPECTION_SNAPSHOT_ITEM ||--o{ INSPECTION_SNAPSHOT_ITEM_STANDARD : preserves
+  STANDARD ||--o{ INSPECTION_SNAPSHOT_ITEM_STANDARD : identifies
+  INSPECTION ||--o{ INSPECTION_RESPONSE : contains
+  INSPECTION_SNAPSHOT_ITEM ||--o{ INSPECTION_RESPONSE : answered_by
+  INSPECTION_RESPONSE ||--o| NON_CONFORMITY : generates
+  NON_CONFORMITY ||--o{ CORRECTIVE_ACTION : requires
+  INSPECTION ||--o{ EVIDENCE : has
+  NON_CONFORMITY ||--o{ EVIDENCE : documents
+  INSPECTION ||--o| REPORT : generates
 ```
 
 **Fonte:** Elaborado pelo autor.
 
----
+## 7.3 Estruturas introduzidas para integridade histórica
 
-## 7.3 Descrição das Relações
+### CHECKLIST_VERSION
 
-## Modelo Lógico (Representação em Tabela)
+| Campo | Tipo | Restrição |
+| --- | --- | --- |
+| id | UUID | PK |
+| checklistId | UUID | FK → CHECKLIST |
+| versionNumber | INTEGER | NOT NULL; UNIQUE com checklistId |
+| status | ENUM | DRAFT, PUBLISHED ou RETIRED |
+| title | TEXT | NOT NULL |
+| description | TEXT | NULL |
+| contentSchemaVersion | INTEGER | NOT NULL |
+| contentHash | CHAR(64) | NULL no draft; obrigatório após publicação |
+| createdById | UUID | FK → USER |
+| publishedById | UUID | FK → USER; NULL no draft |
+| publishedAt | DATETIME | NULL no draft |
+| createdAt / updatedAt | DATETIME | NOT NULL |
 
-### USER
+### CHECKLIST_VERSION_ITEM
 
-| Campo      | Tipo     | Restrição |
-| ---------- | -------- | --------- |
-| id         | UUID     | PK        |
-| name       | VARCHAR  | NOT NULL  |
-| email      | VARCHAR  | UNIQUE    |
-| password   | VARCHAR  | NOT NULL  |
-| role       | ENUM     | NOT NULL  |
-| created_at | DATETIME | NOT NULL  |
-| updated_at | DATETIME | NOT NULL  |
+| Campo | Tipo | Restrição |
+| --- | --- | --- |
+| id | UUID | PK |
+| checklistVersionId | UUID | FK → CHECKLIST_VERSION |
+| sourceVersionItemId | UUID | FK autorreferente, NULL |
+| sourceChecklistItemId | UUID | FK legada, NULL |
+| description | TEXT | NOT NULL |
+| orderIndex | INTEGER | NOT NULL; UNIQUE com checklistVersionId |
+| isRequired | BOOLEAN | NOT NULL |
 
----
+### CHECKLIST_VERSION_ITEM_STANDARD
 
-### COMPANY
+| Campo | Tipo | Restrição |
+| --- | --- | --- |
+| checklistVersionItemId | UUID | PK, FK |
+| standardId | UUID | PK, FK |
+| type / code / title | ENUM/TEXT | cópia histórica obrigatória |
+| summary / officialUrl | TEXT | cópia histórica opcional |
 
-| Campo          | Tipo     | Restrição |
-| -------------- | -------- | --------- |
-| id             | UUID     | PK        |
-| corporate_name | VARCHAR  | NOT NULL  |
-| trade_name     | VARCHAR  | NULL      |
-| cnpj           | VARCHAR  | UNIQUE    |
-| cnae           | VARCHAR  | NOT NULL  |
-| risk_level     | INTEGER  | NOT NULL  |
-| employee_count | INTEGER  | NOT NULL  |
-| address        | VARCHAR  | NULL      |
-| notes          | TEXT     | NULL      |
-| created_by_id  | UUID     | FK → USER |
-| created_at     | DATETIME | NOT NULL  |
-| updated_at     | DATETIME | NOT NULL  |
+### INSPECTION_CHECKLIST_SNAPSHOT
 
----
+| Campo | Tipo | Restrição |
+| --- | --- | --- |
+| id | UUID | PK |
+| inspectionId | UUID | UNIQUE, FK → INSPECTION |
+| sourceChecklistId | UUID | FK → CHECKLIST |
+| sourceChecklistVersionId | UUID | FK → CHECKLIST_VERSION |
+| sourceVersionNumber | INTEGER | NOT NULL |
+| title / description | TEXT | conteúdo capturado |
+| isTemplate | BOOLEAN | NOT NULL |
+| snapshotSchemaVersion | INTEGER | NOT NULL |
+| contentHash | CHAR(64) | NOT NULL |
+| origin | ENUM | INSPECTION_CREATION ou LEGACY_BACKFILL |
+| integrityStatus | ENUM | VERIFIED ou UNVERIFIED_LEGACY |
+| capturedAt | DATETIME | NOT NULL |
 
-### CHECKLIST
+### INSPECTION_SNAPSHOT_ITEM
 
-| Campo         | Tipo     | Restrição |
-| ------------- | -------- | --------- |
-| id            | UUID     | PK        |
-| title         | VARCHAR  | NOT NULL  |
-| description   | TEXT     | NULL      |
-| is_template   | BOOLEAN  | NOT NULL  |
-| is_active     | BOOLEAN  | NOT NULL  |
-| created_by_id | UUID     | FK → USER |
-| created_at    | DATETIME | NOT NULL  |
-| updated_at    | DATETIME | NOT NULL  |
+| Campo | Tipo | Restrição |
+| --- | --- | --- |
+| id | UUID | PK |
+| snapshotId | UUID | FK → INSPECTION_CHECKLIST_SNAPSHOT |
+| sourceVersionItemId | UUID | FK → CHECKLIST_VERSION_ITEM |
+| sourceChecklistItemId | UUID | FK legada, NULL |
+| description | TEXT | NOT NULL |
+| orderIndex | INTEGER | NOT NULL; UNIQUE com snapshotId |
+| isRequired | BOOLEAN | NOT NULL |
 
----
+### INSPECTION_SNAPSHOT_ITEM_STANDARD
 
-### CHECKLIST_ITEM
+| Campo | Tipo | Restrição |
+| --- | --- | --- |
+| snapshotItemId | UUID | PK, FK |
+| standardId | UUID | PK, FK |
+| type / code / title | ENUM/TEXT | cópia histórica obrigatória |
+| summary / officialUrl | TEXT | cópia histórica opcional |
 
-| Campo        | Tipo    | Restrição |
-| ------------ | ------- | --------- |
-| id           | UUID    | PK        |
-| checklist_id | UUID    | FK        |
-| description  | TEXT    | NOT NULL  |
-| order        | INTEGER | NOT NULL  |
-| is_required  | BOOLEAN | NOT NULL  |
+### ALTERAÇÕES EM INSPECTION E INSPECTION_RESPONSE
 
----
+`INSPECTION` recebe `checklistVersionId`. `INSPECTION_RESPONSE` recebe
+`snapshotItemId`, `createdAt` e `updatedAt`; `checklistItemId` torna-se opcional
+durante a compatibilidade. Novas respostas são únicas por
+`(inspectionId, snapshotItemId)`.
 
-### STANDARD
+## 7.4 Regras de integridade
 
-| Campo        | Tipo    | Restrição |
-| ------------ | ------- | --------- |
-| id           | UUID    | PK        |
-| type         | ENUM    | NOT NULL  |
-| code         | VARCHAR | NOT NULL  |
-| title        | VARCHAR | NOT NULL  |
-| summary      | TEXT    | NULL      |
-| official_url | VARCHAR | NULL      |
-| is_active    | BOOLEAN | NOT NULL  |
+- há no máximo um draft por checklist;
+- o número da versão é único e positivo dentro do checklist;
+- estados publicados/retirados exigem autor, data e hash;
+- versão publicada e snapshot não possuem caminhos públicos de alteração;
+- inspeção e snapshot são criados na mesma transação;
+- ordens são únicas dentro da versão e do snapshot;
+- chaves estrangeiras históricas usam exclusão restritiva;
+- respostas identificam o item do snapshot da própria inspeção;
+- backfill legado é marcado como não verificável.
 
----
-
-### CHECKLIST_ITEM_STANDARD
-
-| Campo             | Tipo | Restrição |
-| ----------------- | ---- | --------- |
-| checklist_item_id | UUID | PK, FK    |
-| standard_id       | UUID | PK, FK    |
-
----
-
-### INSPECTION
-
-| Campo           | Tipo     | Restrição |
-| --------------- | -------- | --------- |
-| id              | UUID     | PK        |
-| user_id         | UUID     | FK        |
-| company_id      | UUID     | FK        |
-| checklist_id    | UUID     | FK        |
-| inspection_date | DATE     | NOT NULL  |
-| status          | ENUM     | NOT NULL  |
-| sync_status     | ENUM     | NOT NULL  |
-| notes           | TEXT     | NULL      |
-| created_at      | DATETIME | NOT NULL  |
-| updated_at      | DATETIME | NOT NULL  |
-
----
-
-### INSPECTION_RESPONSE
-
-| Campo             | Tipo | Restrição |
-| ----------------- | ---- | --------- |
-| id                | UUID | PK        |
-| inspection_id     | UUID | FK        |
-| checklist_item_id | UUID | FK        |
-| status            | ENUM | NOT NULL  |
-| observation       | TEXT | NULL      |
-
----
-
-### NON_CONFORMITY
-
-| Campo                  | Tipo     | Restrição |
-| ---------------------- | -------- | --------- |
-| id                     | UUID     | PK        |
-| inspection_response_id | UUID     | FK        |
-| description            | TEXT     | NOT NULL  |
-| severity               | ENUM     | NOT NULL  |
-| due_date               | DATE     | NULL      |
-| status                 | ENUM     | NOT NULL  |
-| created_at             | DATETIME | NOT NULL  |
-
----
-
-### CORRECTIVE_ACTION
-
-| Campo             | Tipo     | Restrição |
-| ----------------- | -------- | --------- |
-| id                | UUID     | PK        |
-| non_conformity_id | UUID     | FK        |
-| description       | TEXT     | NOT NULL  |
-| why               | TEXT     | NULL      |
-| location          | VARCHAR  | NULL      |
-| responsible       | VARCHAR  | NULL      |
-| due_date          | DATE     | NULL      |
-| method            | TEXT     | NULL      |
-| estimated_cost    | VARCHAR  | NULL      |
-| status            | ENUM     | NOT NULL  |
-| completed_at      | DATETIME | NULL      |
-
----
-
-### EVIDENCE
-
-| Campo             | Tipo     | Restrição |
-| ----------------- | -------- | --------- |
-| id                | UUID     | PK        |
-| inspection_id     | UUID     | FK (NULL) |
-| non_conformity_id | UUID     | FK (NULL) |
-| storage_url       | VARCHAR  | NOT NULL  |
-| file_name         | VARCHAR  | NOT NULL  |
-| mime_type         | VARCHAR  | NOT NULL  |
-| file_size         | BIGINT   | NOT NULL  |
-| caption           | TEXT     | NULL      |
-| created_at        | DATETIME | NOT NULL  |
-
----
-
-### REPORT
-
-| Campo           | Tipo     | Restrição  |
-| --------------- | -------- | ---------- |
-| id              | UUID     | PK         |
-| inspection_id   | UUID     | UNIQUE, FK |
-| generated_by_id | UUID     | FK         |
-| version         | INTEGER  | NOT NULL   |
-| generated_at    | DATETIME | NOT NULL   |
-| observations    | TEXT     | NULL       |
-
----
-
-## 7.4 Regras de Integridade
-
-A modelagem lógica foi construída observando as seguintes regras:
-
-* Cada usuário pode cadastrar diversas empresas, criar vários checklists e realizar múltiplas inspeções.
-* Cada empresa pode possuir diversas inspeções ao longo do tempo.
-* Cada checklist é composto por um ou mais itens.
-* Um item de checklist pode estar relacionado a diversas normas, assim como uma norma pode ser utilizada em diversos itens, sendo essa relação implementada por meio da entidade associativa `CHECKLIST_ITEM_STANDARD`.
-* Cada inspeção utiliza exatamente um checklist e gera diversas respostas correspondentes aos itens avaliados.
-* Cada resposta pode originar, no máximo, uma não conformidade.
-* Cada não conformidade pode possuir diversas ações corretivas e evidências.
-* Cada inspeção gera um único relatório consolidado.
-
----
+`ChecklistItem` e `ChecklistItemStandard` permanecem como tabelas de
+compatibilidade, sem serem a fonte de verdade para novas inspeções.
 
 ## 7.5 Considerações
 
-O Modelo Lógico detalha a organização das tabelas e dos relacionamentos que serão implementados na plataforma, servindo como referência direta para a construção do banco de dados.
-
-Sua estrutura foi desenvolvida considerando boas práticas de modelagem relacional, normalização dos dados e compatibilidade com PostgreSQL e Prisma ORM, permitindo que a implementação mantenha consistência com os documentos de requisitos, o Diagrama de Classes e o Modelo Conceitual apresentados anteriormente.
+O modelo lógico mantém o catálogo normalizado e introduz cópias históricas
+controladas apenas nos limites de versão e inspeção. Essa duplicação é
+intencional e impede que atualizações futuras reescrevam registros de SST.

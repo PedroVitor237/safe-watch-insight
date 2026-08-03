@@ -12,6 +12,7 @@ import {
   getChecklistListFilters,
   type ChecklistQueryFilters,
 } from "@/lib/api/checklist.query-keys";
+import { checklistVersionQueryKeys } from "@/lib/api/checklist-version.query-keys";
 import type {
   CreateChecklistClientSchemaInput,
   UpdateChecklistSchemaInput,
@@ -73,6 +74,9 @@ export function useUpdateChecklist() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: checklistQueryKeys.lists() }),
         queryClient.invalidateQueries({ queryKey: checklistQueryKeys.detail(variables.id) }),
+        queryClient.invalidateQueries({
+          queryKey: checklistVersionQueryKeys.list(variables.id),
+        }),
       ]);
     },
   });
