@@ -82,6 +82,7 @@ Observação: em Server Functions, o transporte HTTP pode não refletir diretame
 - `409`: conflito de regra de negócio.
 - `422`: erro de validação.
 - `500`: erro interno não tratado.
+- `502`: falha temporária do provedor externo de armazenamento.
 
 ---
 
@@ -1086,6 +1087,55 @@ await finishInspection({ data: { inspectionId } });
 
 ---
 
+## Evidence
+
+### `uploadEvidence`
+
+- **Finalidade:** enviar uma imagem e registrar seus metadados no contexto histórico.
+- **Método:** `POST` com `FormData`.
+- **Arquivo:** `src/lib/api/evidence.functions.ts`.
+- **Autenticação:** exige sessão.
+- **Campos:** `file`; exatamente um entre `inspectionId` e `nonConformityId`; `caption` opcional.
+- **Validação:** JPEG, PNG ou WebP; arquivo não vazio; máximo de 4 MB; nome com até 255 caracteres; legenda com até 500 caracteres. O Service também confere a assinatura binária do arquivo.
+- **Regras relacionadas:** a inspeção deve possuir snapshot; a não conformidade deve pertencer a uma resposta vinculada a item do snapshot. O arquivo é enviado ao Cloudinary por requisição assinada no servidor e o segredo da API não é exposto. Se a persistência falhar, o arquivo recém-enviado é removido por compensação.
+- **Metadados persistidos:** `publicId`, `storageUrl`, `fileName`, `mimeType`, `fileSize`, `width`, `height`, `caption` e timestamps.
+- **Exemplo de chamada:**
+
+```ts
+const formData = new FormData();
+formData.set("inspectionId", inspectionId);
+formData.set("file", file);
+formData.set("caption", "Extintor da entrada");
+
+await uploadEvidence({ data: formData });
+```
+
+- **Erros possíveis:** `401`, `404` contexto não encontrado, `409` contexto histórico inválido, `422` arquivo inválido, `500` configuração ausente, `502` falha do Cloudinary.
+
+### `listEvidence`
+
+- **Finalidade:** listar evidências ativas de uma inspeção ou não conformidade.
+- **Método:** `POST`.
+- **Arquivo:** `src/lib/api/evidence.functions.ts`.
+- **Autenticação:** exige sessão.
+- **Body:** exatamente um entre `{ "inspectionId": "uuid" }` e `{ "nonConformityId": "uuid" }`.
+- **Validação:** `evidenceTargetSchema`.
+- **Resposta:** lista em ordem decrescente de criação, com tamanho convertido para número seguro no DTO.
+- **Erros possíveis:** `401`, `404`, `409`, `422`, `500`.
+
+### `removeEvidence`
+
+- **Finalidade:** remover o arquivo externo e arquivar seus metadados.
+- **Método:** `POST`.
+- **Arquivo:** `src/lib/api/evidence.functions.ts`.
+- **Autenticação:** exige sessão.
+- **Body:** `{ "id": "uuid" }`.
+- **Validação:** `evidenceIdSchema`.
+- **Regras relacionadas:** aplica soft delete antes da remoção externa; se o Cloudinary falhar, restaura `deletedAt` para não apresentar sucesso parcial. Resultado `not found` do provedor é idempotente e aceito.
+- **Erros possíveis:** `401`, `404`, `422`, `500`, `502`.
+
+---
+
 ## Example
 
 ### `getGreeting`
@@ -1130,7 +1180,6 @@ await getGreeting({ data: { name: "Ada" } });
 Os modelos existem no Prisma ou estão previstos na documentação, mas ainda não possuem Server Functions completas nesta entrega:
 
 - Users CRUD.
-- Evidence/upload.
 - Reports.
 - Dashboard real.
 - Sincronização offline.

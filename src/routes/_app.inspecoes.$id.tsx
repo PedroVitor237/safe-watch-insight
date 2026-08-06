@@ -3,6 +3,7 @@ import { ArrowLeft, CheckCircle2, MinusCircle, XCircle } from "lucide-react";
 
 import { PageHeader } from "@/components/common/PageHeader";
 import { StatusBadge } from "@/components/common/StatusBadge";
+import { EvidencePanel } from "@/components/evidence/EvidencePanel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -225,6 +226,7 @@ function DetalheInspecao() {
         <Tabs defaultValue="execucao">
           <TabsList>
             <TabsTrigger value="execucao">Execução do checklist</TabsTrigger>
+            <TabsTrigger value="evidencias">Evidências</TabsTrigger>
             <TabsTrigger value="encerrar">Encerrar</TabsTrigger>
           </TabsList>
 
@@ -332,6 +334,10 @@ function DetalheInspecao() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="evidencias">
+            <EvidencePanel target={{ inspectionId: inspection.id }} />
           </TabsContent>
 
           <TabsContent value="encerrar">

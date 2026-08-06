@@ -168,7 +168,17 @@ entity "Evidence" as Evidence {
   --
   inspectionId : UUID <<FK, NULL>>
   nonConformityId : UUID <<FK, NULL>>
+  publicId : TEXT <<UNIQUE>>
   storageUrl : TEXT
+  fileName : TEXT
+  mimeType : TEXT
+  fileSize : BIGINT
+  width : INTEGER <<NULL>>
+  height : INTEGER <<NULL>>
+  caption : TEXT <<NULL>>
+  createdAt : TIMESTAMP
+  updatedAt : TIMESTAMP
+  deletedAt : TIMESTAMP <<NULL>>
 }
 
 entity "Report" as Report {
@@ -204,6 +214,12 @@ NonConformity ||--o{ CorrectiveAction
 Inspection ||--o{ Evidence
 NonConformity ||--o{ Evidence
 Inspection ||--o| Report
+
+note right of Evidence
+  CHECK exatamente um contexto:
+  inspectionId XOR nonConformityId
+  Binário armazenado no Cloudinary
+end note
 
 note right of ChecklistVersion
   UNIQUE(checklistId, versionNumber)

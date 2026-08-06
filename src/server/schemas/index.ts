@@ -79,3 +79,16 @@ export type {
   CreateCorrectiveActionSchemaInput,
   UpdateCorrectiveActionSchemaInput,
 } from "./corrective-action.schema";
+export {
+  evidenceCaptionSchema,
+  evidenceIdSchema,
+  evidenceTargetSchema,
+  MAX_EVIDENCE_FILE_SIZE,
+  parseEvidenceUploadFormData,
+  SUPPORTED_EVIDENCE_MIME_TYPES,
+} from "./evidence.schema";
+export type {
+  EvidenceIdSchemaInput,
+  EvidenceTargetSchemaInput,
+  EvidenceUploadFormData,
+} from "./evidence.schema";

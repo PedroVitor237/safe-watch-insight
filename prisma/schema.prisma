@@ -436,16 +436,20 @@ model Evidence {
   id              String    @id @default(uuid()) @db.Uuid
   inspectionId    String?   @db.Uuid
   nonConformityId String?   @db.Uuid
+  publicId        String    @unique
   storageUrl      String
   fileName        String
   mimeType        String
   fileSize        BigInt
+  width           Int?
+  height          Int?
   caption         String?
   createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
   deletedAt       DateTime?
 
-  inspection    Inspection?    @relation(fields: [inspectionId], references: [id])
-  nonConformity NonConformity? @relation(fields: [nonConformityId], references: [id])
+  inspection    Inspection?    @relation(fields: [inspectionId], references: [id], onDelete: Restrict)
+  nonConformity NonConformity? @relation(fields: [nonConformityId], references: [id], onDelete: Restrict)
 
   @@index([inspectionId])
   @@index([nonConformityId])

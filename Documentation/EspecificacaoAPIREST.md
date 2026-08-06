@@ -160,6 +160,16 @@ Os contratos de inspeção preservam compatibilidade progressiva:
 - `updateCorrectiveAction`
 - `deleteCorrectiveAction`
 
+### Evidências
+
+- `uploadEvidence` (`FormData`, imagem e exatamente um contexto histórico);
+- `listEvidence`;
+- `removeEvidence` (remoção externa e soft delete compensado).
+
+O upload é assinado exclusivamente no servidor por uma implementação de
+`StorageService`. O cliente nunca recebe o segredo do Cloudinary. O contrato
+detalhado, validações e erros estão documentados em `AI/API.md`.
+
 ### Exemplo técnico
 
 - `getGreeting`
@@ -171,7 +181,6 @@ Os contratos de inspeção preservam compatibilidade progressiva:
 Os seguintes módulos estão previstos no projeto ou modelados parcialmente no banco, mas ainda não possuem API completa nesta entrega:
 
 - usuários administrativos;
-- evidências e upload;
 - relatórios reais;
 - dashboard real;
 - sincronização offline.

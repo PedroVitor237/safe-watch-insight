@@ -81,6 +81,13 @@ export interface InspectionFindManyFilters {
   includeDeleted?: boolean;
 }
 
+export interface InspectionEvidenceContext {
+  id: string;
+  snapshot: {
+    id: string;
+  } | null;
+}
+
 export interface InspectionSnapshotStandardPersistenceInput {
   standardId: string;
   type: StandardType;
@@ -231,6 +238,23 @@ export class InspectionRepository extends BaseRepository<
         deletedAt: null,
       },
       include: inspectionRelations,
+    });
+  }
+
+  findEvidenceContextById(id: string): Promise<InspectionEvidenceContext | null> {
+    return prisma.inspection.findFirst({
+      where: {
+        id,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        snapshot: {
+          select: {
+            id: true,
+          },
+        },
+      },
     });
   }
 

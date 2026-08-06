@@ -3,5 +3,6 @@ export { ConflictError } from "./conflict-error";
 export { NotFoundError } from "./not-found-error";
 export { UnauthorizedError } from "./unauthorized-error";
 export { ValidationError } from "./validation-error";
+export { StorageError } from "./storage-error";
 export type { ApiErrorOptions } from "./api-error";
 export type { ValidationIssue } from "./validation-error";

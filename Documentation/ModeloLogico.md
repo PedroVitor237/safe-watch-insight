@@ -138,7 +138,17 @@ erDiagram
     uuid id PK
     uuid inspectionId FK
     uuid nonConformityId FK
+    string publicId UK
     string storageUrl
+    string fileName
+    string mimeType
+    bigint fileSize
+    int width
+    int height
+    string caption
+    datetime createdAt
+    datetime updatedAt
+    datetime deletedAt
   }
   REPORT {
     uuid id PK

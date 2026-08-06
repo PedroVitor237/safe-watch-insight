@@ -216,9 +216,12 @@ O sistema deve sincronizar automaticamente os dados armazenados localmente quand
 
 ---
 
-## RF22 – Registro de Evidências (Evolução Futura)
+## RF22 – Registro de Evidências
 
-O sistema poderá permitir anexar fotografias e demais evidências relacionadas às inspeções.
+O sistema deve permitir selecionar, visualizar, enviar, consultar e remover
+fotografias relacionadas à inspeção ou a uma não conformidade. O arquivo deve
+permanecer em armazenamento externo e o banco deve guardar somente URL e
+metadados. O MVP aceita JPEG, PNG e WebP com até 4 MB.
 
 ---
 

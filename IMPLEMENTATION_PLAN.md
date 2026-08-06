@@ -262,7 +262,7 @@ ampliar cobertura dos demais módulos.
 
 # Fase 11 — Evidências
 
-Primeira implementação.
+Primeira implementação concluída.
 
 Implementar:
 
@@ -270,7 +270,11 @@ Implementar:
 - armazenamento da URL;
 - associação à inspeção.
 
-Preparar integração com Cloudinary.
+Integração implementada com Cloudinary por uma abstração de armazenamento no
+servidor. Evidências podem pertencer à inspeção que possui snapshot imutável ou
+à não conformidade vinculada a um item do snapshot. PostgreSQL mantém somente
+URL, identificador do provedor e metadados; arquivos binários não são gravados
+no banco.
 
 ---
 

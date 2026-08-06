@@ -332,19 +332,35 @@ O banco armazenará apenas:
 
 - storageUrl
 
+- publicId
+
 - fileName
 
 - mimeType
 
 - fileSize
 
+- width
+
+- height
+
 - caption
+
+- createdAt
+
+- updatedAt
 
 O arquivo físico ficará em armazenamento externo.
 
 Inicialmente:
 
 Cloudinary.
+
+Cada registro pertence a exatamente um contexto histórico: uma `Inspection`
+que possui seu snapshot imutável ou uma `NonConformity` ligada à resposta e ao
+item do snapshot. A migration aplica um `CHECK` para impedir registros órfãos
+ou simultaneamente associados aos dois contextos. `publicId` é único e permite
+remover o arquivo no provedor sem derivar identificadores da URL.
 
 ---
 

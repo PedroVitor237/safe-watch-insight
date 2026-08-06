@@ -389,7 +389,7 @@ Repositories
 
 # Upload de Imagens
 
-Fluxo planejado:
+Fluxo implementado para o MVP:
 
 ```
 Usuário
@@ -400,22 +400,40 @@ Frontend
 
 ↓
 
-Cloudinary
+React Query
 
 ↓
 
-URL da imagem
+Server Function
 
 ↓
 
-Backend
+EvidenceService
+
+↓
+
+StorageService
+
+↓
+
+Cloudinary (requisição assinada no servidor)
+
+↓
+
+EvidenceRepository
+
+↓
+
+Prisma
 
 ↓
 
 PostgreSQL
 ```
 
-O banco armazenará apenas os metadados da imagem.
+O segredo da API nunca chega ao cliente. O banco armazena somente os metadados
+da imagem e o identificador necessário para gerenciar seu ciclo de vida. A
+regra de negócio depende de `StorageService`, não diretamente do Cloudinary.
 
 ---
 

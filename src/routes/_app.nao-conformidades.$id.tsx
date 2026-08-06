@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, ExternalLink, Paperclip, Trash2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/common/PageHeader";
 import { CorrectiveActionsPanel } from "@/components/non-conformities/CorrectiveActionsPanel";
 import { NonConformityEditForm } from "@/components/non-conformities/NonConformityEditForm";
 import { StatusBadge } from "@/components/common/StatusBadge";
+import { EvidencePanel } from "@/components/evidence/EvidencePanel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -245,7 +246,7 @@ function NonConformityDetail() {
             </CardContent>
           </Card>
 
-          <EvidenceCard evidence={nonConformity.evidence} />
+          <EvidencePanel target={{ nonConformityId: nonConformity.id }} />
         </div>
       </div>
     </div>
@@ -286,50 +287,6 @@ function DetailsCard({
             <ExternalLink className="h-3 w-3" />
           </Link>
         </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function EvidenceCard({
-  evidence,
-}: {
-  evidence: Array<{
-    id: string;
-    storageUrl: string;
-    fileName: string;
-  }>;
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Evidências</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {evidence.length === 0 && <div className="text-sm text-muted-foreground">Sem anexos</div>}
-        {evidence.map((item) => (
-          <a
-            key={item.id}
-            href={item.storageUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 rounded-md border p-2 text-sm hover:bg-muted"
-          >
-            <Paperclip className="h-3.5 w-3.5 text-muted-foreground" />
-            {item.fileName}
-          </a>
-        ))}
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full"
-          disabled
-          title="Upload será implementado em sprint futura."
-        >
-          <Paperclip className="h-4 w-4" />
-          Anexar evidência
-        </Button>
-        <p className="text-xs text-muted-foreground">Upload previsto para a etapa de evidências.</p>
       </CardContent>
     </Card>
   );

@@ -144,10 +144,19 @@ class CorrectiveAction {
 
 class Evidence {
   +UUID id
+  +UUID inspectionId
+  +UUID nonConformityId
+  +String publicId
   +String storageUrl
   +String fileName
   +String mimeType
   +BigInt fileSize
+  +Int width
+  +Int height
+  +String caption
+  +DateTime createdAt
+  +DateTime updatedAt
+  +DateTime deletedAt
 }
 
 class Report {

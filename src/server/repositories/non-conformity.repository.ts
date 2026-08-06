@@ -77,6 +77,18 @@ export interface NonConformityFindManyFilters {
   includeDeleted?: boolean;
 }
 
+export interface NonConformityEvidenceContext {
+  id: string;
+  inspectionResponse: {
+    snapshotItemId: string | null;
+    inspection: {
+      snapshot: {
+        id: string;
+      } | null;
+    };
+  };
+}
+
 export class NonConformityRepository extends BaseRepository<
   NonConformity,
   Prisma.NonConformityCreateInput,
@@ -109,6 +121,32 @@ export class NonConformityRepository extends BaseRepository<
   findByInspectionResponseId(inspectionResponseId: string): Promise<NonConformity | null> {
     return prisma.nonConformity.findUnique({
       where: { inspectionResponseId },
+    });
+  }
+
+  findEvidenceContextById(id: string): Promise<NonConformityEvidenceContext | null> {
+    return prisma.nonConformity.findFirst({
+      where: {
+        id,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        inspectionResponse: {
+          select: {
+            snapshotItemId: true,
+            inspection: {
+              select: {
+                snapshot: {
+                  select: {
+                    id: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
   }
 

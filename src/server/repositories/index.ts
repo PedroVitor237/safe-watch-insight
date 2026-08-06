@@ -22,6 +22,7 @@ export {
   CorrectiveActionRepository,
   correctiveActionRepository,
 } from "./corrective-action.repository";
+export { EvidenceRepository, evidenceRepository } from "./evidence.repository";
 export type { CompanyFindManyFilters, CompanySortField } from "./company.repository";
 export type { InspectionResponseWithRelations } from "./inspection-response.repository";
 export type { StandardFindManyFilters, StandardSortField } from "./standard.repository";
@@ -30,3 +31,7 @@ export type {
   NonConformitySortField,
   NonConformityWithRelations,
 } from "./non-conformity.repository";
+export type {
+  CreateEvidencePersistenceInput,
+  EvidencePersistenceTarget,
+} from "./evidence.repository";

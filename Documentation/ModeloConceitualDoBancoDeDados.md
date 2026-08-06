@@ -59,7 +59,7 @@ erDiagram
 | **InspectionResponse** | Resposta vinculada ao item do snapshot. |
 | **NonConformity** | Irregularidade originada por uma resposta não conforme. |
 | **CorrectiveAction** | Ação destinada a tratar uma não conformidade. |
-| **Evidence** | Arquivo associado à inspeção ou não conformidade. |
+| **Evidence** | Metadados de imagem externa associados exatamente à inspeção com snapshot ou à não conformidade baseada no item histórico. |
 | **Report** | Relatório emitido para uma inspeção. |
 
 ## 6.4 Integridade histórica
@@ -73,6 +73,10 @@ obrigatoriedade ou normas não modificam inspeções existentes.
 As estruturas antigas de item de checklist continuam fisicamente disponíveis
 durante a janela de compatibilidade, mas não são a fonte conceitual de novas
 inspeções.
+
+Evidências não se ligam ao checklist mutável. Quando anexadas à inspeção, o
+contexto é seu snapshot exclusivo; quando anexadas à não conformidade, o
+contexto é a resposta e o item do snapshot que a originaram.
 
 ## 6.5 Considerações
 

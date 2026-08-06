@@ -154,15 +154,18 @@ A arquitetura deverá permanecer preparada para futura implementação.
 
 # Upload de Evidências
 
-Nesta entrega:
+Decisão revisada em 6 de agosto de 2026:
 
-Não implementar upload definitivo.
+- upload de imagens implementado pelo servidor com requisições assinadas ao Cloudinary;
+- `CLOUDINARY_API_SECRET` permanece exclusivamente no ambiente do servidor;
+- uma interface `StorageService` separa regras de negócio do provedor;
+- PostgreSQL armazena somente URL, `publicId`, MIME type, tamanho, dimensões e timestamps;
+- imagens aceitas no MVP: JPEG, PNG e WebP, com limite de 4 MB;
+- evidências pertencem à inspeção com snapshot imutável ou à não conformidade vinculada ao item do snapshot;
+- remoção utiliza soft delete e compensação quando o provedor externo falha;
+- Base64 e binários não são persistidos no banco.
 
-A estrutura do banco deverá suportar upload.
-
-Implementação futura:
-
-Cloudinary.
+Compressão, fila offline e sincronização posterior continuam adiadas.
 
 ---
 
@@ -338,11 +341,10 @@ Quando houver disponibilidade, priorizar:
 
 1. Autorização por perfil e gestão completa de usuários.
 2. Funcionamento Offline First.
-3. Upload de evidências via Cloudinary.
-4. Geração de PDF.
-5. Dashboard com dados reais.
-6. PWA completo.
-7. Testes automatizados.
-8. CI/CD.
-9. Observabilidade e monitoramento.
-10. Avaliação técnica de eventual migração de framework, sem compromisso nesta entrega.
+3. Geração de PDF.
+4. Dashboard com dados reais.
+5. PWA completo e upload offline de evidências.
+6. Testes automatizados ampliados.
+7. CI/CD.
+8. Observabilidade e monitoramento.
+9. Avaliação técnica de eventual migração de framework, sem compromisso nesta entrega.

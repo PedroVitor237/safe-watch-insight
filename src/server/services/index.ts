@@ -12,5 +12,7 @@ export {
 export { StandardService, standardService } from "./standard.service";
 export { NonConformityService, nonConformityService } from "./non-conformity.service";
 export { CorrectiveActionService, correctiveActionService } from "./corrective-action.service";
+export { EvidenceService, evidenceService } from "./evidence.service";
+export type { CreateEvidenceInput, EvidenceDto, EvidenceFileInput } from "./evidence.service";
 export type { SafeUser } from "./user.service";
 export type { SaveInspectionResponseInput } from "./inspection-response.service";

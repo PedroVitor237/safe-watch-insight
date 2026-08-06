@@ -29,6 +29,9 @@ Inspection
       -> InspectionResponse
         -> NonConformity
           -> CorrectiveAction
+
+Inspection/NonConformity
+  -> Evidence (metadados; arquivo externo)
 ```
 
 ## 8.3 Tipos e tabelas adicionados
@@ -56,6 +59,8 @@ Alterações expansivas:
   adicionados;
 - `InspectionResponse.checklistItemId` tornou-se opcional e permanece apenas
   como ponte legada.
+- `Evidence` recebeu `publicId` único, largura, altura e `updatedAt`; os arquivos
+  continuam fora do PostgreSQL.
 
 ## 8.4 Restrições de integridade
 
@@ -71,6 +76,8 @@ Alterações expansivas:
 | check de referência da resposta | snapshot ou relação legada obrigatória |
 | `ON DELETE RESTRICT` nas FKs históricas | conteúdo referenciado não é removido |
 | hashes `CHAR(64)` validados | representação hexadecimal de SHA-256 |
+| `UNIQUE Evidence(publicId)` | identidade estável do arquivo no provedor |
+| check de contexto de `Evidence` | exatamente um entre inspeção e não conformidade |
 
 Os índices adicionais cobrem status e publicação de versões, chaves de origem,
 itens por versão/snapshot, códigos normativos, versão da inspeção e situação de

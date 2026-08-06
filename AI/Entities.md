@@ -418,11 +418,26 @@ Futuramente:
 ## Principais atributos
 
 - id
+- inspectionId ou nonConformityId, exatamente um
+- publicId
 - storageUrl
 - fileName
 - mimeType
 - fileSize
+- width
+- height
 - caption
+- createdAt
+- updatedAt
+- deletedAt
+
+## Regras e relacionamentos
+
+- pertence diretamente a uma inspeção que possui snapshot imutável ou a uma
+  não conformidade vinculada a um item do snapshot;
+- nunca referencia checklist, versão ou item mutável;
+- armazena apenas metadados; o binário permanece no provedor externo;
+- a remoção é lógica e preserva o registro para rastreabilidade.
 
 ---
 

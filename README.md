@@ -100,10 +100,16 @@ Crie um arquivo `.env` a partir de `.env.example`:
 ```env
 DATABASE_URL="postgresql://USER:PASSWORD@HOST/DATABASE?sslmode=require"
 SESSION_SECRET="replace-with-a-secure-random-string"
+CLOUDINARY_CLOUD_NAME="your-cloud-name"
+CLOUDINARY_API_KEY="your-api-key"
+CLOUDINARY_API_SECRET="your-api-secret"
+CLOUDINARY_FOLDER="safe-watch-insight/evidence"
 ```
 
 - `DATABASE_URL`: conexão PostgreSQL usada pelo Prisma.
 - `SESSION_SECRET`: segredo da sessão. Em desenvolvimento há fallback interno, mas em produção essa variável deve ser configurada.
+- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY` e `CLOUDINARY_API_SECRET`: credenciais usadas somente no servidor para requisições assinadas de evidências.
+- `CLOUDINARY_FOLDER`: pasta opcional do provedor; o padrão é `safe-watch-insight/evidence`.
 
 ## Banco de Dados e Prisma
 
@@ -259,13 +265,14 @@ Login
 -> Execução do checklist
 -> Persistência das respostas
 -> Criação automática e tratamento de não conformidades
+-> Upload e gestão de evidências fotográficas no contexto histórico
 -> Conclusão da inspeção
 -> Evolução do checklist em um novo draft/versão sem alterar a inspeção anterior
 ```
 
 ## Limitações Atuais
 
-- Evidências e upload Cloudinary ainda não foram implementados.
+- Upload de evidências exige credenciais Cloudinary configuradas no ambiente; compressão e fila offline permanecem futuras.
 - Relatórios ainda usam uma prévia demonstrativa; impressão e exportação PDF estão desabilitadas.
 - Dashboard ainda usa indicadores mockados, identificados explicitamente na tela.
 - Equipe ainda não está integrada ao backend.
@@ -277,7 +284,6 @@ Login
 
 ## Roadmap
 
-- Implementar evidências e upload de imagens.
 - Gerar relatórios reais a partir das inspeções.
 - Integrar dashboard a consultas reais.
 - Preparar camada offline com IndexedDB/Dexie.

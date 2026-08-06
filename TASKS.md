@@ -220,10 +220,10 @@ Legenda
 
 ## MVP
 
-- [ ] Selecionar imagem
-- [ ] Upload para Cloudinary
-- [ ] Salvar URL
-- [ ] Vincular à inspeção
+- [x] Selecionar imagem
+- [x] Upload para Cloudinary
+- [x] Salvar URL
+- [x] Vincular à inspeção
 
 ## Futuro
 
@@ -335,7 +335,7 @@ Legenda
 - [x] CRUD de checklists
 - [x] CRUD de inspeções
 - [x] Registro de não conformidades
-- [ ] Upload de evidências
+- [x] Upload de evidências
 - [ ] Relatórios
 - [ ] Dashboard funcional
 

@@ -304,6 +304,9 @@ normas, respostas e não conformidades históricas não dependem do checklist
 mutável. Inspeções anteriores à migration foram estabilizadas como backfill
 legado não verificável.
 
+As telas de inspeção e não conformidade permitem selecionar, pré-visualizar,
+enviar, listar e remover evidências fotográficas reais.
+
 ---
 
 ## Backend
@@ -318,12 +321,13 @@ Módulos integrados nesta etapa:
 - versões e itens de checklist;
 - inspeções com snapshot histórico;
 - respostas vinculadas a itens do snapshot;
-- conclusão de inspeção.
+- conclusão de inspeção;
 - normas e associação aos itens;
 - não conformidades;
-- ações corretivas.
+- ações corretivas;
+- evidências fotográficas em Cloudinary, vinculadas ao contexto histórico da inspeção.
 
-O objetivo continua sendo substituir gradualmente os mocks remanescentes por persistência real utilizando Prisma e PostgreSQL.
+O objetivo continua sendo substituir gradualmente os mocks remanescentes por persistência real utilizando Prisma e PostgreSQL. Evidências agora possuem upload seguro no servidor, listagem, prévia e remoção lógica; arquivos ficam no Cloudinary e somente metadados são persistidos.
 
 ---
 

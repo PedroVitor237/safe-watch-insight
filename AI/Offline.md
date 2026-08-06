@@ -319,6 +319,10 @@ Evitar armazenar permanentemente:
 
 As fotografias poderão ser armazenadas temporariamente no dispositivo.
 
+O MVP online envia a imagem por Server Function para uma implementação de
+`StorageService`; a fila offline futura deverá reutilizar o mesmo contrato de
+domínio e nunca persistir Base64 no PostgreSQL.
+
 Quando houver conexão:
 
 ```

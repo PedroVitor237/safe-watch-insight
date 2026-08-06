@@ -273,6 +273,20 @@ Uma evidência pode estar associada:
 - diretamente à inspeção;
 - ou a uma não conformidade.
 
+Deve existir exatamente um desses vínculos. A inspeção precisa possuir seu
+snapshot histórico; a não conformidade precisa estar vinculada a uma resposta e
+a um item do snapshot. Evidências nunca podem referenciar entidades mutáveis do
+checklist.
+
+No MVP são aceitas imagens JPEG, PNG e WebP com até 4 MB. O backend valida
+MIME type, tamanho e assinatura binária antes do envio. O upload é assinado no
+servidor através da abstração `StorageService`; segredos do provedor não são
+enviados ao cliente.
+
+Em caso de falha ao persistir metadados, o Service tenta remover imediatamente
+o arquivo enviado. A remoção arquiva o registro por soft delete e restaura os
+metadados se o provedor rejeitar a exclusão.
+
 ---
 
 # Relatórios
