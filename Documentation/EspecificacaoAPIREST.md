@@ -139,6 +139,9 @@ Os contratos de inspeção preservam compatibilidade progressiva:
   `checklistItemId` legado, nunca os dois ao mesmo tempo;
 - consultas de inspeção e não conformidade retornam o conteúdo do snapshot, não
   o estado atual do checklist.
+- `saveInspectionResponse` e `finishInspection` aceitam metadados opcionais de
+  operação offline; a Server Function usa o usuário da sessão e o backend grava
+  a deduplicação na mesma transação da mutação.
 
 ### Normas
 
@@ -183,7 +186,9 @@ Os seguintes módulos estão previstos no projeto ou modelados parcialmente no b
 - usuários administrativos;
 - relatórios reais;
 - dashboard real;
-- sincronização offline.
+- criação integral de inspeção offline;
+- reconciliação assistida de conflitos;
+- sincronização de evidências binárias offline.
 
 ---
 

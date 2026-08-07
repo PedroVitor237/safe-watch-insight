@@ -903,7 +903,10 @@ await listInspectionResponses({ data: { inspectionId } });
   "inspectionId": "uuid",
   "snapshotItemId": "uuid",
   "status": "COMPLIANT",
-  "observation": "Observação opcional"
+  "observation": "Observação opcional",
+  "operationId": "uuid opcional para sincronização",
+  "clientCreatedAt": "2026-08-06T13:00:00.000Z",
+  "expectedResponseUpdatedAt": "2026-08-06T12:00:00.000Z ou null"
 }
 ```
 
@@ -912,6 +915,7 @@ await listInspectionResponses({ data: { inspectionId } });
 - **Path parameters:** não se aplica.
 - **Status aceitos:** `COMPLIANT`, `NON_COMPLIANT`, `NOT_APPLICABLE`.
 - **Regras relacionadas:** deve ser enviado exatamente um entre `snapshotItemId` e o `checklistItemId` legado. O item precisa pertencer ao snapshot da inspeção; o identificador legado é resolvido para esse snapshot antes da persistência. A resposta é única por inspeção + item do snapshot; inspeção `PLANNED` passa para `IN_PROGRESS`; validação de estado, resposta e criação/restauração/arquivamento da não conformidade são atômicos. A descrição e as normas históricas vêm do snapshot. Inspeções concluídas ou canceladas não aceitam alterações.
+- **Sincronização offline:** `operationId`, `clientCreatedAt` e `expectedResponseUpdatedAt` são opcionais para chamadas online normais, mas formam um conjunto obrigatório quando qualquer um é enviado. O usuário sempre vem da sessão. O servidor calcula hash canônico, confere a revisão esperada e grava `OfflineSyncOperation` atomicamente. Mesmo ID/hash é retry idempotente; mesmo ID com conteúdo diferente ou revisão divergente retorna `409`.
 - **Exemplo de chamada:**
 
 ```ts
@@ -938,14 +942,16 @@ await saveInspectionResponse({
 
 ```json
 {
-  "inspectionId": "uuid"
+  "inspectionId": "uuid",
+  "operationId": "uuid opcional para sincronização",
+  "clientCreatedAt": "2026-08-06T13:30:00.000Z"
 }
 ```
 
 - **Validação:** `inspectionResponseIdSchema`.
 - **Query parameters:** não se aplica.
 - **Path parameters:** `inspectionId` no body.
-- **Regras relacionadas:** inspeção e snapshot devem existir; todos os itens obrigatórios do snapshot devem possuir resposta por `snapshotItemId`; status passa para `COMPLETED`; inspeções concluídas ou canceladas não podem ser concluídas novamente.
+- **Regras relacionadas:** inspeção e snapshot devem existir; todos os itens obrigatórios do snapshot devem possuir resposta por `snapshotItemId`; status passa para `COMPLETED`; inspeções concluídas ou canceladas não podem ser concluídas novamente. Com metadados offline, a conclusão e o registro idempotente são atômicos; retry do mesmo ID/hash retorna a inspeção já concluída.
 - **Limitação atual:** assinatura digital ainda não está disponível na interface nem é persistida.
 - **Exemplo de chamada:**
 
@@ -1182,6 +1188,8 @@ Os modelos existem no Prisma ou estão previstos na documentação, mas ainda n�
 - Users CRUD.
 - Reports.
 - Dashboard real.
-- Sincronização offline.
+- Criação integral de inspeção offline.
+- Reconciliação assistida de conflitos offline.
+- Sincronização offline de evidências binárias.
 
 Esses módulos devem seguir o mesmo fluxo arquitetural quando forem implementados.

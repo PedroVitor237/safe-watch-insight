@@ -25,6 +25,26 @@ export default defineConfig({
     plugins: [
       nitro({
         preset: "vercel", // <--- ISSO DIZ AO NITRO PARA GERAR O FORMATO VERCEL
+        routeRules: {
+          "/manifest.json": {
+            headers: {
+              "Content-Type": "application/manifest+json; charset=utf-8",
+              "Cache-Control": "public, max-age=3600",
+            },
+          },
+          "/sw.js": {
+            headers: {
+              "Content-Type": "text/javascript; charset=utf-8",
+              "Cache-Control": "no-cache",
+              "Service-Worker-Allowed": "/",
+            },
+          },
+          "/offline.html": {
+            headers: {
+              "Cache-Control": "public, max-age=3600",
+            },
+          },
+        },
       }),
     ],
   },

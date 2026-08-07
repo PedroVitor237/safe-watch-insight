@@ -12,10 +12,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { store, useStore } from "@/lib/mockStore";
-import { Moon, RotateCcw, Sun, WifiOff } from "lucide-react";
+import {
+  AlertTriangle,
+  Database,
+  Moon,
+  RefreshCw,
+  RotateCcw,
+  Sun,
+  Wifi,
+  WifiOff,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { PerfilUsuario } from "@/types/sst";
+import { useOfflineState } from "@/offline/use-offline-state";
+import { retryOfflineQueue, synchronizeOfflineQueue } from "@/offline/sync-manager";
 
 export const Route = createFileRoute("/_app/configuracoes")({
   head: () => ({ meta: [{ title: "Configurações — SST" }] }),
@@ -25,6 +36,7 @@ export const Route = createFileRoute("/_app/configuracoes")({
 function Configuracoes() {
   const perfil = useStore((s) => s.perfil);
   const [dark, setDark] = useState(false);
+  const offlineState = useOfflineState();
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
@@ -34,7 +46,7 @@ function Configuracoes() {
     <div>
       <PageHeader
         title="Configurações"
-        description="Preferências locais e recursos planejados da plataforma."
+        description="Preferências locais, armazenamento no dispositivo e sincronização."
       />
       <div className="grid gap-4 p-4 sm:p-8 md:grid-cols-2">
         <Card>
@@ -87,23 +99,63 @@ function Configuracoes() {
             <div className="flex items-center justify-between">
               <div>
                 <Label className="flex items-center gap-2">
-                  <WifiOff className="h-4 w-4" />
-                  Modo offline
+                  {offlineState.isOnline ? (
+                    <Wifi className="h-4 w-4 text-emerald-600" />
+                  ) : (
+                    <WifiOff className="h-4 w-4 text-amber-600" />
+                  )}
+                  {offlineState.isOnline ? "Conexão disponível" : "Sem conexão"}
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  Em desenvolvimento. As operações atuais exigem conexão e só são confirmadas após
-                  persistência no servidor.
+                  Estado obtido do navegador; o resultado de cada envio ainda é validado pelo
+                  servidor.
                 </p>
               </div>
-              <Switch checked={false} disabled aria-label="Modo offline ainda não disponível" />
             </div>
-            <div className="rounded-md border bg-muted/40 p-3 text-sm">
-              <p className="text-muted-foreground">
-                A fila de sincronização com IndexedDB/Dexie será implementada em um sprint futuro.
-                Nenhum dado é marcado como sincronizado por esta tela.
-              </p>
-              <Button size="sm" className="mt-3 w-full" disabled>
-                Sincronização ainda não disponível
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="rounded-md border bg-muted/40 p-3">
+                <Database className="mb-1 h-4 w-4" />
+                <strong>{offlineState.storedInspections}</strong>
+                <p className="text-xs text-muted-foreground">inspeção(ões) no dispositivo</p>
+              </div>
+              <div className="rounded-md border bg-muted/40 p-3">
+                <RefreshCw className="mb-1 h-4 w-4" />
+                <strong>{offlineState.pending + offlineState.syncing}</strong>
+                <p className="text-xs text-muted-foreground">operação(ões) pendente(s)</p>
+              </div>
+            </div>
+            {(offlineState.failed > 0 || offlineState.conflicts > 0) && (
+              <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
+                <div className="flex items-center gap-2 font-medium text-destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  Sincronização bloqueada
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {offlineState.conflicts > 0
+                    ? `${offlineState.conflicts} conflito(s) exigem revisão; nenhuma sobrescrita automática foi aplicada.`
+                    : `${offlineState.failed} operação(ões) falharam e podem ser reenviadas.`}
+                </p>
+              </div>
+            )}
+            <div className="rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">
+              Respostas e encerramento usam o snapshot histórico armazenado em IndexedDB. “Pendente”
+              não significa sincronizado com o PostgreSQL.
+              <Button
+                size="sm"
+                className="mt-3 w-full"
+                disabled={
+                  !offlineState.isOnline ||
+                  offlineState.syncing > 0 ||
+                  (offlineState.pending === 0 && offlineState.failed === 0)
+                }
+                onClick={() =>
+                  void (offlineState.failed > 0 ? retryOfflineQueue() : synchronizeOfflineQueue())
+                }
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${offlineState.syncing > 0 ? "animate-spin" : ""}`}
+                />
+                {offlineState.syncing > 0 ? "Sincronizando..." : "Sincronizar agora"}
               </Button>
             </div>
           </CardContent>

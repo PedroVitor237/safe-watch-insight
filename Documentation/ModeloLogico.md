@@ -120,6 +120,16 @@ erDiagram
     uuid checklistItemId FK
     enum status
     string observation
+    datetime clientUpdatedAt
+  }
+  OFFLINE_SYNC_OPERATION {
+    uuid id PK
+    uuid userId FK
+    uuid inspectionId FK
+    enum type
+    char payloadHash
+    datetime clientCreatedAt
+    datetime completedAt
   }
   NON_CONFORMITY {
     uuid id PK
@@ -173,6 +183,8 @@ erDiagram
   INSPECTION_SNAPSHOT_ITEM ||--o{ INSPECTION_SNAPSHOT_ITEM_STANDARD : preserves
   STANDARD ||--o{ INSPECTION_SNAPSHOT_ITEM_STANDARD : identifies
   INSPECTION ||--o{ INSPECTION_RESPONSE : contains
+  USER ||--o{ OFFLINE_SYNC_OPERATION : submits
+  INSPECTION ||--o{ OFFLINE_SYNC_OPERATION : deduplicates
   INSPECTION_SNAPSHOT_ITEM ||--o{ INSPECTION_RESPONSE : answered_by
   INSPECTION_RESPONSE ||--o| NON_CONFORMITY : generates
   NON_CONFORMITY ||--o{ CORRECTIVE_ACTION : requires
@@ -187,79 +199,79 @@ erDiagram
 
 ### CHECKLIST_VERSION
 
-| Campo | Tipo | Restrição |
-| --- | --- | --- |
-| id | UUID | PK |
-| checklistId | UUID | FK → CHECKLIST |
-| versionNumber | INTEGER | NOT NULL; UNIQUE com checklistId |
-| status | ENUM | DRAFT, PUBLISHED ou RETIRED |
-| title | TEXT | NOT NULL |
-| description | TEXT | NULL |
-| contentSchemaVersion | INTEGER | NOT NULL |
-| contentHash | CHAR(64) | NULL no draft; obrigatório após publicação |
-| createdById | UUID | FK → USER |
-| publishedById | UUID | FK → USER; NULL no draft |
-| publishedAt | DATETIME | NULL no draft |
-| createdAt / updatedAt | DATETIME | NOT NULL |
+| Campo                 | Tipo     | Restrição                                  |
+| --------------------- | -------- | ------------------------------------------ |
+| id                    | UUID     | PK                                         |
+| checklistId           | UUID     | FK → CHECKLIST                             |
+| versionNumber         | INTEGER  | NOT NULL; UNIQUE com checklistId           |
+| status                | ENUM     | DRAFT, PUBLISHED ou RETIRED                |
+| title                 | TEXT     | NOT NULL                                   |
+| description           | TEXT     | NULL                                       |
+| contentSchemaVersion  | INTEGER  | NOT NULL                                   |
+| contentHash           | CHAR(64) | NULL no draft; obrigatório após publicação |
+| createdById           | UUID     | FK → USER                                  |
+| publishedById         | UUID     | FK → USER; NULL no draft                   |
+| publishedAt           | DATETIME | NULL no draft                              |
+| createdAt / updatedAt | DATETIME | NOT NULL                                   |
 
 ### CHECKLIST_VERSION_ITEM
 
-| Campo | Tipo | Restrição |
-| --- | --- | --- |
-| id | UUID | PK |
-| checklistVersionId | UUID | FK → CHECKLIST_VERSION |
-| sourceVersionItemId | UUID | FK autorreferente, NULL |
-| sourceChecklistItemId | UUID | FK legada, NULL |
-| description | TEXT | NOT NULL |
-| orderIndex | INTEGER | NOT NULL; UNIQUE com checklistVersionId |
-| isRequired | BOOLEAN | NOT NULL |
+| Campo                 | Tipo    | Restrição                               |
+| --------------------- | ------- | --------------------------------------- |
+| id                    | UUID    | PK                                      |
+| checklistVersionId    | UUID    | FK → CHECKLIST_VERSION                  |
+| sourceVersionItemId   | UUID    | FK autorreferente, NULL                 |
+| sourceChecklistItemId | UUID    | FK legada, NULL                         |
+| description           | TEXT    | NOT NULL                                |
+| orderIndex            | INTEGER | NOT NULL; UNIQUE com checklistVersionId |
+| isRequired            | BOOLEAN | NOT NULL                                |
 
 ### CHECKLIST_VERSION_ITEM_STANDARD
 
-| Campo | Tipo | Restrição |
-| --- | --- | --- |
-| checklistVersionItemId | UUID | PK, FK |
-| standardId | UUID | PK, FK |
-| type / code / title | ENUM/TEXT | cópia histórica obrigatória |
-| summary / officialUrl | TEXT | cópia histórica opcional |
+| Campo                  | Tipo      | Restrição                   |
+| ---------------------- | --------- | --------------------------- |
+| checklistVersionItemId | UUID      | PK, FK                      |
+| standardId             | UUID      | PK, FK                      |
+| type / code / title    | ENUM/TEXT | cópia histórica obrigatória |
+| summary / officialUrl  | TEXT      | cópia histórica opcional    |
 
 ### INSPECTION_CHECKLIST_SNAPSHOT
 
-| Campo | Tipo | Restrição |
-| --- | --- | --- |
-| id | UUID | PK |
-| inspectionId | UUID | UNIQUE, FK → INSPECTION |
-| sourceChecklistId | UUID | FK → CHECKLIST |
-| sourceChecklistVersionId | UUID | FK → CHECKLIST_VERSION |
-| sourceVersionNumber | INTEGER | NOT NULL |
-| title / description | TEXT | conteúdo capturado |
-| isTemplate | BOOLEAN | NOT NULL |
-| snapshotSchemaVersion | INTEGER | NOT NULL |
-| contentHash | CHAR(64) | NOT NULL |
-| origin | ENUM | INSPECTION_CREATION ou LEGACY_BACKFILL |
-| integrityStatus | ENUM | VERIFIED ou UNVERIFIED_LEGACY |
-| capturedAt | DATETIME | NOT NULL |
+| Campo                    | Tipo     | Restrição                              |
+| ------------------------ | -------- | -------------------------------------- |
+| id                       | UUID     | PK                                     |
+| inspectionId             | UUID     | UNIQUE, FK → INSPECTION                |
+| sourceChecklistId        | UUID     | FK → CHECKLIST                         |
+| sourceChecklistVersionId | UUID     | FK → CHECKLIST_VERSION                 |
+| sourceVersionNumber      | INTEGER  | NOT NULL                               |
+| title / description      | TEXT     | conteúdo capturado                     |
+| isTemplate               | BOOLEAN  | NOT NULL                               |
+| snapshotSchemaVersion    | INTEGER  | NOT NULL                               |
+| contentHash              | CHAR(64) | NOT NULL                               |
+| origin                   | ENUM     | INSPECTION_CREATION ou LEGACY_BACKFILL |
+| integrityStatus          | ENUM     | VERIFIED ou UNVERIFIED_LEGACY          |
+| capturedAt               | DATETIME | NOT NULL                               |
 
 ### INSPECTION_SNAPSHOT_ITEM
 
-| Campo | Tipo | Restrição |
-| --- | --- | --- |
-| id | UUID | PK |
-| snapshotId | UUID | FK → INSPECTION_CHECKLIST_SNAPSHOT |
-| sourceVersionItemId | UUID | FK → CHECKLIST_VERSION_ITEM |
-| sourceChecklistItemId | UUID | FK legada, NULL |
-| description | TEXT | NOT NULL |
-| orderIndex | INTEGER | NOT NULL; UNIQUE com snapshotId |
-| isRequired | BOOLEAN | NOT NULL |
+| Campo                 | Tipo    | Restrição                          |
+| --------------------- | ------- | ---------------------------------- |
+| id                    | UUID    | PK                                 |
+| snapshotId            | UUID    | FK → INSPECTION_CHECKLIST_SNAPSHOT |
+| sourceVersionItemId   | UUID    | FK → CHECKLIST_VERSION_ITEM        |
+| sourceChecklistItemId | UUID    | FK legada, NULL                    |
+| description           | TEXT    | NOT NULL                           |
+| orderIndex            | INTEGER | NOT NULL; UNIQUE com snapshotId    |
+| isRequired            | BOOLEAN | NOT NULL                           |
 
 ### INSPECTION_SNAPSHOT_ITEM_STANDARD
 
-| Campo | Tipo | Restrição |
-| --- | --- | --- |
-| snapshotItemId | UUID | PK, FK |
-| standardId | UUID | PK, FK |
-| type / code / title | ENUM/TEXT | cópia histórica obrigatória |
-| summary / officialUrl | TEXT | cópia histórica opcional |
+| Campo                 | Tipo      | Restrição                   |
+| --------------------- | --------- | --------------------------- |
+| snapshotItemId        | UUID      | PK, FK                      |
+| standardId            | UUID      | PK, FK                      |
+| type / code / title   | ENUM/TEXT | cópia histórica obrigatória |
+| summary / officialUrl | TEXT      | cópia histórica opcional    |
 
 ### ALTERAÇÕES EM INSPECTION E INSPECTION_RESPONSE
 
@@ -267,6 +279,18 @@ erDiagram
 `snapshotItemId`, `createdAt` e `updatedAt`; `checklistItemId` torna-se opcional
 durante a compatibilidade. Novas respostas são únicas por
 `(inspectionId, snapshotItemId)`.
+
+### OFFLINE_SYNC_OPERATION
+
+Registra a identidade de uma operação offline confirmada na mesma transação da
+mutação. O UUID vem do cliente; `payloadHash` impede reutilização divergente;
+`clientCreatedAt` preserva o horário original e `completedAt` registra a
+confirmação do servidor. O payload completo permanece apenas na fila IndexedDB
+até o ACK.
+
+`INSPECTION_RESPONSE.clientUpdatedAt` armazena o horário informado pelo
+dispositivo, enquanto `updatedAt` continua sendo a revisão autoritativa usada na
+detecção de conflito.
 
 ## 7.4 Regras de integridade
 
@@ -279,6 +303,8 @@ durante a compatibilidade. Novas respostas são únicas por
 - chaves estrangeiras históricas usam exclusão restritiva;
 - respostas identificam o item do snapshot da própria inspeção;
 - backfill legado é marcado como não verificável.
+- operação offline confirmada possui UUID único e hash SHA-256 válido;
+- resposta offline só é aceita quando a revisão remota esperada ainda coincide.
 
 `ChecklistItem` e `ChecklistItemStandard` permanecem como tabelas de
 compatibilidade, sem serem a fonte de verdade para novas inspeções.

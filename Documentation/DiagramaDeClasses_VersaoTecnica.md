@@ -123,6 +123,23 @@ class InspectionResponse {
   +UUID checklistItemId
   +ResponseStatus status
   +String observation
+  +DateTime clientUpdatedAt
+}
+
+class OfflineSyncOperation {
+  +UUID id
+  +UUID userId
+  +UUID inspectionId
+  +OfflineOperationType type
+  +String payloadHash
+  +DateTime clientCreatedAt
+  +DateTime completedAt
+}
+
+class OfflineOperationType {
+  <<enumeration>>
+  SAVE_INSPECTION_RESPONSE
+  FINISH_INSPECTION
 }
 
 class NonConformity {
@@ -207,6 +224,9 @@ InspectionSnapshotItem "1" *-- "0..*" InspectionSnapshotItemStandard
 Standard "1" --> "0..*" InspectionSnapshotItemStandard
 
 Inspection "1" *-- "0..*" InspectionResponse
+User "1" --> "0..*" OfflineSyncOperation
+Inspection "1" --> "0..*" OfflineSyncOperation
+OfflineSyncOperation --> OfflineOperationType
 InspectionResponse --> InspectionSnapshotItem : answers
 InspectionResponse "1" --> "0..1" NonConformity
 NonConformity "1" --> "0..*" CorrectiveAction

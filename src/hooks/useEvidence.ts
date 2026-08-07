@@ -37,10 +37,14 @@ async function invalidateEvidenceContext(
   await Promise.all(invalidations);
 }
 
-export function useEvidence(target: EvidenceTargetSchemaInput) {
+export function useEvidence(
+  target: EvidenceTargetSchemaInput,
+  options: { enabled?: boolean } = {},
+) {
   return useQuery({
     queryKey: evidenceQueryKeys.list(target),
     queryFn: () => listEvidence({ data: target }),
+    enabled: options.enabled ?? true,
   });
 }
 

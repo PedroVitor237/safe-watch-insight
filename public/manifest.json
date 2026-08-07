@@ -1,0 +1,20 @@
+{
+  "name": "Safe Watch Insight",
+  "short_name": "Safe Watch",
+  "description": "Inspeções de Segurança e Saúde no Trabalho com continuidade offline.",
+  "lang": "pt-BR",
+  "start_url": "/inspecoes",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f8fafc",
+  "theme_color": "#0f766e",
+  "icons": [
+    {
+      "src": "/icons/safe-watch.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

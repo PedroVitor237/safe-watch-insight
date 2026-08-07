@@ -141,14 +141,32 @@ Caso o projeto evolua para múltiplos idiomas, utilizar uma solução própria d
 
 # Offline
 
-A plataforma continuará sendo projetada como Offline First.
+Decisão revisada em 6 de agosto de 2026:
 
-Entretanto, nesta entrega acadêmica:
+- Offline/PWA passa a ter prioridade sobre Relatórios e Dashboard;
+- IndexedDB é acessado por Dexie, conforme a recomendação arquitetural existente;
+- somente pacotes de domínio necessários à execução são persistidos, não o cache
+  arbitrário do React Query;
+- cada pacote pertence a um usuário e contém a inspeção, seu snapshot, itens,
+  normas e respostas;
+- respostas e conclusão usam fila FIFO durável com sequência local, UUID de
+  operação, retry exponencial e recuperação de `SYNCING` após reinício;
+- `OfflineSyncOperation` registra ID, usuário, inspeção, tipo e hash na mesma
+  transação da mutação remota;
+- retry do mesmo ID/payload é idempotente; reutilização divergente é conflito;
+- respostas com revisão remota diferente são bloqueadas para reconciliação, sem
+  `Last Write Wins`;
+- `InspectionResponse.updatedAt` permanece revisão do servidor e
+  `clientUpdatedAt` preserva o horário original do dispositivo;
+- sessão offline guarda somente o usuário seguro e validade local de oito horas;
+  senha, cookie HTTP-only e segredos não são copiados;
+- logout remove sessão, pacotes e fila do IndexedDB, além do cache privado de navegação.
+- a troca de usuário autenticado limpa os pacotes e operações do usuário anterior no mesmo navegador.
+- o preset Vercel publica MIME explícito para o manifest e `no-cache` para o service worker.
 
-- IndexedDB não será implementado;
-- sincronização não será implementada.
-
-A arquitetura deverá permanecer preparada para futura implementação.
+O incremento é parcial até a execução do cenário browser/E2E completo. Criação
+integral de inspeção offline, resolução assistida de conflitos, Background Sync
+e evidências binárias offline permanecem futuras.
 
 ---
 
@@ -165,7 +183,9 @@ Decisão revisada em 6 de agosto de 2026:
 - remoção utiliza soft delete e compensação quando o provedor externo falha;
 - Base64 e binários não são persistidos no banco.
 
-Compressão, fila offline e sincronização posterior continuam adiadas.
+Compressão, retenção de `Blob` e fila offline de evidências continuam adiadas. A
+interface informa essa limitação e não apresenta metadados em cache como upload
+offline concluído.
 
 ---
 
@@ -339,11 +359,11 @@ Caso exista divergência entre código e documentação, a divergência deverá 
 
 Quando houver disponibilidade, priorizar:
 
-1. Autorização por perfil e gestão completa de usuários.
-2. Funcionamento Offline First.
-3. Geração de PDF.
-4. Dashboard com dados reais.
-5. PWA completo e upload offline de evidências.
+1. Validar e completar o marco Offline/PWA do fluxo principal.
+2. Implementar reconciliação assistida e upload offline de evidências.
+3. Autorização por perfil e gestão completa de usuários.
+4. Geração de PDF.
+5. Dashboard com dados reais.
 6. Testes automatizados ampliados.
 7. CI/CD.
 8. Observabilidade e monitoramento.

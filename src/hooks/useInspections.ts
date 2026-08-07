@@ -1,17 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import {
-  createInspection,
-  deleteInspection,
-  getInspectionById,
-  listInspections,
-} from "@/lib/api/inspection.functions";
+import { createInspection, deleteInspection } from "@/lib/api/inspection.functions";
 import {
   getInspectionListFilters,
   inspectionQueryKeys,
   type InspectionQueryFilters,
 } from "@/lib/api/inspection.query-keys";
 import type { CreateInspectionSchemaInput } from "@/server/schemas/inspection.schema";
+import {
+  getInspectionWithOfflineFallback,
+  listInspectionsWithOfflineFallback,
+} from "@/offline/inspection-client";
+import { cacheInspectionPackage } from "@/offline/inspection-store";
 
 export interface UseInspectionOptions {
   enabled?: boolean;
@@ -22,7 +22,7 @@ export function useInspections(filters: InspectionQueryFilters = {}) {
 
   return useQuery({
     queryKey: inspectionQueryKeys.list(listFilters),
-    queryFn: () => listInspections({ data: listFilters }),
+    queryFn: () => listInspectionsWithOfflineFallback(listFilters),
   });
 }
 
@@ -31,7 +31,7 @@ export function useInspection(id: string, options: UseInspectionOptions = {}) {
 
   return useQuery({
     queryKey: inspectionQueryKeys.detail(id),
-    queryFn: () => getInspectionById({ data: { id } }),
+    queryFn: () => getInspectionWithOfflineFallback(id),
     enabled: enabled && id.length > 0,
   });
 }
@@ -46,6 +46,7 @@ export function useCreateInspection() {
         return;
       }
 
+      await cacheInspectionPackage(result.data);
       await queryClient.invalidateQueries({ queryKey: inspectionQueryKeys.lists() });
     },
   });

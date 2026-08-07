@@ -289,7 +289,6 @@ Associação histórica entre item de snapshot e norma. A referência ao catálo
 permite rastreabilidade, enquanto a cópia de tipo, código, título, resumo e URL
 é a fonte usada para exibição histórica.
 
-
 ---
 
 # INSPECTION
@@ -438,6 +437,31 @@ Futuramente:
 - nunca referencia checklist, versão ou item mutável;
 - armazena apenas metadados; o binário permanece no provedor externo;
 - a remoção é lógica e preserva o registro para rastreabilidade.
+
+---
+
+# OFFLINE_SYNC_OPERATION
+
+Representa a confirmação remota de uma operação criada no dispositivo. Não é a
+fila local e não armazena o payload completo.
+
+## Principais atributos
+
+- id, UUID estável gerado pelo cliente
+- userId
+- inspectionId
+- type (`SAVE_INSPECTION_RESPONSE` ou `FINISH_INSPECTION`)
+- payloadHash
+- clientCreatedAt
+- completedAt
+
+## Regras e relacionamentos
+
+- pertence ao usuário autenticado e à inspeção;
+- é persistida na mesma transação da mutação;
+- o mesmo ID só pode representar o mesmo tipo/contexto/hash;
+- permite confirmar retry após perda da resposta de rede;
+- não substitui o snapshot nem funciona como audit log completo.
 
 ---
 

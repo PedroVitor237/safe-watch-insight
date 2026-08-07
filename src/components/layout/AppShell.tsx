@@ -29,8 +29,11 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { getCurrentSession, logout } from "@/lib/api/auth.functions";
+import { logout } from "@/lib/api/auth.functions";
 import { toast } from "sonner";
+import { OfflineStatusIndicator } from "@/components/offline/OfflineStatusIndicator";
+import { clearAllOfflineData } from "@/offline/database";
+import { getAppSession } from "@/offline/session";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -55,17 +58,33 @@ function AppSidebar() {
   const isActive = (p: string) => pathname === p || pathname.startsWith(p + "/");
 
   async function handleLogout() {
+    let remoteLogoutSucceeded = false;
+    let localDataCleared = false;
+
     try {
       const result = await logout();
 
       if (!result.success) {
-        toast.error(result.message);
-        return;
+        toast.warning("A sessão local foi encerrada, mas o servidor não confirmou o logout.");
+      } else {
+        remoteLogoutSucceeded = true;
+      }
+    } catch {
+      toast.warning("Logout local concluído. A sessão remota expirará automaticamente.");
+    } finally {
+      try {
+        await clearAllOfflineData();
+        localDataCleared = true;
+      } catch {
+        toast.error(
+          "A sessão foi encerrada, mas parte dos dados offline não pôde ser removida deste dispositivo.",
+        );
       }
 
+      if (remoteLogoutSucceeded && localDataCleared) {
+        toast.success("Sessão encerrada e dados offline removidos deste dispositivo.");
+      }
       navigate({ to: "/login" });
-    } catch {
-      toast.error("Não foi possível encerrar a sessão. Tente novamente.");
     }
   }
 
@@ -145,7 +164,7 @@ function TopBar() {
   const navigate = useNavigate();
   const { data: sessionResult } = useQuery({
     queryKey: ["auth", "session"],
-    queryFn: () => getCurrentSession(),
+    queryFn: () => getAppSession(),
   });
   const user = sessionResult?.success ? sessionResult.data : null;
   const initials =
@@ -161,6 +180,7 @@ function TopBar() {
       <div className="min-w-0 flex-1" />
 
       <div className="flex items-center gap-3">
+        <OfflineStatusIndicator />
         <Button variant="ghost" size="icon" aria-label="Notificações">
           <Bell className="h-4 w-4" />
         </Button>

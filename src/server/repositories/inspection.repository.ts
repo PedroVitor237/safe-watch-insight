@@ -3,6 +3,7 @@ import type {
   InspectionSnapshotIntegrityStatus,
   InspectionSnapshotOrigin,
   InspectionStatus,
+  OfflineOperationType,
   Prisma,
   StandardType,
 } from "@/generated/prisma/client";
@@ -12,6 +13,7 @@ import type { PaginatedResult, SortOrder } from "@/server/types";
 import { getPaginationOffset, normalizePagination } from "@/server/utils/pagination.utils";
 
 import { BaseRepository } from "./base.repository";
+import { assertMatchingOfflineOperation } from "./offline-sync-operation";
 
 const INSPECTION_SORT_FIELDS = {
   inspectionDate: "inspectionDate",
@@ -128,6 +130,14 @@ export interface CreateInspectionWithSnapshotPersistenceInput {
     capturedAt: Date;
     items: InspectionSnapshotItemPersistenceInput[];
   };
+}
+
+export interface OfflineFinishOperationPersistenceInput {
+  id: string;
+  userId: string;
+  type: OfflineOperationType;
+  payloadHash: string;
+  clientCreatedAt: Date;
 }
 
 export class InspectionRepository extends BaseRepository<
@@ -311,6 +321,62 @@ export class InspectionRepository extends BaseRepository<
           id,
           deletedAt: null,
         },
+        include: inspectionRelations,
+      });
+    });
+  }
+
+  completeWithOfflineOperation(
+    inspectionId: string,
+    operation: OfflineFinishOperationPersistenceInput,
+  ): Promise<InspectionWithRelations | null> {
+    return prisma.$transaction(async (transaction) => {
+      const completedOperation = await transaction.offlineSyncOperation.findUnique({
+        where: { id: operation.id },
+      });
+
+      if (completedOperation) {
+        assertMatchingOfflineOperation(completedOperation, {
+          ...operation,
+          inspectionId,
+        });
+
+        return transaction.inspection.findFirst({
+          where: { id: inspectionId, userId: operation.userId, deletedAt: null },
+          include: inspectionRelations,
+        });
+      }
+
+      const update = await transaction.inspection.updateMany({
+        where: {
+          id: inspectionId,
+          userId: operation.userId,
+          deletedAt: null,
+          status: { in: ["PLANNED", "IN_PROGRESS"] },
+        },
+        data: {
+          status: "COMPLETED",
+          syncStatus: "SYNCED",
+        },
+      });
+
+      if (update.count !== 1) {
+        return null;
+      }
+
+      await transaction.offlineSyncOperation.create({
+        data: {
+          id: operation.id,
+          userId: operation.userId,
+          inspectionId,
+          type: operation.type,
+          payloadHash: operation.payloadHash,
+          clientCreatedAt: operation.clientCreatedAt,
+        },
+      });
+
+      return transaction.inspection.findFirst({
+        where: { id: inspectionId, userId: operation.userId, deletedAt: null },
         include: inspectionRelations,
       });
     });

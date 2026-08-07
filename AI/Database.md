@@ -272,6 +272,14 @@ N:N Standard por `InspectionSnapshotItemStandard`
 
 ---
 
+## OfflineSyncOperation
+
+User 1:N OfflineSyncOperation
+
+Inspection 1:N OfflineSyncOperation
+
+---
+
 # Tipos de Dados
 
 ## Texto pequeno
@@ -361,6 +369,29 @@ que possui seu snapshot imutável ou uma `NonConformity` ligada à resposta e ao
 item do snapshot. A migration aplica um `CHECK` para impedir registros órfãos
 ou simultaneamente associados aos dois contextos. `publicId` é único e permite
 remover o arquivo no provedor sem derivar identificadores da URL.
+
+---
+
+# Idempotência Offline
+
+`OfflineSyncOperation` contém somente a identidade necessária para deduplicar
+uma mutação já aceita:
+
+- `id`: UUID gerado no cliente e chave primária;
+- `userId` e `inspectionId`: contexto autenticado;
+- `type`: `SAVE_INSPECTION_RESPONSE` ou `FINISH_INSPECTION`;
+- `payloadHash`: SHA-256 canônico;
+- `clientCreatedAt`: horário original informado pelo dispositivo;
+- `completedAt`: horário de confirmação do servidor.
+
+O payload completo não é persistido nessa tabela. O registro é criado na mesma
+transação da resposta/NC ou conclusão. Repetir ID e hash é idempotente; repetir o
+ID com conteúdo diferente é conflito.
+
+`InspectionResponse.clientUpdatedAt` preserva o horário do evento offline.
+`InspectionResponse.updatedAt` continua controlado pelo servidor e funciona como
+revisão otimista, evitando depender do relógio potencialmente incorreto do
+dispositivo.
 
 ---
 
@@ -516,6 +547,8 @@ InspectionChecklistSnapshot.inspectionId
 InspectionSnapshotItem(snapshotId, orderIndex)
 
 InspectionResponse(inspectionId, snapshotItemId)
+
+OfflineSyncOperation.id
 
 ---
 
@@ -674,9 +707,11 @@ Nenhuma decisão atual deve impedir essas futuras implementações.
 
 # Compatibilidade com Offline
 
-A estrutura do banco deve permanecer compatível com sincronização utilizando IndexedDB.
-
-Cada entidade deverá possuir um identificador estável que permita sincronização futura.
+A estrutura do banco é sincronizada com IndexedDB por IDs estáveis. Operações de
+resposta/conclusão usam UUID gerado no cliente, hash, revisão esperada e
+timestamp original. A migration
+`20260806220000_add_offline_sync_idempotency` é aditiva e foi aplicada no Neon
+sem reset ou exclusão de dados.
 
 ---
 

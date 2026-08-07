@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useEvidence, useRemoveEvidence, useUploadEvidence } from "@/hooks/useEvidence";
 import { MAX_EVIDENCE_FILE_SIZE, SUPPORTED_EVIDENCE_MIME_TYPES } from "@/lib/evidence";
 import type { EvidenceTargetSchemaInput } from "@/server/schemas/evidence.schema";
+import { useOfflineState } from "@/offline/use-offline-state";
 
 export interface EvidencePanelProps {
   target: EvidenceTargetSchemaInput;
@@ -51,7 +52,8 @@ export function EvidencePanel({ target, title = "Evidências" }: EvidencePanelPr
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [caption, setCaption] = useState("");
   const [isUploading, setIsUploading] = useState(false);
-  const evidenceQuery = useEvidence(target);
+  const offlineState = useOfflineState();
+  const evidenceQuery = useEvidence(target, { enabled: offlineState.isOnline });
   const uploadEvidence = useUploadEvidence(target);
   const removeEvidence = useRemoveEvidence(target);
   const result = evidenceQuery.data;
@@ -160,6 +162,15 @@ export function EvidencePanel({ target, title = "Evidências" }: EvidencePanelPr
         <CardTitle className="text-base">{title}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
+        {!offlineState.isOnline && (
+          <Alert>
+            <AlertTitle>Upload de evidências indisponível offline</AlertTitle>
+            <AlertDescription>
+              As respostas continuam salvas no dispositivo. A fila persistente de arquivos ainda não
+              faz parte deste incremento; selecione e envie as imagens após reconectar.
+            </AlertDescription>
+          </Alert>
+        )}
         <div className="space-y-3 rounded-lg border border-dashed p-4">
           <div className="space-y-1">
             <Label htmlFor={`evidence-file-${target.inspectionId ?? target.nonConformityId}`}>
@@ -171,7 +182,7 @@ export function EvidencePanel({ target, title = "Evidências" }: EvidencePanelPr
               type="file"
               accept={SUPPORTED_EVIDENCE_MIME_TYPES.join(",")}
               multiple
-              disabled={isUploading}
+              disabled={isUploading || !offlineState.isOnline}
               onChange={(event) => selectFiles(event.target.files)}
             />
             <p className="text-xs text-muted-foreground">JPEG, PNG ou WebP, até 4 MB por imagem.</p>
@@ -219,7 +230,7 @@ export function EvidencePanel({ target, title = "Evidências" }: EvidencePanelPr
               value={caption}
               maxLength={500}
               rows={2}
-              disabled={isUploading}
+              disabled={isUploading || !offlineState.isOnline}
               placeholder="Descreva o local ou o contexto registrado."
               onChange={(event) => setCaption(event.target.value)}
             />
@@ -227,7 +238,7 @@ export function EvidencePanel({ target, title = "Evidências" }: EvidencePanelPr
 
           <Button
             type="button"
-            disabled={selectedFiles.length === 0 || isUploading}
+            disabled={selectedFiles.length === 0 || isUploading || !offlineState.isOnline}
             onClick={uploadSelectedFiles}
           >
             {isUploading ? (
@@ -239,7 +250,7 @@ export function EvidencePanel({ target, title = "Evidências" }: EvidencePanelPr
           </Button>
         </div>
 
-        {evidenceQuery.isLoading && (
+        {offlineState.isOnline && evidenceQuery.isLoading && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             Carregando evidências...

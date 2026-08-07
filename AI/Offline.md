@@ -93,6 +93,33 @@ Banco remoto
 
 - PostgreSQL
 
+## Estado do primeiro incremento — 6 de agosto de 2026
+
+Implementado e validado por testes/build:
+
+- banco Dexie `safe-watch-insight` sobre IndexedDB;
+- tabelas locais `sessions`, `inspectionPackages` e `operations`;
+- pacote autocontido por usuário para inspeções consultadas/listadas online;
+- leitura do snapshot, itens e normas sem conexão;
+- gravação local de respostas/observações e estado correspondente de NC;
+- conclusão local após validar itens obrigatórios;
+- fila FIFO com sequência, UUID estável, dependências por item, tentativas e
+  próximo horário de retry;
+- recuperação de operações deixadas como `SYNCING` após reinício;
+- sincronização automática ao reconectar e sondagem enquanto online;
+- deduplicação remota por `OfflineSyncOperation` na mesma transação da mutação;
+- detecção de conflito pela revisão `InspectionResponse.updatedAt`;
+- indicadores reais de conexão, fila, erro e conflito;
+- manifest, service worker e ativos PWA presentes no artefato Vercel.
+
+Ainda não validado/concluído:
+
+- cenário browser/E2E completo com fechamento/reabertura e verificação no Neon;
+- criação de uma nova inspeção sem conexão;
+- reconciliação assistida de conflito (o bloqueio seguro já existe);
+- armazenamento e sincronização de binários de evidência;
+- Background Sync e política avançada de quota/retention.
+
 ---
 
 # Progressive Web App
@@ -281,9 +308,10 @@ Se uma inspeção já existir, o cliente não poderá trocar seu snapshot por um
 versão mais recente. Edições futuras do checklist e invalidações do cache não
 alteram o pacote histórico de uma inspeção em andamento.
 
-A implementação online atual já fornece as fronteiras de domínio e os IDs
-necessários, mas IndexedDB, Dexie, fila, idempotência completa e protocolo de
-conflitos continuam fora da entrega atual.
+A implementação persiste no IndexedDB o snapshot que veio do servidor; ela não
+reconstrói nem troca esse conteúdo durante a sincronização. Respostas locais
+referenciam `snapshotItemId`. O primeiro incremento ainda não cria uma inspeção
+inteiramente offline a partir de uma versão publicada pré-carregada.
 
 ---
 
@@ -394,17 +422,11 @@ Esta arquitetura permite:
 
 ---
 
-# Limitações da Primeira Entrega
+# Limitações do Primeiro Incremento
 
-Para a primeira versão do projeto (TCC), a sincronização completa poderá não estar totalmente implementada.
-
-Entretanto, a arquitetura deverá permanecer preparada para receber:
-
-- IndexedDB;
-- Dexie.js;
-- Service Workers;
-- fila de sincronização;
-- resolução de conflitos.
+IndexedDB, Dexie, service worker e a fila do fluxo principal já existem. Não se
+deve declarar suporte offline completo antes da validação browser/E2E e da
+implementação das lacunas listadas no estado acima.
 
 ---
 
@@ -461,6 +483,61 @@ PostgreSQL
 ```
 
 Nenhuma implementação futura deverá violar essa separação de responsabilidades.
+
+# Protocolo Implementado de Sincronização
+
+Para `SAVE_INSPECTION_RESPONSE`:
+
+1. a tela grava o novo estado no pacote local;
+2. cria uma operação com UUID, sequência, horário do dispositivo e revisão
+   remota esperada;
+3. operações repetidas no mesmo item são encadeadas e enviadas em ordem;
+4. a Server Function valida Zod e associa o usuário da sessão;
+5. o Service calcula SHA-256 canônico do payload;
+6. o Repository confere deduplicação e revisão dentro da transação;
+7. resposta, NC, estado da inspeção e registro idempotente são persistidos
+   atomicamente;
+8. somente após confirmação o cliente remove a operação local.
+
+Retry do mesmo UUID com mesmo hash retorna sucesso idempotente. O mesmo UUID com
+outro hash retorna conflito. Uma revisão inesperada também retorna conflito e a
+fila é bloqueada para impedir que operações dependentes avancem.
+
+Erros transitórios recebem backoff exponencial limitado a cinco minutos e até
+cinco tentativas automáticas. Erro de autenticação/validação exige intervenção;
+conflito nunca é reenviado automaticamente.
+
+# Estratégia PWA Implementada
+
+O manifest usa modo `standalone`, `start_url=/inspecoes`, tema e ícone próprios.
+O service worker possui cache versionado:
+
+- navegação: network-first e fallback apenas para rota já armazenada ou página
+  offline estática;
+- scripts, estilos, fontes, imagens e manifest da mesma origem: cache-first;
+- Server Functions (`POST` e requisições sem destino estático) não são cacheadas;
+- `/login` não é gravado no cache de navegação;
+- caches de versões antigas são removidos no `activate`.
+
+O preset Nitro/Vercel envia `application/manifest+json` para o manifest, além de
+`no-cache` e escopo `/` para o service worker. Assim, o navegador não depende de
+um MIME genérico e verifica atualizações do worker a cada navegação.
+
+Como TanStack Start usa SSR, a rota precisa ter sido interceptada pelo service
+worker antes de poder ser reaberta offline. Esse comportamento precisa ser
+testado em Chrome/Edge/Android e no domínio HTTPS da Vercel.
+
+# Limites de Segurança Implementados
+
+- nenhum password, segredo Cloudinary ou conteúdo do cookie HTTP-only é copiado;
+- a sessão local guarda usuário seguro e expira após oito horas;
+- pacotes são indexados por usuário;
+- logout limpa sessão, pacotes e fila do IndexedDB e o cache privado de navegação;
+- a troca de identidade autenticada elimina dados pertencentes ao usuário anterior antes de gravar a nova sessão local;
+- respostas do backend e conflitos continuam sendo validados no servidor;
+- dados locais continuam acessíveis a quem controlar o perfil do navegador ou o
+  sistema operacional; criptografia em repouso e MDM não pertencem ao escopo
+  atual.
 
 ---
 

@@ -47,6 +47,20 @@ Cada etapa deve:
 
 Ao finalizar uma etapa, executar testes antes de iniciar a próxima.
 
+## Prioridade vigente a partir de 6 de agosto de 2026
+
+A numeração histórica das fases não representa mais a ordem imediata de
+execução. Como operação offline é requisito central do TCC e depende do snapshot
+histórico já estabilizado, a ordem vigente é:
+
+1. concluir o marco Offline/PWA do fluxo principal;
+2. validar o cenário real em navegador, reinício e reconexão;
+3. implementar relatórios sem comprometer a integridade offline;
+4. implementar dashboard real somente depois do marco Offline/PWA.
+
+Esta prioridade substitui, para execução, a ordem genérica que colocava
+Relatórios e Dashboard antes de Offline.
+
 ---
 
 # Fase 0 — Preparação do Ambiente
@@ -282,6 +296,8 @@ soft delete, idempotência do provedor e compensações de falha.
 
 # Fase 12 — Relatórios
 
+Planejada para depois da validação browser/E2E do marco Offline/PWA.
+
 Implementar:
 
 - geração;
@@ -293,6 +309,8 @@ Primeira versão pode utilizar HTML convertido para PDF.
 ---
 
 # Fase 13 — Dashboard
+
+Adiada até que o marco Offline/PWA esteja suficientemente completo.
 
 Substituir dados mockados.
 
@@ -307,15 +325,34 @@ Indicadores:
 
 # Fase 14 — Offline
 
-Primeira preparação.
+Primeiro incremento implementado e ainda em validação.
 
 Implementar:
 
-- estrutura do IndexedDB;
-- camada de persistência local;
-- abstração para sincronização.
+- IndexedDB com Dexie e segregação por usuário;
+- pacote local autocontido da inspeção e de seu snapshot histórico;
+- respostas e estado local correspondente de não conformidade;
+- fila FIFO durável para respostas e conclusão;
+- UUID estável por operação, retry exponencial e recuperação após reinício;
+- deduplicação persistida no servidor com hash de payload;
+- conflito otimista por revisão da resposta, sem `Last Write Wins`;
+- detecção de conectividade, sincronização automática e indicadores reais;
+- manifest, service worker e cache seguro de shell/ativos.
 
-A sincronização completa poderá ficar para uma versão futura.
+Validado neste incremento:
+
+- persistência e fila por testes automatizados;
+- idempotência/hash e validação do contrato;
+- TypeScript, lint, testes, build Vercel e Prisma;
+- migration aditiva aplicada no Neon.
+
+Continuam pendentes:
+
+- cenário browser/E2E online → offline → reinício → reconexão → Neon;
+- resolução assistida de conflitos (a detecção e o bloqueio já existem);
+- criação integral de inspeções offline;
+- fila de binários/evidências, compressão e gestão de quota;
+- Background Sync e políticas administrativas para dispositivo compartilhado.
 
 ---
 

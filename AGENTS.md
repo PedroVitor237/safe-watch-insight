@@ -69,7 +69,7 @@ Hospedagem
 Offline
 
 - IndexedDB
-- Dexie.js (implementação futura)
+- Dexie.js (primeiro incremento implementado)
 
 Upload de imagens
 
@@ -258,9 +258,12 @@ Não modificar rotas existentes sem necessidade.
 
 O projeto será preparado para funcionamento offline.
 
-Nesta primeira entrega, implementar apenas o necessário para que a arquitetura suporte essa evolução.
+O primeiro incremento real já persiste pacotes históricos de inspeção, respostas
+e conclusão em IndexedDB e possui fila idempotente. Consultar `AI/Offline.md`
+antes de alterar esse fluxo.
 
-Não implementar sincronização completa caso não seja necessária para a atividade.
+Não declarar suporte offline completo enquanto o cenário browser/E2E, criação
+offline, reconciliação assistida e evidências binárias não estiverem concluídos.
 
 ---
 

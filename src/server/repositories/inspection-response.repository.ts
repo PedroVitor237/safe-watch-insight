@@ -2,12 +2,15 @@ import type {
   InspectionStatus,
   InspectionResponse,
   NonConformityStatus,
+  OfflineOperationType,
   Prisma,
   Severity,
 } from "@/generated/prisma/client";
 import { prisma } from "@/server/prisma/client";
 
 import { BaseRepository } from "./base.repository";
+import { InspectionResponseRevisionConflictError } from "./offline-sync.errors";
+import { assertMatchingOfflineOperation } from "./offline-sync-operation";
 
 const inspectionResponseRelations = {
   snapshotItem: {
@@ -39,6 +42,15 @@ export type NonConformityPersistenceDirective =
 export interface InspectionStatePersistenceDirective {
   allowedStatuses: InspectionStatus[];
   nextStatus: InspectionStatus;
+}
+
+export interface OfflineResponseOperationPersistenceInput {
+  id: string;
+  userId: string;
+  type: OfflineOperationType;
+  payloadHash: string;
+  clientCreatedAt: Date;
+  expectedResponseUpdatedAt: Date | null;
 }
 
 export class InspectionStatePersistenceConflictError extends Error {
@@ -75,15 +87,58 @@ export class InspectionResponseRepository extends BaseRepository<
   saveWithNonConformity(
     inspectionId: string,
     snapshotItemId: string,
-    data: Pick<Prisma.InspectionResponseCreateInput, "status" | "observation">,
+    data: Pick<Prisma.InspectionResponseCreateInput, "status" | "observation"> & {
+      clientUpdatedAt?: Date;
+    },
     nonConformity: NonConformityPersistenceDirective,
     inspectionState: InspectionStatePersistenceDirective,
+    offlineOperation?: OfflineResponseOperationPersistenceInput,
   ): Promise<InspectionResponseWithRelations> {
     return prisma.$transaction(
       async (transaction) => {
+        if (offlineOperation) {
+          const completedOperation = await transaction.offlineSyncOperation.findUnique({
+            where: { id: offlineOperation.id },
+          });
+
+          if (completedOperation) {
+            assertMatchingOfflineOperation(completedOperation, {
+              ...offlineOperation,
+              inspectionId,
+            });
+
+            return transaction.inspectionResponse.findUniqueOrThrow({
+              where: {
+                inspectionId_snapshotItemId: {
+                  inspectionId,
+                  snapshotItemId,
+                },
+              },
+              include: inspectionResponseRelations,
+            });
+          }
+
+          const currentResponse = await transaction.inspectionResponse.findUnique({
+            where: {
+              inspectionId_snapshotItemId: {
+                inspectionId,
+                snapshotItemId,
+              },
+            },
+            select: { updatedAt: true },
+          });
+          const currentRevision = currentResponse?.updatedAt.getTime() ?? null;
+          const expectedRevision = offlineOperation.expectedResponseUpdatedAt?.getTime() ?? null;
+
+          if (currentRevision !== expectedRevision) {
+            throw new InspectionResponseRevisionConflictError();
+          }
+        }
+
         const inspectionUpdate = await transaction.inspection.updateMany({
           where: {
             id: inspectionId,
+            ...(offlineOperation ? { userId: offlineOperation.userId } : {}),
             deletedAt: null,
             status: {
               in: inspectionState.allowedStatuses,
@@ -118,10 +173,12 @@ export class InspectionResponseRepository extends BaseRepository<
             },
             status: data.status,
             observation: data.observation,
+            ...(data.clientUpdatedAt ? { clientUpdatedAt: data.clientUpdatedAt } : {}),
           },
           update: {
             status: data.status,
             observation: data.observation,
+            ...(data.clientUpdatedAt ? { clientUpdatedAt: data.clientUpdatedAt } : {}),
           },
         });
 
@@ -157,6 +214,19 @@ export class InspectionResponseRepository extends BaseRepository<
             },
             data: {
               deletedAt: nonConformity.archivedAt,
+            },
+          });
+        }
+
+        if (offlineOperation) {
+          await transaction.offlineSyncOperation.create({
+            data: {
+              id: offlineOperation.id,
+              userId: offlineOperation.userId,
+              inspectionId,
+              type: offlineOperation.type,
+              payloadHash: offlineOperation.payloadHash,
+              clientCreatedAt: offlineOperation.clientCreatedAt,
             },
           });
         }

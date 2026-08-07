@@ -88,7 +88,7 @@ function DetalheInspecao() {
         return;
       }
 
-      toast.success("Resposta salva.");
+      toast.success(result.message ?? "Resposta armazenada localmente.");
     } catch {
       toast.error("Não foi possível salvar a resposta. Tente novamente.");
     }
@@ -124,7 +124,11 @@ function DetalheInspecao() {
         return;
       }
 
-      toast.success("Inspeção concluída!");
+      toast.success(
+        navigator.onLine
+          ? "Inspeção concluída localmente; sincronização iniciada."
+          : "Inspeção concluída localmente e pendente de sincronização.",
+      );
       navigate({ to: "/inspecoes" });
     } catch {
       toast.error("Não foi possível concluir a inspeção. Tente novamente.");
@@ -167,6 +171,15 @@ function DetalheInspecao() {
         actions={
           <>
             <StatusBadge value={toUiInspectionStatus(inspection.status)} />
+            {inspection.syncStatus !== "SYNCED" && (
+              <Badge variant="outline">
+                {inspection.syncStatus === "SYNCING"
+                  ? "Sincronizando"
+                  : inspection.syncStatus === "ERROR"
+                    ? "Falha/conflito de sincronização"
+                    : "Pendente de sincronização"}
+              </Badge>
+            )}
             <Button asChild variant="outline" size="sm">
               <Link to="/inspecoes">
                 <ArrowLeft className="h-4 w-4" />

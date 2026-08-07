@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f766e" />
+    <title>Safe Watch Insight — offline</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        font-family: system-ui, sans-serif;
+        background: #f8fafc;
+        color: #0f172a;
+      }
+      main {
+        width: min(28rem, calc(100% - 2rem));
+        padding: 2rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 1rem;
+        background: white;
+        text-align: center;
+        box-sizing: border-box;
+      }
+      img {
+        width: 4rem;
+        height: 4rem;
+      }
+      button {
+        border: 0;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        color: white;
+        background: #0f766e;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      p {
+        color: #475569;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img src="/icons/safe-watch.svg" alt="" />
+      <h1>Aplicação indisponível nesta rota</h1>
+      <p>
+        Abra uma inspeção enquanto estiver online para disponibilizar seu shell e snapshot neste
+        dispositivo. Nenhum dado pendente foi descartado.
+      </p>
+      <button type="button" onclick="location.reload()">Tentar novamente</button>
+    </main>
+  </body>
+</html>

@@ -25,6 +25,10 @@ export {
 export { EvidenceRepository, evidenceRepository } from "./evidence.repository";
 export type { CompanyFindManyFilters, CompanySortField } from "./company.repository";
 export type { InspectionResponseWithRelations } from "./inspection-response.repository";
+export {
+  InspectionResponseRevisionConflictError,
+  OfflineOperationPayloadConflictError,
+} from "./offline-sync.errors";
 export type { StandardFindManyFilters, StandardSortField } from "./standard.repository";
 export type {
   NonConformityFindManyFilters,

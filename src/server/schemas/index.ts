@@ -20,6 +20,7 @@ export {
   publishChecklistVersionSchema,
 } from "./checklist-version.schema";
 export {
+  finishInspectionSchema,
   inspectionResponseIdSchema,
   responseStatusSchema,
   saveInspectionResponseSchema,
@@ -57,6 +58,7 @@ export type {
   UpdateChecklistItemSchemaInput,
 } from "./checklist-item.schema";
 export type {
+  FinishInspectionSchemaInput,
   InspectionResponseIdSchemaInput,
   SaveInspectionResponseSchemaInput,
 } from "./inspection-response.schema";

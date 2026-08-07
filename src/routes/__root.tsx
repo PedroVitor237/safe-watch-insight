@@ -12,6 +12,10 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
+import { registerSafeWatchServiceWorker } from "@/offline/register-service-worker";
+import { inspectionQueryKeys } from "@/lib/api/inspection.query-keys";
+import { inspectionResponseQueryKeys } from "@/lib/api/inspection-response.query-keys";
+import { nonConformityQueryKeys } from "@/lib/api/non-conformity.query-keys";
 
 function NotFoundComponent() {
   return (
@@ -78,6 +82,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "theme-color", content: "#0f766e" },
       { title: "SST Project" },
       {
         name: "description",
@@ -113,6 +118,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
+      { rel: "manifest", href: "/manifest.json" },
+      { rel: "icon", href: "/icons/safe-watch.svg", type: "image/svg+xml" },
     ],
   }),
   shellComponent: RootShell,
@@ -123,7 +130,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <head>
         <HeadContent />
       </head>
@@ -137,6 +144,28 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    void registerSafeWatchServiceWorker();
+  }, []);
+
+  useEffect(() => {
+    const refreshSynchronizedInspection = (event: Event) => {
+      const inspectionId = (event as CustomEvent<{ inspectionId: string }>).detail.inspectionId;
+      void Promise.all([
+        queryClient.invalidateQueries({ queryKey: inspectionQueryKeys.detail(inspectionId) }),
+        queryClient.invalidateQueries({
+          queryKey: inspectionResponseQueryKeys.list(inspectionId),
+        }),
+        queryClient.invalidateQueries({ queryKey: inspectionQueryKeys.lists() }),
+        queryClient.invalidateQueries({ queryKey: nonConformityQueryKeys.lists() }),
+      ]);
+    };
+
+    window.addEventListener("safe-watch-offline-synchronized", refreshSynchronizedInspection);
+    return () =>
+      window.removeEventListener("safe-watch-offline-synchronized", refreshSynchronizedInspection);
+  }, [queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>

@@ -387,9 +387,16 @@ PostgreSQL
 
 # Funcionamento Offline
 
-A arquitetura deve permanecer compatível com sincronização offline.
+A execução offline usa exclusivamente o snapshot já pertencente à inspeção. Uma
+resposta local deve referenciar `snapshotItemId`, manter o horário original e
+entrar em fila durável. O servidor revalida estado, item, NC e sessão.
 
-Mesmo que a funcionalidade ainda não esteja completamente implementada, nenhuma decisão arquitetural deve impedir sua futura implementação.
+Retry do mesmo ID/payload deve ser idempotente. Reutilização divergente do ID ou
+mudança da revisão remota é conflito e bloqueia operações dependentes. Não usar
+`Last Write Wins` para respostas, conclusão, versões publicadas ou snapshots.
+
+O cliente só pode apresentar `SYNCED` depois da confirmação remota. Estado salvo
+no IndexedDB é `PENDING`, ainda que o navegador reporte conexão disponível.
 
 ---
 

@@ -6,7 +6,7 @@ O projeto é desenvolvido como Trabalho de Conclusão de Curso (TCC) em Análise
 
 ## Objetivo Atual
 
-Substituir formulários impressos e planilhas por uma base digital rastreável para inspeções de SST. Nesta etapa, o projeto integra o fluxo principal, normas, não conformidades, ações corretivas e evidências fotográficas ao backend, mantendo a arquitetura preparada para futuras evoluções como relatórios reais, dashboard com dados reais e funcionamento offline.
+Substituir formulários impressos e planilhas por uma base digital rastreável para inspeções de SST. Nesta etapa, o projeto integra o fluxo principal, normas, não conformidades, ações corretivas e evidências fotográficas ao backend e implementa a primeira fundação Offline/PWA real para execução de inspeções já disponibilizadas no dispositivo.
 
 ## Tecnologias
 
@@ -23,6 +23,7 @@ Substituir formulários impressos e planilhas por uma base digital rastreável p
 - Prisma ORM 7
 - PostgreSQL
 - Neon
+- Dexie/IndexedDB
 - Zod
 - bcrypt
 - TanStack Start sessions
@@ -51,6 +52,7 @@ As telas nunca acessam Prisma diretamente. Regras de negócio ficam em `src/serv
 src/
   components/        Componentes reutilizáveis, layout e UI
   hooks/             Hooks React Query dos módulos integrados
+  offline/           Banco local, fila durável e orquestração de sincronização
   lib/
     api/             Server Functions e query keys
     mockStore.ts     Store local ainda usada por módulos mockados
@@ -215,6 +217,7 @@ npm run lint
 npm test
 npm run validate:nc-flow
 npm run validate:checklist-versioning
+npm run validate:offline-sync
 npm run format
 npm run prisma:generate
 npm run prisma:validate
@@ -246,11 +249,16 @@ npm run db:seed
 - Bloqueio da conclusão enquanto itens obrigatórios estiverem sem resposta.
 - Alteração automática da inspeção para `IN_PROGRESS` ao salvar resposta.
 - Finalização de inspeção com status `COMPLETED`.
+- Pacote histórico de inspeção persistido por usuário em IndexedDB/Dexie.
+- Respostas, observações, estado local de NC e conclusão gravados localmente antes do envio.
+- Fila FIFO durável com UUID de operação, retry, recuperação após reinício e deduplicação no servidor.
+- Detecção de conflito por revisão, sem sobrescrita automática `Last Write Wins`.
+- Indicadores reais de conectividade, pendência, sincronização, erro e conflito.
+- Manifest PWA, service worker e cache versionado de navegação/ativos no build Vercel.
 - Seed demonstrativo para apresentação do fluxo.
 - Dashboard, relatórios e equipe permanecem como prévias claramente identificadas com dados
   demonstrativos.
-- Controles de offline/sincronização e assinatura ficam indisponíveis até possuírem persistência
-  real.
+- Assinatura permanece indisponível até possuir persistência e trilha de auditoria seguras.
 
 ## Fluxo Principal
 
@@ -276,7 +284,12 @@ Login
 - Relatórios ainda usam uma prévia demonstrativa; impressão e exportação PDF estão desabilitadas.
 - Dashboard ainda usa indicadores mockados, identificados explicitamente na tela.
 - Equipe ainda não está integrada ao backend.
-- Funcionamento offline real com IndexedDB/Dexie ainda não foi implementado.
+- O marco offline ainda não foi validado no cenário browser/E2E completo com fechamento,
+  reabertura, reconexão e conferência final no Neon.
+- Somente inspeções previamente abertas/listadas online ficam disponíveis localmente; criação
+  integral de inspeção offline ainda não foi implementada.
+- Evidências binárias não entram na fila offline; o upload continua exigindo conexão.
+- Conflitos são detectados e bloqueados, mas a interface de reconciliação assistida ainda é futura.
 - A assinatura digital ainda não está disponível nem é persistida.
 - A tela expõe publicação e seleção de versões; uma interface completa de histórico e retirada de versões permanece futura.
 - Inspeções migradas do modelo anterior são identificadas como backfill legado não verificável.
@@ -284,9 +297,10 @@ Login
 
 ## Roadmap
 
+- Validar e completar o marco Offline/PWA em navegadores e no deploy Vercel.
+- Implementar fila offline de evidências com `Blob`, quota, compressão e retry.
 - Gerar relatórios reais a partir das inspeções.
-- Integrar dashboard a consultas reais.
-- Preparar camada offline com IndexedDB/Dexie.
+- Integrar dashboard a consultas reais somente após o marco offline.
 - Expandir os testes automatizados para os demais fluxos.
 - Avaliar futuramente alternativas de arquitetura, sem migração prometida para esta entrega.
 

@@ -34,13 +34,13 @@ A solução deverá permitir o registro digital de inspeções, consulta de hist
 
 A plataforma será destinada principalmente a:
 
-* Técnicos de Segurança do Trabalho;
-* Engenheiros de Segurança do Trabalho;
-* Auditores Internos;
-* Supervisores de SST;
-* Consultores de SST;
-* Profissionais responsáveis por inspeções e conformidade;
-* Empresas prestadoras de serviços em SST.
+- Técnicos de Segurança do Trabalho;
+- Engenheiros de Segurança do Trabalho;
+- Auditores Internos;
+- Supervisores de SST;
+- Consultores de SST;
+- Profissionais responsáveis por inspeções e conformidade;
+- Empresas prestadoras de serviços em SST.
 
 ---
 
@@ -48,10 +48,10 @@ A plataforma será destinada principalmente a:
 
 A plataforma deverá funcionar em navegadores web modernos e possuir interface responsiva compatível com:
 
-* Smartphones;
-* Tablets;
-* Notebooks;
-* Computadores desktop.
+- Smartphones;
+- Tablets;
+- Notebooks;
+- Computadores desktop.
 
 A solução deverá priorizar dispositivos móveis, permitindo utilização em campo durante inspeções e fiscalizações.
 
@@ -63,17 +63,17 @@ O sistema será desenvolvido com suporte a funcionamento offline, possibilitando
 
 O sistema deverá oferecer os seguintes módulos:
 
-* Cadastro de empresas;
-* Cadastro de checklists;
-* Biblioteca de templates de checklist;
-* Execução de inspeções;
-* Registro de não conformidades;
-* Gestão de ações corretivas;
-* Consulta de histórico;
-* Consulta de normas regulamentadoras;
-* Emissão de relatórios;
-* Dashboard de acompanhamento;
-* Sincronização offline.
+- Cadastro de empresas;
+- Cadastro de checklists;
+- Biblioteca de templates de checklist;
+- Execução de inspeções;
+- Registro de não conformidades;
+- Gestão de ações corretivas;
+- Consulta de histórico;
+- Consulta de normas regulamentadoras;
+- Emissão de relatórios;
+- Dashboard de acompanhamento;
+- Sincronização offline.
 
 ---
 
@@ -91,12 +91,12 @@ O sistema deve permitir cadastrar empresas para associação às inspeções.
 
 Cada empresa poderá possuir:
 
-* Razão Social;
-* Nome Fantasia;
-* CNPJ;
-* CNAE;
-* Quantidade de funcionários;
-* Observações.
+- Razão Social;
+- Nome Fantasia;
+- CNPJ;
+- CNAE;
+- Quantidade de funcionários;
+- Observações.
 
 ---
 
@@ -343,18 +343,18 @@ Os relatórios emitidos pelo sistema deverão seguir, preferencialmente, a segui
 
 As seguintes funcionalidades não fazem parte do MVP, mas poderão ser implementadas em versões futuras:
 
-* Registro fotográfico de evidências;
-* Armazenamento de anexos;
-* Consulta automática de CNAE por CNPJ;
-* Sugestão automática de normas aplicáveis;
-* Integração com eSocial;
-* Integração com sistemas governamentais;
-* Notificações automáticas;
-* Assinaturas digitais;
-* Geolocalização;
-* Business Intelligence (BI);
-* Dashboards avançados;
-* Recursos de Inteligência Artificial para apoio à elaboração de relatórios.
+- Registro fotográfico de evidências;
+- Armazenamento de anexos;
+- Consulta automática de CNAE por CNPJ;
+- Sugestão automática de normas aplicáveis;
+- Integração com eSocial;
+- Integração com sistemas governamentais;
+- Notificações automáticas;
+- Assinaturas digitais;
+- Geolocalização;
+- Business Intelligence (BI);
+- Dashboards avançados;
+- Recursos de Inteligência Artificial para apoio à elaboração de relatórios.
 
 ---
 
@@ -365,3 +365,12 @@ A proposta busca digitalizar e organizar os processos de inspeção e fiscaliza�
 Os requisitos definidos foram fundamentados tanto na literatura quanto em entrevistas realizadas com profissionais atuantes na área de SST, permitindo que a solução reflita necessidades reais observadas no contexto profissional.
 
 A plataforma prioriza usabilidade, rastreabilidade, mobilidade e funcionamento offline, características consideradas essenciais para apoiar profissionais que realizam inspeções, auditorias e fiscalizações em diferentes ambientes de trabalho.
+
+## Estado de implementação Offline/PWA em 6 de agosto de 2026
+
+RF20, RF21, RNF03, RNF04 e RNF08 possuem um primeiro incremento funcional para
+inspeções previamente disponibilizadas no dispositivo: snapshot em IndexedDB,
+respostas/conclusão locais, fila idempotente, conflito por revisão, indicadores
+reais e service worker. O requisito ainda não é considerado integralmente
+atendido até validar o cenário browser/E2E e implementar criação offline,
+reconciliação assistida e evidências binárias offline.

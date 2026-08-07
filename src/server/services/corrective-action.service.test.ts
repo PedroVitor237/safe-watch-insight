@@ -148,6 +148,7 @@ function createNonConformity(status: NonConformityStatus): NonConformityWithRela
       snapshotItemId: "99999999-9999-4999-8999-999999999999",
       status: ResponseStatus.NON_COMPLIANT,
       observation: null,
+      clientUpdatedAt: null,
       createdAt: now,
       updatedAt: now,
       checklistItem: {

@@ -40,7 +40,8 @@ Enums:
 
 - `ChecklistVersionStatus`: `DRAFT`, `PUBLISHED`, `RETIRED`;
 - `InspectionSnapshotOrigin`: `INSPECTION_CREATION`, `LEGACY_BACKFILL`;
-- `InspectionSnapshotIntegrityStatus`: `VERIFIED`, `UNVERIFIED_LEGACY`.
+- `InspectionSnapshotIntegrityStatus`: `VERIFIED`, `UNVERIFIED_LEGACY`;
+- `OfflineOperationType`: `SAVE_INSPECTION_RESPONSE`, `FINISH_INSPECTION`.
 
 Tabelas:
 
@@ -49,7 +50,8 @@ Tabelas:
 - `ChecklistVersionItemStandard`;
 - `InspectionChecklistSnapshot`;
 - `InspectionSnapshotItem`;
-- `InspectionSnapshotItemStandard`.
+- `InspectionSnapshotItemStandard`;
+- `OfflineSyncOperation`.
 
 Alterações expansivas:
 
@@ -61,23 +63,27 @@ Alterações expansivas:
   como ponte legada.
 - `Evidence` recebeu `publicId` único, largura, altura e `updatedAt`; os arquivos
   continuam fora do PostgreSQL.
+- `InspectionResponse` recebeu `clientUpdatedAt`, separado da revisão remota
+  `updatedAt`.
 
 ## 8.4 Restrições de integridade
 
-| Restrição | Garantia |
-| --- | --- |
-| `UNIQUE ChecklistVersion(checklistId, versionNumber)` | numeração não se repete |
-| índice único parcial de draft | no máximo um `DRAFT` por checklist |
-| checks de publicação | draft sem hash/publicação; publicada/retirada com hash, autor e data |
-| `UNIQUE ChecklistVersionItem(checklistVersionId, orderIndex)` | ordem única na versão |
-| `UNIQUE InspectionChecklistSnapshot(inspectionId)` | um snapshot por inspeção |
-| `UNIQUE InspectionSnapshotItem(snapshotId, orderIndex)` | ordem única no snapshot |
-| `UNIQUE InspectionResponse(inspectionId, snapshotItemId)` | uma resposta por item histórico |
-| check de referência da resposta | snapshot ou relação legada obrigatória |
-| `ON DELETE RESTRICT` nas FKs históricas | conteúdo referenciado não é removido |
-| hashes `CHAR(64)` validados | representação hexadecimal de SHA-256 |
-| `UNIQUE Evidence(publicId)` | identidade estável do arquivo no provedor |
-| check de contexto de `Evidence` | exatamente um entre inspeção e não conformidade |
+| Restrição                                                     | Garantia                                                             |
+| ------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `UNIQUE ChecklistVersion(checklistId, versionNumber)`         | numeração não se repete                                              |
+| índice único parcial de draft                                 | no máximo um `DRAFT` por checklist                                   |
+| checks de publicação                                          | draft sem hash/publicação; publicada/retirada com hash, autor e data |
+| `UNIQUE ChecklistVersionItem(checklistVersionId, orderIndex)` | ordem única na versão                                                |
+| `UNIQUE InspectionChecklistSnapshot(inspectionId)`            | um snapshot por inspeção                                             |
+| `UNIQUE InspectionSnapshotItem(snapshotId, orderIndex)`       | ordem única no snapshot                                              |
+| `UNIQUE InspectionResponse(inspectionId, snapshotItemId)`     | uma resposta por item histórico                                      |
+| check de referência da resposta                               | snapshot ou relação legada obrigatória                               |
+| `ON DELETE RESTRICT` nas FKs históricas                       | conteúdo referenciado não é removido                                 |
+| hashes `CHAR(64)` validados                                   | representação hexadecimal de SHA-256                                 |
+| `UNIQUE Evidence(publicId)`                                   | identidade estável do arquivo no provedor                            |
+| check de contexto de `Evidence`                               | exatamente um entre inspeção e não conformidade                      |
+| `PRIMARY KEY OfflineSyncOperation(id)`                        | deduplicação por UUID do cliente                                     |
+| check SHA-256 de `payloadHash`                                | identidade canônica da operação                                      |
 
 Os índices adicionais cobrem status e publicação de versões, chaves de origem,
 itens por versão/snapshot, códigos normativos, versão da inspeção e situação de
@@ -111,6 +117,10 @@ entretanto, usam versão publicada, snapshot e `snapshotItemId`.
 Depois que não houver consumidores legados e a sincronização offline estiver
 definida, uma migration futura poderá tornar as novas FKs obrigatórias e remover
 as tabelas antigas. Essa limpeza não pertence ao sprint atual.
+
+A migration `20260806220000_add_offline_sync_idempotency` adiciona o enum, a
+tabela de deduplicação e `InspectionResponse.clientUpdatedAt` sem alterar ou
+excluir registros existentes. Ela foi aplicada no Neon em 6 de agosto de 2026.
 
 ## 8.7 Considerações
 

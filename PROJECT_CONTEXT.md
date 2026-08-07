@@ -195,7 +195,16 @@ Sincronização automática
 
 PostgreSQL
 
-Nesta primeira entrega o objetivo é preparar a arquitetura para essa funcionalidade.
+O primeiro incremento real usa Dexie/IndexedDB para persistir inspeções já
+disponibilizadas no dispositivo, sempre com seu snapshot completo. Respostas e
+conclusão são gravadas localmente antes da sincronização e entram em uma fila
+durável com IDs estáveis.
+
+O servidor registra a identidade e o hash de cada operação na mesma transação da
+mutação. A revisão remota de cada resposta é conferida para detectar conflito;
+o sistema não aplica `Last Write Wins` em dados de inspeção. Criação integral de
+inspeção offline, resolução assistida de conflito e evidências binárias offline
+continuam pendentes.
 
 ---
 
@@ -293,7 +302,9 @@ Grande parte das telas já existe.
 
 O fluxo principal da Atividade 2 já utiliza dados reais integrados ao backend: login, empresas, checklists, itens de checklist, criação de inspeção, execução, respostas e conclusão.
 
-Alguns módulos secundários ainda utilizam dados mockados, como dashboard, relatórios, equipe e simulação offline.
+Alguns módulos secundários ainda utilizam dados mockados, como dashboard,
+relatórios e equipe. O antigo controle de simulação offline foi substituído por
+estado real de conectividade, IndexedDB e fila de sincronização.
 
 Normas, associação normativa aos itens, criação automática de não
 conformidades e ações corretivas já utilizam persistência real.
@@ -306,6 +317,13 @@ legado não verificável.
 
 As telas de inspeção e não conformidade permitem selecionar, pré-visualizar,
 enviar, listar e remover evidências fotográficas reais.
+
+O fluxo de execução de uma inspeção já aberta/listada online possui uma fundação
+offline real: pacote histórico local, respostas, observações, estado local de
+não conformidade, conclusão pendente, retry e indicadores de sincronização. O
+manifest e o service worker são incluídos no build Vercel. O cenário completo em
+navegador com fechamento/reabertura e conferência final no Neon ainda precisa de
+validação antes de declarar suporte offline completo.
 
 ---
 

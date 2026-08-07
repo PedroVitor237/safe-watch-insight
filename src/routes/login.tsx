@@ -5,14 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getCurrentSession, login } from "@/lib/api/auth.functions";
+import { login } from "@/lib/api/auth.functions";
+import { cacheOfflineSession, getAppSession } from "@/offline/session";
 import { toast } from "sonner";
 import { redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Entrar — SST Inspeções" }] }),
   beforeLoad: async () => {
-    const result = await getCurrentSession();
+    const result = await getAppSession();
 
     if (result.success) {
       throw redirect({ to: "/dashboard" });
@@ -48,6 +49,7 @@ function LoginPage() {
         return;
       }
 
+      await cacheOfflineSession(result.data);
       toast.success(`Bem-vindo(a), ${result.data.name.split(" ")[0]}!`);
       navigate({ to: "/dashboard" });
     } catch (error) {
@@ -75,7 +77,7 @@ function LoginPage() {
           </h2>
           <p className="mt-4 max-w-md text-sm text-sidebar-foreground/70">
             Execução de checklists em campo, registro de não conformidades, planos de ação 5W2H e
-            relatórios, com arquitetura preparada para futuro suporte offline.
+            relatórios e continuidade do preenchimento mesmo durante perdas temporárias de conexão.
           </p>
         </div>
         <div className="text-xs text-sidebar-foreground/50">

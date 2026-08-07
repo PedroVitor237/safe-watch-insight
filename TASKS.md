@@ -253,16 +253,34 @@ Legenda
 
 ## Preparação
 
-- [ ] Configurar IndexedDB
-- [ ] Configurar Dexie.js
-- [ ] Criar camada de persistência local
+- [x] Configurar IndexedDB
+- [x] Configurar Dexie.js
+- [x] Criar camada de persistência local por usuário para o pacote histórico da inspeção
+- [x] Persistir snapshot, itens, normas, respostas e estado local de não conformidade
+- [x] Preservar o snapshot original sem trocar a versão durante a sincronização
 
-## Futuro
+## Sincronização do fluxo principal
 
-- [ ] Implementar fila de sincronização
-- [ ] Detectar conexão
-- [ ] Sincronização automática
-- [ ] Resolver conflitos
+- [/] Implementar fila durável de sincronização para respostas e conclusão
+- [x] Detectar conexão real do navegador e confirmar o resultado no servidor
+- [/] Sincronização automática com retry e recuperação após reinício
+- [x] Implementar IDs de operação estáveis e deduplicação idempotente no servidor
+- [x] Detectar conflito por revisão da resposta sem aplicar `Last Write Wins`
+- [/] Implementar resolução assistida de conflitos na interface
+- [ ] Criar inspeções completamente offline
+- [ ] Sincronizar manutenção offline de empresas/checklists
+
+## PWA
+
+- [x] Criar web app manifest e metadados de instalação
+- [x] Registrar service worker e publicar ativos PWA no build Vercel
+- [/] Validar cache de shell, navegação offline e atualização em navegadores reais
+
+## Segurança e armazenamento local
+
+- [x] Segregar pacotes locais por usuário e não persistir senha/segredo de sessão
+- [x] Remover sessão, dados IndexedDB e cache privado de navegação no logout local
+- [ ] Implementar política administrativa de retenção/limpeza para dispositivos compartilhados
 
 ---
 
@@ -303,6 +321,15 @@ Legenda
 - [x] Testar contexto histórico da não conformidade
 - [x] Testar rollback transacional sem registros parciais
 - [x] Validar migration e backfill dos dados existentes
+
+## Offline direcionado
+
+- [x] Testar persistência do snapshot local
+- [x] Testar criação e ordenação da fila
+- [x] Testar restauração de operação interrompida com o mesmo ID
+- [x] Testar identidade/hash idempotente e rejeição de reutilização divergente
+- [x] Testar estado local de resposta, não conformidade e conclusão
+- [ ] Executar cenário browser/E2E completo online → offline → reinício → sync → Neon
 
 ## Frontend
 
@@ -347,7 +374,7 @@ Legenda
 - [ ] Controle de permissões
 - [ ] Multiempresa
 - [ ] IndexedDB completo
-- [ ] Sincronização offline
+- [/] Sincronização offline do fluxo principal
 - [ ] Background Sync
 - [ ] Notificações
 - [ ] BI

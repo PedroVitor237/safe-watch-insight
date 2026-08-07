@@ -439,18 +439,18 @@ regra de negócio depende de `StorageService`, não diretamente do Cloudinary.
 
 # Funcionamento Offline
 
-Arquitetura planejada:
+Arquitetura do primeiro incremento:
 
 ```
 Frontend
 
 ↓
 
-IndexedDB
+Camada local de domínio (Dexie/IndexedDB)
 
 ↓
 
-Fila de sincronização
+Fila FIFO durável com UUID/dependências/retry
 
 ↓
 
@@ -465,7 +465,23 @@ Backend
 PostgreSQL
 ```
 
-Nesta primeira etapa, a arquitetura deve apenas ser preparada para esse fluxo.
+O React Query consulta uma fachada cliente que seleciona o pacote local quando
+não há conexão ou quando ele contém alterações ainda não confirmadas. Isso evita
+que um refetch remoto sobrescreva estado local pendente. A camada local não
+recebe regras de domínio remotas arbitrárias: ela aplica somente as transições
+necessárias para resposta/NC/conclusão e o servidor revalida tudo no Service.
+
+No backend, `saveInspectionResponse` e `finishInspection` aceitam metadados
+opcionais de sincronização. A Server Function associa o usuário da sessão; o
+Service calcula o hash e decide conflito; o Repository persiste a mutação e
+`OfflineSyncOperation` na mesma transação Prisma.
+
+O snapshot armazenado permanece a fonte histórica. Nenhum refetch, publicação
+ou sincronização pode reconstruí-lo a partir do checklist atual.
+
+O PWA usa manifest e service worker nativos. Apenas navegação e ativos estáticos
+da mesma origem entram em cache; respostas de Server Functions e credenciais não
+são armazenadas pelo service worker.
 
 ---
 

@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 
 import {
+  finishInspectionSchema,
   inspectionResponseIdSchema,
   saveInspectionResponseSchema,
 } from "@/server/schemas/inspection-response.schema";
@@ -97,11 +98,29 @@ export const saveInspectionResponse = createServerFn({ method: "POST" })
       return toServerResult<never>(userResult);
     }
 
-    return toServerResult(await service.saveInspectionResponse(data));
+    return toServerResult(
+      await service.saveInspectionResponse({
+        inspectionId: data.inspectionId,
+        snapshotItemId: data.snapshotItemId,
+        checklistItemId: data.checklistItemId,
+        status: data.status,
+        observation: data.observation,
+        ...(data.operationId && data.clientCreatedAt
+          ? {
+              offlineOperation: {
+                id: data.operationId,
+                userId: userResult.data.id,
+                clientCreatedAt: data.clientCreatedAt,
+                expectedResponseUpdatedAt: data.expectedResponseUpdatedAt ?? null,
+              },
+            }
+          : {}),
+      }),
+    );
   });
 
 export const finishInspection = createServerFn({ method: "POST" })
-  .inputValidator(inspectionResponseIdSchema)
+  .inputValidator(finishInspectionSchema)
   .handler(async ({ data }) => {
     const service = await getInspectionResponseService();
     const { getAuthenticatedUser } = await getAuthSessionHelpers();
@@ -111,5 +130,16 @@ export const finishInspection = createServerFn({ method: "POST" })
       return toServerResult<never>(userResult);
     }
 
-    return toServerResult(await service.finishInspection(data.inspectionId));
+    return toServerResult(
+      await service.finishInspection(
+        data.inspectionId,
+        data.operationId && data.clientCreatedAt
+          ? {
+              id: data.operationId,
+              userId: userResult.data.id,
+              clientCreatedAt: data.clientCreatedAt,
+            }
+          : undefined,
+      ),
+    );
   });
