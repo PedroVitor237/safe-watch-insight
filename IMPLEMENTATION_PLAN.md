@@ -274,7 +274,9 @@ Integração implementada com Cloudinary por uma abstração de armazenamento no
 servidor. Evidências podem pertencer à inspeção que possui snapshot imutável ou
 à não conformidade vinculada a um item do snapshot. PostgreSQL mantém somente
 URL, identificador do provedor e metadados; arquivos binários não são gravados
-no banco.
+no banco. A migration do MVP foi aplicada no Neon e o fluxo real autenticado de
+upload, listagem e remoção foi validado com Cloudinary e PostgreSQL, incluindo
+soft delete, idempotência do provedor e compensações de falha.
 
 ---
 

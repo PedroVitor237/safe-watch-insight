@@ -292,7 +292,7 @@ Legenda
 - [ ] Testar CRUD de empresas
 - [ ] Testar CRUD de checklists
 - [ ] Testar inspeções
-- [ ] Testar upload
+- [x] Testar upload
 - [ ] Testar relatórios
 
 ## Integridade histórica direcionada

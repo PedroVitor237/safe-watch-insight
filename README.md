@@ -6,7 +6,7 @@ O projeto é desenvolvido como Trabalho de Conclusão de Curso (TCC) em Análise
 
 ## Objetivo Atual
 
-Substituir formulários impressos e planilhas por uma base digital rastreável para inspeções de SST. Nesta etapa, o projeto integra o fluxo principal, normas, não conformidades e ações corretivas ao backend, mantendo a arquitetura preparada para futuras evoluções como evidências, relatórios reais, dashboard com dados reais e funcionamento offline.
+Substituir formulários impressos e planilhas por uma base digital rastreável para inspeções de SST. Nesta etapa, o projeto integra o fluxo principal, normas, não conformidades, ações corretivas e evidências fotográficas ao backend, mantendo a arquitetura preparada para futuras evoluções como relatórios reais, dashboard com dados reais e funcionamento offline.
 
 ## Tecnologias
 
