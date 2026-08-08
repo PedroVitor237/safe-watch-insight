@@ -13,6 +13,7 @@ import {
   Bell,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -165,8 +166,15 @@ function TopBar() {
   const { data: sessionResult } = useQuery({
     queryKey: ["auth", "session"],
     queryFn: () => getAppSession(),
+    networkMode: "always",
   });
   const user = sessionResult?.success ? sessionResult.data : null;
+
+  useEffect(() => {
+    if (sessionResult?.success === false) {
+      navigate({ to: "/login", replace: true });
+    }
+  }, [navigate, sessionResult]);
   const initials =
     user?.name
       .split(" ")

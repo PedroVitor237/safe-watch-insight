@@ -325,7 +325,7 @@ Indicadores:
 
 # Fase 14 — Offline
 
-Primeiro incremento implementado e ainda em validação.
+Primeiro incremento implementado e validado no fluxo principal em Chromium.
 
 Implementar:
 
@@ -343,12 +343,15 @@ Validado neste incremento:
 
 - persistência e fila por testes automatizados;
 - idempotência/hash e validação do contrato;
+- cenário browser/E2E online → offline → reabertura → retry → reconexão → Neon;
+- recuperação de falha transitória e de autenticação sem trocar o UUID da operação;
+- manifest instalável, service worker, navegação offline e invalidação de cache no Chromium;
 - TypeScript, lint, testes, build Vercel e Prisma;
 - migration aditiva aplicada no Neon.
 
 Continuam pendentes:
 
-- cenário browser/E2E online → offline → reinício → reconexão → Neon;
+- homologação do PWA no domínio HTTPS publicado e em outros navegadores/dispositivos;
 - resolução assistida de conflitos (a detecção e o bloqueio já existem);
 - criação integral de inspeções offline;
 - fila de binários/evidências, compressão e gestão de quota;

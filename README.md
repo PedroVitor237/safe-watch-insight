@@ -78,7 +78,8 @@ scripts/             Scripts utilitários
 
 ## Pré-requisitos
 
-- Node.js 22 ou superior recomendado.
+- Node.js 22.12 ou superior. O build ainda executa em Node 20.19.2, mas essa
+  versão está abaixo do `engines` declarado pelos pacotes TanStack instalados.
 - npm disponível.
 - Bun é opcional; o repositório também possui `bun.lock`.
 - Um banco PostgreSQL. Para a entrega, a documentação considera Neon.
@@ -100,7 +101,7 @@ bun install
 Crie um arquivo `.env` a partir de `.env.example`:
 
 ```env
-DATABASE_URL="postgresql://USER:PASSWORD@HOST/DATABASE?sslmode=require"
+DATABASE_URL="postgresql://USER:PASSWORD@HOST/DATABASE?sslmode=verify-full"
 SESSION_SECRET="replace-with-a-secure-random-string"
 CLOUDINARY_CLOUD_NAME="your-cloud-name"
 CLOUDINARY_API_KEY="your-api-key"
@@ -108,7 +109,8 @@ CLOUDINARY_API_SECRET="your-api-secret"
 CLOUDINARY_FOLDER="safe-watch-insight/evidence"
 ```
 
-- `DATABASE_URL`: conexão PostgreSQL usada pelo Prisma.
+- `DATABASE_URL`: conexão PostgreSQL usada pelo Prisma; para Neon, use validação
+  TLS explícita com `sslmode=verify-full`.
 - `SESSION_SECRET`: segredo da sessão. Em desenvolvimento há fallback interno, mas em produção essa variável deve ser configurada.
 - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY` e `CLOUDINARY_API_SECRET`: credenciais usadas somente no servidor para requisições assinadas de evidências.
 - `CLOUDINARY_FOLDER`: pasta opcional do provedor; o padrão é `safe-watch-insight/evidence`.
@@ -284,8 +286,9 @@ Login
 - Relatórios ainda usam uma prévia demonstrativa; impressão e exportação PDF estão desabilitadas.
 - Dashboard ainda usa indicadores mockados, identificados explicitamente na tela.
 - Equipe ainda não está integrada ao backend.
-- O marco offline ainda não foi validado no cenário browser/E2E completo com fechamento,
-  reabertura, reconexão e conferência final no Neon.
+- O cenário Offline/PWA principal foi validado no Chromium local com fechamento,
+  reabertura, reconexão e conferência final no Neon; o domínio Vercel publicado e
+  outros navegadores/dispositivos ainda exigem homologação.
 - Somente inspeções previamente abertas/listadas online ficam disponíveis localmente; criação
   integral de inspeção offline ainda não foi implementada.
 - Evidências binárias não entram na fila offline; o upload continua exigindo conexão.
@@ -297,7 +300,7 @@ Login
 
 ## Roadmap
 
-- Validar e completar o marco Offline/PWA em navegadores e no deploy Vercel.
+- Homologar o marco Offline/PWA no domínio Vercel e em outros navegadores/dispositivos.
 - Implementar fila offline de evidências com `Blob`, quota, compressão e retry.
 - Gerar relatórios reais a partir das inspeções.
 - Integrar dashboard a consultas reais somente após o marco offline.

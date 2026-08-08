@@ -93,7 +93,7 @@ Banco remoto
 
 - PostgreSQL
 
-## Estado do primeiro incremento — 6 de agosto de 2026
+## Estado do primeiro incremento — 7 de agosto de 2026
 
 Implementado e validado por testes/build:
 
@@ -111,10 +111,19 @@ Implementado e validado por testes/build:
 - detecção de conflito pela revisão `InspectionResponse.updatedAt`;
 - indicadores reais de conexão, fila, erro e conflito;
 - manifest, service worker e ativos PWA presentes no artefato Vercel.
+- cenário Chromium online → offline → reabertura → retry → sincronização com
+  conferência final no Neon;
+- persistência do mesmo UUID após interrupção e falha transitória, deduplicação
+  idempotente e preservação da identidade/hash do snapshot;
+- erro de autenticação retido localmente e recuperado após novo login;
+- expiração da sessão local, isolamento na troca de usuário e limpeza de dados
+  privados no logout;
+- manifest sem erro de parsing/instalabilidade, service worker sob escopo `/`,
+  navegação offline e remoção de cache obsoleto no Chromium.
 
 Ainda não validado/concluído:
 
-- cenário browser/E2E completo com fechamento/reabertura e verificação no Neon;
+- homologação no domínio HTTPS publicado e em Chrome/Edge/Android adicionais;
 - criação de uma nova inspeção sem conexão;
 - reconciliação assistida de conflito (o bloqueio seguro já existe);
 - armazenamento e sincronização de binários de evidência;
@@ -514,7 +523,9 @@ O service worker possui cache versionado:
 
 - navegação: network-first e fallback apenas para rota já armazenada ou página
   offline estática;
-- scripts, estilos, fontes, imagens e manifest da mesma origem: cache-first;
+- ativos versionados de produção, fontes, imagens e manifest da mesma origem:
+  cache-first;
+- módulos de desenvolvimento do Vite: network-first com fallback em cache;
 - Server Functions (`POST` e requisições sem destino estático) não são cacheadas;
 - `/login` não é gravado no cache de navegação;
 - caches de versões antigas são removidos no `activate`.
@@ -524,8 +535,31 @@ O preset Nitro/Vercel envia `application/manifest+json` para o manifest, além d
 um MIME genérico e verifica atualizações do worker a cada navegação.
 
 Como TanStack Start usa SSR, a rota precisa ter sido interceptada pelo service
-worker antes de poder ser reaberta offline. Esse comportamento precisa ser
-testado em Chrome/Edge/Android e no domínio HTTPS da Vercel.
+worker antes de poder ser reaberta offline. Esse comportamento foi comprovado no
+Chromium usado pelo Playwright contra o servidor local e ainda precisa ser
+homologado em Chrome/Edge/Android adicionais e no domínio HTTPS da Vercel.
+
+# Evidência Browser/E2E — 7 de agosto de 2026
+
+O teste `npm run test:e2e:offline` executou com sucesso no Chromium
+151.0.7922.34. O teste cria uma inspeção temporária com snapshot publicado,
+remove o fixture ao terminar e verificou:
+
+- pré-carga online do pacote histórico no IndexedDB;
+- bloqueio real da rede, resposta `NON_COMPLIANT` offline e reabertura da rota;
+- recuperação de operação `SYNCING`, falha `NETWORK_ERROR` e retry automático
+  mantendo o UUID;
+- resposta, item do snapshot, não conformidade e `OfflineSyncOperation` no Neon;
+- repetição idempotente sem duplicar a operação;
+- falha `UNAUTHORIZED`, novo login e sincronização manual de recuperação;
+- ausência de senha/segredos no armazenamento inspecionado, cookie HTTP-only,
+  expiração local, troca de usuário e limpeza no logout;
+- manifest válido/instalável, escopo do worker, invalidação de cache e interação
+  da interface após reload offline.
+
+O E2E usou o servidor TanStack/Vite local com banco Neon real. O build separado
+com preset Vercel confirmou os headers e artefatos PWA, mas não substitui a
+homologação no domínio HTTPS publicado.
 
 # Limites de Segurança Implementados
 

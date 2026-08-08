@@ -68,6 +68,22 @@ Prisma ORM
 
 PostgreSQL
 
+## Runtime Node.js
+
+Avaliação revisada em 7 de agosto de 2026:
+
+- o ambiente local observado usa Node 20.19.2 e o artefato Vercel atual ainda
+  declara `nodejs20.x`;
+- o build e os testes passam nesse ambiente, mas `@tanstack/react-start` e
+  `@tanstack/start-client-core` instalados declaram Node `>=22.12.0`;
+- `@prisma/streams-local`, dependência das ferramentas Prisma, declara Node
+  `>=22.0.0`;
+- portanto Node 20 não é considerado formalmente suportado pela árvore atual,
+  mesmo funcionando nesta validação;
+- a atualização de ambiente local, CI e Vercel para Node 22.12+ deve ser feita
+  de forma controlada em uma etapa própria, sem alteração automática neste
+  incremento.
+
 ---
 
 ## Banco de Dados
@@ -141,7 +157,7 @@ Caso o projeto evolua para múltiplos idiomas, utilizar uma solução própria d
 
 # Offline
 
-Decisão revisada em 6 de agosto de 2026:
+Decisão revisada em 7 de agosto de 2026:
 
 - Offline/PWA passa a ter prioridade sobre Relatórios e Dashboard;
 - IndexedDB é acessado por Dexie, conforme a recomendação arquitetural existente;
@@ -163,10 +179,17 @@ Decisão revisada em 6 de agosto de 2026:
 - logout remove sessão, pacotes e fila do IndexedDB, além do cache privado de navegação.
 - a troca de usuário autenticado limpa os pacotes e operações do usuário anterior no mesmo navegador.
 - o preset Vercel publica MIME explícito para o manifest e `no-cache` para o service worker.
+- Server Functions usam middleware CSRF; o service worker ignora requisições que
+  não sejam `GET` e não armazena as respostas dessas mutações;
+- módulos servidos pelo Vite em desenvolvimento usam network-first com fallback
+  em cache, evitando misturar módulos antigos após uma atualização;
+- o cenário Chromium online → offline → reabertura → retry → sincronização foi
+  comprovado contra o Neon, inclusive com idempotência, expiração de sessão,
+  isolamento entre usuários e limpeza no logout.
 
-O incremento é parcial até a execução do cenário browser/E2E completo. Criação
-integral de inspeção offline, resolução assistida de conflitos, Background Sync
-e evidências binárias offline permanecem futuras.
+O incremento permanece parcial porque criação integral de inspeção offline,
+resolução assistida de conflitos, Background Sync, evidências binárias offline e
+homologação no domínio HTTPS publicado permanecem futuras.
 
 ---
 
@@ -359,7 +382,7 @@ Caso exista divergência entre código e documentação, a divergência deverá 
 
 Quando houver disponibilidade, priorizar:
 
-1. Validar e completar o marco Offline/PWA do fluxo principal.
+1. Homologar o marco Offline/PWA no domínio publicado e em outros navegadores.
 2. Implementar reconciliação assistida e upload offline de evidências.
 3. Autorização por perfil e gestão completa de usuários.
 4. Geração de PDF.

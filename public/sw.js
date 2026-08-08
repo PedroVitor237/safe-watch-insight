@@ -44,9 +44,19 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (["script", "style", "font", "image", "manifest"].includes(request.destination)) {
-    event.respondWith(cacheFirstStatic(request));
+    event.respondWith(
+      isDevelopmentModule(url) ? networkFirstStatic(request) : cacheFirstStatic(request),
+    );
   }
 });
+
+function isDevelopmentModule(url) {
+  return (
+    url.pathname.startsWith("/src/") ||
+    url.pathname.startsWith("/node_modules/") ||
+    url.pathname.startsWith("/@")
+  );
+}
 
 async function networkFirstNavigation(request) {
   const cache = await caches.open(NAVIGATION_CACHE);
@@ -76,4 +86,17 @@ async function cacheFirstStatic(request) {
     await cache.put(request, response.clone());
   }
   return response;
+}
+
+async function networkFirstStatic(request) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(STATIC_CACHE);
+      await cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    return (await caches.match(request)) || Response.error();
+  }
 }

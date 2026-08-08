@@ -29,6 +29,7 @@ export function useSaveInspectionResponse() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    networkMode: "always",
     mutationFn: async (data: SaveInspectionResponseSchemaInput) => {
       const result = await queueInspectionResponse(data);
 
@@ -65,6 +66,7 @@ export function useFinishInspection() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    networkMode: "always",
     mutationFn: async (inspectionId: string) => {
       const result = await queueInspectionFinish(inspectionId);
 

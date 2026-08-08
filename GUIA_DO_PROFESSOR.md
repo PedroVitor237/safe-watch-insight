@@ -51,13 +51,15 @@ npm install
 4. Crie o arquivo `.env` com base em `.env.example`.
 
 ```env
-DATABASE_URL="postgresql://USER:PASSWORD@HOST/DATABASE?sslmode=require"
+DATABASE_URL="postgresql://USER:PASSWORD@HOST/DATABASE?sslmode=verify-full"
 SESSION_SECRET="replace-with-a-secure-random-string"
 ```
 
 5. Configure o banco PostgreSQL.
 
-Use uma conexão PostgreSQL válida em `DATABASE_URL`. Para Neon, copie a connection string do painel do projeto e mantenha `sslmode=require`.
+Use uma conexão PostgreSQL válida em `DATABASE_URL`. Para Neon, copie a
+connection string do painel do projeto e mantenha `sslmode=verify-full` para
+validar explicitamente o certificado TLS.
 
 6. Valide o schema Prisma.
 

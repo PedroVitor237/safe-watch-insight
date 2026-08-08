@@ -202,9 +202,11 @@ durável com IDs estáveis.
 
 O servidor registra a identidade e o hash de cada operação na mesma transação da
 mutação. A revisão remota de cada resposta é conferida para detectar conflito;
-o sistema não aplica `Last Write Wins` em dados de inspeção. Criação integral de
-inspeção offline, resolução assistida de conflito e evidências binárias offline
-continuam pendentes.
+o sistema não aplica `Last Write Wins` em dados de inspeção. Em 7 de agosto de
+2026, o ciclo online → offline → reabertura → retry → sincronização foi validado
+em Chromium real, com conferência da resposta, não conformidade, snapshot e
+operação idempotente no Neon. Criação integral de inspeção offline, resolução
+assistida de conflito e evidências binárias offline continuam pendentes.
 
 ---
 
@@ -321,9 +323,11 @@ enviar, listar e remover evidências fotográficas reais.
 O fluxo de execução de uma inspeção já aberta/listada online possui uma fundação
 offline real: pacote histórico local, respostas, observações, estado local de
 não conformidade, conclusão pendente, retry e indicadores de sincronização. O
-manifest e o service worker são incluídos no build Vercel. O cenário completo em
-navegador com fechamento/reabertura e conferência final no Neon ainda precisa de
-validação antes de declarar suporte offline completo.
+manifest e o service worker são incluídos no build Vercel. O cenário completo
+com fechamento/reabertura e conferência final no Neon foi validado no Chromium
+contra o servidor local; o artefato Vercel também foi validado por build. O
+domínio HTTPS publicado e outros navegadores ainda exigem homologação, e as
+funcionalidades offline futuras impedem declarar suporte offline completo.
 
 ---
 

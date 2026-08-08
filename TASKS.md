@@ -261,9 +261,9 @@ Legenda
 
 ## Sincronização do fluxo principal
 
-- [/] Implementar fila durável de sincronização para respostas e conclusão
+- [x] Implementar fila durável de sincronização para respostas e conclusão
 - [x] Detectar conexão real do navegador e confirmar o resultado no servidor
-- [/] Sincronização automática com retry e recuperação após reinício
+- [x] Sincronização automática com retry e recuperação após reinício
 - [x] Implementar IDs de operação estáveis e deduplicação idempotente no servidor
 - [x] Detectar conflito por revisão da resposta sem aplicar `Last Write Wins`
 - [/] Implementar resolução assistida de conflitos na interface
@@ -274,7 +274,7 @@ Legenda
 
 - [x] Criar web app manifest e metadados de instalação
 - [x] Registrar service worker e publicar ativos PWA no build Vercel
-- [/] Validar cache de shell, navegação offline e atualização em navegadores reais
+- [x] Validar cache de shell, navegação offline e atualização no Chromium
 
 ## Segurança e armazenamento local
 
@@ -329,7 +329,7 @@ Legenda
 - [x] Testar restauração de operação interrompida com o mesmo ID
 - [x] Testar identidade/hash idempotente e rejeição de reutilização divergente
 - [x] Testar estado local de resposta, não conformidade e conclusão
-- [ ] Executar cenário browser/E2E completo online → offline → reinício → sync → Neon
+- [x] Executar cenário browser/E2E completo online → offline → reinício → sync → Neon
 
 ## Frontend
 
