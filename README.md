@@ -62,7 +62,7 @@ o conteúdo histórico capturado por inspeções existentes.
 O projeto usa uma arquitetura em camadas:
 
 ```text
-Tela React
+-> Tela React
 -> TanStack React Query
 -> TanStack Start Server Function
 -> Service
