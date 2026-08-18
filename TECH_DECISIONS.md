@@ -70,19 +70,15 @@ PostgreSQL
 
 ## Runtime Node.js
 
-Avaliação revisada em 7 de agosto de 2026:
+Decisão revisada em 17 de agosto de 2026:
 
-- o ambiente local observado usa Node 20.19.2 e o artefato Vercel atual ainda
-  declara `nodejs20.x`;
-- o build e os testes passam nesse ambiente, mas `@tanstack/react-start` e
-  `@tanstack/start-client-core` instalados declaram Node `>=22.12.0`;
-- `@prisma/streams-local`, dependência das ferramentas Prisma, declara Node
-  `>=22.0.0`;
-- portanto Node 20 não é considerado formalmente suportado pela árvore atual,
-  mesmo funcionando nesta validação;
-- a atualização de ambiente local, CI e Vercel para Node 22.12+ deve ser feita
-  de forma controlada em uma etapa própria, sem alteração automática neste
-  incremento.
+- o projeto requer Node `^22.12.0` no `package.json`, em conformidade com os
+  pacotes TanStack instalados;
+- o desenvolvimento local usa Node 22.23.2, fixado no `.nvmrc`;
+- a Vercel interpreta o intervalo `^22.12.0` como a linha Node 22.x e atualiza
+  automaticamente minor e patch dentro dessa linha;
+- não há configuração de CI no repositório; uma futura CI deve respeitar o
+  `package.json` e o `.nvmrc`.
 
 ---
 

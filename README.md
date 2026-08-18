@@ -78,8 +78,7 @@ scripts/             Scripts utilitários
 
 ## Pré-requisitos
 
-- Node.js 22.12 ou superior. O build ainda executa em Node 20.19.2, mas essa
-  versão está abaixo do `engines` declarado pelos pacotes TanStack instalados.
+- Node.js 22 LTS (mínimo 22.12; versão local fixada em 22.23.2 no `.nvmrc`).
 - npm disponível.
 - Bun é opcional; o repositório também possui `bun.lock`.
 - Um banco PostgreSQL. Para a entrega, a documentação considera Neon.
