@@ -157,8 +157,8 @@ Principais documentos disponíveis:
 - `AI/BusinessRules.md`: regras de negócio.
 - `AI/Database.md`: padrões de banco de dados.
 - `AI/Entities.md`: entidades do domínio.
-- `AI/Offline.md`: planejamento da arquitetura offline.
-- `AI_PROJECT_CONTEXT.md`: contexto consolidado do estado atual.
+- `AI/Offline.md`: arquitetura e estado atual do primeiro incremento offline.
+- `AI_PROJECT_CONTEXT.md`: snapshot histórico de 25 de julho de 2026.
 - `IMPLEMENTATION_PLAN.md`: plano de implementação.
 - `TASKS.md`: backlog e status das tarefas.
 - `TECH_DECISIONS.md`: decisões técnicas.
@@ -250,7 +250,9 @@ Ainda em desenvolvimento:
 - Dashboard com dados reais.
 - Consulta real de normas.
 - Tela de equipe integrada ao backend.
-- Sincronização offline com IndexedDB/Dexie.
+- Fundação Offline/PWA do fluxo principal implementada e validada em Chromium;
+  criação integral offline, reconciliação assistida e evidências binárias
+  continuam futuras.
 - Persistência da assinatura da inspeção.
 - Testes automatizados.
 

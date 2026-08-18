@@ -366,11 +366,14 @@ Os requisitos definidos foram fundamentados tanto na literatura quanto em entrev
 
 A plataforma prioriza usabilidade, rastreabilidade, mobilidade e funcionamento offline, características consideradas essenciais para apoiar profissionais que realizam inspeções, auditorias e fiscalizações em diferentes ambientes de trabalho.
 
-## Estado de implementação Offline/PWA em 6 de agosto de 2026
+## Estado de implementação Offline/PWA em 17 de agosto de 2026
 
 RF20, RF21, RNF03, RNF04 e RNF08 possuem um primeiro incremento funcional para
 inspeções previamente disponibilizadas no dispositivo: snapshot em IndexedDB,
 respostas/conclusão locais, fila idempotente, conflito por revisão, indicadores
-reais e service worker. O requisito ainda não é considerado integralmente
-atendido até validar o cenário browser/E2E e implementar criação offline,
-reconciliação assistida e evidências binárias offline.
+reais e service worker. O cenário online → offline → reabertura → retry →
+reconexão foi validado em Chromium real contra o Neon. O marco está encerrado
+para o escopo do TCC como atendimento parcial; o requisito integral continua
+pendente por não incluir criação offline, reconciliação assistida, evidências
+binárias offline, Background Sync nem homologação no domínio HTTPS publicado e
+em outros navegadores/dispositivos.

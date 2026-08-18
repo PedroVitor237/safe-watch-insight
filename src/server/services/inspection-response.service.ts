@@ -71,7 +71,9 @@ export class InspectionResponseService extends BaseService<InspectionResponseRep
   ): Promise<Result<InspectionResponseWithRelations>> {
     return this.execute(async () => {
       const inspection = await this.ensureInspectionExists(input.inspectionId);
-      this.ensureInspectionCanBeEdited(inspection);
+      if (!input.offlineOperation) {
+        this.ensureInspectionCanBeEdited(inspection);
+      }
       const snapshotItem = this.getSnapshotItem(
         inspection,
         input.snapshotItemId,

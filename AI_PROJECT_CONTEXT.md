@@ -1,6 +1,9 @@
-# AI Project Context
+# AI Project Context — snapshot histórico
 
-Primary context document for future AI assistants working on this repository.
+Historical repository snapshot retained for traceability. It was last analyzed
+on 2026-07-25 and is not a current implementation-status source. Use
+`PROJECT_CONTEXT.md`, `TASKS.md`, `TECH_DECISIONS.md` and `AI/Offline.md` for the
+current Offline/PWA state.
 
 Last analyzed: 2026-07-25.
 

@@ -357,6 +357,28 @@ Continuam pendentes:
 - fila de binários/evidências, compressão e gestão de quota;
 - Background Sync e políticas administrativas para dispositivo compartilhado.
 
+## Encerramento do marco Offline/PWA — 17 de agosto de 2026
+
+O marco do primeiro incremento está encerrado para o escopo do TCC após revisão
+final, testes automatizados, validação direcionada no Neon e nova execução do
+cenário Chromium. Esse encerramento significa que a fundação do fluxo principal
+está estável e documentada; não significa suporte offline completo.
+
+- **COMPLETE:** persistência Dexie/IndexedDB das inspeções do usuário
+  autenticado já disponibilizadas no dispositivo, snapshot histórico,
+  respostas/conclusão local-first, fila durável, retry, idempotência, detecção
+  segura de conflito, reconexão, manifest, service worker, fallback, isolamento
+  local e limpeza no logout.
+- **PARTIAL:** Offline/PWA como requisito amplo, pois o incremento cobre a
+  execução de inspeções existentes e foi homologado somente no Chromium local.
+- **FUTURE:** criação integral offline, reconciliação assistida, evidências
+  binárias offline, Background Sync, CRUD offline de outros módulos, políticas
+  administrativas de retenção e homologação no domínio publicado/outros
+  navegadores.
+
+O próximo marco funcional recomendado é **Relatórios**, conforme a Fase 12. O
+Dashboard permanece posterior e não foi iniciado neste encerramento.
+
 ---
 
 # Fase 15 — Refatoração

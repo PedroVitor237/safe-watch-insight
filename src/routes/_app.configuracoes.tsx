@@ -132,7 +132,7 @@ function Configuracoes() {
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {offlineState.conflicts > 0
-                    ? `${offlineState.conflicts} conflito(s) exigem revisão; nenhuma sobrescrita automática foi aplicada.`
+                    ? `${offlineState.conflicts} conflito(s) bloqueado(s) com segurança. A resolução assistida ainda não está disponível; nenhuma sobrescrita automática foi aplicada.`
                     : `${offlineState.failed} operação(ões) falharam e podem ser reenviadas.`}
                 </p>
               </div>

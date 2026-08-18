@@ -43,8 +43,13 @@ export async function cacheInspectionPackage(inspection: OfflineInspection): Pro
     return;
   }
 
+  const session = await getCachedOfflineSession();
+  if (!session.success || inspection.user.id !== session.data.id) {
+    return;
+  }
+
   const db = getOfflineDatabase();
-  const key = inspectionPackageKey(inspection.user.id, inspection.id);
+  const key = inspectionPackageKey(session.data.id, inspection.id);
   const pendingOperations = await db.operations.where("inspectionId").equals(inspection.id).count();
 
   if (pendingOperations > 0) {
@@ -163,12 +168,14 @@ export async function queueInspectionResponse(
 
       if (blockingOperation) {
         return localConflict(
-          "Há uma falha de sincronização neste item. Revise o conflito antes de continuar.",
+          blockingOperation.status === "CONFLICT"
+            ? "Este item possui um conflito bloqueado. A resolução assistida ainda não está disponível nesta versão."
+            : "Este item possui uma falha de sincronização. Use “Sincronizar agora” antes de continuar.",
         );
       }
 
       const previousOperation = [...existingOperations].sort(
-        (left, right) => right.createdAt.getTime() - left.createdAt.getTime(),
+        (left, right) => right.sequence - left.sequence || right.id.localeCompare(left.id),
       )[0];
       const now = new Date();
       const inspection = structuredClone(record.inspection);
@@ -291,7 +298,9 @@ export async function queueInspectionFinish(
         .first();
       if (blockingOperation) {
         return localConflict(
-          "A inspeção possui falhas de sincronização que precisam ser revistas.",
+          blockingOperation.status === "CONFLICT"
+            ? "A inspeção possui um conflito bloqueado. A resolução assistida ainda não está disponível nesta versão."
+            : "A inspeção possui falhas de sincronização. Use “Sincronizar agora” antes de concluir.",
         );
       }
 

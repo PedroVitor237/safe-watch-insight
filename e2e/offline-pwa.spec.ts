@@ -261,6 +261,7 @@ test("online → offline → reopen → retry → synchronize → Neon", async (
       (error) => error.errorId,
     );
     expect(evidence.manifestParseErrors).toBe(0);
+    expect(evidence.installabilityErrors).toEqual([]);
 
     const evidenceTab = page.getByRole("tab", { name: "Evidências", exact: true });
     await evidenceTab.click();

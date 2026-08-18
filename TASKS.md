@@ -266,7 +266,7 @@ Legenda
 - [x] Sincronização automática com retry e recuperação após reinício
 - [x] Implementar IDs de operação estáveis e deduplicação idempotente no servidor
 - [x] Detectar conflito por revisão da resposta sem aplicar `Last Write Wins`
-- [/] Implementar resolução assistida de conflitos na interface
+- [ ] Implementar resolução assistida de conflitos na interface
 - [ ] Criar inspeções completamente offline
 - [ ] Sincronizar manutenção offline de empresas/checklists
 
@@ -281,6 +281,20 @@ Legenda
 - [x] Segregar pacotes locais por usuário e não persistir senha/segredo de sessão
 - [x] Remover sessão, dados IndexedDB e cache privado de navegação no logout local
 - [ ] Implementar política administrativa de retenção/limpeza para dispositivos compartilhados
+
+## Encerramento do marco TCC — 17 de agosto de 2026
+
+- [x] Revisar o incremento Offline/PWA sem ampliar o escopo
+- [x] Corrigir regressões pequenas de isolamento local, ordenação da fila e retry idempotente
+- [x] Reexecutar testes automatizados e validação direcionada no Neon
+- [x] Reexecutar o cenário Chromium online → offline → reabertura → retry → sincronização
+- [x] Encerrar o marco do primeiro incremento para o TCC, mantendo o requisito Offline/PWA geral como parcial
+
+Classificação de encerramento:
+
+- **COMPLETE:** fundação local-first do fluxo principal para inspeções do usuário já disponíveis no dispositivo;
+- **PARTIAL:** requisito Offline/PWA amplo e homologação de navegadores/deploy;
+- **FUTURE:** itens não marcados nesta fase, sem implementação iniciada neste encerramento.
 
 ---
 

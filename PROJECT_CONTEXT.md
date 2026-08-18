@@ -195,10 +195,10 @@ Sincronização automática
 
 PostgreSQL
 
-O primeiro incremento real usa Dexie/IndexedDB para persistir inspeções já
-disponibilizadas no dispositivo, sempre com seu snapshot completo. Respostas e
-conclusão são gravadas localmente antes da sincronização e entram em uma fila
-durável com IDs estáveis.
+O primeiro incremento real usa Dexie/IndexedDB para persistir inspeções do
+usuário autenticado já disponibilizadas no dispositivo, sempre com seu snapshot
+completo. Respostas e conclusão são gravadas localmente antes da sincronização e
+entram em uma fila durável com IDs estáveis.
 
 O servidor registra a identidade e o hash de cada operação na mesma transação da
 mutação. A revisão remota de cada resposta é conferida para detectar conflito;

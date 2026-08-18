@@ -38,6 +38,8 @@ class FakeInspectionResponseRepository extends InspectionResponseRepository {
   directive: NonConformityPersistenceDirective | null = null;
   inspectionState: InspectionStatePersistenceDirective | null = null;
   savedSnapshotItemId: string | null = null;
+  offlineOperation: Parameters<InspectionResponseRepository["saveWithNonConformity"]>[5] =
+    undefined;
   failWithStateConflict = false;
 
   override saveWithNonConformity(
@@ -46,10 +48,12 @@ class FakeInspectionResponseRepository extends InspectionResponseRepository {
     data: Parameters<InspectionResponseRepository["saveWithNonConformity"]>[2],
     nonConformity: NonConformityPersistenceDirective,
     inspectionState: InspectionStatePersistenceDirective,
+    offlineOperation?: Parameters<InspectionResponseRepository["saveWithNonConformity"]>[5],
   ): Promise<InspectionResponseWithRelations> {
     this.directive = nonConformity;
     this.inspectionState = inspectionState;
     this.savedSnapshotItemId = snapshotItemId;
+    this.offlineOperation = offlineOperation;
 
     if (this.failWithStateConflict) {
       return Promise.reject(new InspectionStatePersistenceConflictError());
@@ -205,6 +209,30 @@ test("a completed inspection cannot receive new responses", async () => {
 
   assert.equal(result.success, false);
   assert.equal(responseRepository.directive, null);
+});
+
+test("a completed inspection still delegates an offline retry to idempotency persistence", async () => {
+  const responseRepository = new FakeInspectionResponseRepository();
+  const service = new InspectionResponseService(
+    responseRepository,
+    new FakeInspectionRepository(createInspection(InspectionStatus.COMPLETED)),
+  );
+
+  const operationId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+  const result = await service.saveInspectionResponse({
+    inspectionId: INSPECTION_ID,
+    snapshotItemId: SNAPSHOT_ITEM_ID,
+    status: ResponseStatus.COMPLIANT,
+    offlineOperation: {
+      id: operationId,
+      userId: "77777777-7777-4777-8777-777777777777",
+      clientCreatedAt: new Date("2026-08-06T13:00:00.000Z"),
+      expectedResponseUpdatedAt: null,
+    },
+  });
+
+  assert.equal(result.success, true);
+  assert.equal(responseRepository.offlineOperation?.id, operationId);
 });
 
 test("a concurrent completion conflict is returned without accepting a response", async () => {

@@ -52,9 +52,9 @@ A navegação principal fica no menu lateral. Ele está dividido em dois grupos:
 - **Empresas:** mostra empresas e unidades fiscalizadas.
 - **Normas (NRs):** apresenta normas regulamentadoras cadastradas.
 - **Equipe:** mostra os profissionais cadastrados.
-- **Configurações:** reúne preferências, perfil ativo, modo offline e restauração dos dados de demonstração.
+- **Configurações:** reúne preferências, perfil ativo, estado de conexão/sincronização e restauração dos dados de demonstração.
 
-Na parte superior da tela há uma barra com o botão para abrir ou recolher o menu, indicador de modo offline, itens pendentes de sincronização, notificações e acesso ao perfil do usuário. Ao clicar no avatar do usuário, o sistema abre a tela de Configurações.
+Na parte superior da tela há uma barra com o botão para abrir ou recolher o menu, indicador real de conexão e sincronização, notificações e acesso ao perfil do usuário. Ao clicar no avatar do usuário, o sistema abre a tela de Configurações.
 
 Para sair, use a opção **Sair** no rodapé do menu lateral.
 

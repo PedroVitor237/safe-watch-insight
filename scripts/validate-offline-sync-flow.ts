@@ -100,6 +100,7 @@ async function main(): Promise<void> {
   assert.equal(divergentRetry.statusCode, 409);
 
   const nonCompliantOperationId = randomUUID();
+  const nonCompliantClientTime = new Date();
   const nonCompliantResponse = unwrap(
     await inspectionResponseService.saveInspectionResponse({
       inspectionId: inspection.id,
@@ -109,7 +110,7 @@ async function main(): Promise<void> {
       offlineOperation: {
         id: nonCompliantOperationId,
         userId: user.id,
-        clientCreatedAt: new Date(),
+        clientCreatedAt: nonCompliantClientTime,
         expectedResponseUpdatedAt: firstResponse.updatedAt,
       },
     }),
@@ -166,6 +167,22 @@ async function main(): Promise<void> {
   assert.equal(completed.status, InspectionStatus.COMPLETED);
   assert.equal(duplicateCompletion.id, completed.id);
 
+  const responseRetryAfterCompletion = unwrap(
+    await inspectionResponseService.saveInspectionResponse({
+      inspectionId: inspection.id,
+      snapshotItemId: firstItem.id,
+      status: ResponseStatus.NON_COMPLIANT,
+      observation: "Não conformidade registrada durante trabalho offline.",
+      offlineOperation: {
+        id: nonCompliantOperationId,
+        userId: user.id,
+        clientCreatedAt: nonCompliantClientTime,
+        expectedResponseUpdatedAt: firstResponse.updatedAt,
+      },
+    }),
+  );
+  assert.equal(responseRetryAfterCompletion.id, nonCompliantResponse.id);
+
   const operationCount = await prisma.offlineSyncOperation.count({
     where: { inspectionId: inspection.id },
   });
@@ -180,6 +197,7 @@ async function main(): Promise<void> {
       staleRevisionRejected: true,
       localNonConformityRevalidatedByServer: true,
       completionRetryIdempotent: true,
+      responseRetryAfterCompletionIdempotent: true,
       completedOperationCount: operationCount,
     }),
   );

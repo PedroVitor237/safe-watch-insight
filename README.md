@@ -250,7 +250,7 @@ npm run db:seed
 - Bloqueio da conclusão enquanto itens obrigatórios estiverem sem resposta.
 - Alteração automática da inspeção para `IN_PROGRESS` ao salvar resposta.
 - Finalização de inspeção com status `COMPLETED`.
-- Pacote histórico de inspeção persistido por usuário em IndexedDB/Dexie.
+- Pacote histórico das inspeções do usuário autenticado persistido em IndexedDB/Dexie.
 - Respostas, observações, estado local de NC e conclusão gravados localmente antes do envio.
 - Fila FIFO durável com UUID de operação, retry, recuperação após reinício e deduplicação no servidor.
 - Detecção de conflito por revisão, sem sobrescrita automática `Last Write Wins`.
@@ -288,8 +288,8 @@ Login
 - O cenário Offline/PWA principal foi validado no Chromium local com fechamento,
   reabertura, reconexão e conferência final no Neon; o domínio Vercel publicado e
   outros navegadores/dispositivos ainda exigem homologação.
-- Somente inspeções previamente abertas/listadas online ficam disponíveis localmente; criação
-  integral de inspeção offline ainda não foi implementada.
+- Somente inspeções do usuário autenticado previamente abertas/listadas online ficam disponíveis
+  localmente; criação integral de inspeção offline ainda não foi implementada.
 - Evidências binárias não entram na fila offline; o upload continua exigindo conexão.
 - Conflitos são detectados e bloqueados, mas a interface de reconciliação assistida ainda é futura.
 - A assinatura digital ainda não está disponível nem é persistida.

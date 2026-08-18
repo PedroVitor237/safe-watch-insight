@@ -107,6 +107,52 @@ test("orders repeated edits through explicit operation dependencies", async () =
   assert.equal(operations[1]?.dependsOnOperationId, operations[0]?.id);
 });
 
+test("uses queue sequence when repeated edits share the same timestamp", async () => {
+  await cacheInspectionPackage(createInspection());
+  await queueInspectionResponse({
+    inspectionId: INSPECTION_ID,
+    snapshotItemId: SNAPSHOT_ITEM_ID,
+    status: "NON_COMPLIANT",
+  });
+  await queueInspectionResponse({
+    inspectionId: INSPECTION_ID,
+    snapshotItemId: SNAPSHOT_ITEM_ID,
+    status: "COMPLIANT",
+  });
+
+  const db = getOfflineDatabase();
+  const operations = (await db.operations.toArray()).sort(
+    (left, right) => left.sequence - right.sequence,
+  );
+  const first = operations[0];
+  const second = operations[1];
+  assert.ok(first);
+  assert.ok(second);
+
+  const sharedTimestamp = new Date("2026-08-06T13:00:00.000Z");
+  const firstId = "00000000-0000-4000-8000-000000000001";
+  const secondId = "ffffffff-ffff-4fff-bfff-ffffffffffff";
+  await db.operations.clear();
+  await db.operations.bulkAdd([
+    { ...first, id: firstId, createdAt: sharedTimestamp },
+    {
+      ...second,
+      id: secondId,
+      createdAt: sharedTimestamp,
+      dependsOnOperationId: firstId,
+    },
+  ]);
+
+  await queueInspectionResponse({
+    inspectionId: INSPECTION_ID,
+    snapshotItemId: SNAPSHOT_ITEM_ID,
+    status: "NOT_APPLICABLE",
+  });
+
+  const third = (await db.operations.toArray()).find((operation) => operation.sequence === 3);
+  assert.equal(third?.dependsOnOperationId, secondId);
+});
+
 test("restores interrupted syncing operations for an idempotent retry after restart", async () => {
   await cacheInspectionPackage(createInspection());
   await queueInspectionResponse({
@@ -199,6 +245,28 @@ test("clears the previous user's local inspection data when the authenticated id
   assert.equal(await db.inspectionPackages.count(), 0);
   assert.equal(await db.operations.count(), 0);
   assert.equal((await db.sessions.get("current"))?.user.id, SECOND_USER_ID);
+});
+
+test("does not retain inspection packages assigned to another user", async () => {
+  const ownInspection = createInspection();
+  await cacheInspectionPackage(ownInspection);
+  await cacheInspectionPackage({
+    ...ownInspection,
+    id: SECOND_INSPECTION_ID,
+    userId: SECOND_USER_ID,
+    user: {
+      ...ownInspection.user,
+      id: SECOND_USER_ID,
+      email: "second-user@example.com",
+    },
+  });
+
+  await cacheOfflineSession(ownInspection.user);
+
+  const packages = await getOfflineDatabase().inspectionPackages.toArray();
+  assert.equal(packages.length, 1);
+  assert.equal(packages[0]?.userId, USER_ID);
+  assert.equal(packages[0]?.inspectionId, INSPECTION_ID);
 });
 
 function createInspection(): OfflineInspection {

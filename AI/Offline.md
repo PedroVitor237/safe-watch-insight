@@ -93,13 +93,14 @@ Banco remoto
 
 - PostgreSQL
 
-## Estado do primeiro incremento — 7 de agosto de 2026
+## Estado do primeiro incremento — revisão de encerramento em 17 de agosto de 2026
 
 Implementado e validado por testes/build:
 
 - banco Dexie `safe-watch-insight` sobre IndexedDB;
 - tabelas locais `sessions`, `inspectionPackages` e `operations`;
-- pacote autocontido por usuário para inspeções consultadas/listadas online;
+- pacote autocontido somente para inspeções do usuário autenticado que foram
+  consultadas/listadas online;
 - leitura do snapshot, itens e normas sem conexão;
 - gravação local de respostas/observações e estado correspondente de NC;
 - conclusão local após validar itens obrigatórios;
@@ -147,16 +148,18 @@ Objetivos:
 
 # Dados Armazenados Localmente
 
-Inicialmente deverão ser armazenados:
+O primeiro incremento armazena:
 
-- empresas consultadas;
-- identidades de checklists;
-- versões publicadas e seus itens/metadados normativos;
-- normas;
-- inspeções em andamento com seu snapshot completo;
-- respostas;
-- evidências pendentes;
-- fila de sincronização.
+- sessão local limitada aos dados seguros do usuário e validade de oito horas;
+- inspeções do próprio usuário previamente disponibilizadas no dispositivo;
+- snapshot completo, itens, metadados normativos e respostas dessas inspeções;
+- estado local correspondente de não conformidade e conclusão;
+- fila de operações de resposta e conclusão.
+
+Empresas, catálogo de checklists/versões, normas independentes, ações corretivas
+e evidências binárias ainda não possuem CRUD/fila offline próprios. Os dados de
+empresa e checklist presentes no pacote existem apenas como contexto histórico
+da inspeção já criada no servidor.
 
 ---
 
@@ -250,9 +253,10 @@ Ordem sugerida:
 
 # Identificadores
 
-Todas as entidades utilizarão identificadores únicos (UUID/CUID) gerados no cliente.
-
-Isso permitirá criar registros offline sem necessidade de consultar o servidor.
+No incremento implementado, cada operação de resposta ou conclusão recebe um
+UUID estável gerado no cliente. Inspeções, snapshots e itens atualmente vêm do
+pacote criado pelo servidor. A geração antecipada dos IDs dessas entidades será
+necessária somente quando a criação integral de inspeção offline for implementada.
 
 ---
 
@@ -433,9 +437,10 @@ Esta arquitetura permite:
 
 # Limitações do Primeiro Incremento
 
-IndexedDB, Dexie, service worker e a fila do fluxo principal já existem. Não se
-deve declarar suporte offline completo antes da validação browser/E2E e da
-implementação das lacunas listadas no estado acima.
+IndexedDB, Dexie, service worker, a fila do fluxo principal e o cenário
+browser/E2E em Chromium já foram validados. O marco pode ser encerrado para o
+escopo do TCC como uma fundação Offline/PWA parcial, mas não como suporte offline
+completo. As lacunas listadas no estado acima permanecem futuras.
 
 ---
 
@@ -539,7 +544,7 @@ worker antes de poder ser reaberta offline. Esse comportamento foi comprovado no
 Chromium usado pelo Playwright contra o servidor local e ainda precisa ser
 homologado em Chrome/Edge/Android adicionais e no domínio HTTPS da Vercel.
 
-# Evidência Browser/E2E — 7 de agosto de 2026
+# Evidência Browser/E2E — execução original em 7 de agosto de 2026
 
 O teste `npm run test:e2e:offline` executou com sucesso no Chromium
 151.0.7922.34. O teste cria uma inspeção temporária com snapshot publicado,
@@ -560,6 +565,16 @@ remove o fixture ao terminar e verificou:
 O E2E usou o servidor TanStack/Vite local com banco Neon real. O build separado
 com preset Vercel confirmou os headers e artefatos PWA, mas não substitui a
 homologação no domínio HTTPS publicado.
+
+## Revalidação de encerramento — 17 de agosto de 2026
+
+O mesmo cenário foi reexecutado com sucesso no Chromium 151.0.7922.34. A
+revisão passou a exigir também ausência de erros de instalabilidade reportados
+pelo Chromium. Foram reconfirmados snapshot/NC no Neon, UUID estável, retry,
+deduplicação, recuperação de autenticação, expiração local, isolamento de
+usuário, limpeza no logout, fallback offline e invalidação de cache. A validação
+direcionada no Neon também confirmou retry idempotente de resposta depois que a
+inspeção já havia sido concluída.
 
 # Limites de Segurança Implementados
 
