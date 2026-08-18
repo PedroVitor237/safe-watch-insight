@@ -73,7 +73,7 @@ Offline
 
 Upload de imagens
 
-- Cloudinary (implementação futura)
+- Cloudinary (implementado para evidências online)
 
 ---
 
@@ -81,7 +81,9 @@ Upload de imagens
 
 O frontend já existe e possui diversas telas implementadas.
 
-O fluxo principal da Atividade 2 já utiliza integração real com o backend. Alguns módulos secundários ainda utilizam dados mockados.
+O fluxo principal de autenticação, empresas, checklists, inspeções, respostas,
+não conformidades, ações corretivas e evidências já utiliza integração real com
+o backend. Alguns módulos secundários ainda utilizam dados demonstrativos.
 
 O objetivo principal é substituir gradualmente os mocks remanescentes por integração real com o backend.
 
@@ -256,24 +258,23 @@ Não modificar rotas existentes sem necessidade.
 
 # Offline
 
-O projeto será preparado para funcionamento offline.
+O projeto possui um primeiro incremento real de funcionamento offline.
 
 O primeiro incremento real já persiste pacotes históricos de inspeção, respostas
 e conclusão em IndexedDB e possui fila idempotente. Consultar `AI/Offline.md`
 antes de alterar esse fluxo.
 
-Não declarar suporte offline completo enquanto o cenário browser/E2E, criação
-offline, reconciliação assistida e evidências binárias não estiverem concluídos.
+Não declarar suporte offline completo enquanto criação offline, reconciliação
+assistida, evidências binárias e homologação ampliada não estiverem concluídas.
 
 ---
 
 # Fotos
 
-A arquitetura deve prever upload de imagens.
+O upload online de evidências utiliza Cloudinary por meio da abstração de
+armazenamento do servidor. PostgreSQL mantém somente os metadados.
 
-Nesta entrega basta preparar a estrutura.
-
-Caso haja tempo, implementar upload utilizando Cloudinary.
+Upload offline, compressão e gestão de quota permanecem evoluções futuras.
 
 ---
 
@@ -311,17 +312,17 @@ Antes de iniciar qualquer tarefa:
 
 Consultar:
 
-Architecture.md
+AI/Architecture.md
 
-Database.md
+AI/Database.md
 
-Entities.md
+AI/Entities.md
 
-BusinessRules.md
+AI/BusinessRules.md
 
-API.md
+AI/API.md
 
-Offline.md
+AI/Offline.md
 
 ---
 

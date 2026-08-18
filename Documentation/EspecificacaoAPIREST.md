@@ -1,14 +1,13 @@
-# 10. Especificação da API - Atividade 2
+# 10. Especificação da API
 
 ## 10.1 Objetivo
 
-Este documento registra a especificação da camada de comunicação implementada na entrega atual da plataforma **Safe Watch Insight**.
+Este documento registra a especificação da camada de comunicação atualmente
+implementada na plataforma **Safe Watch Insight**.
 
-Na versão da Atividade 2, a aplicação utiliza **TanStack Start Server Functions** em vez de endpoints REST tradicionais. A documentação detalhada de cada Server Function implementada está em:
-
-```text
-AI/API.md
-```
+Na implementação atual, a aplicação utiliza **TanStack Start Server Functions**
+em vez de endpoints REST tradicionais. A documentação detalhada de cada Server
+Function implementada está em [AI/API.md](../AI/API.md).
 
 Este arquivo permanece na pasta `Documentation/` por fazer parte do conjunto acadêmico do TCC, mas foi atualizado para refletir a implementação atual.
 
@@ -171,7 +170,8 @@ Os contratos de inspeção preservam compatibilidade progressiva:
 
 O upload é assinado exclusivamente no servidor por uma implementação de
 `StorageService`. O cliente nunca recebe o segredo do Cloudinary. O contrato
-detalhado, validações e erros estão documentados em `AI/API.md`.
+detalhado, validações e erros estão documentados em
+[AI/API.md](../AI/API.md).
 
 ### Exemplo técnico
 
@@ -181,7 +181,8 @@ detalhado, validações e erros estão documentados em `AI/API.md`.
 
 ## 10.6 Funcionalidades Ainda Não Implementadas na API
 
-Os seguintes módulos estão previstos no projeto ou modelados parcialmente no banco, mas ainda não possuem API completa nesta entrega:
+Os seguintes módulos estão previstos no projeto ou modelados parcialmente no
+banco, mas ainda não possuem API completa:
 
 - usuários administrativos;
 - relatórios reais;
@@ -194,4 +195,9 @@ Os seguintes módulos estão previstos no projeto ou modelados parcialmente no b
 
 ## 10.7 Observação sobre REST
 
-Uma API REST tradicional ou Route Handlers de outro framework podem ser avaliados em evolução futura. Para a Atividade 2, o contrato real da aplicação é a camada de Server Functions documentada em `AI/API.md`.
+Uma API REST tradicional ou Route Handlers de outro framework podem ser
+avaliados em evolução futura. O contrato real da aplicação é a camada de Server
+Functions documentada em [AI/API.md](../AI/API.md).
+
+Esta especificação teve origem na documentação acadêmica da Atividade 2 e foi
+mantida como referência permanente após a evolução da implementação.

@@ -10,11 +10,11 @@ Toda implementação deve seguir este plano, respeitando a arquitetura definida 
 
 - AGENTS.md
 - PROJECT_CONTEXT.md
-- Architecture.md
-- BusinessRules.md
-- Database.md
-- API.md
-- Offline.md
+- AI/Architecture.md
+- AI/BusinessRules.md
+- AI/Database.md
+- AI/API.md
+- AI/Offline.md
 
 Não implementar funcionalidades fora da ordem sem necessidade.
 
@@ -430,10 +430,10 @@ Cada etapa será considerada concluída quando:
 - utilizar Prisma;
 - não utilizar mocks;
 - possuir validação;
-- seguir Architecture.md;
-- seguir BusinessRules.md;
-- seguir Database.md;
-- seguir API.md;
+- seguir AI/Architecture.md;
+- seguir AI/BusinessRules.md;
+- seguir AI/Database.md;
+- seguir AI/API.md;
 - funcionar corretamente no frontend.
 
 ---

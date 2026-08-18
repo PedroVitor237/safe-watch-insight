@@ -135,7 +135,9 @@ O sistema deve permitir o armazenamento de:
 - anexos;
 - observações.
 
-Nesta etapa do projeto, a estrutura será preparada para upload de imagens.
+O fluxo online permite selecionar, pré-visualizar, enviar, listar e remover
+evidências fotográficas. Os arquivos ficam no Cloudinary e os metadados no
+PostgreSQL. Upload offline permanece futuro.
 
 ---
 
@@ -302,7 +304,9 @@ O frontend já está implementado.
 
 Grande parte das telas já existe.
 
-O fluxo principal da Atividade 2 já utiliza dados reais integrados ao backend: login, empresas, checklists, itens de checklist, criação de inspeção, execução, respostas e conclusão.
+O fluxo principal já utiliza dados reais integrados ao backend: login, empresas,
+checklists, itens de checklist, criação de inspeção, execução, respostas e
+conclusão.
 
 Alguns módulos secundários ainda utilizam dados mockados, como dashboard,
 relatórios e equipe. O antigo controle de simulação offline foi substituído por
@@ -366,12 +370,12 @@ Raiz do projeto:
 
 Pasta AI/
 
-- Architecture.md
-- API.md
-- BusinessRules.md
-- Database.md
-- Entities.md
-- Offline.md
+- AI/Architecture.md
+- AI/API.md
+- AI/BusinessRules.md
+- AI/Database.md
+- AI/Entities.md
+- AI/Offline.md
 
 Pasta Documentation/
 
@@ -379,19 +383,22 @@ Pasta Documentation/
 - Diagramas UML
 - Modelagem do Banco
 - Personas
-- API REST
+- Especificação da API
+- Especificação de telas
+- Mapa de navegação
+- Guia do usuário
+- Wireframes históricos
 - Demais documentos do TCC
 
 ---
 
 # Objetivo da Implementação
 
-Durante esta fase do projeto o foco é:
+Durante a fase atual do projeto o foco é:
 
-- implementar o backend;
-- integrar Prisma;
-- integrar PostgreSQL;
-- remover os mocks;
+- implementar relatórios reais;
+- substituir os mocks remanescentes de forma gradual;
+- ampliar o suporte offline sem comprometer a integridade histórica;
 - manter compatibilidade com o frontend existente;
 - preservar a arquitetura documentada.
 

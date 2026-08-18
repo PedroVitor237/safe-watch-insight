@@ -1,5 +1,11 @@
 # Plano: Geração do documento `MAPA_DE_NAVEGACAO.md`
 
+> **Registro histórico.** Este plano descreve a geração original do documento
+> durante o protótipo. O mapa vigente está em
+> [`Documentation/MAPA_DE_NAVEGACAO.md`](../Documentation/MAPA_DE_NAVEGACAO.md);
+> as instruções abaixo e a localização na raiz não representam a estrutura
+> atual do repositório.
+
 ## Objetivo
 Criar, na raiz do projeto, o arquivo `MAPA_DE_NAVEGACAO.md` contendo o mapa de navegação completo da plataforma SST, em linguagem acadêmica adequada para entrega de TCC, baseado nas rotas existentes em `src/routes/` e nos vínculos de navegação reais entre elas (já levantados ao produzir `ESPECIFICACAO_DE_TELAS.md`).
 

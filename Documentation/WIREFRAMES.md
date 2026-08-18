@@ -1,6 +1,17 @@
-# Wireframes ASCII - SST Inspecoes
+# Wireframes ASCII — registro histórico do protótipo
 
-Este documento representa, em ASCII, a estrutura visual das principais telas implementadas no projeto. Os wireframes foram baseados nas rotas em `src/routes/` e no layout compartilhado `AppShell`.
+> **Documento histórico.** Estes wireframes registram a proposta visual do
+> protótipo de frontend produzida em uma etapa anterior do TCC. Eles são
+> preservados para rastreabilidade de design e não representam, isoladamente, o
+> estado funcional atual. Autenticação, empresas, checklists, inspeções, não
+> conformidades, evidências e sincronização evoluíram desde esta versão. Para a
+> especificação vigente, consulte
+> [ESPECIFICACAO_DE_TELAS.md](./ESPECIFICACAO_DE_TELAS.md) e
+> [MAPA_DE_NAVEGACAO.md](./MAPA_DE_NAVEGACAO.md).
+
+Este documento representa, em ASCII, a estrutura visual das principais telas do
+protótipo original. Os wireframes foram baseados nas rotas em `src/routes/` e no
+layout compartilhado `AppShell` existentes naquela etapa.
 
 ## Estrutura comum das telas internas
 

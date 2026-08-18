@@ -7,15 +7,15 @@ Você irá implementar um CRUD completo para uma entidade da plataforma Safe Wat
 Antes de escrever qualquer código, leia obrigatoriamente:
 
 - AGENTS.md
-- AI/PROJECT_CONTEXT.md
+- PROJECT_CONTEXT.md
 - AI/Architecture.md
 - AI/BusinessRules.md
 - AI/Database.md
 - AI/Entities.md
 - AI/API.md
 - AI/Offline.md
-- AI/IMPLEMENTATION_PLAN.md
-- AI/TASKS.md
+- IMPLEMENTATION_PLAN.md
+- TASKS.md
 
 Respeite toda a documentação.
 

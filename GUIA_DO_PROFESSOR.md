@@ -1,12 +1,16 @@
-# Guia do Professor - Atividade 2
+# Guia do Professor — contexto acadêmico da Atividade 2
 
 # 1. Apresentação
 
 O **Safe Watch Insight** é uma plataforma web para apoiar inspeções, auditorias e fiscalizações de Segurança e Saúde no Trabalho (SST).
 
-O projeto faz parte do Trabalho de Conclusão de Curso (TCC) de Análise e Desenvolvimento de Sistemas. Esta entrega corresponde à **Atividade 2**, com foco na consolidação do fluxo principal da aplicação e na organização da documentação técnica e acadêmica.
+O projeto faz parte do Trabalho de Conclusão de Curso (TCC) de Análise e
+Desenvolvimento de Sistemas. Este guia preserva o contexto de avaliação da
+**Atividade 2**, cujo foco foi consolidar o fluxo principal e organizar a
+documentação técnica e acadêmica. O desenvolvimento continuou após esse marco;
+o estado atual está resumido no `README.md` e em `PROJECT_CONTEXT.md`.
 
-O sistema continua em desenvolvimento após esta entrega. A versão atual prioriza o fluxo online principal:
+O fluxo que estruturou o marco acadêmico foi:
 
 ```text
 Login
@@ -53,6 +57,10 @@ npm install
 ```env
 DATABASE_URL="postgresql://USER:PASSWORD@HOST/DATABASE?sslmode=verify-full"
 SESSION_SECRET="replace-with-a-secure-random-string"
+CLOUDINARY_CLOUD_NAME="your-cloud-name"
+CLOUDINARY_API_KEY="your-api-key"
+CLOUDINARY_API_SECRET="your-api-secret"
+CLOUDINARY_FOLDER="safe-watch-insight/evidence"
 ```
 
 5. Configure o banco PostgreSQL.
@@ -142,11 +150,11 @@ Organização principal do repositório:
 - `prisma`: schema, migrations e seed.
 - `src/mocks`: dados mockados ainda usados por módulos não finalizados.
 - `AI`: documentação técnica e instruções de arquitetura para desenvolvimento assistido por IA.
-- `Documentation`: documentação acadêmica do TCC.
-- `DocumentaçãoAtividade`: documentação visual e funcional da atividade 1 (Frontend).
+- `Documentation`: requisitos, modelos, especificações, guias, wireframes e
+  demais artefatos acadêmicos do TCC.
 - `scripts`: scripts utilitários.
 
-# 4. Documentação da atividade
+# 4. Documentação do projeto e histórico acadêmico
 
 Principais documentos disponíveis:
 
@@ -169,10 +177,10 @@ Principais documentos disponíveis:
 - `Documentation/ModeloLogico.md`: modelo lógico.
 - `Documentation/ModeloFisicoDB.md`: modelo físico.
 - `Documentation/EspecificacaoAPIREST.md`: documento acadêmico de API atualizado para o contexto da entrega.
-- `DocumentaçãoAtividade/ESPECIFICACAO_DE_TELAS.md`: especificação das telas.
-- `DocumentaçãoAtividade/MAPA_DE_NAVEGACAO.md`: mapa de navegação.
-- `DocumentaçãoAtividade/WIREFRAMES.md`: wireframes.
-- `DocumentaçãoAtividade/GUIA_USUARIO.md`: guia de uso.
+- `Documentation/ESPECIFICACAO_DE_TELAS.md`: especificação atual das telas.
+- `Documentation/MAPA_DE_NAVEGACAO.md`: mapa de navegação atual.
+- `Documentation/WIREFRAMES.md`: wireframes históricos do protótipo.
+- `Documentation/GUIA_USUARIO.md`: guia de uso atual.
 
 Alguns diagramas estão em Mermaid ou PlantUML. Eles podem ser visualizados com:
 
@@ -226,40 +234,32 @@ As decisões mais importantes para esta entrega são:
 
 # 7. Estado atual do projeto
 
-Implementado e funcional na entrega atual:
+Além do fluxo consolidado no marco da Atividade 2, o projeto atualmente possui:
 
-- Login real com sessão.
-- Proteção de rotas autenticadas.
-- Logout.
-- CRUD de empresas.
-- CRUD de checklists.
-- CRUD de itens de checklist.
-- Criação de inspeções.
-- Listagem e detalhamento de inspeções.
-- Execução de checklist.
-- Salvamento das respostas.
-- Conclusão da inspeção.
-- Seed demonstrativo com usuário, empresa, checklist, itens e inspeção planejada.
+- autenticação real, sessão e proteção de rotas;
+- CRUD de empresas, checklists e itens;
+- versões publicadas e snapshots históricos por inspeção;
+- catálogo e associação reais de Normas Regulamentadoras;
+- inspeções, respostas e conclusão persistidas;
+- não conformidades e ações corretivas integradas;
+- evidências fotográficas com Cloudinary;
+- primeiro incremento Offline/PWA do fluxo principal validado em Chromium;
+- testes automatizados concentrados em versionamento, regras do fluxo,
+  evidências e sincronização offline.
 
-Ainda em desenvolvimento:
+Permanecem em desenvolvimento:
 
-- Persistência de não conformidades.
-- Ações corretivas.
-- Upload de evidências.
-- Relatórios reais.
-- Dashboard com dados reais.
-- Consulta real de normas.
-- Tela de equipe integrada ao backend.
-- Fundação Offline/PWA do fluxo principal implementada e validada em Chromium;
-  criação integral offline, reconciliação assistida e evidências binárias
-  continuam futuras.
-- Persistência da assinatura da inspeção.
-- Testes automatizados.
+- relatórios reais e exportação PDF;
+- dashboard com dados reais;
+- tela de equipe integrada ao backend;
+- criação integral de inspeções offline;
+- reconciliação assistida e evidências binárias offline;
+- assinatura com persistência e trilha de auditoria;
+- ampliação da cobertura automatizada.
 
 # 8. Observações importantes
 
-Este é um projeto de TCC em desenvolvimento ativo. A documentação está sendo revisada continuamente para acompanhar a implementação.
-
-Alguns documentos podem ainda conter pequenas inconsistências herdadas de iterações anteriores, especialmente quando descrevem funcionalidades planejadas para fases futuras. Essas inconsistências estão sendo corrigidas conforme o desenvolvimento avança.
-
-Caso o professor identifique qualquer divergência entre documentação, código ou fluxo demonstrado, a equipe agradece se puder ser informada para que a documentação seja melhorada nas próximas revisões.
+Este é um projeto de TCC em evolução. Documentos permanentes descrevem o estado
+atual; planos, backlogs, wireframes e este guia preservam também a história das
+entregas acadêmicas. Em caso de dúvida sobre implementação vigente, consulte
+`README.md`, `PROJECT_CONTEXT.md`, `TASKS.md` e `TECH_DECISIONS.md`.

@@ -5,6 +5,10 @@ on 2026-07-25 and is not a current implementation-status source. Use
 `PROJECT_CONTEXT.md`, `TASKS.md`, `TECH_DECISIONS.md` and `AI/Offline.md` for the
 current Offline/PWA state.
 
+Documentation paths in the repository index below were updated after the
+directory consolidation of 2026-08-18; implementation descriptions remain the
+historical snapshot from 2026-07-25.
+
 Last analyzed: 2026-07-25.
 
 This document is based on the repository documentation and the current code implementation. When documentation and implementation diverge, the divergence is called out explicitly.
@@ -68,8 +72,9 @@ This flow is mandatory. Frontend code must not access Prisma directly.
 - `prisma/`: Prisma schema, migration, config, and seed.
 - `scripts/`: utility scripts, currently cycle-detection scripts.
 - `AI/`: architecture, database, API, business rules, entities, offline, and prompt guidance for AI agents.
-- `Documentation/`: academic/TCC documentation for requirements, personas, UML/database models.
-- `DocumentacaoAtividade` / `DocumentaçãoAtividade`: screen specifications, wireframes, navigation map, user guide.
+- `Documentation/`: requirements, personas, UML/database models, screen
+  specifications, navigation map, user guide, wireframes and other TCC
+  documentation.
 - `.lovable/`: Lovable planning artifact.
 - `.output/`, `.vercel/`, `.wrangler/`, `.tanstack/`, `node_modules/`: generated/build/dependency artifacts; do not treat as source documentation.
 
@@ -83,7 +88,9 @@ This flow is mandatory. Frontend code must not access Prisma directly.
 - `TASKS.md`: backlog and academic delivery checklist. Read when deciding current priorities.
 - `TECH_DECISIONS.md`: technical decisions and rationale. Read before changing framework, auth, Prisma, deploy, offline, or upload strategy.
 - `CODING_STANDARDS.md`: currently empty. Keep listed, but it has no content as of this analysis.
-- `README.md`: setup, routes, scripts, and feature overview. It is partially outdated because it still states there is no backend, while backend code now exists.
+- `README.md`: setup, routes, scripts, and feature overview. At the time of this
+  snapshot, it was partially outdated because it still stated there was no
+  backend.
 - `AI/Architecture.md`: official layered architecture. Read before backend/frontend integration changes.
 - `AI/API.md`: expected API modules, response format, validation, pagination, filters. Read before adding Server Functions or APIs.
 - `AI/BusinessRules.md`: domain rules for users, companies, checklists, inspections, NCs, evidence, reports, security, offline. Read before business logic changes.
@@ -105,12 +112,17 @@ This flow is mandatory. Frontend code must not access Prisma directly.
 - `Documentation/ModeloConceitualDoBancoDeDados.md`: conceptual database model. Read before schema changes.
 - `Documentation/ModeloLogico.md`: logical database model and table attributes. Read before schema changes.
 - `Documentation/ModeloFisicoDB.md`: physical PostgreSQL/Prisma-oriented model. Read before migrations.
-- `DocumentaçãoAtividade/ESPECIFICACAO_DE_TELAS.md`: approved screen behavior and components. Read before UI changes.
-- `DocumentaçãoAtividade/MAPA_DE_NAVEGACAO.md`: navigation map and flows, based on the earlier mock prototype. Read before route/navigation changes.
-- `DocumentaçãoAtividade/WIREFRAMES.md`: ASCII wireframes of current UI. Read before layout changes.
-- `DocumentaçãoAtividade/GUIA_USUARIO.md`: user guide, currently describes prototype behavior. Read for UX wording and demo flows.
+- `Documentation/ESPECIFICACAO_DE_TELAS.md`: current screen behavior, components
+  and implementation-state labels. Read before UI changes.
+- `Documentation/MAPA_DE_NAVEGACAO.md`: current routes and navigation flows.
+  Read before route/navigation changes.
+- `Documentation/WIREFRAMES.md`: historical ASCII wireframes of the earlier
+  prototype. Use for design traceability, not as current implementation status.
+- `Documentation/GUIA_USUARIO.md`: current user guide and documented module
+  limitations. Read for UX wording and operational flows.
 - `.lovable/plan.md`: old plan for generating a navigation-map document. Historical reference only.
-- `AI_PROJECT_CONTEXT.md`: this current repository context. Read after `AGENTS.md` for a fast, implementation-aware overview.
+- `AI_PROJECT_CONTEXT.md`: this historical repository snapshot. Use the current
+  context documents listed at the top for implementation status.
 
 ---
 
@@ -439,7 +451,9 @@ Confirmed or strongly indicated by code:
 - Inspection completion does not persist the drawn signature.
 - Dashboard "Proximas inspeções" links use mock IDs against the real `/inspecoes/$id` route, which can lead to "Inspeção não encontrada" when mock IDs do not exist in the database.
 - Reports still read mock inspections, so real completed inspections do not appear in `/relatorios`.
-- `README.md`, `GUIA_USUARIO.md`, and `MAPA_DE_NAVEGACAO.md` still describe the older all-mock prototype in several places.
+- At the time of this snapshot, `README.md`, `GUIA_USUARIO.md`, and
+  `MAPA_DE_NAVEGACAO.md` still described the older all-mock prototype in several
+  places. These documents were revised after the snapshot date.
 - `CODING_STANDARDS.md` is empty, despite being referenced as a standards document.
 
 Temporary workarounds:

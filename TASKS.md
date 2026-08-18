@@ -10,11 +10,11 @@ Cada tarefa deve ser executada seguindo:
 
 - AGENTS.md
 - PROJECT_CONTEXT.md
-- Architecture.md
-- BusinessRules.md
-- Database.md
-- API.md
-- Offline.md
+- AI/Architecture.md
+- AI/BusinessRules.md
+- AI/Database.md
+- AI/API.md
+- AI/Offline.md
 
 Sempre concluir uma tarefa antes de iniciar outra, salvo quando houver dependência explícita.
 
