@@ -308,8 +308,8 @@ O fluxo principal já utiliza dados reais integrados ao backend: login, empresas
 checklists, itens de checklist, criação de inspeção, execução, respostas e
 conclusão.
 
-Alguns módulos secundários ainda utilizam dados mockados, como dashboard,
-relatórios e equipe. O antigo controle de simulação offline foi substituído por
+Alguns módulos secundários ainda utilizam dados mockados, como dashboard e
+equipe. O antigo controle de simulação offline foi substituído por
 estado real de conectividade, IndexedDB e fila de sincronização.
 
 Normas, associação normativa aos itens, criação automática de não
@@ -323,6 +323,11 @@ legado não verificável.
 
 As telas de inspeção e não conformidade permitem selecionar, pré-visualizar,
 enviar, listar e remover evidências fotográficas reais.
+
+O módulo de relatórios utiliza dados reais e monta uma visão de leitura a partir
+do snapshot imutável da inspeção, respostas, não conformidades, ações corretivas
+e evidências ativas. A impressão e o salvamento em PDF usam o diálogo nativo do
+navegador; geração customizada de PDF permanece futura.
 
 O fluxo de execução de uma inspeção já aberta/listada online possui uma fundação
 offline real: pacote histórico local, respostas, observações, estado local de
@@ -396,7 +401,7 @@ Pasta Documentation/
 
 Durante a fase atual do projeto o foco é:
 
-- implementar relatórios reais;
+- estabilizar e demonstrar os relatórios reais já implementados;
 - substituir os mocks remanescentes de forma gradual;
 - ampliar o suporte offline sem comprometer a integridade histórica;
 - manter compatibilidade com o frontend existente;

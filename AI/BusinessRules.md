@@ -305,6 +305,11 @@ Sempre que possível, o relatório deve referenciar:
 - não conformidades;
 - ações corretivas.
 
+No MVP, o relatório é uma visão montada sob demanda. A listagem e a consulta são
+limitadas às inspeções do usuário autenticado. A impressão física e o salvamento
+em PDF utilizam `window.print()` e o diálogo nativo do navegador; não existe
+geração customizada de PDF nesta etapa.
+
 ---
 
 # Histórico

@@ -1,9 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { Download, Printer, FileText } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { FileText, Printer, RefreshCw } from "lucide-react";
+import { z } from "zod";
+
 import { PageHeader } from "@/components/common/PageHeader";
-import { Card, CardContent } from "@/components/ui/card";
+import { InspectionReport } from "@/components/reports/InspectionReport";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -11,191 +14,132 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useStore } from "@/lib/mockStore";
-import { checklists, empresas, usuarios } from "@/mocks/data";
-import { fmtData, fmtDataHora } from "@/lib/format";
-import { StatusBadge } from "@/components/common/StatusBadge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAvailableInspectionReports, useInspectionReport } from "@/hooks/useReports";
+import { fmtData } from "@/lib/format";
+
+const reportSearchSchema = z.object({
+  inspectionId: z.string().uuid().optional().catch(undefined),
+});
 
 export const Route = createFileRoute("/_app/relatorios")({
+  validateSearch: reportSearchSchema,
   head: () => ({ meta: [{ title: "Relatórios — SST" }] }),
   component: Relatorios,
 });
 
 function Relatorios() {
-  const inspecoes = useStore((s) => s.inspecoes);
-  const concluidas = inspecoes.filter(
-    (i) => i.status === "concluida" || i.status === "pendente_sync",
-  );
-  const [id, setId] = useState(concluidas[0]?.id ?? "");
-  const ins = inspecoes.find((i) => i.id === id);
+  const navigate = useNavigate({ from: Route.fullPath });
+  const { inspectionId: requestedInspectionId } = Route.useSearch();
+  const availableQuery = useAvailableInspectionReports();
+  const availableResult = availableQuery.data;
+  const availableReports = availableResult?.success ? availableResult.data : [];
+  const selectedInspectionId = requestedInspectionId ?? availableReports[0]?.id ?? "";
+  const reportQuery = useInspectionReport(selectedInspectionId);
+  const reportResult = reportQuery.data;
+  const report = reportResult?.success ? reportResult.data : null;
+
+  function selectInspection(inspectionId: string) {
+    void navigate({
+      search: { inspectionId },
+      replace: true,
+    });
+  }
 
   return (
     <div>
-      <PageHeader
-        title="Relatórios"
-        description="Prévia demonstrativa do módulo de relatórios."
-        actions={
-          <>
-            <Button variant="outline" disabled>
+      <div className="print-hidden">
+        <PageHeader
+          title="Relatórios"
+          description="Relatório histórico com dados persistidos. Use a impressão do navegador para imprimir ou salvar em PDF."
+          actions={
+            <Button type="button" disabled={!report} onClick={() => window.print()}>
               <Printer className="h-4 w-4" />
-              Impressão indisponível
+              Imprimir
             </Button>
-            <Button disabled>
-              <Download className="h-4 w-4" />
-              PDF indisponível
-            </Button>
-          </>
-        }
-      />
-      <div className="space-y-4 p-4 sm:p-8">
-        <Card className="border-info/40 bg-info/10">
-          <CardContent className="p-4 text-sm">
-            Esta tela usa dados demonstrativos locais e não representa inspeções persistidas. A
-            geração, impressão e exportação de relatórios reais serão implementadas em um sprint
-            futuro.
-          </CardContent>
-        </Card>
-        <Card className="p-3">
-          <Select value={id} onValueChange={setId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione uma inspeção…" />
-            </SelectTrigger>
-            <SelectContent>
-              {concluidas.map((i) => (
-                <SelectItem key={i.id} value={i.id}>
-                  {i.codigo} — {i.titulo}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          }
+        />
+      </div>
+
+      <div className="space-y-4 p-4 sm:p-8 print:p-0">
+        <Card className="print-hidden p-3">
+          {availableQuery.isLoading ? (
+            <Skeleton className="h-9 w-full" />
+          ) : availableQuery.isError || availableResult?.success === false ? (
+            <Alert variant="destructive">
+              <AlertTitle>Não foi possível carregar as inspeções</AlertTitle>
+              <AlertDescription className="mt-2 flex flex-wrap items-center justify-between gap-3">
+                <span>
+                  {availableResult?.success === false
+                    ? availableResult.message
+                    : "Tente novamente em alguns instantes."}
+                </span>
+                <Button variant="outline" size="sm" onClick={() => availableQuery.refetch()}>
+                  <RefreshCw className="h-4 w-4" />
+                  Tentar novamente
+                </Button>
+              </AlertDescription>
+            </Alert>
+          ) : availableReports.length > 0 ? (
+            <Select value={selectedInspectionId} onValueChange={selectInspection}>
+              <SelectTrigger aria-label="Selecionar inspeção concluída">
+                <SelectValue placeholder="Selecione uma inspeção concluída" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableReports.map((inspection) => (
+                  <SelectItem key={inspection.id} value={inspection.id}>
+                    {inspection.id.slice(0, 8)} — {inspection.title} · {inspection.companyName} ·{" "}
+                    {fmtData(inspection.inspectionDate)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <div className="p-8 text-center text-sm text-muted-foreground">
+              <FileText className="mx-auto mb-2 h-8 w-8" />
+              Nenhuma inspeção concluída está disponível para relatório.
+            </div>
+          )}
         </Card>
 
-        {ins ? (
-          <PreviewRelatorio insId={ins.id} />
-        ) : (
-          <Card className="p-12 text-center text-sm text-muted-foreground">
-            <FileText className="mx-auto mb-2 h-8 w-8" />
-            Nenhuma inspeção concluída para gerar relatório.
-          </Card>
+        {selectedInspectionId && reportQuery.isLoading && <ReportLoading />}
+
+        {selectedInspectionId && (reportQuery.isError || reportResult?.success === false) && (
+          <Alert variant="destructive" className="print-hidden">
+            <AlertTitle>Relatório indisponível</AlertTitle>
+            <AlertDescription className="mt-2 flex flex-wrap items-center justify-between gap-3">
+              <span>
+                {reportResult?.success === false
+                  ? reportResult.message
+                  : "Não foi possível carregar os dados históricos da inspeção."}
+              </span>
+              <Button variant="outline" size="sm" onClick={() => reportQuery.refetch()}>
+                <RefreshCw className="h-4 w-4" />
+                Tentar novamente
+              </Button>
+            </AlertDescription>
+          </Alert>
         )}
+
+        {report && <InspectionReport report={report} />}
       </div>
     </div>
   );
 }
 
-function PreviewRelatorio({ insId }: { insId: string }) {
-  const ins = useStore((s) => s.inspecoes.find((x) => x.id === insId))!;
-  const ncs = useStore((s) => s.ncs.filter((n) => n.inspecaoId === insId));
-  const checklist = checklists.find((c) => c.id === ins.checklistId)!;
-  const emp = empresas.find((e) => e.id === ins.empresaId)!;
-  const insp = usuarios.find((u) => u.id === ins.inspetorId)!;
-  const itens = checklist.secoes.flatMap((s) => s.itens);
-  const conformes = itens.filter((i) => ins.respostas[i.id]?.resposta === "conforme").length;
-
+function ReportLoading() {
   return (
-    <Card className="bg-white p-6 sm:p-10 text-sm leading-relaxed shadow-sm">
-      <CardContent className="space-y-6 p-0">
-        <div className="flex items-start justify-between border-b pb-4">
-          <div>
-            <div className="text-xs uppercase tracking-wide text-muted-foreground">
-              Relatório de Inspeção
-            </div>
-            <h2 className="mt-1 text-xl font-bold">{ins.titulo}</h2>
-            <div className="text-xs text-muted-foreground">{ins.codigo}</div>
-          </div>
-          <div className="text-right text-xs text-muted-foreground">
-            <div>Emitido em {fmtData(new Date())}</div>
-            <div>SST Inspeções v1.0</div>
-          </div>
-        </div>
-
-        <section className="grid gap-2 sm:grid-cols-2">
-          <Field k="Empresa" v={`${emp.nomeFantasia} (${emp.razaoSocial})`} />
-          <Field k="CNPJ" v={emp.cnpj} />
-          <Field k="Unidade" v={emp.unidades.find((u) => u.id === ins.unidadeId)?.nome ?? "—"} />
-          <Field k="Setor" v={emp.setor} />
-          <Field k="Inspetor" v={`${insp.nome} (${insp.registroProfissional})`} />
-          <Field k="Checklist" v={`${checklist.titulo} v${checklist.versao}`} />
-          <Field k="Início" v={fmtDataHora(ins.iniciadaEm)} />
-          <Field k="Conclusão" v={fmtDataHora(ins.concluidaEm)} />
-        </section>
-
-        <section>
-          <h3 className="font-semibold">Resumo</h3>
-          <div className="mt-2 grid gap-3 sm:grid-cols-3">
-            <Box label="Total de itens" value={itens.length} />
-            <Box label="Conformes" value={conformes} accent="success" />
-            <Box label="Não conformes" value={itens.length - conformes} accent="destructive" />
-          </div>
-        </section>
-
-        <section>
-          <h3 className="font-semibold">Detalhamento</h3>
-          <div className="mt-2 divide-y rounded-md border">
-            {itens.map((it) => {
-              const r = ins.respostas[it.id];
-              return (
-                <div key={it.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 p-3">
-                  <div className="min-w-0">
-                    <div className="text-sm">{it.texto}</div>
-                    {r?.observacao && (
-                      <div className="mt-1 text-xs italic text-muted-foreground">
-                        ↳ {r.observacao}
-                      </div>
-                    )}
-                  </div>
-                  <StatusBadge value={r?.resposta ?? "na"} />
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {ncs.length > 0 && (
-          <section>
-            <h3 className="font-semibold">Não conformidades registradas</h3>
-            <div className="mt-2 space-y-2">
-              {ncs.map((nc) => (
-                <div key={nc.id} className="rounded-md border p-3">
-                  <div className="flex justify-between">
-                    <strong>{nc.codigo}</strong>
-                    <StatusBadge value={nc.criticidade} />
-                  </div>
-                  <div className="text-sm">{nc.titulo}</div>
-                  <div className="text-xs text-muted-foreground">{nc.descricao}</div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-      </CardContent>
+    <Card className="space-y-6 p-6 sm:p-10">
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="h-8 w-2/3" />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        {Array.from({ length: 6 }, (_, index) => (
+          <Skeleton key={index} className="h-16" />
+        ))}
+      </div>
+      <Skeleton className="h-48" />
     </Card>
-  );
-}
-
-function Field({ k, v }: { k: string; v: string }) {
-  return (
-    <div>
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{k}</div>
-      <div className="font-medium">{v}</div>
-    </div>
-  );
-}
-function Box({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: number;
-  accent?: "success" | "destructive";
-}) {
-  const cls =
-    accent === "success" ? "text-success" : accent === "destructive" ? "text-destructive" : "";
-  return (
-    <div className="rounded-md border p-3">
-      <div className="text-[10px] uppercase text-muted-foreground">{label}</div>
-      <div className={`mt-1 text-2xl font-bold ${cls}`}>{value}</div>
-    </div>
   );
 }

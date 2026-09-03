@@ -12,6 +12,7 @@ const styles: Record<string, string> = {
   em_tratativa: "bg-warning/20 text-warning-foreground border-warning/50",
   resolvida: "bg-success/15 text-success border-success/40",
   vencida: "bg-destructive/25 text-destructive border-destructive/60",
+  pendente: "bg-muted text-muted-foreground border-border",
   conforme: "bg-success/15 text-success border-success/40",
   nao_conforme: "bg-destructive/15 text-destructive border-destructive/40",
   na: "bg-muted text-muted-foreground border-border",

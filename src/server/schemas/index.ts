@@ -94,3 +94,5 @@ export type {
   EvidenceTargetSchemaInput,
   EvidenceUploadFormData,
 } from "./evidence.schema";
+export { inspectionReportIdSchema } from "./report.schema";
+export type { InspectionReportIdSchemaInput } from "./report.schema";

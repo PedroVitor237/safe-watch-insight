@@ -14,5 +14,14 @@ export { NonConformityService, nonConformityService } from "./non-conformity.ser
 export { CorrectiveActionService, correctiveActionService } from "./corrective-action.service";
 export { EvidenceService, evidenceService } from "./evidence.service";
 export type { CreateEvidenceInput, EvidenceDto, EvidenceFileInput } from "./evidence.service";
+export { ReportService, reportService } from "./report.service";
+export type {
+  AvailableInspectionReportDto,
+  InspectionReportDto,
+  ReportCorrectiveActionDto,
+  ReportEvidenceDto,
+  ReportItemDto,
+  ReportNonConformityDto,
+} from "./report.service";
 export type { SafeUser } from "./user.service";
 export type { SaveInspectionResponseInput } from "./inspection-response.service";

@@ -140,6 +140,70 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-family:
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      "Segoe UI",
+      sans-serif;
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  body {
+    background: white !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .print-report,
+  .print-report * {
+    visibility: visible;
+  }
+
+  .print-report {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    max-width: none;
+    box-shadow: none !important;
+  }
+
+  .print-report > div {
+    padding: 0 !important;
+  }
+
+  .print-hidden {
+    display: none !important;
+  }
+
+  .print-avoid-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-report section {
+    break-before: auto;
+  }
+
+  .print-report h2,
+  .print-report h3,
+  .print-report h4,
+  .print-report h5 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .print-report img {
+    max-height: 42mm;
   }
 }

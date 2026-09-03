@@ -23,6 +23,7 @@ export {
   correctiveActionRepository,
 } from "./corrective-action.repository";
 export { EvidenceRepository, evidenceRepository } from "./evidence.repository";
+export { ReportRepository, reportRepository } from "./report.repository";
 export type { CompanyFindManyFilters, CompanySortField } from "./company.repository";
 export type { InspectionResponseWithRelations } from "./inspection-response.repository";
 export {
@@ -39,3 +40,4 @@ export type {
   CreateEvidencePersistenceInput,
   EvidencePersistenceTarget,
 } from "./evidence.repository";
+export type { AvailableInspectionReportSource, InspectionReportSource } from "./report.repository";

@@ -355,6 +355,24 @@ O estudo que fundamentou a decisão está em
 
 ---
 
+# Relatórios
+
+Decisão implementada em 3 de setembro de 2026 para o MVP do TCC:
+
+- o relatório é montado sob demanda a partir de
+  `InspectionChecklistSnapshot`, itens e normas do snapshot, respostas, não
+  conformidades, ações corretivas e evidências ativas;
+- a consulta dedicada filtra a inspeção pelo usuário autenticado;
+- o frontend não consulta checklist ou item mutável para reconstruir histórico;
+- impressão física e “Salvar como PDF” utilizam `window.print()` e CSS de
+  impressão A4;
+- não foi adicionada biblioteca de PDF e a visualização não cria um registro em
+  `Report` apenas por ser aberta.
+
+Geração customizada, armazenamento e download direto de PDF permanecem futuros.
+
+---
+
 # Uso de Inteligência Artificial
 
 Este projeto foi estruturado para desenvolvimento assistido por IA.
@@ -381,7 +399,7 @@ Quando houver disponibilidade, priorizar:
 1. Homologar o marco Offline/PWA no domínio publicado e em outros navegadores.
 2. Implementar reconciliação assistida e upload offline de evidências.
 3. Autorização por perfil e gestão completa de usuários.
-4. Geração de PDF.
+4. Geração customizada e download direto de PDF.
 5. Dashboard com dados reais.
 6. Testes automatizados ampliados.
 7. CI/CD.

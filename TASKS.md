@@ -235,9 +235,10 @@ Legenda
 
 # FASE 13 — Relatórios
 
-- [ ] Gerar relatório
-- [ ] Consultar relatório
-- [ ] Download PDF
+- [x] Gerar relatório histórico com dados reais
+- [x] Consultar relatório com isolamento pelo usuário autenticado
+- [x] Imprimir ou salvar como PDF pelo diálogo nativo do navegador
+- [ ] Gerar e baixar PDF customizado pela aplicação (futuro, fora do MVP)
 
 ---
 
@@ -325,7 +326,7 @@ Classificação de encerramento:
 - [ ] Testar CRUD de checklists
 - [ ] Testar inspeções
 - [x] Testar upload
-- [ ] Testar relatórios
+- [x] Testar relatórios
 
 ## Integridade histórica direcionada
 
@@ -377,7 +378,7 @@ Classificação de encerramento:
 - [x] CRUD de inspeções
 - [x] Registro de não conformidades
 - [x] Upload de evidências
-- [ ] Relatórios
+- [x] Relatórios
 - [ ] Dashboard funcional
 
 ---

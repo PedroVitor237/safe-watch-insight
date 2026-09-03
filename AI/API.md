@@ -1142,6 +1142,36 @@ await uploadEvidence({ data: formData });
 
 ---
 
+## Reports
+
+### `listAvailableInspectionReports`
+
+- **Finalidade:** listar inspeções concluídas disponíveis para relatório.
+- **Método:** `GET`.
+- **Arquivo:** `src/lib/api/report.functions.ts`.
+- **Autenticação:** exige sessão.
+- **Regras relacionadas:** retorna somente inspeções ativas e concluídas cujo
+  `userId` corresponde ao usuário autenticado e que possuem snapshot. Título e
+  versão vêm do snapshot histórico.
+- **Erros possíveis:** `401`, `500`.
+
+### `getInspectionReport`
+
+- **Finalidade:** montar o read model imprimível de uma inspeção.
+- **Método:** `POST`.
+- **Arquivo:** `src/lib/api/report.functions.ts`.
+- **Autenticação:** exige sessão.
+- **Body:** `{ "inspectionId": "uuid" }`.
+- **Validação:** `inspectionReportIdSchema`.
+- **Regras relacionadas:** a consulta filtra simultaneamente por ID da inspeção
+  e ID do usuário autenticado. Itens, redação, ordem e normas vêm exclusivamente
+  do snapshot; respostas, não conformidades, ações corretivas e evidências
+  ativas são incorporadas ao read model. O endpoint não gera arquivo PDF e não
+  cria registro em `Report` durante a leitura.
+- **Erros possíveis:** `401`, `404`, `409` histórico indisponível, `422`, `500`.
+
+---
+
 ## Example
 
 ### `getGreeting`
@@ -1186,7 +1216,6 @@ await getGreeting({ data: { name: "Ada" } });
 Os modelos existem no Prisma ou estão previstos na documentação, mas ainda não possuem Server Functions completas nesta entrega:
 
 - Users CRUD.
-- Reports.
 - Dashboard real.
 - Criação integral de inspeção offline.
 - Reconciliação assistida de conflitos offline.

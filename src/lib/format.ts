@@ -44,6 +44,7 @@ export const labelStatus: Record<string, string> = {
   em_tratativa: "Em tratativa",
   resolvida: "Resolvida",
   vencida: "Vencida",
+  pendente: "Pendente",
   conforme: "Conforme",
   nao_conforme: "Não conforme",
   na: "N/A",

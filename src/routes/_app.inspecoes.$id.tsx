@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, CheckCircle2, MinusCircle, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, FileText, MinusCircle, XCircle } from "lucide-react";
 
 import { PageHeader } from "@/components/common/PageHeader";
 import { StatusBadge } from "@/components/common/StatusBadge";
@@ -179,6 +179,14 @@ function DetalheInspecao() {
                     ? "Falha/conflito de sincronização"
                     : "Pendente de sincronização"}
               </Badge>
+            )}
+            {inspection.status === "COMPLETED" && (
+              <Button asChild variant="outline" size="sm">
+                <Link to="/relatorios" search={{ inspectionId: inspection.id }}>
+                  <FileText className="h-4 w-4" />
+                  Ver relatório
+                </Link>
+              </Button>
             )}
             <Button asChild variant="outline" size="sm">
               <Link to="/inspecoes">

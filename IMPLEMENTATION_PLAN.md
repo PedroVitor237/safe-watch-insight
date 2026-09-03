@@ -296,15 +296,19 @@ soft delete, idempotência do provedor e compensações de falha.
 
 # Fase 12 — Relatórios
 
-Planejada para depois da validação browser/E2E do marco Offline/PWA.
+MVP implementado depois da validação browser/E2E do marco Offline/PWA.
 
-Implementar:
+Implementado:
 
-- geração;
-- consulta;
-- download.
+- consulta autenticada de inspeções concluídas do usuário;
+- relatório montado a partir do snapshot histórico, respostas, não
+  conformidades, ações corretivas e evidências;
+- resumo e detalhamento item a item;
+- impressão física e salvamento em PDF pelo diálogo nativo do navegador;
+- estilos de impressão A4, sem navegação ou controles interativos.
 
-Primeira versão pode utilizar HTML convertido para PDF.
+Não há geração customizada nem download direto de PDF neste marco. Essa evolução
+permanece futura e não é necessária para o escopo do TCC.
 
 ---
 

@@ -487,31 +487,40 @@ são armazenadas pelo service worker.
 
 # Geração de Relatórios
 
-Fluxo:
+Fluxo do MVP:
 
 ```
-Inspeção
+Tela de relatório / React Query
 
 ↓
 
-Service
+Server Function autenticada
 
 ↓
 
-Montagem dos dados
+ReportService
 
 ↓
 
-PDF
+ReportRepository
 
 ↓
 
-Registro do relatório
+Prisma / PostgreSQL
 
 ↓
 
-Download
+Read model baseado no snapshot histórico
+
+↓
+
+HTML imprimível / window.print()
 ```
+
+O relatório é montado sob demanda e não reconstrói itens a partir do checklist
+mutável. O botão `Imprimir` abre o diálogo nativo do navegador, que permite
+impressão física ou “Salvar como PDF”. O MVP não registra uma nova linha em
+`Report` a cada visualização e não utiliza biblioteca de geração de PDF.
 
 ---
 
