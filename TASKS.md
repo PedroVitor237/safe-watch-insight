@@ -244,9 +244,9 @@ Legenda
 
 # FASE 14 — Dashboard
 
-- [ ] Integrar indicadores reais
-- [ ] Remover mocks
-- [ ] Atualizar gráficos
+- [x] Integrar indicadores reais
+- [x] Remover mocks
+- [x] Atualizar gráficos
 
 ---
 
@@ -379,7 +379,7 @@ Classificação de encerramento:
 - [x] Registro de não conformidades
 - [x] Upload de evidências
 - [x] Relatórios
-- [ ] Dashboard funcional
+- [x] Dashboard funcional
 
 ---
 

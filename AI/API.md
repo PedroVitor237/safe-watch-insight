@@ -1172,6 +1172,27 @@ await uploadEvidence({ data: formData });
 
 ---
 
+## Dashboard
+
+### `getDashboard`
+
+- **Finalidade:** obter o resumo operacional do usuário autenticado.
+- **Método:** `GET`.
+- **Arquivo:** `src/lib/api/dashboard.functions.ts`.
+- **Autenticação:** exige sessão.
+- **Resposta:** read model com resumo de inspeções e não conformidades,
+  conformidade de respostas aplicáveis, distribuição por status e até cinco
+  inspeções recentes.
+- **Regras relacionadas:** todas as consultas usam `Inspection.userId` da
+  sessão e ignoram inspeções excluídas. A conformidade usa somente respostas
+  `COMPLIANT` e `NON_COMPLIANT` com `snapshotItemId` em inspeções concluídas.
+  `NOT_APPLICABLE` não integra o denominador. NCs e ações vencidas são
+  identificadas sem atualização de status durante a leitura. Títulos recentes
+  vêm do snapshot histórico.
+- **Erros possíveis:** `401`, `500`.
+
+---
+
 ## Example
 
 ### `getGreeting`
@@ -1216,7 +1237,6 @@ await getGreeting({ data: { name: "Ada" } });
 Os modelos existem no Prisma ou estão previstos na documentação, mas ainda não possuem Server Functions completas nesta entrega:
 
 - Users CRUD.
-- Dashboard real.
 - Criação integral de inspeção offline.
 - Reconciliação assistida de conflitos offline.
 - Sincronização offline de evidências binárias.

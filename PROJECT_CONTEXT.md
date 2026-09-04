@@ -308,8 +308,8 @@ O fluxo principal já utiliza dados reais integrados ao backend: login, empresas
 checklists, itens de checklist, criação de inspeção, execução, respostas e
 conclusão.
 
-Alguns módulos secundários ainda utilizam dados mockados, como dashboard e
-equipe. O antigo controle de simulação offline foi substituído por
+Alguns módulos secundários ainda utilizam dados mockados, como equipe. O antigo
+controle de simulação offline foi substituído por
 estado real de conectividade, IndexedDB e fila de sincronização.
 
 Normas, associação normativa aos itens, criação automática de não
@@ -328,6 +328,11 @@ O módulo de relatórios utiliza dados reais e monta uma visão de leitura a par
 do snapshot imutável da inspeção, respostas, não conformidades, ações corretivas
 e evidências ativas. A impressão e o salvamento em PDF usam o diálogo nativo do
 navegador; geração customizada de PDF permanece futura.
+
+O Dashboard MVP utiliza agregações reais e isoladas pelo usuário autenticado
+para exibir inspeções por status, não conformidades, pendências, conformidade de
+respostas aplicáveis em inspeções concluídas e as cinco inspeções mais recentes.
+As consultas de atraso são somente leitura e não alteram estados persistidos.
 
 O fluxo de execução de uma inspeção já aberta/listada online possui uma fundação
 offline real: pacote histórico local, respostas, observações, estado local de

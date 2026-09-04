@@ -314,16 +314,19 @@ permanece futura e não é necessária para o escopo do TCC.
 
 # Fase 13 — Dashboard
 
-Adiada até que o marco Offline/PWA esteja suficientemente completo.
+MVP implementado depois dos marcos Offline/PWA e Relatórios.
 
-Substituir dados mockados.
+Implementado:
 
-Indicadores:
+- agregações reais de inspeções por status, isoladas pelo usuário autenticado;
+- totais de não conformidades e pendências vencidas sem mutação durante leitura;
+- conformidade sobre respostas `COMPLIANT` e `NON_COMPLIANT` vinculadas ao
+  snapshot de inspeções concluídas, excluindo `NOT_APPLICABLE`;
+- cinco inspeções recentes com título histórico e acesso ao relatório existente;
+- estados de carregamento, erro e ausência de inspeções;
+- consulta dedicada nas camadas Repository, Service, Server Function e React Query.
 
-- inspeções;
-- empresas;
-- não conformidades;
-- ações corretivas.
+Filtros analíticos, séries temporais, comparativos e BI permanecem fora do MVP.
 
 ---
 
@@ -380,8 +383,8 @@ está estável e documentada; não significa suporte offline completo.
   administrativas de retenção e homologação no domínio publicado/outros
   navegadores.
 
-O próximo marco funcional recomendado é **Relatórios**, conforme a Fase 12. O
-Dashboard permanece posterior e não foi iniciado neste encerramento.
+Na data desse encerramento, o próximo marco recomendado era **Relatórios** e o
+Dashboard ainda não havia sido iniciado. Ambos foram implementados posteriormente.
 
 ---
 

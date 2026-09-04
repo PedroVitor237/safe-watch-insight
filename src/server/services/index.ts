@@ -15,6 +15,8 @@ export { CorrectiveActionService, correctiveActionService } from "./corrective-a
 export { EvidenceService, evidenceService } from "./evidence.service";
 export type { CreateEvidenceInput, EvidenceDto, EvidenceFileInput } from "./evidence.service";
 export { ReportService, reportService } from "./report.service";
+export { DashboardService, dashboardService } from "./dashboard.service";
+export type { DashboardDto } from "./dashboard.service";
 export type {
   AvailableInspectionReportDto,
   InspectionReportDto,

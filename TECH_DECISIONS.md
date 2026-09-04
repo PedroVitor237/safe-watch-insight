@@ -373,6 +373,28 @@ Geração customizada, armazenamento e download direto de PDF permanecem futuros
 
 ---
 
+# Dashboard
+
+Decisão implementada em 4 de setembro de 2026 para o MVP do TCC:
+
+- o Dashboard usa um read model dedicado, consultado por React Query através de
+  Server Function autenticada, Service, Repository e Prisma;
+- todas as agregações são limitadas por `Inspection.userId` e ignoram inspeções
+  excluídas logicamente;
+- a conformidade considera apenas respostas `COMPLIANT` e `NON_COMPLIANT`,
+  vinculadas a itens do snapshot de inspeções `COMPLETED`; `NOT_APPLICABLE`,
+  inspeções abertas, canceladas e respostas legadas sem `snapshotItemId` ficam
+  fora do denominador;
+- atrasos de não conformidades e ações corretivas são derivados pela data e pelo
+  estado durante a leitura, sem atualizar entidades;
+- a lista recente é limitada a cinco inspeções e usa título e versão do snapshot;
+- inspeções concluídas reutilizam a rota existente de Relatórios.
+
+Não foi criada migration nem persistência de métricas. Filtros avançados,
+comparativos temporais, séries históricas e BI permanecem futuros.
+
+---
+
 # Uso de Inteligência Artificial
 
 Este projeto foi estruturado para desenvolvimento assistido por IA.
@@ -400,7 +422,7 @@ Quando houver disponibilidade, priorizar:
 2. Implementar reconciliação assistida e upload offline de evidências.
 3. Autorização por perfil e gestão completa de usuários.
 4. Geração customizada e download direto de PDF.
-5. Dashboard com dados reais.
+5. Filtros e análises avançadas no Dashboard, caso sejam necessários.
 6. Testes automatizados ampliados.
 7. CI/CD.
 8. Observabilidade e monitoramento.

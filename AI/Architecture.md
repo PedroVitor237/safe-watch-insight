@@ -524,6 +524,41 @@ impressão física ou “Salvar como PDF”. O MVP não registra uma nova linha 
 
 ---
 
+# Dashboard
+
+Fluxo do MVP:
+
+```text
+Tela do Dashboard / React Query
+
+↓
+
+Server Function autenticada
+
+↓
+
+DashboardService
+
+↓
+
+DashboardRepository
+
+↓
+
+Prisma / PostgreSQL
+
+↓
+
+Read model agregado e limitado pelo usuário
+```
+
+Contagens simples são agregadas no banco e a lista recente é limitada. Quando
+uma métrica depende de resposta, somente respostas vinculadas ao item do
+snapshot histórico são consideradas. A identificação de atrasos é somente de
+leitura e não atualiza status como efeito colateral da consulta.
+
+---
+
 # Segurança
 
 Senhas:
