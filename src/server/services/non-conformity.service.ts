@@ -76,10 +76,17 @@ export class NonConformityService extends BaseService<NonConformityRepository> {
     });
   }
 
-  async getNonConformityById(id: string): Promise<Result<NonConformityWithRelations>> {
+  async getNonConformityById(
+    id: string,
+    userId: string,
+  ): Promise<Result<NonConformityWithRelations>> {
     return this.execute(async () => {
       await this.repository.markOverdue(new Date());
-      const nonConformity = await this.ensureNonConformityExists(id);
+      const nonConformity = await this.repository.findActiveOwnedById(id, userId);
+
+      if (!nonConformity) {
+        throw new NotFoundError("Non-conformity not found.");
+      }
 
       return this.success(nonConformity);
     });
@@ -87,13 +94,17 @@ export class NonConformityService extends BaseService<NonConformityRepository> {
 
   async listNonConformities(
     filters: NonConformityFindManyFilters = {},
+    userId: string,
   ): Promise<Result<PaginatedResult<NonConformityWithRelations>>> {
     return this.execute(async () => {
       await this.repository.markOverdue(new Date());
-      const nonConformities = await this.repository.findManyPaginated({
-        ...filters,
-        includeDeleted: false,
-      });
+      const nonConformities = await this.repository.findManyOwnedPaginated(
+        {
+          ...filters,
+          includeDeleted: false,
+        },
+        userId,
+      );
 
       return this.success(nonConformities);
     });

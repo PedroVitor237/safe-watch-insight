@@ -77,6 +77,22 @@ export interface NonConformityFindManyFilters {
   includeDeleted?: boolean;
 }
 
+function ownedInspectionScope(userId: string): Prisma.InspectionWhereInput {
+  return {
+    userId,
+    deletedAt: null,
+  };
+}
+
+export function buildActiveOwnedNonConformityWhere(userId: string): Prisma.NonConformityWhereInput {
+  return {
+    deletedAt: null,
+    inspectionResponse: {
+      inspection: ownedInspectionScope(userId),
+    },
+  };
+}
+
 export interface NonConformityEvidenceContext {
   id: string;
   inspectionResponse: {
@@ -118,17 +134,30 @@ export class NonConformityRepository extends BaseRepository<
     });
   }
 
+  findActiveOwnedById(id: string, userId: string): Promise<NonConformityWithRelations | null> {
+    return prisma.nonConformity.findFirst({
+      where: {
+        id,
+        ...buildActiveOwnedNonConformityWhere(userId),
+      },
+      include: nonConformityRelations,
+    });
+  }
+
   findByInspectionResponseId(inspectionResponseId: string): Promise<NonConformity | null> {
     return prisma.nonConformity.findUnique({
       where: { inspectionResponseId },
     });
   }
 
-  findEvidenceContextById(id: string): Promise<NonConformityEvidenceContext | null> {
+  findOwnedEvidenceContextById(
+    id: string,
+    userId: string,
+  ): Promise<NonConformityEvidenceContext | null> {
     return prisma.nonConformity.findFirst({
       where: {
         id,
-        deletedAt: null,
+        ...buildActiveOwnedNonConformityWhere(userId),
       },
       select: {
         id: true,
@@ -155,6 +184,29 @@ export class NonConformityRepository extends BaseRepository<
   ): Promise<PaginatedResult<NonConformityWithRelations>> {
     const pagination = normalizePagination(filters.page, filters.pageSize);
     const where = this.buildWhere(filters);
+    const orderBy = this.buildOrderBy(filters.sortBy, filters.sortOrder);
+
+    return Promise.all([
+      prisma.nonConformity.findMany({
+        where,
+        orderBy,
+        skip: getPaginationOffset(pagination),
+        take: pagination.pageSize,
+        include: nonConformityRelations,
+      }),
+      prisma.nonConformity.count({ where }),
+    ]).then(([items, totalItems]) => paginate(items, totalItems, pagination));
+  }
+
+  findManyOwnedPaginated(
+    filters: NonConformityFindManyFilters,
+    userId: string,
+  ): Promise<PaginatedResult<NonConformityWithRelations>> {
+    const pagination = normalizePagination(filters.page, filters.pageSize);
+    const filterWhere = this.buildWhere(filters);
+    const where: Prisma.NonConformityWhereInput = {
+      AND: [filterWhere, buildActiveOwnedNonConformityWhere(userId)],
+    };
     const orderBy = this.buildOrderBy(filters.sortBy, filters.sortOrder);
 
     return Promise.all([

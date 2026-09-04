@@ -202,6 +202,19 @@ Decisão revisada em 6 de agosto de 2026:
 - remoção utiliza soft delete e compensação quando o provedor externo falha;
 - Base64 e binários não são persistidos no banco.
 
+Hardening revisado em 4 de setembro de 2026:
+
+- o proprietário da evidência é derivado de `Inspection.userId`, diretamente ou
+  pelo caminho `Evidence -> NonConformity -> InspectionResponse -> Inspection`;
+- o `userId` confiável vem exclusivamente da sessão e percorre Server Function,
+  Service, Repository e predicados relacionais Prisma;
+- upload, listagem, busca por UUID, soft delete e restauração usam consultas
+  limitadas ao proprietário e a contextos ativos;
+- recurso inexistente e recurso de outro usuário possuem a mesma semântica
+  `NOT_FOUND`, evitando enumeração;
+- detalhe e lista de não conformidades são limitados à inspeção do usuário para
+  não expor a relação de evidências indiretamente.
+
 Compressão, retenção de `Blob` e fila offline de evidências continuam adiadas. A
 interface informa essa limitação e não apresenta metadados em cache como upload
 offline concluído.

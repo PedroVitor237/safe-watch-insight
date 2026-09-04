@@ -225,6 +225,14 @@ Legenda
 - [x] Salvar URL
 - [x] Vincular à inspeção
 
+## Hardening de autorização por propriedade — 4 de setembro de 2026
+
+- [x] Propagar o usuário autenticado da sessão até o `EvidenceService` e os Repositories
+- [x] Restringir upload e listagem pela propriedade da inspeção ou da inspeção relacionada à NC
+- [x] Restringir busca, soft delete e restauração de evidência pelo proprietário
+- [x] Impedir exposição indireta de evidências pelas leituras de detalhe e lista de NC
+- [x] Validar isolamento com testes unitários, dois usuários temporários no PostgreSQL e Chromium
+
 ## Futuro
 
 - [ ] Compressão automática

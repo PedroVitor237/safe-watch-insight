@@ -24,6 +24,8 @@ const NON_CONFORMITY_ID = "22222222-2222-4222-8222-222222222222";
 const EVIDENCE_ID = "33333333-3333-4333-8333-333333333333";
 const SNAPSHOT_ID = "44444444-4444-4444-8444-444444444444";
 const SNAPSHOT_ITEM_ID = "55555555-5555-4555-8555-555555555555";
+const USER_A_ID = "66666666-6666-4666-8666-666666666661";
+const USER_B_ID = "66666666-6666-4666-8666-666666666662";
 
 function createPngFile(
   bytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
@@ -62,12 +64,24 @@ function createEvidence(overrides: Partial<Evidence> = {}): Evidence {
 
 class FakeEvidenceRepository {
   createdInput: CreateEvidencePersistenceInput | null = null;
+  requestedUserIds: string[] = [];
+  listCalled = false;
   softDeleted = false;
   restored = false;
   failOnCreate = false;
   evidence: Evidence | null = createEvidence();
+  ownerUserId = USER_A_ID;
 
-  createEvidence(input: CreateEvidencePersistenceInput): Promise<Evidence> {
+  createOwnedEvidence(
+    input: CreateEvidencePersistenceInput,
+    userId: string,
+  ): Promise<Evidence | null> {
+    this.requestedUserIds.push(userId);
+
+    if (userId !== this.ownerUserId) {
+      return Promise.resolve(null);
+    }
+
     this.createdInput = input;
 
     if (this.failOnCreate) {
@@ -91,37 +105,60 @@ class FakeEvidenceRepository {
     );
   }
 
-  findActiveById(): Promise<Evidence | null> {
-    return Promise.resolve(this.evidence);
+  findActiveOwnedById(_id: string, userId: string): Promise<Evidence | null> {
+    this.requestedUserIds.push(userId);
+    return Promise.resolve(userId === this.ownerUserId ? this.evidence : null);
   }
 
-  listActive(_target: EvidencePersistenceTarget): Promise<Evidence[]> {
-    return Promise.resolve(this.evidence ? [this.evidence] : []);
+  listActiveOwned(_target: EvidencePersistenceTarget, userId: string): Promise<Evidence[]> {
+    this.requestedUserIds.push(userId);
+    this.listCalled = true;
+    return Promise.resolve(userId === this.ownerUserId && this.evidence ? [this.evidence] : []);
   }
 
-  softDelete(): Promise<Evidence> {
+  softDeleteOwned(_id: string, userId: string): Promise<Evidence | null> {
+    this.requestedUserIds.push(userId);
+
+    if (userId !== this.ownerUserId) {
+      return Promise.resolve(null);
+    }
+
     this.softDeleted = true;
     return Promise.resolve(createEvidence({ deletedAt: new Date("2026-08-06T12:10:00.000Z") }));
   }
 
-  restore(): Promise<Evidence> {
+  restoreOwned(_id: string, userId: string): Promise<Evidence | null> {
+    this.requestedUserIds.push(userId);
+
+    if (userId !== this.ownerUserId) {
+      return Promise.resolve(null);
+    }
+
     this.restored = true;
     return Promise.resolve(createEvidence());
   }
 }
 
 class FakeInspectionContextRepository {
+  requestedUserIds: string[] = [];
+  ownerUserId = USER_A_ID;
   context: InspectionEvidenceContext | null = {
     id: INSPECTION_ID,
     snapshot: { id: SNAPSHOT_ID },
   };
 
-  findEvidenceContextById(): Promise<InspectionEvidenceContext | null> {
-    return Promise.resolve(this.context);
+  findOwnedEvidenceContextById(
+    _id: string,
+    userId: string,
+  ): Promise<InspectionEvidenceContext | null> {
+    this.requestedUserIds.push(userId);
+    return Promise.resolve(userId === this.ownerUserId ? this.context : null);
   }
 }
 
 class FakeNonConformityContextRepository {
+  requestedUserIds: string[] = [];
+  ownerUserId = USER_A_ID;
   context: NonConformityEvidenceContext | null = {
     id: NON_CONFORMITY_ID,
     inspectionResponse: {
@@ -132,8 +169,12 @@ class FakeNonConformityContextRepository {
     },
   };
 
-  findEvidenceContextById(): Promise<NonConformityEvidenceContext | null> {
-    return Promise.resolve(this.context);
+  findOwnedEvidenceContextById(
+    _id: string,
+    userId: string,
+  ): Promise<NonConformityEvidenceContext | null> {
+    this.requestedUserIds.push(userId);
+    return Promise.resolve(userId === this.ownerUserId ? this.context : null);
   }
 }
 
@@ -180,11 +221,14 @@ function createService() {
 
 test("uploads valid image bytes and persists only metadata in an inspection snapshot context", async () => {
   const { service, repository, storage } = createService();
-  const result = await service.uploadEvidence({
-    inspectionId: INSPECTION_ID,
-    file: createPngFile(),
-    caption: "  Extintor da entrada  ",
-  });
+  const result = await service.uploadEvidence(
+    {
+      inspectionId: INSPECTION_ID,
+      file: createPngFile(),
+      caption: "  Extintor da entrada  ",
+    },
+    USER_A_ID,
+  );
 
   assert.equal(result.success, true);
   assert.equal(storage.uploadInput?.mimeType, "image/png");
@@ -197,10 +241,13 @@ test("uploads valid image bytes and persists only metadata in an inspection snap
 
 test("rejects spoofed image content before calling storage", async () => {
   const { service, storage } = createService();
-  const result = await service.uploadEvidence({
-    inspectionId: INSPECTION_ID,
-    file: createPngFile(new Uint8Array([0x00, 0x01, 0x02, 0x03])),
-  });
+  const result = await service.uploadEvidence(
+    {
+      inspectionId: INSPECTION_ID,
+      file: createPngFile(new Uint8Array([0x00, 0x01, 0x02, 0x03])),
+    },
+    USER_A_ID,
+  );
 
   assert.equal(result.success, false);
   assert.equal(!result.success && result.code, "VALIDATION_ERROR");
@@ -210,10 +257,13 @@ test("rejects spoofed image content before calling storage", async () => {
 test("rejects an inspection without its immutable snapshot", async () => {
   const { service, inspectionRepository, storage } = createService();
   inspectionRepository.context = { id: INSPECTION_ID, snapshot: null };
-  const result = await service.uploadEvidence({
-    inspectionId: INSPECTION_ID,
-    file: createPngFile(),
-  });
+  const result = await service.uploadEvidence(
+    {
+      inspectionId: INSPECTION_ID,
+      file: createPngFile(),
+    },
+    USER_A_ID,
+  );
 
   assert.equal(result.success, false);
   assert.equal(!result.success && result.code, "CONFLICT");
@@ -229,10 +279,13 @@ test("rejects a non-conformity that is not linked to a snapshot item", async () 
       inspection: { snapshot: { id: SNAPSHOT_ID } },
     },
   };
-  const result = await service.uploadEvidence({
-    nonConformityId: NON_CONFORMITY_ID,
-    file: createPngFile(),
-  });
+  const result = await service.uploadEvidence(
+    {
+      nonConformityId: NON_CONFORMITY_ID,
+      file: createPngFile(),
+    },
+    USER_A_ID,
+  );
 
   assert.equal(result.success, false);
   assert.equal(!result.success && result.code, "CONFLICT");
@@ -242,10 +295,13 @@ test("rejects a non-conformity that is not linked to a snapshot item", async () 
 test("removes the uploaded provider file when metadata persistence fails", async () => {
   const { service, repository, storage } = createService();
   repository.failOnCreate = true;
-  const result = await service.uploadEvidence({
-    inspectionId: INSPECTION_ID,
-    file: createPngFile(),
-  });
+  const result = await service.uploadEvidence(
+    {
+      inspectionId: INSPECTION_ID,
+      file: createPngFile(),
+    },
+    USER_A_ID,
+  );
 
   assert.equal(result.success, false);
   assert.equal(!result.success && result.code, "INTERNAL_SERVER_ERROR");
@@ -255,10 +311,129 @@ test("removes the uploaded provider file when metadata persistence fails", async
 test("restores soft-deleted metadata when provider removal fails", async () => {
   const { service, repository, storage } = createService();
   storage.failOnRemove = true;
-  const result = await service.removeEvidence(EVIDENCE_ID);
+  const result = await service.removeEvidence(EVIDENCE_ID, USER_A_ID);
 
   assert.equal(repository.softDeleted, true);
   assert.equal(repository.restored, true);
   assert.equal(result.success, false);
   assert.equal(!result.success && result.code, "STORAGE_ERROR");
+});
+
+test("uploads evidence to an owned non-conformity historical context", async () => {
+  const { service, repository, nonConformityRepository, storage } = createService();
+  const result = await service.uploadEvidence(
+    {
+      nonConformityId: NON_CONFORMITY_ID,
+      file: createPngFile(),
+    },
+    USER_A_ID,
+  );
+
+  assert.equal(result.success, true);
+  assert.equal(repository.createdInput?.nonConformityId, NON_CONFORMITY_ID);
+  assert.equal(storage.uploadInput !== null, true);
+  assert.deepEqual(nonConformityRepository.requestedUserIds, [USER_A_ID]);
+});
+
+test("rejects a cross-user inspection upload before storage or persistence", async () => {
+  const { service, repository, storage } = createService();
+  const result = await service.uploadEvidence(
+    {
+      inspectionId: INSPECTION_ID,
+      file: createPngFile(),
+    },
+    USER_B_ID,
+  );
+
+  assert.equal(result.success, false);
+  assert.equal(!result.success && result.code, "NOT_FOUND");
+  assert.equal(!result.success && result.statusCode, 404);
+  assert.equal(storage.uploadInput, null);
+  assert.equal(repository.createdInput, null);
+});
+
+test("rejects a cross-user non-conformity upload before storage or persistence", async () => {
+  const { service, repository, storage } = createService();
+  const result = await service.uploadEvidence(
+    {
+      nonConformityId: NON_CONFORMITY_ID,
+      file: createPngFile(),
+    },
+    USER_B_ID,
+  );
+
+  assert.equal(result.success, false);
+  assert.equal(!result.success && result.code, "NOT_FOUND");
+  assert.equal(storage.uploadInput, null);
+  assert.equal(repository.createdInput, null);
+});
+
+test("lists only active evidence from an owned inspection", async () => {
+  const { service, repository, inspectionRepository } = createService();
+  const result = await service.listEvidence({ inspectionId: INSPECTION_ID }, USER_A_ID);
+
+  assert.equal(result.success, true);
+  assert.equal(result.success && result.data.length, 1);
+  assert.equal(repository.listCalled, true);
+  assert.deepEqual(inspectionRepository.requestedUserIds, [USER_A_ID]);
+  assert.deepEqual(repository.requestedUserIds, [USER_A_ID]);
+});
+
+test("does not list evidence from another user's inspection", async () => {
+  const { service, repository } = createService();
+  const result = await service.listEvidence({ inspectionId: INSPECTION_ID }, USER_B_ID);
+
+  assert.equal(result.success, false);
+  assert.equal(!result.success && result.code, "NOT_FOUND");
+  assert.equal(repository.listCalled, false);
+});
+
+test("removes owned evidence through ownership-scoped metadata operations", async () => {
+  const { service, repository, storage } = createService();
+  const result = await service.removeEvidence(EVIDENCE_ID, USER_A_ID);
+
+  assert.equal(result.success, true);
+  assert.equal(repository.softDeleted, true);
+  assert.equal(repository.restored, false);
+  assert.deepEqual(storage.removedPublicIds, [createEvidence().publicId]);
+  assert.deepEqual(repository.requestedUserIds, [USER_A_ID, USER_A_ID]);
+});
+
+test("rejects cross-user evidence removal without storage or metadata mutation", async () => {
+  const { service, repository, storage } = createService();
+  const result = await service.removeEvidence(EVIDENCE_ID, USER_B_ID);
+
+  assert.equal(result.success, false);
+  assert.equal(!result.success && result.code, "NOT_FOUND");
+  assert.equal(!result.success && result.statusCode, 404);
+  assert.equal(repository.softDeleted, false);
+  assert.equal(repository.restored, false);
+  assert.deepEqual(storage.removedPublicIds, []);
+  assert.equal(repository.evidence?.deletedAt, null);
+});
+
+test("uses indistinguishable not-found semantics for foreign and missing evidence", async () => {
+  const foreign = createService();
+  const missing = createService();
+  missing.repository.evidence = null;
+
+  const foreignResult = await foreign.service.removeEvidence(EVIDENCE_ID, USER_B_ID);
+  const missingResult = await missing.service.removeEvidence(EVIDENCE_ID, USER_A_ID);
+
+  assert.equal(foreignResult.success, false);
+  assert.equal(missingResult.success, false);
+  if (!foreignResult.success && !missingResult.success) {
+    assert.deepEqual(
+      {
+        code: foreignResult.code,
+        statusCode: foreignResult.statusCode,
+        message: foreignResult.message,
+      },
+      {
+        code: missingResult.code,
+        statusCode: missingResult.statusCode,
+        message: missingResult.message,
+      },
+    );
+  }
 });

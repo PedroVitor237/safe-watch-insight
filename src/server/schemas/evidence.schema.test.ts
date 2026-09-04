@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  evidenceIdSchema,
   evidenceTargetSchema,
   MAX_EVIDENCE_FILE_SIZE,
   parseEvidenceUploadFormData,
@@ -22,6 +23,18 @@ test("evidence target requires exactly one historical context", () => {
       inspectionId: INSPECTION_ID,
       nonConformityId: NON_CONFORMITY_ID,
     }).success,
+    false,
+  );
+});
+
+test("evidence identifiers reject invalid UUIDs before service execution", () => {
+  assert.equal(evidenceIdSchema.safeParse({ id: "not-an-evidence-id" }).success, false);
+  assert.equal(
+    evidenceTargetSchema.safeParse({ inspectionId: "not-an-inspection-id" }).success,
+    false,
+  );
+  assert.equal(
+    evidenceTargetSchema.safeParse({ nonConformityId: "not-a-non-conformity-id" }).success,
     false,
   );
 });

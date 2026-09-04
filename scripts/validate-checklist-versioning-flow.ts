@@ -200,7 +200,7 @@ async function main(): Promise<void> {
   }
 
   const historicalNonConformity = unwrap(
-    await nonConformityService.getNonConformityById(nonCompliantResponse.nonConformity.id),
+    await nonConformityService.getNonConformityById(nonCompliantResponse.nonConformity.id, user.id),
   );
   assert.equal(
     historicalNonConformity.inspectionResponse.snapshotItem?.description,

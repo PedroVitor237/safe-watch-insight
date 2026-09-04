@@ -251,10 +251,14 @@ export class InspectionRepository extends BaseRepository<
     });
   }
 
-  findEvidenceContextById(id: string): Promise<InspectionEvidenceContext | null> {
+  findOwnedEvidenceContextById(
+    id: string,
+    userId: string,
+  ): Promise<InspectionEvidenceContext | null> {
     return prisma.inspection.findFirst({
       where: {
         id,
+        userId,
         deletedAt: null,
       },
       select: {

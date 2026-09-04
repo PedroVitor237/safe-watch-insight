@@ -7,6 +7,8 @@ import {
   nonConformityIdSchema,
   updateNonConformityInputSchema,
 } from "@/server/schemas/non-conformity.schema";
+import type { Result } from "@/server/responses";
+import type { SafeUser } from "@/server/services/user.service";
 
 async function getNonConformityService() {
   const { nonConformityService } = await import("@/server/services/non-conformity.service");
@@ -14,9 +16,14 @@ async function getNonConformityService() {
   return nonConformityService;
 }
 
-async function ensureAuthenticated() {
+async function getAuthenticatedUserResult(): Promise<Result<SafeUser>> {
   const { getAuthenticatedUser } = await import("@/server/auth/session");
-  const userResult = await getAuthenticatedUser();
+
+  return getAuthenticatedUser();
+}
+
+async function ensureAuthenticated() {
+  const userResult = await getAuthenticatedUserResult();
 
   return userResult.success ? null : toServerResult<never>(userResult);
 }
@@ -38,29 +45,29 @@ export const createNonConformity = createServerFn({ method: "POST" })
 export const getNonConformityById = createServerFn({ method: "POST" })
   .validator(nonConformityIdSchema)
   .handler(async ({ data }) => {
-    const authError = await ensureAuthenticated();
+    const userResult = await getAuthenticatedUserResult();
 
-    if (authError) {
-      return authError;
+    if (!userResult.success) {
+      return toServerResult<never>(userResult);
     }
 
     const service = await getNonConformityService();
 
-    return toServerResult(await service.getNonConformityById(data.id));
+    return toServerResult(await service.getNonConformityById(data.id, userResult.data.id));
   });
 
 export const listNonConformities = createServerFn({ method: "POST" })
   .validator(nonConformityFiltersSchema)
   .handler(async ({ data }) => {
-    const authError = await ensureAuthenticated();
+    const userResult = await getAuthenticatedUserResult();
 
-    if (authError) {
-      return authError;
+    if (!userResult.success) {
+      return toServerResult<never>(userResult);
     }
 
     const service = await getNonConformityService();
 
-    return toServerResult(await service.listNonConformities(data));
+    return toServerResult(await service.listNonConformities(data, userResult.data.id));
   });
 
 export const updateNonConformity = createServerFn({ method: "POST" })

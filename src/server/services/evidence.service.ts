@@ -49,19 +49,28 @@ export interface EvidenceDto {
 }
 
 interface EvidenceRepositoryPort {
-  createEvidence(input: CreateEvidencePersistenceInput): Promise<Evidence>;
-  findActiveById(id: string): Promise<Evidence | null>;
-  listActive(target: EvidencePersistenceTarget): Promise<Evidence[]>;
-  softDelete(id: string): Promise<Evidence>;
-  restore(id: string): Promise<Evidence>;
+  createOwnedEvidence(
+    input: CreateEvidencePersistenceInput,
+    userId: string,
+  ): Promise<Evidence | null>;
+  findActiveOwnedById(id: string, userId: string): Promise<Evidence | null>;
+  listActiveOwned(target: EvidencePersistenceTarget, userId: string): Promise<Evidence[]>;
+  softDeleteOwned(id: string, userId: string): Promise<Evidence | null>;
+  restoreOwned(id: string, userId: string): Promise<Evidence | null>;
 }
 
 interface InspectionContextRepositoryPort {
-  findEvidenceContextById(id: string): Promise<InspectionEvidenceContext | null>;
+  findOwnedEvidenceContextById(
+    id: string,
+    userId: string,
+  ): Promise<InspectionEvidenceContext | null>;
 }
 
 interface NonConformityContextRepositoryPort {
-  findEvidenceContextById(id: string): Promise<NonConformityEvidenceContext | null>;
+  findOwnedEvidenceContextById(
+    id: string,
+    userId: string,
+  ): Promise<NonConformityEvidenceContext | null>;
 }
 
 const FILE_SIGNATURES: Record<(typeof SUPPORTED_EVIDENCE_MIME_TYPES)[number], number[]> = {
@@ -119,10 +128,10 @@ export class EvidenceService {
     private readonly storageService: StorageService = cloudinaryStorageService,
   ) {}
 
-  async uploadEvidence(input: CreateEvidenceInput): Promise<Result<EvidenceDto>> {
+  async uploadEvidence(input: CreateEvidenceInput, userId: string): Promise<Result<EvidenceDto>> {
     try {
       const target = this.normalizeTarget(input);
-      await this.ensureHistoricalContext(target);
+      await this.ensureOwnedHistoricalContext(target, userId);
 
       const fileName = normalizeFileName(input.file.name);
       const bytes = new Uint8Array(await input.file.arrayBuffer());
@@ -137,18 +146,25 @@ export class EvidenceService {
       });
 
       try {
-        const evidence = await this.repository.createEvidence({
-          id: evidenceId,
-          ...target,
-          publicId: storedFile.publicId,
-          storageUrl: storedFile.storageUrl,
-          fileName,
-          mimeType: input.file.type,
-          fileSize: BigInt(storedFile.fileSize),
-          width: storedFile.width,
-          height: storedFile.height,
-          caption: input.caption?.trim() || null,
-        });
+        const evidence = await this.repository.createOwnedEvidence(
+          {
+            id: evidenceId,
+            ...target,
+            publicId: storedFile.publicId,
+            storageUrl: storedFile.storageUrl,
+            fileName,
+            mimeType: input.file.type,
+            fileSize: BigInt(storedFile.fileSize),
+            width: storedFile.width,
+            height: storedFile.height,
+            caption: input.caption?.trim() || null,
+          },
+          userId,
+        );
+
+        if (!evidence) {
+          throw new NotFoundError("Evidence context not found.");
+        }
 
         return success(toEvidenceDto(evidence), "Evidence uploaded.");
       } catch (error) {
@@ -160,11 +176,14 @@ export class EvidenceService {
     }
   }
 
-  async listEvidence(target: EvidencePersistenceTarget): Promise<Result<EvidenceDto[]>> {
+  async listEvidence(
+    target: EvidencePersistenceTarget,
+    userId: string,
+  ): Promise<Result<EvidenceDto[]>> {
     try {
       const normalizedTarget = this.normalizeTarget(target);
-      await this.ensureHistoricalContext(normalizedTarget);
-      const evidence = await this.repository.listActive(normalizedTarget);
+      await this.ensureOwnedHistoricalContext(normalizedTarget, userId);
+      const evidence = await this.repository.listActiveOwned(normalizedTarget, userId);
 
       return success(evidence.map(toEvidenceDto));
     } catch (error) {
@@ -172,20 +191,24 @@ export class EvidenceService {
     }
   }
 
-  async removeEvidence(id: string): Promise<Result<EvidenceDto>> {
+  async removeEvidence(id: string, userId: string): Promise<Result<EvidenceDto>> {
     try {
-      const evidence = await this.repository.findActiveById(id);
+      const evidence = await this.repository.findActiveOwnedById(id, userId);
 
       if (!evidence) {
         throw new NotFoundError("Evidence not found.");
       }
 
-      const archivedEvidence = await this.repository.softDelete(id);
+      const archivedEvidence = await this.repository.softDeleteOwned(id, userId);
+
+      if (!archivedEvidence) {
+        throw new NotFoundError("Evidence not found.");
+      }
 
       try {
         await this.storageService.remove(evidence.publicId);
       } catch (error) {
-        await this.repository.restore(id);
+        await this.repository.restoreOwned(id, userId);
         throw error;
       }
 
@@ -213,10 +236,14 @@ export class EvidenceService {
       : { nonConformityId: target.nonConformityId };
   }
 
-  private async ensureHistoricalContext(target: EvidencePersistenceTarget): Promise<void> {
+  private async ensureOwnedHistoricalContext(
+    target: EvidencePersistenceTarget,
+    userId: string,
+  ): Promise<void> {
     if (target.inspectionId) {
-      const inspection = await this.inspectionContextRepository.findEvidenceContextById(
+      const inspection = await this.inspectionContextRepository.findOwnedEvidenceContextById(
         target.inspectionId,
+        userId,
       );
 
       if (!inspection) {
@@ -230,8 +257,9 @@ export class EvidenceService {
       return;
     }
 
-    const nonConformity = await this.nonConformityContextRepository.findEvidenceContextById(
+    const nonConformity = await this.nonConformityContextRepository.findOwnedEvidenceContextById(
       target.nonConformityId as string,
+      userId,
     );
 
     if (!nonConformity) {

@@ -145,9 +145,12 @@ async function main(): Promise<void> {
   createdIds.nonConformityId = response.nonConformity.id;
 
   const nonConformities = unwrap(
-    await nonConformityService.listNonConformities({
-      inspectionId: inspection.id,
-    }),
+    await nonConformityService.listNonConformities(
+      {
+        inspectionId: inspection.id,
+      },
+      authenticatedUser.id,
+    ),
   );
 
   if (nonConformities.totalItems !== 1) {

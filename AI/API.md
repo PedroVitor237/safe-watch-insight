@@ -1011,6 +1011,8 @@ await finishInspection({ data: { inspectionId } });
 - **Autenticação:** exige sessão.
 - **Body:** `{ "id": "uuid" }`.
 - **Validação:** `nonConformityIdSchema`.
+- **Regras relacionadas:** limita a consulta à inspeção pertencente ao usuário
+  autenticado, impedindo exposição indireta de evidências de outro usuário.
 - **Erros possíveis:** `401`, `404`, `422`, `500`.
 
 ### `listNonConformities`
@@ -1021,7 +1023,9 @@ await finishInspection({ data: { inspectionId } });
 - **Autenticação:** exige sessão.
 - **Filtros:** `search`, `status`, `severity`, `companyId`, `inspectionId`, `standardId`, paginação e ordenação.
 - **Validação:** `nonConformityFiltersSchema`.
-- **Regras relacionadas:** registros vencidos ainda abertos são marcados como `OVERDUE`.
+- **Regras relacionadas:** registros vencidos ainda abertos são marcados como
+  `OVERDUE`; a lista é limitada às inspeções do usuário autenticado para não
+  expor evidências relacionadas de outro usuário.
 - **Erros possíveis:** `401`, `422`, `500`.
 
 ### `updateNonConformity`
@@ -1103,7 +1107,12 @@ await finishInspection({ data: { inspectionId } });
 - **Autenticação:** exige sessão.
 - **Campos:** `file`; exatamente um entre `inspectionId` e `nonConformityId`; `caption` opcional.
 - **Validação:** JPEG, PNG ou WebP; arquivo não vazio; máximo de 4 MB; nome com até 255 caracteres; legenda com até 500 caracteres. O Service também confere a assinatura binária do arquivo.
-- **Regras relacionadas:** a inspeção deve possuir snapshot; a não conformidade deve pertencer a uma resposta vinculada a item do snapshot. O arquivo é enviado ao Cloudinary por requisição assinada no servidor e o segredo da API não é exposto. Se a persistência falhar, o arquivo recém-enviado é removido por compensação.
+- **Regras relacionadas:** a inspeção deve possuir snapshot e pertencer ao usuário
+  autenticado; a não conformidade deve pertencer a uma resposta vinculada a item
+  do snapshot de uma inspeção do mesmo usuário. O `userId` vem exclusivamente da
+  sessão. O arquivo é enviado ao Cloudinary por requisição assinada no servidor e
+  o segredo da API não é exposto. Se a persistência falhar, o arquivo recém-enviado
+  é removido por compensação.
 - **Metadados persistidos:** `publicId`, `storageUrl`, `fileName`, `mimeType`, `fileSize`, `width`, `height`, `caption` e timestamps.
 - **Exemplo de chamada:**
 
@@ -1127,6 +1136,8 @@ await uploadEvidence({ data: formData });
 - **Body:** exatamente um entre `{ "inspectionId": "uuid" }` e `{ "nonConformityId": "uuid" }`.
 - **Validação:** `evidenceTargetSchema`.
 - **Resposta:** lista em ordem decrescente de criação, com tamanho convertido para número seguro no DTO.
+- **Regras relacionadas:** tanto o contexto consultado quanto a consulta de
+  evidências são limitados ao usuário autenticado pelos relacionamentos Prisma.
 - **Erros possíveis:** `401`, `404`, `409`, `422`, `500`.
 
 ### `removeEvidence`
@@ -1137,7 +1148,11 @@ await uploadEvidence({ data: formData });
 - **Autenticação:** exige sessão.
 - **Body:** `{ "id": "uuid" }`.
 - **Validação:** `evidenceIdSchema`.
-- **Regras relacionadas:** aplica soft delete antes da remoção externa; se o Cloudinary falhar, restaura `deletedAt` para não apresentar sucesso parcial. Resultado `not found` do provedor é idempotente e aceito.
+- **Regras relacionadas:** localiza e arquiva somente evidência pertencente ao
+  usuário autenticado. A autorização ocorre antes de qualquer chamada ao
+  Cloudinary. Aplica soft delete antes da remoção externa; se o Cloudinary falhar,
+  restaura `deletedAt` com o mesmo escopo de propriedade para não apresentar
+  sucesso parcial. Resultado `not found` do provedor é idempotente e aceito.
 - **Erros possíveis:** `401`, `404`, `422`, `500`, `502`.
 
 ---
