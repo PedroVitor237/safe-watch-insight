@@ -75,6 +75,10 @@ interface TestFixture {
   snapshotContentHash: string;
   snapshotItemId: string;
   snapshotItemDescription: string;
+  snapshotItems: Array<{
+    id: string;
+    description: string;
+  }>;
 }
 
 let fixture: TestFixture | null = null;
@@ -566,6 +570,293 @@ test("online → offline → reopen → retry → synchronize → Neon", async (
   console.log(`OFFLINE_PWA_BROWSER_EVIDENCE=${JSON.stringify(evidence)}`);
 });
 
+test("multiple offline edits → observation → conclusion → reload → synchronize", async ({
+  context,
+  page: initialPage,
+}) => {
+  const workflowFixture = await createTemporaryInspection();
+  const pageErrors: string[] = [];
+  const cloudinaryRequests: string[] = [];
+
+  await context.addInitScript(() => {
+    Object.defineProperty(Navigator.prototype, "onLine", {
+      configurable: true,
+      get: () => localStorage.getItem("safe-watch-e2e-online") !== "false",
+    });
+  });
+
+  let page = initialPage;
+  const observePage = (observedPage: Page) => {
+    observedPage.on("pageerror", (error) => pageErrors.push(error.message));
+    observedPage.on("request", (request) => {
+      if (request.url().includes("cloudinary.com")) {
+        cloudinaryRequests.push(request.url());
+      }
+    });
+  };
+  observePage(page);
+
+  try {
+    const inspectionUrl = `/inspecoes/${workflowFixture.inspectionId}`;
+    await login(page);
+    await openInspection(page, inspectionUrl, workflowFixture.snapshotItemDescription);
+    await page.waitForFunction(async () => {
+      const registration = await navigator.serviceWorker.ready;
+      return registration.active !== null && navigator.serviceWorker.controller !== null;
+    });
+    await page.reload({ waitUntil: "domcontentloaded" });
+
+    await setEmulatedConnectivity(page, false);
+    await context.setOffline(true);
+    await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);
+
+    let expectedOperationCount = 0;
+    const firstCard = responseCard(page, workflowFixture.snapshotItemDescription);
+    await firstCard.getByRole("button", { name: "Conforme", exact: true }).click();
+    expectedOperationCount += 1;
+    await expect
+      .poll(async () => (await readBrowserStorage(page)).operations.length)
+      .toBe(expectedOperationCount);
+
+    await firstCard.getByRole("button", { name: "NC", exact: true }).click();
+    expectedOperationCount += 1;
+    await expect
+      .poll(async () => (await readBrowserStorage(page)).operations.length)
+      .toBe(expectedOperationCount);
+
+    const observation = "Proteção ausente, registrada durante a inspeção offline.";
+    const observationField = firstCard.getByPlaceholder(
+      "Observações, evidências verbais, contexto...",
+    );
+    await observationField.fill(observation);
+    await observationField.blur();
+    expectedOperationCount += 1;
+    await expect
+      .poll(async () => (await readBrowserStorage(page)).operations.length)
+      .toBe(expectedOperationCount);
+
+    for (const item of workflowFixture.snapshotItems.slice(1)) {
+      await responseCard(page, item.description)
+        .getByRole("button", { name: "Conforme", exact: true })
+        .click();
+      expectedOperationCount += 1;
+      await expect
+        .poll(async () => (await readBrowserStorage(page)).operations.length)
+        .toBe(expectedOperationCount);
+    }
+
+    await page.getByRole("tab", { name: "Evidências", exact: true }).click();
+    await expect(
+      page.getByText("Upload de evidências indisponível offline", { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByLabel("Imagens")).toBeDisabled();
+    await expect(page.getByRole("button", { name: "Enviar evidências" })).toBeDisabled();
+    expect(cloudinaryRequests).toEqual([]);
+
+    await page.getByRole("tab", { name: "Encerrar", exact: true }).click();
+    await page.getByRole("button", { name: "Concluir inspeção", exact: true }).click();
+    expectedOperationCount += 1;
+    await expect(page).toHaveURL(/\/inspecoes$/);
+    await expect
+      .poll(async () => {
+        try {
+          return (await readBrowserStorage(page)).operations.length;
+        } catch {
+          return -1;
+        }
+      })
+      .toBe(expectedOperationCount);
+
+    let storage = await readBrowserStorage(page);
+    const orderedOperations = [...storage.operations].sort(
+      (left, right) =>
+        asNumber(left.sequence, "operation sequence") -
+        asNumber(right.sequence, "operation sequence"),
+    );
+    expect(orderedOperations.map((operation) => operation.sequence)).toEqual(
+      Array.from({ length: expectedOperationCount }, (_, index) => index + 1),
+    );
+    expect(orderedOperations.at(-1)?.type).toBe("FINISH_INSPECTION");
+    const firstItemOperations = orderedOperations.filter(
+      (operation) => operation.entityKey === `response:${workflowFixture.snapshotItemId}`,
+    );
+    expect(firstItemOperations).toHaveLength(3);
+    expect(firstItemOperations[1]?.dependsOnOperationId).toBe(firstItemOperations[0]?.id);
+    expect(firstItemOperations[2]?.dependsOnOperationId).toBe(firstItemOperations[1]?.id);
+
+    const finishOperation = asRecord(orderedOperations.at(-1), "finish operation");
+    const finishPayload = asRecord(finishOperation.payload, "finish operation payload");
+    const finishOperationId = asString(finishOperation.id, "finish operation id");
+    const finishClientCreatedAt = asString(
+      finishPayload.clientCreatedAt,
+      "finish operation client timestamp",
+    );
+
+    await page.close();
+    page = await context.newPage();
+    observePage(page);
+    await page.goto(inspectionUrl, { waitUntil: "domcontentloaded" });
+    await expect(responseCard(page, workflowFixture.snapshotItemDescription)).toBeVisible();
+    await expect(
+      responseCard(page, workflowFixture.snapshotItemDescription).getByPlaceholder(
+        "Observações, evidências verbais, contexto...",
+      ),
+    ).toHaveValue(observation);
+    storage = await readBrowserStorage(page);
+    expect(storage.operations).toHaveLength(expectedOperationCount);
+    const reopenedPackage = findInspectionPackage(storage, workflowFixture.inspectionId);
+    expect(asRecord(reopenedPackage.inspection, "reopened inspection").status).toBe("COMPLETED");
+
+    await context.setOffline(false);
+    await setEmulatedConnectivity(page, true);
+    await expect
+      .poll(async () => (await readBrowserStorage(page)).operations.length, { timeout: 90_000 })
+      .toBe(0);
+
+    const persistedInspection = await prisma.inspection.findUniqueOrThrow({
+      where: { id: workflowFixture.inspectionId },
+      include: {
+        responses: true,
+        offlineSyncOperations: true,
+      },
+    });
+    expect(persistedInspection.status).toBe("COMPLETED");
+    expect(persistedInspection.responses).toHaveLength(workflowFixture.snapshotItems.length);
+    const firstResponse = persistedInspection.responses.find(
+      (response) => response.snapshotItemId === workflowFixture.snapshotItemId,
+    );
+    expect(firstResponse?.status).toBe(ResponseStatus.NON_COMPLIANT);
+    expect(firstResponse?.observation).toBe(observation);
+    expect(persistedInspection.offlineSyncOperations).toHaveLength(expectedOperationCount);
+
+    const duplicateCompletion = unwrap(
+      await inspectionResponseService.finishInspection(workflowFixture.inspectionId, {
+        id: finishOperationId,
+        userId: workflowFixture.userId,
+        clientCreatedAt: new Date(finishClientCreatedAt),
+      }),
+    );
+    expect(duplicateCompletion.status).toBe("COMPLETED");
+    expect(await prisma.offlineSyncOperation.count({ where: { id: finishOperationId } })).toBe(1);
+    expect(pageErrors).toEqual([]);
+
+    console.log(
+      `OFFLINE_WORKFLOW_BROWSER_EVIDENCE=${JSON.stringify({
+        itemCount: workflowFixture.snapshotItems.length,
+        queuedOperationCount: expectedOperationCount,
+        repeatedFirstItemEdits: firstItemOperations.length,
+        observationPersisted: firstResponse?.observation === observation,
+        localConclusionSurvivedReopen: true,
+        dependencyOrdering: true,
+        synchronizedConclusion: persistedInspection.status === "COMPLETED",
+        idempotentConclusionRetry: true,
+        offlineEvidenceBlocked: cloudinaryRequests.length === 0,
+        applicationExceptions: pageErrors,
+      })}`,
+    );
+  } finally {
+    await cleanupTemporaryInspection(workflowFixture.inspectionId);
+  }
+});
+
+test("optimistic conflict remains blocked across network transitions", async ({
+  context,
+  page,
+}) => {
+  const conflictFixture = await createTemporaryInspection();
+  const pageErrors: string[] = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+
+  await context.addInitScript(() => {
+    Object.defineProperty(Navigator.prototype, "onLine", {
+      configurable: true,
+      get: () => localStorage.getItem("safe-watch-e2e-online") !== "false",
+    });
+  });
+
+  try {
+    const inspectionUrl = `/inspecoes/${conflictFixture.inspectionId}`;
+    await login(page);
+    await openInspection(page, inspectionUrl, conflictFixture.snapshotItemDescription);
+    await page.waitForFunction(async () => {
+      const registration = await navigator.serviceWorker.ready;
+      return registration.active !== null && navigator.serviceWorker.controller !== null;
+    });
+
+    await setEmulatedConnectivity(page, false);
+    await context.setOffline(true);
+    const firstCard = responseCard(page, conflictFixture.snapshotItemDescription);
+    await firstCard.getByRole("button", { name: "NC", exact: true }).click();
+    await expect.poll(async () => (await readBrowserStorage(page)).operations.length).toBe(1);
+    const localOperation = captureOnlyResponseOperation(await readBrowserStorage(page));
+
+    unwrap(
+      await inspectionResponseService.saveInspectionResponse({
+        inspectionId: conflictFixture.inspectionId,
+        snapshotItemId: conflictFixture.snapshotItemId,
+        status: ResponseStatus.COMPLIANT,
+        observation: "Alteração concorrente no servidor.",
+      }),
+    );
+
+    await context.setOffline(false);
+    await setEmulatedConnectivity(page, true);
+    await expect
+      .poll(async () => {
+        const operations = (await readBrowserStorage(page)).operations;
+        return operations[0]?.status;
+      })
+      .toBe("CONFLICT");
+
+    let storage = await readBrowserStorage(page);
+    expect(storage.operations).toHaveLength(1);
+    expect(storage.operations[0]?.id).toBe(localOperation.id);
+    expect(storage.operations[0]?.lastErrorCode).toBe("CONFLICT");
+    expect(findInspectionPackage(storage, conflictFixture.inspectionId).localSyncStatus).toBe(
+      "CONFLICT",
+    );
+    await expect(page.getByText("1 conflito(s)", { exact: true })).toBeVisible();
+
+    for (let transition = 0; transition < 2; transition += 1) {
+      await setEmulatedConnectivity(page, false);
+      await context.setOffline(true);
+      await context.setOffline(false);
+      await setEmulatedConnectivity(page, true);
+    }
+    await page.waitForTimeout(500);
+    storage = await readBrowserStorage(page);
+    expect(storage.operations).toHaveLength(1);
+    expect(storage.operations[0]?.id).toBe(localOperation.id);
+    expect(storage.operations[0]?.status).toBe("CONFLICT");
+    expect(await prisma.offlineSyncOperation.count({ where: { id: localOperation.id } })).toBe(0);
+
+    await firstCard.getByRole("button", { name: "Conforme", exact: true }).click();
+    await expect.poll(async () => (await readBrowserStorage(page)).operations.length).toBe(1);
+    const serverResponse = await prisma.inspectionResponse.findUniqueOrThrow({
+      where: {
+        inspectionId_snapshotItemId: {
+          inspectionId: conflictFixture.inspectionId,
+          snapshotItemId: conflictFixture.snapshotItemId,
+        },
+      },
+    });
+    expect(serverResponse.status).toBe(ResponseStatus.COMPLIANT);
+    expect(pageErrors).toEqual([]);
+
+    console.log(
+      `OFFLINE_CONFLICT_BROWSER_EVIDENCE=${JSON.stringify({
+        operationIdPreserved: storage.operations[0]?.id === localOperation.id,
+        conflictState: storage.operations[0]?.status,
+        retryBlockedAcrossTransitions: true,
+        serverValuePreserved: serverResponse.status,
+        applicationExceptions: pageErrors,
+      })}`,
+    );
+  } finally {
+    await cleanupTemporaryInspection(conflictFixture.inspectionId);
+  }
+});
+
 async function login(page: Page): Promise<void> {
   await page.goto("/login");
   await loginFromCurrentPage(page);
@@ -867,6 +1158,10 @@ async function createTemporaryInspection(): Promise<TestFixture> {
     snapshotContentHash: snapshot.contentHash,
     snapshotItemId: firstItem.id,
     snapshotItemDescription: firstItem.description,
+    snapshotItems: snapshot.items.map((item) => ({
+      id: item.id,
+      description: item.description,
+    })),
   };
 }
 
@@ -875,33 +1170,36 @@ async function cleanupTemporaryInspection(inspectionId: string): Promise<void> {
     where: { inspectionId },
   });
 
-  await prisma.$transaction(async (transaction) => {
-    await transaction.offlineSyncOperation.deleteMany({ where: { inspectionId } });
-    await transaction.correctiveAction.deleteMany({
-      where: { nonConformity: { inspectionResponse: { inspectionId } } },
-    });
-    await transaction.evidence.deleteMany({
-      where: {
-        OR: [{ inspectionId }, { nonConformity: { inspectionResponse: { inspectionId } } }],
-      },
-    });
-    await transaction.nonConformity.deleteMany({
-      where: { inspectionResponse: { inspectionId } },
-    });
-    await transaction.inspectionResponse.deleteMany({ where: { inspectionId } });
-
-    if (snapshot) {
-      await transaction.inspectionSnapshotItemStandard.deleteMany({
-        where: { snapshotItem: { snapshotId: snapshot.id } },
+  await prisma.$transaction(
+    async (transaction) => {
+      await transaction.offlineSyncOperation.deleteMany({ where: { inspectionId } });
+      await transaction.correctiveAction.deleteMany({
+        where: { nonConformity: { inspectionResponse: { inspectionId } } },
       });
-      await transaction.inspectionSnapshotItem.deleteMany({ where: { snapshotId: snapshot.id } });
-      await transaction.inspectionChecklistSnapshot.delete({ where: { id: snapshot.id } });
-    }
+      await transaction.evidence.deleteMany({
+        where: {
+          OR: [{ inspectionId }, { nonConformity: { inspectionResponse: { inspectionId } } }],
+        },
+      });
+      await transaction.nonConformity.deleteMany({
+        where: { inspectionResponse: { inspectionId } },
+      });
+      await transaction.inspectionResponse.deleteMany({ where: { inspectionId } });
 
-    await transaction.inspection.deleteMany({
-      where: { id: inspectionId, notes: { startsWith: TEMPORARY_NOTE_PREFIX } },
-    });
-  });
+      if (snapshot) {
+        await transaction.inspectionSnapshotItemStandard.deleteMany({
+          where: { snapshotItem: { snapshotId: snapshot.id } },
+        });
+        await transaction.inspectionSnapshotItem.deleteMany({ where: { snapshotId: snapshot.id } });
+        await transaction.inspectionChecklistSnapshot.delete({ where: { id: snapshot.id } });
+      }
+
+      await transaction.inspection.deleteMany({
+        where: { id: inspectionId, notes: { startsWith: TEMPORARY_NOTE_PREFIX } },
+      });
+    },
+    { maxWait: 10_000, timeout: 30_000 },
+  );
 }
 
 async function cleanupStaleTemporaryInspections(): Promise<void> {

@@ -305,6 +305,32 @@ Classificação de encerramento:
 - **PARTIAL:** requisito Offline/PWA amplo e homologação de navegadores/deploy;
 - **FUTURE:** itens não marcados nesta fase, sem implementação iniciada neste encerramento.
 
+## Homologação final PWA/Offline — 5 de setembro de 2026
+
+- [x] Reauditar manifest, service worker, Dexie, sessão local e protocolo de sincronização
+- [x] Revalidar instalação, escopo, atualização e fallback offline no Chromium 151
+- [x] Validar 6 respostas, edições repetidas, observação e conclusão offline em uma fila de 9 operações
+- [x] Validar reabertura offline, reconexão, ordenação por dependência e conclusão no Neon
+- [x] Validar retry transitório, recuperação de `SYNCING` e idempotência de resposta e conclusão
+- [x] Validar conflito otimista real e bloqueio seguro durante oscilações de rede
+- [x] Revalidar expiração local, troca de usuário, logout e ausência de segredos no armazenamento
+- [x] Confirmar que evidências permanecem bloqueadas offline e funcionam online
+- [x] Reexecutar TypeScript, ESLint, Prettier dos arquivos alterados, Prisma, 65 testes e build Vercel com Node 22.23.2
+- [x] Validar o deployment público por HTTPS, registro/controle do service worker e fallback sem rede
+
+Resultado: **APPROVED WITH KNOWN LIMITATIONS** para a demonstração do TCC. A
+homologação confirmou o fluxo offline suportado, sem necessidade de correção na
+implementação. O teste E2E foi ampliado para registrar as evidências acima e seu
+teardown recebeu timeout compatível com a latência do Neon. O domínio HTTPS
+publicado também foi homologado para recursos PWA, controle do service worker e
+fallback offline. O fluxo autenticado completo não foi repetido em produção, e
+reinício completo do processo do navegador e navegadores/dispositivos adicionais
+não foram homologados nesta execução.
+
+Permanecem fora do escopo: criação integral de inspeção offline, evidências
+binárias offline, Background Sync, CRUD offline amplo e resolução assistida de
+conflitos.
+
 ---
 
 # FASE 16 — Segurança

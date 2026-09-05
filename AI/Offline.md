@@ -541,8 +541,8 @@ um MIME genérico e verifica atualizações do worker a cada navegação.
 
 Como TanStack Start usa SSR, a rota precisa ter sido interceptada pelo service
 worker antes de poder ser reaberta offline. Esse comportamento foi comprovado no
-Chromium usado pelo Playwright contra o servidor local e ainda precisa ser
-homologado em Chrome/Edge/Android adicionais e no domínio HTTPS da Vercel.
+Chromium usado pelo Playwright contra o servidor local e no domínio HTTPS da
+Vercel; ainda precisa ser homologado em Chrome/Edge/Android adicionais.
 
 # Evidência Browser/E2E — execução original em 7 de agosto de 2026
 
@@ -575,6 +575,43 @@ deduplicação, recuperação de autenticação, expiração local, isolamento d
 usuário, limpeza no logout, fallback offline e invalidação de cache. A validação
 direcionada no Neon também confirmou retry idempotente de resposta depois que a
 inspeção já havia sido concluída.
+
+## Homologação final — 5 de setembro de 2026
+
+O marco final foi homologado novamente no Chromium 151.0.7922.34 contra o
+servidor local e o Neon. A auditoria estática confirmou que manifest, service
+worker, banco Dexie versão 1, sessão local e protocolo de fila continuam
+alinhados a este documento após as mudanças de relatórios, dashboard e hardening
+de evidências.
+
+A execução browser/E2E passou em três cenários:
+
+- instalação sem erros, registro e atualização do service worker, remoção de
+  cache obsoleto, fallback offline, retry transitório, recuperação de `SYNCING`,
+  idempotência, expiração da sessão, troca de usuário e limpeza no logout;
+- fluxo completo com 6 itens, 9 operações FIFO, três alterações dependentes no
+  mesmo item, observação, conclusão local, reabertura offline, reconexão,
+  persistência final e retry idempotente da conclusão;
+- conflito otimista provocado por alteração concorrente, mantido em `CONFLICT`
+  sem sobrescrever o servidor mesmo após oscilações de rede.
+
+O mesmo navegador confirmou que upload de evidência fica desabilitado offline,
+sem requisição ao Cloudinary. O E2E online de upload, listagem e remoção de
+evidência também passou. Não houve exceção de aplicação nos novos cenários. A
+suíte automatizada passou com 65 de 65 testes e o artefato Vercel foi gerado com
+Node 22.23.2, incluindo manifest, worker, fallback, ícone e headers previstos.
+
+O veredito é **APPROVED WITH KNOWN LIMITATIONS** para a demonstração do TCC. Não
+foi necessária correção na implementação offline/PWA; somente a cobertura E2E e
+o timeout do teardown dos fixtures foram ajustados. O domínio público foi
+validado por HTTPS no Chromium: manifest, worker, fallback e ícone responderam
+com sucesso, o contexto era seguro, o worker assumiu o controle no escopo `/` e
+a navegação sem rede exibiu o fallback. O fluxo autenticado completo não foi
+repetido em produção, e um reinício completo do processo do navegador e
+Chrome/Edge/Android adicionais não foram testados nesta execução. Criação
+integral de inspeção offline, reconciliação assistida, evidências binárias
+offline, Background Sync e CRUD offline amplo continuam intencionalmente fora do
+escopo.
 
 # Limites de Segurança Implementados
 
