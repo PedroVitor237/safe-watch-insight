@@ -28,6 +28,7 @@ import {
 
 import { InspectionResponseService } from "./inspection-response.service";
 
+const USER_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const INSPECTION_ID = "11111111-1111-4111-8111-111111111111";
 const SNAPSHOT_ITEM_ID = "22222222-2222-4222-8222-222222222222";
 const LEGACY_ITEM_ID = "33333333-3333-4333-8333-333333333333";
@@ -85,7 +86,7 @@ class FakeInspectionRepository extends InspectionRepository {
     super();
   }
 
-  override findActiveById(): Promise<InspectionWithRelations | null> {
+  override findActiveOwnedById(): Promise<InspectionWithRelations | null> {
     return Promise.resolve(this.currentInspection);
   }
 
@@ -112,6 +113,7 @@ test("a non-compliant response uses the snapshot text for the NC directive", asy
   );
 
   const result = await service.saveInspectionResponse({
+    userId: USER_ID,
     inspectionId: INSPECTION_ID,
     snapshotItemId: SNAPSHOT_ITEM_ID,
     status: ResponseStatus.NON_COMPLIANT,
@@ -138,6 +140,7 @@ test("a legacy checklist item identifier is mapped to its inspection snapshot it
   );
 
   const result = await service.saveInspectionResponse({
+    userId: USER_ID,
     inspectionId: INSPECTION_ID,
     checklistItemId: LEGACY_ITEM_ID,
     status: ResponseStatus.COMPLIANT,
@@ -155,6 +158,7 @@ test("an item outside the inspection snapshot is rejected", async () => {
   );
 
   const result = await service.saveInspectionResponse({
+    userId: USER_ID,
     inspectionId: INSPECTION_ID,
     snapshotItemId: "99999999-9999-4999-8999-999999999999",
     status: ResponseStatus.COMPLIANT,
@@ -173,7 +177,7 @@ test("finishing is rejected while a required snapshot item is unanswered", async
     inspectionRepository,
   );
 
-  const result = await service.finishInspection(INSPECTION_ID);
+  const result = await service.finishInspection(INSPECTION_ID, USER_ID);
 
   assert.equal(result.success, false);
   assert.equal(inspectionRepository.updatedStatus, null);
@@ -188,7 +192,7 @@ test("finishing uses answered snapshot item IDs", async () => {
     inspectionRepository,
   );
 
-  const result = await service.finishInspection(INSPECTION_ID);
+  const result = await service.finishInspection(INSPECTION_ID, USER_ID);
 
   assert.equal(result.success, true);
   assert.equal(inspectionRepository.updatedStatus, InspectionStatus.COMPLETED);
@@ -202,6 +206,7 @@ test("a completed inspection cannot receive new responses", async () => {
   );
 
   const result = await service.saveInspectionResponse({
+    userId: USER_ID,
     inspectionId: INSPECTION_ID,
     snapshotItemId: SNAPSHOT_ITEM_ID,
     status: ResponseStatus.COMPLIANT,
@@ -220,6 +225,7 @@ test("a completed inspection still delegates an offline retry to idempotency per
 
   const operationId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
   const result = await service.saveInspectionResponse({
+    userId: USER_ID,
     inspectionId: INSPECTION_ID,
     snapshotItemId: SNAPSHOT_ITEM_ID,
     status: ResponseStatus.COMPLIANT,
@@ -244,6 +250,7 @@ test("a concurrent completion conflict is returned without accepting a response"
   );
 
   const result = await service.saveInspectionResponse({
+    userId: USER_ID,
     inspectionId: INSPECTION_ID,
     snapshotItemId: SNAPSHOT_ITEM_ID,
     status: ResponseStatus.COMPLIANT,

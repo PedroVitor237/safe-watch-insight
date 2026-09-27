@@ -84,7 +84,9 @@ export const listInspectionResponses = createServerFn({ method: "POST" })
       return toServerResult<never>(userResult);
     }
 
-    return toServerResult(await service.listInspectionResponses(data.inspectionId));
+    return toServerResult(
+      await service.listInspectionResponses(data.inspectionId, userResult.data.id),
+    );
   });
 
 export const saveInspectionResponse = createServerFn({ method: "POST" })
@@ -100,6 +102,7 @@ export const saveInspectionResponse = createServerFn({ method: "POST" })
 
     return toServerResult(
       await service.saveInspectionResponse({
+        userId: userResult.data.id,
         inspectionId: data.inspectionId,
         snapshotItemId: data.snapshotItemId,
         checklistItemId: data.checklistItemId,
@@ -133,6 +136,7 @@ export const finishInspection = createServerFn({ method: "POST" })
     return toServerResult(
       await service.finishInspection(
         data.inspectionId,
+        userResult.data.id,
         data.operationId && data.clientCreatedAt
           ? {
               id: data.operationId,

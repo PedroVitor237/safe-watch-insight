@@ -117,9 +117,22 @@ export class NonConformityRepository extends BaseRepository<
     super(prisma.nonConformity);
   }
 
-  createWithRelations(data: Prisma.NonConformityCreateInput): Promise<NonConformityWithRelations> {
+  createWithRelations(
+    data: Prisma.NonConformityCreateInput,
+    userId: string,
+  ): Promise<NonConformityWithRelations> {
     return prisma.nonConformity.create({
-      data,
+      data: data.inspectionResponse?.connect?.id
+        ? {
+            ...data,
+            inspectionResponse: {
+              connect: {
+                id: data.inspectionResponse.connect.id,
+                inspection: { userId, deletedAt: null },
+              },
+            },
+          }
+        : data,
       include: nonConformityRelations,
     });
   }
@@ -224,23 +237,29 @@ export class NonConformityRepository extends BaseRepository<
   updateWithRelations(
     id: string,
     data: Prisma.NonConformityUpdateInput,
+    userId: string,
   ): Promise<NonConformityWithRelations> {
     return prisma.nonConformity.update({
-      where: { id },
+      where: {
+        id,
+        deletedAt: null,
+        inspectionResponse: { inspection: { userId, deletedAt: null } },
+      },
       data,
       include: nonConformityRelations,
     });
   }
 
-  softDelete(id: string): Promise<NonConformityWithRelations> {
-    return this.updateWithRelations(id, { deletedAt: new Date() });
+  softDelete(id: string, userId: string): Promise<NonConformityWithRelations> {
+    return this.updateWithRelations(id, { deletedAt: new Date() }, userId);
   }
 
-  markOverdue(referenceDate: Date): Promise<number> {
+  markOverdue(referenceDate: Date, userId: string): Promise<number> {
     return prisma.nonConformity
       .updateMany({
         where: {
           deletedAt: null,
+          inspectionResponse: { inspection: { userId, deletedAt: null } },
           dueDate: { lt: referenceDate },
           status: { in: ["OPEN", "IN_PROGRESS"] },
         },

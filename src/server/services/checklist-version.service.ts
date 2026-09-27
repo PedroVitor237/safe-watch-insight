@@ -24,12 +24,20 @@ export class ChecklistVersionService extends BaseService<ChecklistVersionReposit
     super(repository);
   }
 
-  async listVersions(checklistId: string): Promise<Result<ChecklistVersionWithItems[]>> {
+  async listVersions(
+    checklistId: string,
+    userId: string,
+  ): Promise<Result<ChecklistVersionWithItems[]>> {
     return this.execute(async () => {
-      await this.ensureChecklistExists(checklistId);
+      const checklist = await this.checklistRepository.findVisibleById(checklistId, userId);
+      if (!checklist) throw new NotFoundError("Checklist not found.");
       const versions = await this.repository.listByChecklistId(checklistId);
 
-      return this.success(versions);
+      return this.success(
+        checklist.createdById === userId
+          ? versions
+          : versions.filter((version) => version.status === ChecklistVersionStatus.PUBLISHED),
+      );
     });
   }
 
@@ -38,36 +46,40 @@ export class ChecklistVersionService extends BaseService<ChecklistVersionReposit
     publishedById: string,
   ): Promise<Result<ChecklistVersionWithItems>> {
     return this.execute(async () => {
-      await this.ensureChecklistExists(checklistId);
+      await this.ensureChecklistExists(checklistId, publishedById);
       const draft = await this.repository.findDraftByChecklistId(checklistId);
 
       if (!draft) {
         throw new ConflictError("This checklist has no draft version to publish.");
       }
 
-      const published = await this.repository.publishDraft(draft.id, {
-        publishedById,
-        publishedAt: new Date(),
-        contentHash: createChecklistContentHash({
-          title: draft.title,
-          description: draft.description,
-          items: draft.items.map((item) => ({
-            description: item.description,
-            orderIndex: item.orderIndex,
-            isRequired: item.isRequired,
-            standards: item.standards.map((standard) => ({
-              standardId: standard.standardId,
-              type: standard.type,
-              code: standard.code,
-              title: standard.title,
-              summary: standard.summary,
-              officialUrl: standard.officialUrl,
+      const published = await this.repository.publishDraft(
+        draft.id,
+        {
+          publishedById,
+          publishedAt: new Date(),
+          contentHash: createChecklistContentHash({
+            title: draft.title,
+            description: draft.description,
+            items: draft.items.map((item) => ({
+              description: item.description,
+              orderIndex: item.orderIndex,
+              isRequired: item.isRequired,
+              standards: item.standards.map((standard) => ({
+                standardId: standard.standardId,
+                type: standard.type,
+                code: standard.code,
+                title: standard.title,
+                summary: standard.summary,
+                officialUrl: standard.officialUrl,
+              })),
             })),
-          })),
-        }),
-        contentSchemaVersion: CHECKLIST_CONTENT_SCHEMA_VERSION,
-        expectedUpdatedAt: draft.updatedAt,
-      });
+          }),
+          contentSchemaVersion: CHECKLIST_CONTENT_SCHEMA_VERSION,
+          expectedUpdatedAt: draft.updatedAt,
+        },
+        publishedById,
+      );
 
       return this.success(published);
     });
@@ -76,9 +88,10 @@ export class ChecklistVersionService extends BaseService<ChecklistVersionReposit
   async retireVersion(
     checklistId: string,
     versionId: string,
+    userId: string,
   ): Promise<Result<ChecklistVersionWithItems>> {
     return this.execute(async () => {
-      await this.ensureChecklistExists(checklistId);
+      await this.ensureChecklistExists(checklistId, userId);
       const version = await this.repository.findByIdWithItems(versionId);
 
       if (!version || version.checklistId !== checklistId) {
@@ -89,7 +102,7 @@ export class ChecklistVersionService extends BaseService<ChecklistVersionReposit
         throw new ConflictError("Only published checklist versions can be retired.");
       }
 
-      const retired = await this.repository.retirePublished(versionId);
+      const retired = await this.repository.retirePublished(versionId, userId);
 
       return this.success(retired);
     });
@@ -156,6 +169,7 @@ export class ChecklistVersionService extends BaseService<ChecklistVersionReposit
       return await this.repository.updateDraftMetadataAndChecklist(
         checklistId,
         draft.id,
+        createdById,
         {
           ...(input.title !== undefined ? { title: input.title } : {}),
           ...(input.description !== undefined ? { description: input.description } : {}),
@@ -189,8 +203,8 @@ export class ChecklistVersionService extends BaseService<ChecklistVersionReposit
     }));
   }
 
-  private async ensureChecklistExists(id: string): Promise<void> {
-    const checklist = await this.checklistRepository.findActiveById(id);
+  private async ensureChecklistExists(id: string, userId: string): Promise<void> {
+    const checklist = await this.checklistRepository.findActiveOwnedById(id, userId);
 
     if (!checklist) {
       throw new NotFoundError("Checklist not found.");

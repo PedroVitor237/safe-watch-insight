@@ -73,17 +73,6 @@ function toServerResult<TData>(result: Result<TData>): ServerResult<TData> {
   };
 }
 
-async function ensureAuthenticated(): Promise<ServerResult<never> | null> {
-  const { getAuthenticatedUser } = await getAuthSessionHelpers();
-  const userResult = await getAuthenticatedUser();
-
-  if (!userResult.success) {
-    return toServerResult<never>(userResult);
-  }
-
-  return null;
-}
-
 export const createChecklistItem = createServerFn({ method: "POST" })
   .inputValidator(createChecklistItemSchema)
   .handler(async ({ data }) => {
@@ -139,13 +128,14 @@ export const deleteChecklistItem = createServerFn({ method: "POST" })
 export const listChecklistItems = createServerFn({ method: "POST" })
   .inputValidator(checklistItemsByChecklistIdSchema)
   .handler(async ({ data }) => {
-    const authError = await ensureAuthenticated();
+    const { getAuthenticatedUser } = await getAuthSessionHelpers();
+    const userResult = await getAuthenticatedUser();
 
-    if (authError) {
-      return authError;
+    if (!userResult.success) {
+      return toServerResult<never>(userResult);
     }
 
     const service = await getChecklistItemService();
 
-    return toServerResult(await service.listChecklistItems(data.checklistId));
+    return toServerResult(await service.listChecklistItems(data.checklistId, userResult.data.id));
   });

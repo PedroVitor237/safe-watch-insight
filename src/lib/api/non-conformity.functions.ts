@@ -22,24 +22,18 @@ async function getAuthenticatedUserResult(): Promise<Result<SafeUser>> {
   return getAuthenticatedUser();
 }
 
-async function ensureAuthenticated() {
-  const userResult = await getAuthenticatedUserResult();
-
-  return userResult.success ? null : toServerResult<never>(userResult);
-}
-
 export const createNonConformity = createServerFn({ method: "POST" })
   .validator(createNonConformitySchema)
   .handler(async ({ data }) => {
-    const authError = await ensureAuthenticated();
+    const userResult = await getAuthenticatedUserResult();
 
-    if (authError) {
-      return authError;
+    if (!userResult.success) {
+      return toServerResult<never>(userResult);
     }
 
     const service = await getNonConformityService();
 
-    return toServerResult(await service.createNonConformity(data));
+    return toServerResult(await service.createNonConformity(data, userResult.data.id));
   });
 
 export const getNonConformityById = createServerFn({ method: "POST" })
@@ -73,27 +67,29 @@ export const listNonConformities = createServerFn({ method: "POST" })
 export const updateNonConformity = createServerFn({ method: "POST" })
   .validator(updateNonConformityInputSchema)
   .handler(async ({ data }) => {
-    const authError = await ensureAuthenticated();
+    const userResult = await getAuthenticatedUserResult();
 
-    if (authError) {
-      return authError;
+    if (!userResult.success) {
+      return toServerResult<never>(userResult);
     }
 
     const service = await getNonConformityService();
 
-    return toServerResult(await service.updateNonConformity(data.id, data.data));
+    return toServerResult(
+      await service.updateNonConformity(data.id, data.data, userResult.data.id),
+    );
   });
 
 export const deleteNonConformity = createServerFn({ method: "POST" })
   .validator(nonConformityIdSchema)
   .handler(async ({ data }) => {
-    const authError = await ensureAuthenticated();
+    const userResult = await getAuthenticatedUserResult();
 
-    if (authError) {
-      return authError;
+    if (!userResult.success) {
+      return toServerResult<never>(userResult);
     }
 
     const service = await getNonConformityService();
 
-    return toServerResult(await service.deleteNonConformity(data.id));
+    return toServerResult(await service.deleteNonConformity(data.id, userResult.data.id));
   });

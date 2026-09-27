@@ -4,6 +4,7 @@ import {
   InspectionSnapshotOrigin,
   InspectionStatus,
   SyncStatus,
+  Prisma,
 } from "@/generated/prisma/client";
 import { ApiError, ConflictError, NotFoundError } from "@/server/errors";
 import { ChecklistRepository } from "@/server/repositories/checklist.repository";
@@ -51,8 +52,11 @@ export class InspectionService extends BaseService<InspectionRepository> {
 
   async createInspection(input: CreateInspectionInput): Promise<Result<InspectionWithRelations>> {
     return this.execute(async () => {
-      await this.ensureCompanyExists(input.companyId);
-      const checklist = await this.ensureChecklistCanStartInspection(input.checklistId);
+      await this.ensureCompanyExists(input.companyId, input.userId);
+      const checklist = await this.ensureChecklistCanStartInspection(
+        input.checklistId,
+        input.userId,
+      );
       const version = await this.resolvePublishedVersion(
         input.checklistId,
         input.checklistVersionId,
@@ -100,9 +104,9 @@ export class InspectionService extends BaseService<InspectionRepository> {
     });
   }
 
-  async getInspectionById(id: string): Promise<Result<InspectionWithRelations>> {
+  async getInspectionById(id: string, userId: string): Promise<Result<InspectionWithRelations>> {
     return this.execute(async () => {
-      const inspection = await this.repository.findActiveById(id);
+      const inspection = await this.repository.findActiveOwnedById(id, userId);
 
       if (!inspection) {
         throw new NotFoundError("Inspection not found.");
@@ -118,10 +122,12 @@ export class InspectionService extends BaseService<InspectionRepository> {
 
   async listInspections(
     filters: InspectionFindManyFilters = {},
+    userId: string,
   ): Promise<Result<PaginatedResult<InspectionWithRelations>>> {
     return this.execute(async () => {
       const inspections = await this.repository.findManyPaginated({
         ...filters,
+        userId,
         includeDeleted: false,
       });
 
@@ -129,11 +135,11 @@ export class InspectionService extends BaseService<InspectionRepository> {
     });
   }
 
-  async deleteInspection(id: string): Promise<Result<InspectionWithRelations>> {
+  async deleteInspection(id: string, userId: string): Promise<Result<InspectionWithRelations>> {
     return this.execute(async () => {
-      await this.ensureInspectionExists(id);
+      await this.ensureInspectionExists(id, userId);
 
-      const inspection = await this.repository.softDelete(id);
+      const inspection = await this.repository.softDeleteOwned(id, userId);
 
       return this.success(inspection);
     });
@@ -147,12 +153,19 @@ export class InspectionService extends BaseService<InspectionRepository> {
         return this.failure(error);
       }
 
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+        return this.failure(new NotFoundError("Inspection or required resource not found."));
+      }
+
       throw error;
     }
   }
 
-  private async ensureInspectionExists(id: string): Promise<InspectionWithRelations> {
-    const inspection = await this.repository.findActiveById(id);
+  private async ensureInspectionExists(
+    id: string,
+    userId: string,
+  ): Promise<InspectionWithRelations> {
+    const inspection = await this.repository.findActiveOwnedById(id, userId);
 
     if (!inspection) {
       throw new NotFoundError("Inspection not found.");
@@ -161,16 +174,19 @@ export class InspectionService extends BaseService<InspectionRepository> {
     return inspection;
   }
 
-  private async ensureCompanyExists(id: string): Promise<void> {
-    const company = await this.companyRepository.findActiveById(id);
+  private async ensureCompanyExists(id: string, userId: string): Promise<void> {
+    const company = await this.companyRepository.findActiveOwnedById(id, userId);
 
     if (!company) {
       throw new NotFoundError("Company not found.");
     }
   }
 
-  private async ensureChecklistCanStartInspection(id: string): Promise<ChecklistEntity> {
-    const checklist = await this.checklistRepository.findActiveById(id);
+  private async ensureChecklistCanStartInspection(
+    id: string,
+    userId: string,
+  ): Promise<ChecklistEntity> {
+    const checklist = await this.checklistRepository.findVisibleById(id, userId);
 
     if (!checklist) {
       throw new NotFoundError("Checklist not found.");

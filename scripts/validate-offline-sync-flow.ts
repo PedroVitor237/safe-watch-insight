@@ -15,7 +15,7 @@ let inspectionId: string | null = null;
 async function main(): Promise<void> {
   const user = unwrap(await userService.authenticate("admin@demo.com", "Admin@123"));
   const company = await prisma.company.findFirst({
-    where: { deletedAt: null },
+    where: { deletedAt: null, createdById: user.id },
     orderBy: { createdAt: "asc" },
   });
   const publishedVersion = await prisma.checklistVersion.findFirst({
@@ -53,6 +53,7 @@ async function main(): Promise<void> {
   const firstClientTime = new Date();
   const firstResponse = unwrap(
     await inspectionResponseService.saveInspectionResponse({
+      userId: user.id,
       inspectionId: inspection.id,
       snapshotItemId: firstItem.id,
       status: ResponseStatus.COMPLIANT,
@@ -68,6 +69,7 @@ async function main(): Promise<void> {
 
   const duplicateResponse = unwrap(
     await inspectionResponseService.saveInspectionResponse({
+      userId: user.id,
       inspectionId: inspection.id,
       snapshotItemId: firstItem.id,
       status: ResponseStatus.COMPLIANT,
@@ -84,6 +86,7 @@ async function main(): Promise<void> {
   assert.equal(duplicateResponse.clientUpdatedAt?.getTime(), firstClientTime.getTime());
 
   const divergentRetry = await inspectionResponseService.saveInspectionResponse({
+    userId: user.id,
     inspectionId: inspection.id,
     snapshotItemId: firstItem.id,
     status: ResponseStatus.NON_COMPLIANT,
@@ -103,6 +106,7 @@ async function main(): Promise<void> {
   const nonCompliantClientTime = new Date();
   const nonCompliantResponse = unwrap(
     await inspectionResponseService.saveInspectionResponse({
+      userId: user.id,
       inspectionId: inspection.id,
       snapshotItemId: firstItem.id,
       status: ResponseStatus.NON_COMPLIANT,
@@ -118,6 +122,7 @@ async function main(): Promise<void> {
   assert.ok(nonCompliantResponse.nonConformity);
 
   const staleRevision = await inspectionResponseService.saveInspectionResponse({
+    userId: user.id,
     inspectionId: inspection.id,
     snapshotItemId: firstItem.id,
     status: ResponseStatus.COMPLIANT,
@@ -135,6 +140,7 @@ async function main(): Promise<void> {
   for (const item of inspection.snapshot.items.slice(1)) {
     unwrap(
       await inspectionResponseService.saveInspectionResponse({
+        userId: user.id,
         inspectionId: inspection.id,
         snapshotItemId: item.id,
         status: ResponseStatus.COMPLIANT,
@@ -151,14 +157,14 @@ async function main(): Promise<void> {
   const finishOperationId = randomUUID();
   const finishClientTime = new Date();
   const completed = unwrap(
-    await inspectionResponseService.finishInspection(inspection.id, {
+    await inspectionResponseService.finishInspection(inspection.id, user.id, {
       id: finishOperationId,
       userId: user.id,
       clientCreatedAt: finishClientTime,
     }),
   );
   const duplicateCompletion = unwrap(
-    await inspectionResponseService.finishInspection(inspection.id, {
+    await inspectionResponseService.finishInspection(inspection.id, user.id, {
       id: finishOperationId,
       userId: user.id,
       clientCreatedAt: finishClientTime,
@@ -169,6 +175,7 @@ async function main(): Promise<void> {
 
   const responseRetryAfterCompletion = unwrap(
     await inspectionResponseService.saveInspectionResponse({
+      userId: user.id,
       inspectionId: inspection.id,
       snapshotItemId: firstItem.id,
       status: ResponseStatus.NON_COMPLIANT,

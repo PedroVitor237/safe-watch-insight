@@ -14,65 +14,69 @@ async function getCorrectiveActionService() {
   return correctiveActionService;
 }
 
-async function ensureAuthenticated() {
+async function getAuthenticatedUserResult() {
   const { getAuthenticatedUser } = await import("@/server/auth/session");
   const userResult = await getAuthenticatedUser();
 
-  return userResult.success ? null : toServerResult<never>(userResult);
+  return userResult;
 }
 
 export const createCorrectiveAction = createServerFn({ method: "POST" })
   .validator(createCorrectiveActionSchema)
   .handler(async ({ data }) => {
-    const authError = await ensureAuthenticated();
+    const userResult = await getAuthenticatedUserResult();
 
-    if (authError) {
-      return authError;
+    if (!userResult.success) {
+      return toServerResult<never>(userResult);
     }
 
     const service = await getCorrectiveActionService();
 
-    return toServerResult(await service.createCorrectiveAction(data));
+    return toServerResult(await service.createCorrectiveAction(data, userResult.data.id));
   });
 
 export const listCorrectiveActions = createServerFn({ method: "POST" })
   .validator(correctiveActionsByNonConformitySchema)
   .handler(async ({ data }) => {
-    const authError = await ensureAuthenticated();
+    const userResult = await getAuthenticatedUserResult();
 
-    if (authError) {
-      return authError;
+    if (!userResult.success) {
+      return toServerResult<never>(userResult);
     }
 
     const service = await getCorrectiveActionService();
 
-    return toServerResult(await service.listCorrectiveActions(data.nonConformityId));
+    return toServerResult(
+      await service.listCorrectiveActions(data.nonConformityId, userResult.data.id),
+    );
   });
 
 export const updateCorrectiveAction = createServerFn({ method: "POST" })
   .validator(updateCorrectiveActionInputSchema)
   .handler(async ({ data }) => {
-    const authError = await ensureAuthenticated();
+    const userResult = await getAuthenticatedUserResult();
 
-    if (authError) {
-      return authError;
+    if (!userResult.success) {
+      return toServerResult<never>(userResult);
     }
 
     const service = await getCorrectiveActionService();
 
-    return toServerResult(await service.updateCorrectiveAction(data.id, data.data));
+    return toServerResult(
+      await service.updateCorrectiveAction(data.id, data.data, userResult.data.id),
+    );
   });
 
 export const deleteCorrectiveAction = createServerFn({ method: "POST" })
   .validator(correctiveActionIdSchema)
   .handler(async ({ data }) => {
-    const authError = await ensureAuthenticated();
+    const userResult = await getAuthenticatedUserResult();
 
-    if (authError) {
-      return authError;
+    if (!userResult.success) {
+      return toServerResult<never>(userResult);
     }
 
     const service = await getCorrectiveActionService();
 
-    return toServerResult(await service.deleteCorrectiveAction(data.id));
+    return toServerResult(await service.deleteCorrectiveAction(data.id, userResult.data.id));
   });

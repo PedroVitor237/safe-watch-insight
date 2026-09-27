@@ -53,7 +53,7 @@ class FakeInspectionRepository extends InspectionRepository {
 }
 
 class FakeCompanyRepository extends CompanyRepository {
-  override findActiveById() {
+  override findActiveOwnedById() {
     const now = new Date("2026-08-03T12:00:00.000Z");
 
     return Promise.resolve({
@@ -79,7 +79,7 @@ class FakeChecklistRepository extends ChecklistRepository {
     super();
   }
 
-  override findActiveById() {
+  override findVisibleById() {
     const now = new Date("2026-08-03T12:00:00.000Z");
 
     return Promise.resolve({

@@ -106,7 +106,7 @@ export const getInspectionById = createServerFn({ method: "POST" })
       return toServerResult<never>(userResult);
     }
 
-    return toServerResult(await service.getInspectionById(data.id));
+    return toServerResult(await service.getInspectionById(data.id, userResult.data.id));
   });
 
 export const listInspections = createServerFn({ method: "POST" })
@@ -120,7 +120,7 @@ export const listInspections = createServerFn({ method: "POST" })
       return toServerResult<never>(userResult);
     }
 
-    return toServerResult(await service.listInspections(data));
+    return toServerResult(await service.listInspections(data, userResult.data.id));
   });
 
 export const deleteInspection = createServerFn({ method: "POST" })
@@ -134,5 +134,5 @@ export const deleteInspection = createServerFn({ method: "POST" })
       return toServerResult<never>(userResult);
     }
 
-    return toServerResult(await service.deleteInspection(data.id));
+    return toServerResult(await service.deleteInspection(data.id, userResult.data.id));
   });

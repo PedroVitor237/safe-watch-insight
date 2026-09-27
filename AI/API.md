@@ -103,6 +103,29 @@ Todas as Server Functions de negócio exigem sessão autenticada. Exceções:
 - `getCurrentSession`
 - `getGreeting` exemplo técnico
 
+## Autorização por propriedade no fluxo principal
+
+As Server Functions obtêm o ID do usuário da sessão; IDs enviados no body não
+substituem essa identidade. Os Services repassam o ID aos Repositories, que
+restringem buscas e mutações no PostgreSQL. Um recurso privado inexistente ou
+pertencente a outro usuário retorna o mesmo `NOT_FOUND` lógico (`404`).
+
+- Empresas: `createdById` restringe lista, detalhe, atualização e exclusão.
+  Apenas empresas próprias podem ser usadas ao criar inspeções.
+- Checklists: o autor pode editar, excluir, publicar, retirar versões e alterar
+  itens. Um checklist ativo com versão `PUBLISHED` pode ser lido e reutilizado
+  por outro usuário; essa leitura mostra apenas versões publicadas e seus
+  metadados publicados. Drafts e versões retiradas permanecem privados.
+- Inspeções: `Inspection.userId` restringe lista, detalhe, exclusão, respostas
+  e conclusão. A mesma regra vale para a sincronização offline, preservando
+  UUID, revisão esperada e deduplicação das operações.
+- Não conformidades e ações corretivas: a autorização segue a inspeção da
+  resposta associada, inclusive nas mutações. Evidências, relatórios e
+  dashboard preservam seus filtros de propriedade existentes.
+
+O `statusCode` é um campo lógico do resultado da Server Function, conforme
+descrito acima.
+
 ---
 
 # Paginação, Filtros e Ordenação

@@ -336,7 +336,12 @@ conflitos.
 # FASE 16 — Segurança
 
 - [x] Validar entradas com Zod nos módulos implementados
-- [ ] Revisar permissões
+- [x] Restringir o fluxo principal por proprietário no servidor: empresas,
+      checklists e itens, inspeções e respostas, conclusão, NCs e ações corretivas
+- [x] Preservar leitura/reutilização de checklists publicados sem permitir
+      alterações por outros usuários
+- [x] Testar isolamento entre dois usuários e regressão da fila offline
+- [ ] Revisar permissões além do escopo de propriedade do fluxo principal
 - [ ] Sanitizar entradas
 - [x] Revisar tratamento de erros base
 

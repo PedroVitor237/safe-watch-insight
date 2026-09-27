@@ -1,8 +1,4 @@
-import {
-  CorrectiveActionStatus,
-  NonConformityStatus,
-  type Prisma,
-} from "@/generated/prisma/client";
+import { CorrectiveActionStatus, NonConformityStatus, Prisma } from "@/generated/prisma/client";
 import { ApiError, ConflictError, NotFoundError } from "@/server/errors";
 import {
   correctiveActionRepository,
@@ -56,10 +52,12 @@ export class CorrectiveActionService extends BaseService<CorrectiveActionReposit
 
   async createCorrectiveAction(
     input: CreateCorrectiveActionInput,
+    userId: string,
   ): Promise<Result<CorrectiveActionEntity>> {
     return this.execute(async () => {
-      const nonConformity = await this.nonConformityRepository.findActiveById(
+      const nonConformity = await this.nonConformityRepository.findActiveOwnedById(
         input.nonConformityId,
+        userId,
       );
 
       if (!nonConformity) {
@@ -78,6 +76,7 @@ export class CorrectiveActionService extends BaseService<CorrectiveActionReposit
                 to: NonConformityStatus.IN_PROGRESS,
               }
             : undefined,
+          userId,
         );
       } catch (error) {
         if (error instanceof NonConformityStatePersistenceConflictError) {
@@ -93,15 +92,21 @@ export class CorrectiveActionService extends BaseService<CorrectiveActionReposit
     });
   }
 
-  async listCorrectiveActions(nonConformityId: string): Promise<Result<CorrectiveActionEntity[]>> {
+  async listCorrectiveActions(
+    nonConformityId: string,
+    userId: string,
+  ): Promise<Result<CorrectiveActionEntity[]>> {
     return this.execute(async () => {
-      const nonConformity = await this.nonConformityRepository.findActiveById(nonConformityId);
+      const nonConformity = await this.nonConformityRepository.findActiveOwnedById(
+        nonConformityId,
+        userId,
+      );
 
       if (!nonConformity) {
         throw new NotFoundError("Non-conformity not found.");
       }
 
-      await this.repository.markOverdue(new Date());
+      await this.repository.markOverdue(new Date(), userId);
       const actions = await this.repository.findByNonConformityId(nonConformityId);
 
       return this.success(actions);
@@ -111,19 +116,23 @@ export class CorrectiveActionService extends BaseService<CorrectiveActionReposit
   async updateCorrectiveAction(
     id: string,
     input: UpdateCorrectiveActionInput,
+    userId: string,
   ): Promise<Result<CorrectiveActionEntity>> {
     return this.execute(async () => {
-      await this.ensureCorrectiveActionExists(id);
-      const action = await this.repository.update({ id }, this.toUpdateData(input));
+      await this.ensureCorrectiveActionExists(id, userId);
+      const action = await this.repository.updateOwned(id, userId, this.toUpdateData(input));
 
       return this.success(action);
     });
   }
 
-  async deleteCorrectiveAction(id: string): Promise<Result<CorrectiveActionEntity>> {
+  async deleteCorrectiveAction(
+    id: string,
+    userId: string,
+  ): Promise<Result<CorrectiveActionEntity>> {
     return this.execute(async () => {
-      await this.ensureCorrectiveActionExists(id);
-      const action = await this.repository.softDelete(id);
+      await this.ensureCorrectiveActionExists(id, userId);
+      const action = await this.repository.softDeleteOwned(id, userId);
 
       return this.success(action);
     });
@@ -137,12 +146,19 @@ export class CorrectiveActionService extends BaseService<CorrectiveActionReposit
         return this.failure(error);
       }
 
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+        return this.failure(new NotFoundError("Corrective action or non-conformity not found."));
+      }
+
       throw error;
     }
   }
 
-  private async ensureCorrectiveActionExists(id: string): Promise<CorrectiveActionEntity> {
-    const action = await this.repository.findActiveById(id);
+  private async ensureCorrectiveActionExists(
+    id: string,
+    userId: string,
+  ): Promise<CorrectiveActionEntity> {
+    const action = await this.repository.findActiveOwnedById(id, userId);
 
     if (!action) {
       throw new NotFoundError("Corrective action not found.");

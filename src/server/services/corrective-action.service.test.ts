@@ -23,6 +23,7 @@ import {
 
 import { CorrectiveActionService } from "./corrective-action.service";
 
+const USER_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const NON_CONFORMITY_ID = "11111111-1111-4111-8111-111111111111";
 
 class FakeCorrectiveActionRepository extends CorrectiveActionRepository {
@@ -65,7 +66,7 @@ class FakeNonConformityRepository extends NonConformityRepository {
     super();
   }
 
-  override findActiveById(): Promise<NonConformityWithRelations | null> {
+  override findActiveOwnedById(): Promise<NonConformityWithRelations | null> {
     return Promise.resolve(this.nonConformity);
   }
 }
@@ -77,10 +78,13 @@ test("creating the first corrective action requests an atomic NC transition", as
   );
   const service = new CorrectiveActionService(actionRepository, nonConformityRepository);
 
-  const result = await service.createCorrectiveAction({
-    nonConformityId: NON_CONFORMITY_ID,
-    description: "Instalar proteção fixa.",
-  });
+  const result = await service.createCorrectiveAction(
+    {
+      nonConformityId: NON_CONFORMITY_ID,
+      description: "Instalar proteção fixa.",
+    },
+    USER_ID,
+  );
 
   assert.equal(result.success, true);
   assert.deepEqual(actionRepository.transition, {
@@ -97,10 +101,13 @@ test("creating another action does not rewrite an NC already in progress", async
   );
   const service = new CorrectiveActionService(actionRepository, nonConformityRepository);
 
-  const result = await service.createCorrectiveAction({
-    nonConformityId: NON_CONFORMITY_ID,
-    description: "Treinar operadores.",
-  });
+  const result = await service.createCorrectiveAction(
+    {
+      nonConformityId: NON_CONFORMITY_ID,
+      description: "Treinar operadores.",
+    },
+    USER_ID,
+  );
 
   assert.equal(result.success, true);
   assert.equal(actionRepository.transition, undefined);
@@ -114,10 +121,13 @@ test("a concurrent NC state change returns a conflict instead of a partial actio
   );
   const service = new CorrectiveActionService(actionRepository, nonConformityRepository);
 
-  const result = await service.createCorrectiveAction({
-    nonConformityId: NON_CONFORMITY_ID,
-    description: "Instalar proteção fixa.",
-  });
+  const result = await service.createCorrectiveAction(
+    {
+      nonConformityId: NON_CONFORMITY_ID,
+      description: "Instalar proteção fixa.",
+    },
+    USER_ID,
+  );
 
   assert.equal(result.success, false);
 

@@ -84,6 +84,13 @@ export class InspectionResponseRepository extends BaseRepository<
     });
   }
 
+  findOwnedById(id: string, userId: string): Promise<InspectionResponseWithRelations | null> {
+    return prisma.inspectionResponse.findFirst({
+      where: { id, inspection: { userId, deletedAt: null } },
+      include: inspectionResponseRelations,
+    });
+  }
+
   saveWithNonConformity(
     inspectionId: string,
     snapshotItemId: string,
@@ -92,7 +99,8 @@ export class InspectionResponseRepository extends BaseRepository<
     },
     nonConformity: NonConformityPersistenceDirective,
     inspectionState: InspectionStatePersistenceDirective,
-    offlineOperation?: OfflineResponseOperationPersistenceInput,
+    offlineOperation: OfflineResponseOperationPersistenceInput | undefined,
+    userId: string,
   ): Promise<InspectionResponseWithRelations> {
     return prisma.$transaction(
       async (transaction) => {
@@ -138,7 +146,7 @@ export class InspectionResponseRepository extends BaseRepository<
         const inspectionUpdate = await transaction.inspection.updateMany({
           where: {
             id: inspectionId,
-            ...(offlineOperation ? { userId: offlineOperation.userId } : {}),
+            userId,
             deletedAt: null,
             status: {
               in: inspectionState.allowedStatuses,

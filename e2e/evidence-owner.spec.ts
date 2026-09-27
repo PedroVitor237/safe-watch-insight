@@ -98,7 +98,7 @@ async function login(page: Page): Promise<void> {
 async function createTemporaryInspection(): Promise<string> {
   const user = unwrap(await userService.authenticate(ADMIN_EMAIL, ADMIN_PASSWORD));
   const company = await prisma.company.findFirst({
-    where: { deletedAt: null },
+    where: { deletedAt: null, createdById: user.id },
     orderBy: { createdAt: "asc" },
   });
   const publishedVersion = await prisma.checklistVersion.findFirst({

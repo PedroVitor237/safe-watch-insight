@@ -30,16 +30,30 @@ export class CorrectiveActionRepository extends BaseRepository<
 
   createWithNonConformityTransition(
     data: Prisma.CorrectiveActionCreateInput,
-    transition?: NonConformityStatusTransition,
+    transition: NonConformityStatusTransition | undefined,
+    userId: string,
   ): Promise<CorrectiveAction> {
+    const scopedData: Prisma.CorrectiveActionCreateInput = data.nonConformity?.connect?.id
+      ? {
+          ...data,
+          nonConformity: {
+            connect: {
+              id: data.nonConformity.connect.id,
+              deletedAt: null,
+              inspectionResponse: { inspection: { userId, deletedAt: null } },
+            },
+          },
+        }
+      : data;
     if (!transition) {
-      return prisma.correctiveAction.create({ data });
+      return prisma.correctiveAction.create({ data: scopedData });
     }
 
     return prisma.$transaction(async (transaction) => {
       const nonConformityUpdate = await transaction.nonConformity.updateMany({
         where: {
           id: transition.id,
+          inspectionResponse: { inspection: { userId, deletedAt: null } },
           deletedAt: null,
           status: transition.from,
         },
@@ -52,7 +66,7 @@ export class CorrectiveActionRepository extends BaseRepository<
         throw new NonConformityStatePersistenceConflictError();
       }
 
-      return transaction.correctiveAction.create({ data });
+      return transaction.correctiveAction.create({ data: scopedData });
     });
   }
 
@@ -63,6 +77,41 @@ export class CorrectiveActionRepository extends BaseRepository<
         deletedAt: null,
       },
     });
+  }
+
+  findActiveOwnedById(id: string, userId: string): Promise<CorrectiveAction | null> {
+    return prisma.correctiveAction.findFirst({
+      where: {
+        id,
+        deletedAt: null,
+        nonConformity: {
+          deletedAt: null,
+          inspectionResponse: { inspection: { userId, deletedAt: null } },
+        },
+      },
+    });
+  }
+
+  updateOwned(
+    id: string,
+    userId: string,
+    data: Prisma.CorrectiveActionUpdateInput,
+  ): Promise<CorrectiveAction> {
+    return prisma.correctiveAction.update({
+      where: {
+        id,
+        deletedAt: null,
+        nonConformity: {
+          deletedAt: null,
+          inspectionResponse: { inspection: { userId, deletedAt: null } },
+        },
+      },
+      data,
+    });
+  }
+
+  softDeleteOwned(id: string, userId: string): Promise<CorrectiveAction> {
+    return this.updateOwned(id, userId, { deletedAt: new Date() });
   }
 
   findByNonConformityId(nonConformityId: string): Promise<CorrectiveAction[]> {
@@ -84,11 +133,15 @@ export class CorrectiveActionRepository extends BaseRepository<
     });
   }
 
-  markOverdue(referenceDate: Date): Promise<number> {
+  markOverdue(referenceDate: Date, userId: string): Promise<number> {
     return prisma.correctiveAction
       .updateMany({
         where: {
           deletedAt: null,
+          nonConformity: {
+            deletedAt: null,
+            inspectionResponse: { inspection: { userId, deletedAt: null } },
+          },
           dueDate: { lt: referenceDate },
           status: { in: ["PENDING", "IN_PROGRESS"] },
         },

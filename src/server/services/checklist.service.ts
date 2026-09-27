@@ -1,4 +1,5 @@
 import { ApiError, NotFoundError } from "@/server/errors";
+import { Prisma } from "@/generated/prisma/client";
 import {
   checklistRepository,
   ChecklistRepository,
@@ -58,15 +59,15 @@ export class ChecklistService extends BaseService<ChecklistRepository> {
     updatedById: string,
   ): Promise<Result<ChecklistEntity>> {
     return this.execute(async () => {
-      await this.ensureChecklistExists(id);
+      await this.ensureChecklistExists(id, updatedById);
 
       if (input.title !== undefined || input.description !== undefined) {
         await this.versionService.updateDraftAndChecklist(id, updatedById, input);
       } else {
-        await this.repository.updateWithItems({ id }, this.toUpdateData(input));
+        await this.repository.updateOwnedWithItems(id, updatedById, this.toUpdateData(input));
       }
 
-      const checklist = await this.repository.findActiveById(id);
+      const checklist = await this.repository.findActiveOwnedById(id, updatedById);
 
       if (!checklist) {
         throw new NotFoundError("Checklist not found.");
@@ -76,38 +77,69 @@ export class ChecklistService extends BaseService<ChecklistRepository> {
     });
   }
 
-  async deleteChecklist(id: string): Promise<Result<ChecklistEntity>> {
+  async deleteChecklist(id: string, userId: string): Promise<Result<ChecklistEntity>> {
     return this.execute(async () => {
-      await this.ensureChecklistExists(id);
+      await this.ensureChecklistExists(id, userId);
 
-      const checklist = await this.repository.softDelete(id);
+      const checklist = await this.repository.softDeleteOwned(id, userId);
 
       return this.success(checklist);
     });
   }
 
-  async getChecklistById(id: string): Promise<Result<ChecklistEntity>> {
+  async getChecklistById(id: string, userId: string): Promise<Result<ChecklistEntity>> {
     return this.execute(async () => {
-      const checklist = await this.repository.findActiveById(id);
+      const checklist = await this.repository.findVisibleById(id, userId);
 
       if (!checklist) {
         throw new NotFoundError("Checklist not found.");
       }
 
-      return this.success(checklist);
+      return this.success(
+        checklist.createdById === userId
+          ? checklist
+          : {
+              ...checklist,
+              title:
+                checklist.versions.find((version) => version.status === "PUBLISHED")?.title ??
+                checklist.title,
+              description:
+                checklist.versions.find((version) => version.status === "PUBLISHED")?.description ??
+                null,
+              versions: checklist.versions.filter((version) => version.status === "PUBLISHED"),
+            },
+      );
     });
   }
 
   async listChecklists(
     filters: ChecklistFindManyFilters = {},
+    userId: string,
   ): Promise<Result<PaginatedResult<ChecklistListEntity>>> {
     return this.execute(async () => {
       const checklists = await this.repository.findManyPaginated({
         ...filters,
         includeDeleted: false,
+        visibleToUserId: userId,
       });
 
-      return this.success(checklists);
+      return this.success({
+        ...checklists,
+        items: checklists.items.map((checklist) =>
+          checklist.createdById === userId
+            ? checklist
+            : {
+                ...checklist,
+                title:
+                  checklist.versions.find((version) => version.status === "PUBLISHED")?.title ??
+                  checklist.title,
+                description:
+                  checklist.versions.find((version) => version.status === "PUBLISHED")
+                    ?.description ?? null,
+                versions: checklist.versions.filter((version) => version.status === "PUBLISHED"),
+              },
+        ),
+      });
     });
   }
 
@@ -119,12 +151,16 @@ export class ChecklistService extends BaseService<ChecklistRepository> {
         return this.failure(error);
       }
 
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+        return this.failure(new NotFoundError("Checklist not found."));
+      }
+
       throw error;
     }
   }
 
-  private async ensureChecklistExists(id: string): Promise<ChecklistEntity> {
-    const checklist = await this.repository.findActiveById(id);
+  private async ensureChecklistExists(id: string, userId: string): Promise<ChecklistEntity> {
+    const checklist = await this.repository.findActiveOwnedById(id, userId);
 
     if (!checklist) {
       throw new NotFoundError("Checklist not found.");

@@ -175,13 +175,25 @@ export class InspectionRepository extends BaseRepository<
               connect: { id: input.userId },
             },
             company: {
-              connect: { id: input.companyId },
+              connect: { id: input.companyId, createdById: input.userId, deletedAt: null },
             },
             checklist: {
-              connect: { id: input.checklistId },
+              connect: {
+                id: input.checklistId,
+                isActive: true,
+                deletedAt: null,
+                OR: [
+                  { createdById: input.userId },
+                  { versions: { some: { status: "PUBLISHED" } } },
+                ],
+              },
             },
             checklistVersion: {
-              connect: { id: input.checklistVersionId },
+              connect: {
+                id: input.checklistVersionId,
+                checklistId: input.checklistId,
+                status: "PUBLISHED",
+              },
             },
             snapshot: {
               create: {
@@ -251,6 +263,13 @@ export class InspectionRepository extends BaseRepository<
     });
   }
 
+  findActiveOwnedById(id: string, userId: string): Promise<InspectionWithRelations | null> {
+    return prisma.inspection.findFirst({
+      where: { id, userId, deletedAt: null },
+      include: inspectionRelations,
+    });
+  }
+
   findOwnedEvidenceContextById(
     id: string,
     userId: string,
@@ -299,15 +318,25 @@ export class InspectionRepository extends BaseRepository<
     });
   }
 
+  softDeleteOwned(id: string, userId: string): Promise<InspectionWithRelations> {
+    return prisma.inspection.update({
+      where: { id, userId, deletedAt: null },
+      data: { deletedAt: new Date() },
+      include: inspectionRelations,
+    });
+  }
+
   updateStatusIfCurrent(
     id: string,
     allowedStatuses: InspectionStatus[],
     status: InspectionStatus,
+    userId?: string,
   ): Promise<InspectionWithRelations | null> {
     return prisma.$transaction(async (transaction) => {
       const update = await transaction.inspection.updateMany({
         where: {
           id,
+          ...(userId ? { userId } : {}),
           deletedAt: null,
           status: {
             in: allowedStatuses,
@@ -323,6 +352,7 @@ export class InspectionRepository extends BaseRepository<
       return transaction.inspection.findFirst({
         where: {
           id,
+          ...(userId ? { userId } : {}),
           deletedAt: null,
         },
         include: inspectionRelations,

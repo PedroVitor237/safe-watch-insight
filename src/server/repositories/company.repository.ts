@@ -49,6 +49,18 @@ export class CompanyRepository extends BaseRepository<
     });
   }
 
+  findActiveOwnedById(id: string, userId: string): Promise<Company | null> {
+    return prisma.company.findFirst({ where: { id, createdById: userId, deletedAt: null } });
+  }
+
+  updateOwned(id: string, userId: string, data: Prisma.CompanyUpdateInput): Promise<Company> {
+    return prisma.company.update({ where: { id, createdById: userId, deletedAt: null }, data });
+  }
+
+  softDeleteOwned(id: string, userId: string): Promise<Company> {
+    return this.updateOwned(id, userId, { deletedAt: new Date() });
+  }
+
   findActiveByCnpj(cnpj: string): Promise<Company | null> {
     return prisma.company.findFirst({
       where: {

@@ -109,7 +109,7 @@ export const updateCompany = createServerFn({ method: "POST" })
       return toServerResult<never>(userResult);
     }
 
-    return toServerResult(await service.updateCompany(data.id, data.data));
+    return toServerResult(await service.updateCompany(data.id, data.data, userResult.data.id));
   });
 
 export const deleteCompany = createServerFn({ method: "POST" })
@@ -123,7 +123,7 @@ export const deleteCompany = createServerFn({ method: "POST" })
       return toServerResult<never>(userResult);
     }
 
-    return toServerResult(await service.deleteCompany(data.id));
+    return toServerResult(await service.deleteCompany(data.id, userResult.data.id));
   });
 
 export const getCompanyById = createServerFn({ method: "POST" })
@@ -137,7 +137,7 @@ export const getCompanyById = createServerFn({ method: "POST" })
       return toServerResult<never>(userResult);
     }
 
-    return toServerResult(await service.getCompanyById(data.id));
+    return toServerResult(await service.getCompanyById(data.id, userResult.data.id));
   });
 
 export const listCompanies = createServerFn({ method: "POST" })
@@ -151,5 +151,5 @@ export const listCompanies = createServerFn({ method: "POST" })
       return toServerResult<never>(userResult);
     }
 
-    return toServerResult(await service.listCompanies(data));
+    return toServerResult(await service.listCompanies(data, userResult.data.id));
   });

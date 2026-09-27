@@ -32,7 +32,7 @@ async function main(): Promise<void> {
 
   const user = unwrap(await userService.authenticate("admin@demo.com", "Admin@123"));
   const company = await prisma.company.findFirst({
-    where: { deletedAt: null },
+    where: { deletedAt: null, createdById: user.id },
     orderBy: { createdAt: "asc" },
   });
 
@@ -131,7 +131,7 @@ async function main(): Promise<void> {
     }),
   );
 
-  const draftItems = unwrap(await checklistItemService.listChecklistItems(checklist.id));
+  const draftItems = unwrap(await checklistItemService.listChecklistItems(checklist.id, user.id));
   const draftItemB = draftItems.find((item) => item.description === itemB.description);
 
   if (!draftItemB) {
@@ -151,7 +151,9 @@ async function main(): Promise<void> {
 
   assert.equal(version2.versionNumber, 2);
 
-  const historicalInspection = unwrap(await inspectionService.getInspectionById(inspection1.id));
+  const historicalInspection = unwrap(
+    await inspectionService.getInspectionById(inspection1.id, user.id),
+  );
   const historicalItemA = historicalInspection.snapshot?.items.find(
     (item) => item.description === "Item A original",
   );
@@ -188,6 +190,7 @@ async function main(): Promise<void> {
 
   const nonCompliantResponse = unwrap(
     await inspectionResponseService.saveInspectionResponse({
+      userId: user.id,
       inspectionId: inspection1.id,
       snapshotItemId: historicalItemA.id,
       status: ResponseStatus.NON_COMPLIANT,
@@ -218,6 +221,7 @@ async function main(): Promise<void> {
 
     unwrap(
       await inspectionResponseService.saveInspectionResponse({
+        userId: user.id,
         inspectionId: inspection1.id,
         snapshotItemId: snapshotItem.id,
         status: ResponseStatus.COMPLIANT,
@@ -225,7 +229,9 @@ async function main(): Promise<void> {
     );
   }
 
-  const completed = unwrap(await inspectionResponseService.finishInspection(inspection1.id));
+  const completed = unwrap(
+    await inspectionResponseService.finishInspection(inspection1.id, user.id),
+  );
   assert.equal(completed.status, InspectionStatus.COMPLETED);
 
   const version2ItemA = version2.items.find((item) => item.description === "Item A atualizado");
@@ -242,7 +248,7 @@ async function main(): Promise<void> {
   );
 
   const completedAfterDraftChange = unwrap(
-    await inspectionService.getInspectionById(inspection1.id),
+    await inspectionService.getInspectionById(inspection1.id, user.id),
   );
   assert.equal(completedAfterDraftChange.snapshot?.items[0]?.description, "Item A original");
 

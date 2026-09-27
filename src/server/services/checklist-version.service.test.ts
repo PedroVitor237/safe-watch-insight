@@ -21,7 +21,7 @@ const VERSION_ITEM_ID = "44444444-4444-4444-8444-444444444444";
 const STANDARD_ID = "55555555-5555-4555-8555-555555555555";
 
 class FakeChecklistRepository extends ChecklistRepository {
-  override findActiveById() {
+  override findActiveOwnedById() {
     const now = new Date("2026-08-03T12:00:00.000Z");
 
     return Promise.resolve({

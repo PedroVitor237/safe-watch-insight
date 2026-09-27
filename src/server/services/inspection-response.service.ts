@@ -27,6 +27,7 @@ import { createOfflineOperationPayloadHash } from "@/server/utils/offline-operat
 import { BaseService } from "./base.service";
 
 export interface SaveInspectionResponseInput {
+  userId: string;
   inspectionId: string;
   snapshotItemId?: string;
   checklistItemId?: string;
@@ -56,9 +57,10 @@ export class InspectionResponseService extends BaseService<InspectionResponseRep
 
   async listInspectionResponses(
     inspectionId: string,
+    userId: string,
   ): Promise<Result<InspectionResponseWithRelations[]>> {
     return this.execute(async () => {
-      await this.ensureInspectionExists(inspectionId);
+      await this.ensureInspectionExists(inspectionId, userId);
 
       const responses = await this.repository.findByInspectionId(inspectionId);
 
@@ -70,7 +72,7 @@ export class InspectionResponseService extends BaseService<InspectionResponseRep
     input: SaveInspectionResponseInput,
   ): Promise<Result<InspectionResponseWithRelations>> {
     return this.execute(async () => {
-      const inspection = await this.ensureInspectionExists(input.inspectionId);
+      const inspection = await this.ensureInspectionExists(input.inspectionId, input.userId);
       if (!input.offlineOperation) {
         this.ensureInspectionCanBeEdited(inspection);
       }
@@ -127,6 +129,7 @@ export class InspectionResponseService extends BaseService<InspectionResponseRep
             nextStatus: InspectionStatus.IN_PROGRESS,
           },
           offlineOperation,
+          input.userId,
         );
       } catch (error) {
         if (error instanceof InspectionStatePersistenceConflictError) {
@@ -154,10 +157,11 @@ export class InspectionResponseService extends BaseService<InspectionResponseRep
 
   async finishInspection(
     inspectionId: string,
+    userId: string,
     offlineOperation?: FinishInspectionOfflineOperationInput,
   ): Promise<Result<InspectionWithRelations>> {
     return this.execute(async () => {
-      const currentInspection = await this.ensureInspectionExists(inspectionId);
+      const currentInspection = await this.ensureInspectionExists(inspectionId, userId);
       this.ensureRequiredItemsWereAnswered(currentInspection);
 
       if (offlineOperation) {
@@ -201,6 +205,7 @@ export class InspectionResponseService extends BaseService<InspectionResponseRep
         inspectionId,
         [InspectionStatus.PLANNED, InspectionStatus.IN_PROGRESS],
         InspectionStatus.COMPLETED,
+        userId,
       );
 
       if (!inspection) {
@@ -223,8 +228,11 @@ export class InspectionResponseService extends BaseService<InspectionResponseRep
     }
   }
 
-  private async ensureInspectionExists(id: string): Promise<InspectionWithRelations> {
-    const inspection = await this.inspectionRepository.findActiveById(id);
+  private async ensureInspectionExists(
+    id: string,
+    userId: string,
+  ): Promise<InspectionWithRelations> {
+    const inspection = await this.inspectionRepository.findActiveOwnedById(id, userId);
 
     if (!inspection) {
       throw new NotFoundError("Inspection not found.");

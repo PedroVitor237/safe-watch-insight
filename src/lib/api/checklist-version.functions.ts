@@ -30,7 +30,7 @@ export const listChecklistVersions = createServerFn({ method: "POST" })
 
     const service = await getChecklistVersionService();
 
-    return toServerResult(await service.listVersions(data.checklistId));
+    return toServerResult(await service.listVersions(data.checklistId, userResult.data.id));
   });
 
 export const publishChecklistVersion = createServerFn({ method: "POST" })
@@ -58,5 +58,7 @@ export const retireChecklistVersion = createServerFn({ method: "POST" })
 
     const service = await getChecklistVersionService();
 
-    return toServerResult(await service.retireVersion(data.checklistId, data.versionId));
+    return toServerResult(
+      await service.retireVersion(data.checklistId, data.versionId, userResult.data.id),
+    );
   });

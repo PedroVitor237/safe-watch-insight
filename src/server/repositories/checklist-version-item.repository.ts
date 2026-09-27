@@ -22,6 +22,7 @@ export type ChecklistVersionItemWithVersion = Prisma.ChecklistVersionItemGetPayl
 
 export interface CreateVersionItemPersistenceInput {
   checklistVersionId: string;
+  userId: string;
   description: string;
   orderIndex: number;
   isRequired: boolean;
@@ -68,7 +69,7 @@ export class ChecklistVersionItemRepository {
     input: CreateVersionItemPersistenceInput,
   ): Promise<ChecklistVersionItemWithStandards> {
     return prisma.$transaction(async (transaction) => {
-      await this.touchDraft(transaction, input.checklistVersionId);
+      await this.touchDraft(transaction, input.checklistVersionId, input.userId);
 
       return transaction.checklistVersionItem.create({
         data: {
@@ -99,10 +100,11 @@ export class ChecklistVersionItemRepository {
   updateInDraft(
     id: string,
     checklistVersionId: string,
+    userId: string,
     input: UpdateVersionItemPersistenceInput,
   ): Promise<ChecklistVersionItemWithStandards> {
     return prisma.$transaction(async (transaction) => {
-      await this.touchDraft(transaction, checklistVersionId);
+      await this.touchDraft(transaction, checklistVersionId, userId);
 
       const update = await transaction.checklistVersionItem.updateMany({
         where: {
@@ -147,9 +149,9 @@ export class ChecklistVersionItemRepository {
     });
   }
 
-  deleteFromDraft(id: string, checklistVersionId: string): Promise<void> {
+  deleteFromDraft(id: string, checklistVersionId: string, userId: string): Promise<void> {
     return prisma.$transaction(async (transaction) => {
-      await this.touchDraft(transaction, checklistVersionId);
+      await this.touchDraft(transaction, checklistVersionId, userId);
       await transaction.checklistVersionItemStandard.deleteMany({
         where: { checklistVersionItemId: id },
       });
@@ -178,10 +180,12 @@ export class ChecklistVersionItemRepository {
   private async touchDraft(
     transaction: Prisma.TransactionClient,
     checklistVersionId: string,
+    userId: string,
   ): Promise<void> {
     const update = await transaction.checklistVersion.updateMany({
       where: {
         id: checklistVersionId,
+        checklist: { createdById: userId, deletedAt: null },
         status: ChecklistVersionStatus.DRAFT,
       },
       data: {

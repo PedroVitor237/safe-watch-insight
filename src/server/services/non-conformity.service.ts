@@ -1,7 +1,7 @@
 import {
   ResponseStatus,
+  Prisma,
   type NonConformityStatus,
-  type Prisma,
   type Severity,
 } from "@/generated/prisma/client";
 import { ApiError, ConflictError, NotFoundError } from "@/server/errors";
@@ -48,11 +48,13 @@ export class NonConformityService extends BaseService<NonConformityRepository> {
 
   async createNonConformity(
     input: CreateNonConformityInput,
+    userId: string,
   ): Promise<Result<NonConformityWithRelations>> {
     return this.execute(async () => {
-      const response = await this.responseRepository.findById({
-        id: input.inspectionResponseId,
-      });
+      const response = await this.responseRepository.findOwnedById(
+        input.inspectionResponseId,
+        userId,
+      );
 
       if (!response) {
         throw new NotFoundError("Inspection response not found.");
@@ -70,7 +72,10 @@ export class NonConformityService extends BaseService<NonConformityRepository> {
         throw new ConflictError("This inspection response already has a non-conformity.");
       }
 
-      const nonConformity = await this.repository.createWithRelations(this.toCreateData(input));
+      const nonConformity = await this.repository.createWithRelations(
+        this.toCreateData(input),
+        userId,
+      );
 
       return this.success(nonConformity);
     });
@@ -81,7 +86,7 @@ export class NonConformityService extends BaseService<NonConformityRepository> {
     userId: string,
   ): Promise<Result<NonConformityWithRelations>> {
     return this.execute(async () => {
-      await this.repository.markOverdue(new Date());
+      await this.repository.markOverdue(new Date(), userId);
       const nonConformity = await this.repository.findActiveOwnedById(id, userId);
 
       if (!nonConformity) {
@@ -97,7 +102,7 @@ export class NonConformityService extends BaseService<NonConformityRepository> {
     userId: string,
   ): Promise<Result<PaginatedResult<NonConformityWithRelations>>> {
     return this.execute(async () => {
-      await this.repository.markOverdue(new Date());
+      await this.repository.markOverdue(new Date(), userId);
       const nonConformities = await this.repository.findManyOwnedPaginated(
         {
           ...filters,
@@ -113,19 +118,27 @@ export class NonConformityService extends BaseService<NonConformityRepository> {
   async updateNonConformity(
     id: string,
     input: UpdateNonConformityInput,
+    userId: string,
   ): Promise<Result<NonConformityWithRelations>> {
     return this.execute(async () => {
-      await this.ensureNonConformityExists(id);
-      const nonConformity = await this.repository.updateWithRelations(id, this.toUpdateData(input));
+      await this.ensureNonConformityExists(id, userId);
+      const nonConformity = await this.repository.updateWithRelations(
+        id,
+        this.toUpdateData(input),
+        userId,
+      );
 
       return this.success(nonConformity);
     });
   }
 
-  async deleteNonConformity(id: string): Promise<Result<NonConformityWithRelations>> {
+  async deleteNonConformity(
+    id: string,
+    userId: string,
+  ): Promise<Result<NonConformityWithRelations>> {
     return this.execute(async () => {
-      await this.ensureNonConformityExists(id);
-      const nonConformity = await this.repository.softDelete(id);
+      await this.ensureNonConformityExists(id, userId);
+      const nonConformity = await this.repository.softDelete(id, userId);
 
       return this.success(nonConformity);
     });
@@ -139,12 +152,19 @@ export class NonConformityService extends BaseService<NonConformityRepository> {
         return this.failure(error);
       }
 
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+        return this.failure(new NotFoundError("Non-conformity or inspection response not found."));
+      }
+
       throw error;
     }
   }
 
-  private async ensureNonConformityExists(id: string): Promise<NonConformityWithRelations> {
-    const nonConformity = await this.repository.findActiveById(id);
+  private async ensureNonConformityExists(
+    id: string,
+    userId: string,
+  ): Promise<NonConformityWithRelations> {
+    const nonConformity = await this.repository.findActiveOwnedById(id, userId);
 
     if (!nonConformity) {
       throw new NotFoundError("Non-conformity not found.");

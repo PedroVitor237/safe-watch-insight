@@ -49,30 +49,34 @@ export class CompanyService extends BaseService<CompanyRepository> {
     });
   }
 
-  async updateCompany(id: string, input: UpdateCompanyInput): Promise<Result<CompanyEntity>> {
+  async updateCompany(
+    id: string,
+    input: UpdateCompanyInput,
+    userId: string,
+  ): Promise<Result<CompanyEntity>> {
     return this.execute(async () => {
-      await this.ensureCompanyExists(id);
+      await this.ensureCompanyExists(id, userId);
       await this.ensureCnpjIsAvailable(input.cnpj, id);
 
-      const company = await this.repository.update({ id }, this.toUpdateData(input));
+      const company = await this.repository.updateOwned(id, userId, this.toUpdateData(input));
 
       return this.success(company);
     });
   }
 
-  async deleteCompany(id: string): Promise<Result<CompanyEntity>> {
+  async deleteCompany(id: string, userId: string): Promise<Result<CompanyEntity>> {
     return this.execute(async () => {
-      await this.ensureCompanyExists(id);
+      await this.ensureCompanyExists(id, userId);
 
-      const company = await this.repository.softDelete(id);
+      const company = await this.repository.softDeleteOwned(id, userId);
 
       return this.success(company);
     });
   }
 
-  async getCompanyById(id: string): Promise<Result<CompanyEntity>> {
+  async getCompanyById(id: string, userId: string): Promise<Result<CompanyEntity>> {
     return this.execute(async () => {
-      const company = await this.repository.findActiveById(id);
+      const company = await this.repository.findActiveOwnedById(id, userId);
 
       if (!company) {
         throw new NotFoundError("Company not found.");
@@ -84,10 +88,12 @@ export class CompanyService extends BaseService<CompanyRepository> {
 
   async listCompanies(
     filters: CompanyFindManyFilters = {},
+    userId: string,
   ): Promise<Result<PaginatedResult<CompanyEntity>>> {
     return this.execute(async () => {
       const companies = await this.repository.findManyPaginated({
         ...filters,
+        createdById: userId,
         includeDeleted: false,
       });
 
@@ -117,6 +123,10 @@ export class CompanyService extends BaseService<CompanyRepository> {
         return this.failure(error);
       }
 
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+        return this.failure(new NotFoundError("Company not found."));
+      }
+
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
         return this.failure(new ConflictError("A company with this CNPJ already exists."));
       }
@@ -125,8 +135,8 @@ export class CompanyService extends BaseService<CompanyRepository> {
     }
   }
 
-  private async ensureCompanyExists(id: string): Promise<CompanyEntity> {
-    const company = await this.repository.findActiveById(id);
+  private async ensureCompanyExists(id: string, userId: string): Promise<CompanyEntity> {
+    const company = await this.repository.findActiveOwnedById(id, userId);
 
     if (!company) {
       throw new NotFoundError("Company not found.");

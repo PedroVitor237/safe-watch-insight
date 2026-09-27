@@ -68,9 +68,13 @@ async function main(): Promise<void> {
   createdIds.companyId = company.id;
 
   unwrap(
-    await companyService.updateCompany(company.id, {
-      employeeCount: 11,
-    }),
+    await companyService.updateCompany(
+      company.id,
+      {
+        employeeCount: 11,
+      },
+      authenticatedUser.id,
+    ),
   );
 
   const checklist = unwrap(
@@ -131,6 +135,7 @@ async function main(): Promise<void> {
 
   const response = unwrap(
     await inspectionResponseService.saveInspectionResponse({
+      userId: authenticatedUser.id,
       inspectionId: inspection.id,
       snapshotItemId: snapshotItem.id,
       status: ResponseStatus.NON_COMPLIANT,
@@ -158,22 +163,29 @@ async function main(): Promise<void> {
   }
 
   unwrap(
-    await nonConformityService.updateNonConformity(response.nonConformity.id, {
-      severity: Severity.HIGH,
-    }),
+    await nonConformityService.updateNonConformity(
+      response.nonConformity.id,
+      {
+        severity: Severity.HIGH,
+      },
+      authenticatedUser.id,
+    ),
   );
 
   const correctiveAction = unwrap(
-    await correctiveActionService.createCorrectiveAction({
-      nonConformityId: response.nonConformity.id,
-      description: "Disponibilizar o EPI e registrar a entrega.",
-      why: "Eliminar a exposição sem proteção adequada.",
-      location: "Área operacional",
-      responsible: "SESMT",
-      dueDate: new Date(Date.now() + 86_400_000),
-      method: "Comprar, entregar e registrar o recebimento do EPI.",
-      estimatedCost: "R$ 500,00",
-    }),
+    await correctiveActionService.createCorrectiveAction(
+      {
+        nonConformityId: response.nonConformity.id,
+        description: "Disponibilizar o EPI e registrar a entrega.",
+        why: "Eliminar a exposição sem proteção adequada.",
+        location: "Área operacional",
+        responsible: "SESMT",
+        dueDate: new Date(Date.now() + 86_400_000),
+        method: "Comprar, entregar e registrar o recebimento do EPI.",
+        estimatedCost: "R$ 500,00",
+      },
+      authenticatedUser.id,
+    ),
   );
   createdIds.correctiveActionId = correctiveAction.id;
 
@@ -187,22 +199,26 @@ async function main(): Promise<void> {
   }
 
   unwrap(
-    await correctiveActionService.updateCorrectiveAction(correctiveAction.id, {
-      status: CorrectiveActionStatus.COMPLETED,
-    }),
+    await correctiveActionService.updateCorrectiveAction(
+      correctiveAction.id,
+      {
+        status: CorrectiveActionStatus.COMPLETED,
+      },
+      authenticatedUser.id,
+    ),
   );
 
   const completedInspection = unwrap(
-    await inspectionResponseService.finishInspection(inspection.id),
+    await inspectionResponseService.finishInspection(inspection.id, authenticatedUser.id),
   );
 
   if (completedInspection.status !== InspectionStatus.COMPLETED) {
     throw new Error("The inspection was not completed.");
   }
 
-  unwrap(await inspectionService.deleteInspection(inspection.id));
-  unwrap(await checklistService.deleteChecklist(checklist.id));
-  unwrap(await companyService.deleteCompany(company.id));
+  unwrap(await inspectionService.deleteInspection(inspection.id, authenticatedUser.id));
+  unwrap(await checklistService.deleteChecklist(checklist.id, authenticatedUser.id));
+  unwrap(await companyService.deleteCompany(company.id, authenticatedUser.id));
 
   const duplicateDeletedCompany = await companyService.createCompany({
     corporateName: `Validação NC duplicada ${uniqueSuffix} Ltda.`,

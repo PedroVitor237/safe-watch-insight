@@ -54,7 +54,7 @@ export class ChecklistItemService extends BaseService<ChecklistVersionItemReposi
     input: CreateChecklistItemInput,
   ): Promise<Result<ChecklistVersionItemWithStandards>> {
     return this.execute(async () => {
-      await this.ensureChecklistExists(input.checklistId);
+      await this.ensureChecklistExists(input.checklistId, input.updatedById);
       const draft = await this.versionService.getOrCreateDraft(
         input.checklistId,
         input.updatedById,
@@ -63,6 +63,7 @@ export class ChecklistItemService extends BaseService<ChecklistVersionItemReposi
       const orderIndex = input.orderIndex ?? (await this.repository.getNextOrderIndex(draft.id));
       const item = await this.repository.createInDraft({
         checklistVersionId: draft.id,
+        userId: input.updatedById,
         description: input.description,
         orderIndex,
         isRequired: input.isRequired ?? true,
@@ -78,16 +79,21 @@ export class ChecklistItemService extends BaseService<ChecklistVersionItemReposi
     input: UpdateChecklistItemInput,
   ): Promise<Result<ChecklistVersionItemWithStandards>> {
     return this.execute(async () => {
-      const selectedItem = await this.ensureChecklistItemExists(id);
+      const selectedItem = await this.ensureChecklistItemExists(id, input.updatedById);
       const draftItem = await this.resolveDraftItem(selectedItem, input.updatedById);
       const standards =
         input.standardIds === undefined ? undefined : await this.findStandards(input.standardIds);
-      const item = await this.repository.updateInDraft(draftItem.id, draftItem.checklistVersionId, {
-        ...(input.description !== undefined ? { description: input.description } : {}),
-        ...(input.orderIndex !== undefined ? { orderIndex: input.orderIndex } : {}),
-        ...(input.isRequired !== undefined ? { isRequired: input.isRequired } : {}),
-        ...(standards !== undefined ? { standards: this.toPersistenceStandards(standards) } : {}),
-      });
+      const item = await this.repository.updateInDraft(
+        draftItem.id,
+        draftItem.checklistVersionId,
+        input.updatedById,
+        {
+          ...(input.description !== undefined ? { description: input.description } : {}),
+          ...(input.orderIndex !== undefined ? { orderIndex: input.orderIndex } : {}),
+          ...(input.isRequired !== undefined ? { isRequired: input.isRequired } : {}),
+          ...(standards !== undefined ? { standards: this.toPersistenceStandards(standards) } : {}),
+        },
+      );
 
       return this.success(item);
     });
@@ -95,10 +101,14 @@ export class ChecklistItemService extends BaseService<ChecklistVersionItemReposi
 
   async deleteChecklistItem(id: string, updatedById: string): Promise<Result<null>> {
     return this.execute(async () => {
-      const selectedItem = await this.ensureChecklistItemExists(id);
+      const selectedItem = await this.ensureChecklistItemExists(id, updatedById);
       const draftItem = await this.resolveDraftItem(selectedItem, updatedById);
 
-      await this.repository.deleteFromDraft(draftItem.id, draftItem.checklistVersionId);
+      await this.repository.deleteFromDraft(
+        draftItem.id,
+        draftItem.checklistVersionId,
+        updatedById,
+      );
 
       return this.success(null);
     });
@@ -106,14 +116,18 @@ export class ChecklistItemService extends BaseService<ChecklistVersionItemReposi
 
   async listChecklistItems(
     checklistId: string,
+    userId: string,
   ): Promise<Result<ChecklistVersionItemWithStandards[]>> {
     return this.execute(async () => {
-      await this.ensureChecklistExists(checklistId);
+      const checklist = await this.checklistRepository.findVisibleById(checklistId, userId);
+      if (!checklist) throw new NotFoundError("Checklist not found.");
       const versions = await this.versionRepository.listByChecklistId(checklistId);
       const workingVersion =
-        versions.find((version) => version.status === ChecklistVersionStatus.DRAFT) ??
+        (checklist.createdById === userId
+          ? versions.find((version) => version.status === ChecklistVersionStatus.DRAFT)
+          : undefined) ??
         versions.find((version) => version.status === ChecklistVersionStatus.PUBLISHED) ??
-        versions[0];
+        (checklist.createdById === userId ? versions[0] : undefined);
 
       if (!workingVersion) {
         throw new NotFoundError("Checklist version not found.");
@@ -168,18 +182,27 @@ export class ChecklistItemService extends BaseService<ChecklistVersionItemReposi
     }
   }
 
-  private async ensureChecklistExists(id: string): Promise<void> {
-    const checklist = await this.checklistRepository.findActiveById(id);
+  private async ensureChecklistExists(id: string, userId: string): Promise<void> {
+    const checklist = await this.checklistRepository.findActiveOwnedById(id, userId);
 
     if (!checklist) {
       throw new NotFoundError("Checklist not found.");
     }
   }
 
-  private async ensureChecklistItemExists(id: string): Promise<ChecklistVersionItemWithVersion> {
+  private async ensureChecklistItemExists(
+    id: string,
+    userId: string,
+  ): Promise<ChecklistVersionItemWithVersion> {
     const item = await this.repository.findWithVersionById(id);
 
-    if (!item) {
+    if (
+      !item ||
+      !(await this.checklistRepository.findActiveOwnedById(
+        item.checklistVersion.checklistId,
+        userId,
+      ))
+    ) {
       throw new NotFoundError("Checklist item not found.");
     }
 

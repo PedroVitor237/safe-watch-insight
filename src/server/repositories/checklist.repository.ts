@@ -1,4 +1,4 @@
-import type { Checklist, Prisma } from "@/generated/prisma/client";
+import { ChecklistVersionStatus, type Checklist, type Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/server/prisma/client";
 import { paginate } from "@/server/responses/pagination";
 import type { PaginatedResult, SortOrder } from "@/server/types";
@@ -56,6 +56,7 @@ export interface ChecklistFindManyFilters {
   sortBy?: ChecklistSortField;
   sortOrder?: SortOrder;
   createdById?: string;
+  visibleToUserId?: string;
   isTemplate?: boolean;
   isActive?: boolean;
   includeDeleted?: boolean;
@@ -129,6 +130,43 @@ export class ChecklistRepository extends BaseRepository<
     });
   }
 
+  findActiveOwnedById(id: string, userId: string): Promise<ChecklistWithItems | null> {
+    return prisma.checklist.findFirst({
+      where: { id, createdById: userId, deletedAt: null },
+      include: checklistRelations,
+    });
+  }
+
+  findVisibleById(id: string, userId: string): Promise<ChecklistWithItems | null> {
+    return prisma.checklist.findFirst({
+      where: {
+        id,
+        deletedAt: null,
+        OR: [
+          { createdById: userId },
+          { isActive: true, versions: { some: { status: ChecklistVersionStatus.PUBLISHED } } },
+        ],
+      },
+      include: checklistRelations,
+    });
+  }
+
+  updateOwnedWithItems(
+    id: string,
+    userId: string,
+    data: Prisma.ChecklistUpdateInput,
+  ): Promise<ChecklistWithItems> {
+    return prisma.checklist.update({
+      where: { id, createdById: userId, deletedAt: null },
+      data,
+      include: checklistRelations,
+    });
+  }
+
+  softDeleteOwned(id: string, userId: string): Promise<ChecklistWithItems> {
+    return this.updateOwnedWithItems(id, userId, { deletedAt: new Date() });
+  }
+
   findManyPaginated(
     filters: ChecklistFindManyFilters = {},
   ): Promise<PaginatedResult<ChecklistWithVersionSummaries>> {
@@ -165,6 +203,15 @@ export class ChecklistRepository extends BaseRepository<
 
     if (filters.createdById) {
       conditions.push({ createdById: filters.createdById });
+    }
+
+    if (filters.visibleToUserId) {
+      conditions.push({
+        OR: [
+          { createdById: filters.visibleToUserId },
+          { isActive: true, versions: { some: { status: ChecklistVersionStatus.PUBLISHED } } },
+        ],
+      });
     }
 
     if (filters.isTemplate !== undefined) {

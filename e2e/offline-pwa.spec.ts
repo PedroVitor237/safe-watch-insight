@@ -429,6 +429,7 @@ test("online → offline → reopen → retry → synchronize → Neon", async (
 
     const duplicate = unwrap(
       await inspectionResponseService.saveInspectionResponse({
+        userId: fixture.userId,
         inspectionId: primaryOperation.inspectionId,
         snapshotItemId: primaryOperation.payload.snapshotItemId,
         status: ResponseStatus.NON_COMPLIANT,
@@ -730,11 +731,15 @@ test("multiple offline edits → observation → conclusion → reload → synch
     expect(persistedInspection.offlineSyncOperations).toHaveLength(expectedOperationCount);
 
     const duplicateCompletion = unwrap(
-      await inspectionResponseService.finishInspection(workflowFixture.inspectionId, {
-        id: finishOperationId,
-        userId: workflowFixture.userId,
-        clientCreatedAt: new Date(finishClientCreatedAt),
-      }),
+      await inspectionResponseService.finishInspection(
+        workflowFixture.inspectionId,
+        workflowFixture.userId,
+        {
+          id: finishOperationId,
+          userId: workflowFixture.userId,
+          clientCreatedAt: new Date(finishClientCreatedAt),
+        },
+      ),
     );
     expect(duplicateCompletion.status).toBe("COMPLETED");
     expect(await prisma.offlineSyncOperation.count({ where: { id: finishOperationId } })).toBe(1);
@@ -792,6 +797,7 @@ test("optimistic conflict remains blocked across network transitions", async ({
 
     unwrap(
       await inspectionResponseService.saveInspectionResponse({
+        userId: conflictFixture.userId,
         inspectionId: conflictFixture.inspectionId,
         snapshotItemId: conflictFixture.snapshotItemId,
         status: ResponseStatus.COMPLIANT,
@@ -1118,7 +1124,7 @@ function findForbiddenKeyPaths(value: unknown, path = "root"): string[] {
 async function createTemporaryInspection(): Promise<TestFixture> {
   const user = unwrap(await userService.authenticate(ADMIN_EMAIL, ADMIN_PASSWORD));
   const company = await prisma.company.findFirst({
-    where: { deletedAt: null },
+    where: { deletedAt: null, createdById: user.id },
     orderBy: { createdAt: "asc" },
   });
   const publishedVersion = await prisma.checklistVersion.findFirst({

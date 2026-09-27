@@ -123,7 +123,7 @@ export const deleteChecklist = createServerFn({ method: "POST" })
       return toServerResult<never>(userResult);
     }
 
-    return toServerResult(await service.deleteChecklist(data.id));
+    return toServerResult(await service.deleteChecklist(data.id, userResult.data.id));
   });
 
 export const getChecklistById = createServerFn({ method: "POST" })
@@ -137,7 +137,7 @@ export const getChecklistById = createServerFn({ method: "POST" })
       return toServerResult<never>(userResult);
     }
 
-    return toServerResult(await service.getChecklistById(data.id));
+    return toServerResult(await service.getChecklistById(data.id, userResult.data.id));
   });
 
 export const listChecklists = createServerFn({ method: "POST" })
@@ -151,5 +151,5 @@ export const listChecklists = createServerFn({ method: "POST" })
       return toServerResult<never>(userResult);
     }
 
-    return toServerResult(await service.listChecklists(data));
+    return toServerResult(await service.listChecklists(data, userResult.data.id));
   });
