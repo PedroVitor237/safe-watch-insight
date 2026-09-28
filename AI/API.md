@@ -169,6 +169,24 @@ Resposta paginada:
 
 ## Auth
 
+### `register`
+
+- **Finalidade:** criar uma conta comum para uso posterior pelo login existente.
+- **Método:** `POST`
+- **Arquivo:** `src/lib/api/auth.functions.ts`
+- **Autenticação:** pública; não cria sessão.
+- **Body:** `name`, `email`, `password` e `confirmPassword` (strings); campos extras são rejeitados.
+- **Validação:** `registrationSchema`; nome não vazio após trim, e-mail válido normalizado para minúsculas, senha com no mínimo 8 caracteres e confirmação idêntica.
+- **Regras relacionadas:** o Service define `TECHNICIAN`, aplica bcrypt com custo 12 e verifica duplicidade de e-mail, inclusive contas excluídas logicamente. A restrição única do banco protege contra cadastro concorrente.
+- **Exemplo de chamada:**
+
+```ts
+await register({ data: { name: "Ana Silva", email: "ana@example.com", password: "senha-segura-123", confirmPassword: "senha-segura-123" } });
+```
+
+- **Resposta:** `success: true` com `id`, `name` e `email`; não retorna senha, hash ou papel. Após o sucesso, a interface encaminha ao login.
+- **Erros possíveis:** `409` e-mail já cadastrado; validação Zod para payload inválido; `500` erro interno.
+
 ### `login`
 
 - **Finalidade:** autenticar usuário por e-mail e senha e criar sessão.

@@ -72,7 +72,7 @@ Legenda
 
 ## Funcionalidades
 
-- [ ] Criar usuário
+- [x] Criar usuário (cadastro público mínimo; gestão de usuários permanece futura)
 - [ ] Atualizar usuário
 - [x] Consultar usuário autenticado
 - [ ] Listar usuários

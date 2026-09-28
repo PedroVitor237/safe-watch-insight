@@ -6,3 +6,6 @@ export const loginSchema = z.object({
 });
 
 export type LoginSchemaInput = z.infer<typeof loginSchema>;
+
+export { registrationSchema } from "@/lib/validation/registration.schema";
+export type { RegistrationSchemaInput } from "@/lib/validation/registration.schema";

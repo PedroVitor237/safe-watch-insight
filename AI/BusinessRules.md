@@ -20,6 +20,13 @@ O sistema deve permitir registrar informações de forma rápida, segura, rastre
 
 # Usuários
 
+O cadastro público exige nome, e-mail válido e senha de pelo menos 8 caracteres,
+com confirmação igual. O e-mail é normalizado para minúsculas e não pode repetir
+uma conta existente, inclusive excluída logicamente. A senha é armazenada com
+bcrypt (custo 12). O servidor atribui o papel comum `TECHNICIAN`; o cliente não
+pode escolher papel, ID ou proprietário. O cadastro não inicia sessão: o usuário
+entra pelo login existente para acessar seus próprios recursos.
+
 Um usuário pode:
 
 - autenticar-se no sistema;

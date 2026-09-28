@@ -34,6 +34,10 @@ export class UserRepository extends BaseRepository<
     });
   }
 
+  findByEmail(email: string): Promise<User | null> {
+    return prisma.user.findFirst({ where: { email: { equals: email, mode: "insensitive" } } });
+  }
+
   countActiveAdmins(): Promise<number> {
     return prisma.user.count({
       where: {

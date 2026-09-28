@@ -1,6 +1,5 @@
 import "dotenv/config";
 
-import bcrypt from "bcrypt";
 import { createHash } from "node:crypto";
 import process from "node:process";
 
@@ -20,6 +19,7 @@ import {
   CHECKLIST_CONTENT_SCHEMA_VERSION,
   createChecklistContentHash,
 } from "../src/server/utils/checklist-content-hash";
+import { hashPassword } from "../src/server/auth/password";
 
 const DEMO_ADMIN_ID = "11111111-1111-4111-8111-111111111111";
 const DEMO_COMPANY_ID = "22222222-2222-4222-8222-222222222222";
@@ -131,7 +131,7 @@ function createPrismaClient(): PrismaClient {
 const prisma = createPrismaClient();
 
 async function main() {
-  const password = await bcrypt.hash("Admin@123", 12);
+  const password = await hashPassword("Admin@123");
 
   const admin = await prisma.user.upsert({
     where: { email: "admin@demo.com" },

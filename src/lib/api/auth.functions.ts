@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
-import { loginSchema } from "@/server/schemas/auth.schema";
+import { loginSchema, registrationSchema } from "@/server/schemas/auth.schema";
 import type { Result } from "@/server/responses";
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
@@ -31,6 +31,10 @@ async function getSessionHelpers() {
 
 function validateLoginInput(input: unknown) {
   return loginSchema.parse(input);
+}
+
+function validateRegistrationInput(input: unknown) {
+  return registrationSchema.parse(input);
 }
 
 async function toServerErrorResult(error: unknown): Promise<ServerResult<never>> {
@@ -95,6 +99,19 @@ export const login = createServerFn({ method: "POST" })
     }
 
     return toServerResult(result);
+  });
+
+export const register = createServerFn({ method: "POST" })
+  .inputValidator(validateRegistrationInput)
+  .handler(async ({ data }) => {
+    const service = await getUserService();
+    return toServerResult(
+      await service.register({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+      }),
+    );
   });
 
 export const getCurrentSession = createServerFn({ method: "GET" }).handler(async () => {

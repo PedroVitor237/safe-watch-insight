@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -121,6 +121,12 @@ function LoginPage() {
                 {isSubmitting ? "Entrando..." : "Entrar"}
               </Button>
             </form>
+            <p className="mt-4 text-center text-sm text-muted-foreground">
+              Ainda não tem uma conta?{" "}
+              <Link to="/register" className="font-medium text-primary hover:underline">
+                Criar conta
+              </Link>
+            </p>
             <div className="mt-4 rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground">
               <div className="font-medium text-foreground">Ambiente de demonstração</div>
               <div className="mt-2 space-y-1">
