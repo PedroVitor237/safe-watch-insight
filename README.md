@@ -195,13 +195,24 @@ A URL local padrão é `http://localhost:5173`.
 ### Acesso demonstrativo
 
 ```text
-E-mail: admin@demo.com
-Senha: Admin@123
+Nome: Usuário Demonstração
+E-mail: demo.user@example.test
+Senha: Demo@12345
+Perfil: TECHNICIAN
 ```
 
-O seed é idempotente e cria o usuário demonstrativo, uma empresa, um checklist
-com versão publicada e itens, as 38 Normas Regulamentadoras e uma inspeção
-planejada com snapshot próprio.
+O Demo Seed é executado somente por `npm run db:seed`. Ele cria uma conta
+fictícia, quatro empresas fictícias, quatro checklists publicados e oito
+inspeções com snapshots (quatro concluídas, duas em andamento e duas planejadas),
+respostas, não conformidades e ações corretivas. Os dados alimentam os
+relatórios e o dashboard reais. Evidências fotográficas devem ser enviadas na
+demonstração ao vivo. O seed não altera dados já criados em uma nova execução.
+
+O banco configurado para o TCC é de teste. Após o TCC, caso a plataforma seja
+usada com dados operacionais reais, execute o Demo Seed somente em um banco ou
+ambiente de demonstração dedicado, separado dos dados operacionais.
+Contas e registros criados por versões antigas do seed não são removidos
+automaticamente, pois podem conter atividade de teste que deve ser preservada.
 
 ## Validação e build
 

@@ -101,7 +101,9 @@ npx prisma migrate deploy
 npm run db:seed
 ```
 
-O seed cria dados de demonstração para apresentação do fluxo principal.
+O Demo Seed cria uma única conta fictícia e dados relacionais sintéticos para
+apresentar o fluxo principal, relatórios e dashboard. A execução é manual e
+pode ser repetida sem restaurar inspeções ou sobrescrever respostas existentes.
 
 10. Inicie o servidor de desenvolvimento.
 
@@ -118,9 +120,15 @@ http://localhost:5173
 ## Credenciais de demonstração
 
 ```text
-Email: admin@demo.com
-Senha: Admin@123
+Nome: Usuário Demonstração
+Email: demo.user@example.test
+Senha: Demo@12345
+Perfil: TECHNICIAN
 ```
+
+Após o TCC, se houver uso com dados operacionais reais, o Demo Seed deverá ser
+executado somente em banco/ambiente de demonstração dedicado, separado do banco
+operacional. As evidências fotográficas são demonstradas com upload real ao vivo.
 
 ## Build de produção local
 

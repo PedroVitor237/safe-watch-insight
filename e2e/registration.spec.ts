@@ -10,13 +10,21 @@ const password = "Registration123!";
 let temporaryEmails: string[] = [];
 let temporaryContexts: BrowserContext[] = [];
 
-async function waitForFormHydration(page: Page) {
+async function waitForFormHydration(
+  page: Page,
+  passwordAutocomplete: "new-password" | "current-password",
+) {
   await page.waitForFunction(
-    () => {
+    (expectedAutocomplete) => {
       const form = document.querySelector("form");
-      return form !== null && Object.keys(form).some((key) => key.startsWith("__reactProps$"));
+      const passwordInput = form?.querySelector('input[name="password"]');
+      return (
+        form !== null &&
+        passwordInput?.getAttribute("autocomplete") === expectedAutocomplete &&
+        Object.keys(form).some((key) => key.startsWith("__reactProps$"))
+      );
     },
-    undefined,
+    passwordAutocomplete,
     { timeout: 15_000 },
   );
 }
@@ -40,14 +48,14 @@ async function registerAndLogin(page: Page, name: string, email: string) {
   await page.goto("/login");
   await page.getByRole("link", { name: "Criar conta" }).click();
   await expect(page).toHaveURL(/\/register$/);
-  await waitForFormHydration(page);
+  await waitForFormHydration(page, "new-password");
   await page.getByLabel("Nome", { exact: true }).fill(name);
   await page.getByLabel("E-mail", { exact: true }).fill(email);
   await page.getByLabel("Senha", { exact: true }).fill(password);
   await page.getByLabel("Confirmar senha", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Criar conta" }).click();
   await expect(page).toHaveURL(/\/login$/);
-  await waitForFormHydration(page);
+  await waitForFormHydration(page, "current-password");
   await page.getByLabel("E-mail").fill(email);
   await page.getByLabel("Senha").fill(password);
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
@@ -59,9 +67,12 @@ async function checkSeededLogin(browser: Browser) {
   try {
     const page = await context.newPage();
     await page.goto("/login");
-    await waitForFormHydration(page);
-    await page.getByLabel("E-mail").fill("admin@demo.com");
-    await page.getByLabel("Senha").fill("Admin@123");
+    await waitForFormHydration(page, "current-password");
+    await expect(page.getByText("Ambiente de demonstração")).toBeVisible();
+    await expect(page.getByText("demo.user@example.test")).toBeVisible();
+    await expect(page.getByText("Demo@12345")).toBeVisible();
+    await page.getByLabel("E-mail").fill("demo.user@example.test");
+    await page.getByLabel("Senha").fill("Demo@12345");
     await page.getByRole("button", { name: "Entrar", exact: true }).click();
     await expect(page).toHaveURL(/\/dashboard$/);
   } finally {
@@ -158,5 +169,8 @@ test("two public registrations log in and retain private company ownership", asy
     secondUser.id,
   );
   expect(foreignMutation.success).toBe(false);
+});
+
+test("demo credentials are displayed and log in", async ({ browser }) => {
   await checkSeededLogin(browser);
 });

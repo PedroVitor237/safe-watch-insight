@@ -36,7 +36,9 @@ interface CreatedIds {
 const createdIds: CreatedIds = {};
 
 async function main(): Promise<void> {
-  const authenticatedUser = unwrap(await userService.authenticate("admin@demo.com", "Admin@123"));
+  const authenticatedUser = unwrap(
+    await userService.authenticate("demo.user@example.test", "Demo@12345"),
+  );
   const standards = unwrap(
     await standardService.listStandards({
       page: 1,

@@ -8,8 +8,8 @@ import { inspectionService } from "../src/server/services/inspection.service";
 import { userService } from "../src/server/services/user.service";
 import { cloudinaryStorageService } from "../src/server/storage/cloudinary-storage.service.server";
 
-const ADMIN_EMAIL = "admin@demo.com";
-const ADMIN_PASSWORD = "Admin@123";
+const DEMO_EMAIL = "demo.user@example.test";
+const DEMO_PASSWORD = "Demo@12345";
 const TEMPORARY_NOTE_PREFIX = "E2E Evidence ownership temporário";
 const FILE_NAME = "evidence-ownership-browser.png";
 const FILE_CAPTION = "Validação de evidência do proprietário";
@@ -89,14 +89,14 @@ async function login(page: Page): Promise<void> {
     const form = document.querySelector("form");
     return form !== null && Object.keys(form).some((key) => key.startsWith("__reactProps$"));
   });
-  await page.getByLabel("E-mail").fill(ADMIN_EMAIL);
-  await page.getByLabel("Senha").fill(ADMIN_PASSWORD);
+  await page.getByLabel("E-mail").fill(DEMO_EMAIL);
+  await page.getByLabel("Senha").fill(DEMO_PASSWORD);
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
 }
 
 async function createTemporaryInspection(): Promise<string> {
-  const user = unwrap(await userService.authenticate(ADMIN_EMAIL, ADMIN_PASSWORD));
+  const user = unwrap(await userService.authenticate(DEMO_EMAIL, DEMO_PASSWORD));
   const company = await prisma.company.findFirst({
     where: { deletedAt: null, createdById: user.id },
     orderBy: { createdAt: "asc" },

@@ -159,7 +159,7 @@ The Prisma client is generated to `src/generated/prisma`, not the default `node_
 Authentication is real, not simulated:
 
 - Login Server Function validates with Zod, uses `UserService.authenticate`, compares bcrypt hashes, and creates a session.
-- Seed creates `admin@demo.com` with password `Admin@123`.
+- Seed creates `demo.user@example.test` with password `Demo@12345`.
 - Session helpers use TanStack Start server sessions with an HTTP-only cookie named `safe_watch_session`.
 - Session max age is 8 hours.
 - `SESSION_SECRET` is required in production. A development fallback secret exists for non-production.
@@ -246,8 +246,10 @@ Migrations:
 
 Seed:
 
-- `prisma/seed.ts` is idempotent for the demo admin, company, checklist, checklist items, one planned inspection, all 38 NRs, and the demo item-standard associations.
-- It does not seed non-conformities, corrective actions, evidence, or reports.
+- `prisma/seed.ts` manually creates one fictional TECHNICIAN account, four
+  fictional companies, four published checklists, eight inspections and their
+  responses, non-conformities and corrective actions.
+- It does not seed evidence or report records; reports are derived from inspections.
 
 Current status:
 
@@ -407,7 +409,7 @@ Estimated from current code, not from unchecked task boxes in `TASKS.md`:
 - Real login/logout/session flow.
 - Prisma schema for core domain.
 - Initial PostgreSQL migration.
-- Idempotent demo seed for admin, company, checklist, checklist items, inspection.
+- Idempotent Demo Seed with one ordinary fictional user and relational inspection data.
 - Prisma singleton with `@prisma/adapter-pg`.
 - Backend base repository/service patterns.
 - Standard `Result` response shape and API errors.
@@ -458,7 +460,7 @@ Confirmed or strongly indicated by code:
 
 Temporary workarounds:
 
-- Use seeded admin credentials for login: `admin@demo.com` / `Admin@123`.
+- Use the fictional TECHNICIAN credentials for login: `demo.user@example.test` / `Demo@12345`.
 - Use seeded data for real integrated flows.
 - Mock-only modules continue to work through `localStorage` key `sst-store-v1`.
 

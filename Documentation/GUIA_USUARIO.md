@@ -23,8 +23,8 @@ Ao abrir a aplicação, o usuário é direcionado para `/login`.
 No ambiente preparado pelo seed, as credenciais demonstrativas são:
 
 ```text
-E-mail: admin@demo.com
-Senha: Admin@123
+E-mail: demo.user@example.test
+Senha: Demo@12345
 ```
 
 A autenticação é real e cria uma sessão HTTP-only. Não há seleção de perfil no

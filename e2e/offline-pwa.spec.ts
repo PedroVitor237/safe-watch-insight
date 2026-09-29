@@ -11,8 +11,8 @@ import { inspectionResponseService } from "../src/server/services/inspection-res
 import { inspectionService } from "../src/server/services/inspection.service";
 import { userService } from "../src/server/services/user.service";
 
-const ADMIN_EMAIL = "admin@demo.com";
-const ADMIN_PASSWORD = "Admin@123";
+const DEMO_EMAIL = "demo.user@example.test";
+const DEMO_PASSWORD = "Demo@12345";
 const TEMPORARY_NOTE_PREFIX = "E2E Offline/PWA temporário";
 
 interface BrowserStorageSnapshot {
@@ -516,7 +516,7 @@ test("online → offline → reopen → retry → synchronize → Neon", async (
     const privateStorage = await readBrowserStorage(page);
     evidence.forbiddenLocalKeyPaths = findForbiddenKeyPaths(privateStorage);
     expect(evidence.forbiddenLocalKeyPaths).toEqual([]);
-    expect(JSON.stringify(privateStorage)).not.toContain(ADMIN_PASSWORD);
+    expect(JSON.stringify(privateStorage)).not.toContain(DEMO_PASSWORD);
 
     const sessionCookie = (await context.cookies()).find(
       (cookie) => cookie.name === "safe_watch_session",
@@ -874,8 +874,8 @@ async function loginFromCurrentPage(page: Page): Promise<void> {
     return form !== null && Object.keys(form).some((key) => key.startsWith("__reactProps$"));
   });
   await expect(page.locator("form")).toHaveAttribute("method", "post");
-  await page.getByLabel("E-mail").fill(ADMIN_EMAIL);
-  await page.getByLabel("Senha").fill(ADMIN_PASSWORD);
+  await page.getByLabel("E-mail").fill(DEMO_EMAIL);
+  await page.getByLabel("Senha").fill(DEMO_PASSWORD);
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
 }
@@ -1122,7 +1122,7 @@ function findForbiddenKeyPaths(value: unknown, path = "root"): string[] {
 }
 
 async function createTemporaryInspection(): Promise<TestFixture> {
-  const user = unwrap(await userService.authenticate(ADMIN_EMAIL, ADMIN_PASSWORD));
+  const user = unwrap(await userService.authenticate(DEMO_EMAIL, DEMO_PASSWORD));
   const company = await prisma.company.findFirst({
     where: { deletedAt: null, createdById: user.id },
     orderBy: { createdAt: "asc" },

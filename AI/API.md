@@ -197,8 +197,8 @@ await register({ data: { name: "Ana Silva", email: "ana@example.com", password: 
 
 ```json
 {
-  "email": "admin@demo.com",
-  "password": "Admin@123"
+  "email": "demo.user@example.test",
+  "password": "Demo@12345"
 }
 ```
 
@@ -209,7 +209,7 @@ await register({ data: { name: "Ana Silva", email: "ana@example.com", password: 
 - **Exemplo de chamada:**
 
 ```ts
-await login({ data: { email: "admin@demo.com", password: "Admin@123" } });
+await login({ data: { email: "demo.user@example.test", password: "Demo@12345" } });
 ```
 
 - **Exemplo de resposta:**
@@ -218,10 +218,10 @@ await login({ data: { email: "admin@demo.com", password: "Admin@123" } });
 {
   "success": true,
   "data": {
-    "id": "11111111-1111-4111-8111-111111111111",
-    "name": "Administrador",
-    "email": "admin@demo.com",
-    "role": "ADMIN"
+    "id": "f5b24d96-7d25-4c93-917c-1bb4fd019001",
+    "name": "Usuário Demonstração",
+    "email": "demo.user@example.test",
+    "role": "TECHNICIAN"
   }
 }
 ```
@@ -251,10 +251,10 @@ await getCurrentSession();
 {
   "success": true,
   "data": {
-    "id": "11111111-1111-4111-8111-111111111111",
-    "name": "Administrador",
-    "email": "admin@demo.com",
-    "role": "ADMIN"
+    "id": "f5b24d96-7d25-4c93-917c-1bb4fd019001",
+    "name": "Usuário Demonstração",
+    "email": "demo.user@example.test",
+    "role": "TECHNICIAN"
   }
 }
 ```

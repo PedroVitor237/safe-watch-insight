@@ -131,10 +131,14 @@ function LoginPage() {
               <div className="font-medium text-foreground">Ambiente de demonstração</div>
               <div className="mt-2 space-y-1">
                 <div>
-                  Email: <span className="font-medium text-foreground">admin@demo.com</span>
+                  Usuário: <span className="font-medium text-foreground">Usuário Demonstração</span>{" "}
+                  (TECHNICIAN)
                 </div>
                 <div>
-                  Senha: <span className="font-medium text-foreground">Admin@123</span>
+                  Email: <span className="font-medium text-foreground">demo.user@example.test</span>
+                </div>
+                <div>
+                  Senha: <span className="font-medium text-foreground">Demo@12345</span>
                 </div>
               </div>
             </div>

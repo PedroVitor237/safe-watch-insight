@@ -13,7 +13,7 @@ import { userService } from "@/server/services/user.service";
 let inspectionId: string | null = null;
 
 async function main(): Promise<void> {
-  const user = unwrap(await userService.authenticate("admin@demo.com", "Admin@123"));
+  const user = unwrap(await userService.authenticate("demo.user@example.test", "Demo@12345"));
   const company = await prisma.company.findFirst({
     where: { deletedAt: null, createdById: user.id },
     orderBy: { createdAt: "asc" },

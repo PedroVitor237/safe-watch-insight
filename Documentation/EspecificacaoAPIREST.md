@@ -49,8 +49,8 @@ A autenticação atual usa:
 Credenciais de demonstração criadas pelo seed:
 
 ```text
-Email: admin@demo.com
-Senha: Admin@123
+Email: demo.user@example.test
+Senha: Demo@12345
 ```
 
 ---

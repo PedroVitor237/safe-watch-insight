@@ -32,6 +32,8 @@ import { BaseService } from "./base.service";
 type ChecklistEntity = NonNullable<Awaited<ReturnType<ChecklistRepository["findActiveById"]>>>;
 
 export interface CreateInspectionInput {
+  /** Internal identity for deterministic demonstration data; never accepted by the public schema. */
+  id?: string;
   userId: string;
   companyId: string;
   checklistId: string;
@@ -64,6 +66,7 @@ export class InspectionService extends BaseService<InspectionRepository> {
       this.ensurePublishedContentIsValid(version);
 
       const inspection = await this.repository.createWithSnapshot({
+        id: input.id,
         userId: input.userId,
         companyId: input.companyId,
         checklistId: input.checklistId,
