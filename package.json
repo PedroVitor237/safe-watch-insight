@@ -12,7 +12,7 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "test": "tsx --test src/server/services/authorization.service.test.ts src/server/services/user.service.test.ts src/offline/inspection-store.test.ts src/server/repositories/evidence.repository.test.ts src/server/schemas/evidence.schema.test.ts src/server/schemas/sprint.schemas.test.ts src/server/services/checklist-version.service.test.ts src/server/services/corrective-action.service.test.ts src/server/services/dashboard.service.test.ts src/server/services/evidence.service.test.ts src/server/services/inspection-response.service.test.ts src/server/services/inspection.service.test.ts src/server/services/report.service.test.ts src/server/storage/cloudinary-storage.service.test.ts src/server/utils/offline-operation-hash.test.ts",
+    "test": "tsx --test src/server/services/authorization.service.test.ts src/server/services/user.service.test.ts src/offline/inspection-store.test.ts src/server/repositories/evidence.repository.test.ts src/server/schemas/evidence.schema.test.ts src/server/schemas/sprint.schemas.test.ts src/server/services/checklist-version.service.test.ts src/server/services/corrective-action.service.test.ts src/server/services/dashboard.service.test.ts src/server/services/evidence.service.test.ts src/server/services/inspection-response.service.test.ts src/server/services/inspection.service.test.ts src/server/services/report.service.test.ts src/server/storage/cloudinary-storage.service.test.ts src/server/utils/offline-operation-hash.test.ts src/server/services/official-checklist.service.test.ts",
     "test:e2e:offline": "playwright test e2e/offline-pwa.spec.ts --project=chromium",
     "test:e2e:evidence": "playwright test e2e/evidence-owner.spec.ts --project=chromium",
     "validate:nc-flow": "tsx scripts/validate-non-conformity-flow.ts",
@@ -27,7 +27,10 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "db:seed:platform": "tsx prisma/seed-platform.ts",
+    "validate:official-templates": "tsx --test scripts/validate-official-templates.ts",
+    "test:e2e:templates": "playwright test e2e/official-templates.spec.ts --project=chromium"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

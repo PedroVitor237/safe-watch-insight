@@ -301,3 +301,24 @@ permanente acima.
 
 Projeto desenvolvido por [Pedro Vitor](https://github.com/PedroVitor237) como TCC de Análise e
 Desenvolvimento de Sistemas.
+
+## Templates oficiais e implantação de conteúdo basal
+
+O catálogo inicial contém dois templates curados pela Safe Watch Insight: NR-18
+(12 itens adaptados de Murbach, 2019) e preparação para trabalho em altura
+(NR-1, NR-6 e NR-35; 8 itens). São templates da plataforma, não documentos
+governamentais nem garantia de conformidade legal atual. Na Biblioteca, abra
+“Templates oficiais” e use “Usar template” para obter uma cópia pessoal editável.
+
+Na implantação, depois das migrations e antes de disponibilizar a aplicação:
+
+```bash
+npx prisma migrate deploy
+npm run db:seed:platform
+```
+
+Esse bootstrap é idempotente, independente de usuários e adequado ao conteúdo
+basal de produção. Não cria dataset demo e não roda na inicialização.
+`npm run db:seed` também chama o bootstrap, preservando o dataset sintético
+existente e mantendo os templates fora da propriedade da conta demo.
+Fontes, modelo, limitações e testes: [AI/OfficialTemplates.md](./AI/OfficialTemplates.md).

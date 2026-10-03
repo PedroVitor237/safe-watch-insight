@@ -181,7 +181,14 @@ Resposta paginada:
 - **Exemplo de chamada:**
 
 ```ts
-await register({ data: { name: "Ana Silva", email: "ana@example.com", password: "senha-segura-123", confirmPassword: "senha-segura-123" } });
+await register({
+  data: {
+    name: "Ana Silva",
+    email: "ana@example.com",
+    password: "senha-segura-123",
+    confirmPassword: "senha-segura-123",
+  },
+});
 ```
 
 - **Resposta:** `success: true` com `id`, `name` e `email`; não retorna senha, hash ou papel. Após o sucesso, a interface encaminha ao login.
@@ -1298,3 +1305,25 @@ Os modelos existem no Prisma ou estão previstos na documentação, mas ainda n�
 - Sincronização offline de evidências binárias.
 
 Esses módulos devem seguir o mesmo fluxo arquitetural quando forem implementados.
+
+## Templates oficiais da plataforma
+
+- `listChecklists` aceita `scope?: "official" | "mine" | "shared"`. O filtro
+  restringe a consulta à plataforma, ao usuário da sessão ou a publicações de
+  outros usuários. Sem scope, preserva a listagem visível anterior.
+- Lista e detalhe retornam `isOfficial`, `createdById` opcional e `canManage`,
+  calculado pelo Service para orientar a UI; autorização continua no servidor.
+- `getChecklistById`, `listChecklistItems` e `listChecklistVersions` permitem
+  leitura autenticada das versões publicadas dos templates oficiais.
+- `useOfficialTemplate` (`POST`, `src/lib/api/checklist.functions.ts`) recebe
+  somente `{ id: UUID }` e usa o proprietário da sessão. Cria atomicamente um
+  checklist pessoal (`isOfficial=false`) com draft v1 e cópias dos itens/normas
+  da última publicação institucional. Retorna o checklist com suas versões.
+  Erros: `401` sessão ausente; `404` origem não oficial/inativa/indisponível;
+  `409` falha de integridade; validação Zod para UUID/payload inválido.
+- Schemas de criação/edição não aceitam atribuição de oficialidade/propriedade.
+  Os endpoints existentes de mutação de checklist, itens, publicação e retirada
+  retornam `NOT_FOUND` para templates da plataforma.
+- Bootstrap institucional não é exposto por Server Function.
+
+Fluxo e referência acadêmica: [OfficialTemplates.md](./OfficialTemplates.md).

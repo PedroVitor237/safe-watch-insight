@@ -30,6 +30,7 @@ erDiagram
     string title
     string description
     boolean isTemplate
+    boolean isOfficial
     boolean isActive
   }
   CHECKLIST_VERSION {
@@ -168,8 +169,8 @@ erDiagram
   }
 
   USER ||--o{ COMPANY : registers
-  USER ||--o{ CHECKLIST : creates
-  USER ||--o{ CHECKLIST_VERSION : creates_and_publishes
+  USER |o--o{ CHECKLIST : creates
+  USER |o--o{ CHECKLIST_VERSION : creates_and_publishes
   USER ||--o{ INSPECTION : performs
   COMPANY ||--o{ INSPECTION : has
   CHECKLIST ||--|{ CHECKLIST_VERSION : has
@@ -199,20 +200,20 @@ erDiagram
 
 ### CHECKLIST_VERSION
 
-| Campo                 | Tipo     | Restrição                                  |
-| --------------------- | -------- | ------------------------------------------ |
-| id                    | UUID     | PK                                         |
-| checklistId           | UUID     | FK → CHECKLIST                             |
-| versionNumber         | INTEGER  | NOT NULL; UNIQUE com checklistId           |
-| status                | ENUM     | DRAFT, PUBLISHED ou RETIRED                |
-| title                 | TEXT     | NOT NULL                                   |
-| description           | TEXT     | NULL                                       |
-| contentSchemaVersion  | INTEGER  | NOT NULL                                   |
-| contentHash           | CHAR(64) | NULL no draft; obrigatório após publicação |
-| createdById           | UUID     | FK → USER                                  |
-| publishedById         | UUID     | FK → USER; NULL no draft                   |
-| publishedAt           | DATETIME | NULL no draft                              |
-| createdAt / updatedAt | DATETIME | NOT NULL                                   |
+| Campo                 | Tipo     | Restrição                                            |
+| --------------------- | -------- | ---------------------------------------------------- |
+| id                    | UUID     | PK                                                   |
+| checklistId           | UUID     | FK → CHECKLIST                                       |
+| versionNumber         | INTEGER  | NOT NULL; UNIQUE com checklistId                     |
+| status                | ENUM     | DRAFT, PUBLISHED ou RETIRED                          |
+| title                 | TEXT     | NOT NULL                                             |
+| description           | TEXT     | NULL                                                 |
+| contentSchemaVersion  | INTEGER  | NOT NULL                                             |
+| contentHash           | CHAR(64) | NULL no draft; obrigatório após publicação           |
+| createdById           | UUID     | FK → USER; NULL para autoria institucional           |
+| publishedById         | UUID     | FK → USER; NULL no draft ou publicação institucional |
+| publishedAt           | DATETIME | NULL no draft                                        |
+| createdAt / updatedAt | DATETIME | NOT NULL                                             |
 
 ### CHECKLIST_VERSION_ITEM
 
@@ -314,3 +315,19 @@ compatibilidade, sem serem a fonte de verdade para novas inspeções.
 O modelo lógico mantém o catálogo normalizado e introduz cópias históricas
 controladas apenas nos limites de versão e inspeção. Essa duplicação é
 intencional e impede que atualizações futuras reescrevam registros de SST.
+
+## Propriedade dos templates institucionais
+
+`Checklist.isOfficial` é BOOLEAN NOT NULL DEFAULT false. `createdById` em
+Checklist e ChecklistVersion aceita NULL para autoria institucional. Um CHECK
+exige `isOfficial=true`, `isTemplate=true` e proprietário NULL para oficiais;
+pessoais exigem proprietário e `isOfficial=false`. As cardinalidades User →
+Checklist/ChecklistVersion são 0..1 do lado do autor, sem criar usuário fictício.
+Versões institucionais também possuem `publishedById=NULL`; continuam exigindo
+data e hash SHA-256 na publicação, com autoria herdada do checklist.
+
+A migration `20261003000000_add_official_checklist_templates` preserva todos os
+registros anteriores como pessoais. Linhagem das cópias usa a relação existente
+`ChecklistVersionItem.sourceVersionItemId`. Fonte, escopo e ano são descrição
+versionada, sem banco normativo adicional. Ver
+[Templates oficiais](../AI/OfficialTemplates.md).

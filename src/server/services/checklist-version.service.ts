@@ -10,6 +10,7 @@ import {
 } from "@/server/repositories/checklist-version.repository";
 import type { Result } from "@/server/responses";
 import {
+  type ChecklistContentHashInput,
   CHECKLIST_CONTENT_SCHEMA_VERSION,
   createChecklistContentHash,
 } from "@/server/utils/checklist-content-hash";
@@ -56,26 +57,7 @@ export class ChecklistVersionService extends BaseService<ChecklistVersionReposit
       const published = await this.repository.publishDraft(
         draft.id,
         {
-          publishedById,
-          publishedAt: new Date(),
-          contentHash: createChecklistContentHash({
-            title: draft.title,
-            description: draft.description,
-            items: draft.items.map((item) => ({
-              description: item.description,
-              orderIndex: item.orderIndex,
-              isRequired: item.isRequired,
-              standards: item.standards.map((standard) => ({
-                standardId: standard.standardId,
-                type: standard.type,
-                code: standard.code,
-                title: standard.title,
-                summary: standard.summary,
-                officialUrl: standard.officialUrl,
-              })),
-            })),
-          }),
-          contentSchemaVersion: CHECKLIST_CONTENT_SCHEMA_VERSION,
+          ...prepareChecklistPublication(draft, publishedById),
           expectedUpdatedAt: draft.updatedAt,
         },
         publishedById,
@@ -112,6 +94,7 @@ export class ChecklistVersionService extends BaseService<ChecklistVersionReposit
     checklistId: string,
     createdById: string,
   ): Promise<ChecklistVersionWithItems> {
+    await this.ensureChecklistExists(checklistId, createdById);
     const existingDraft = await this.repository.findDraftByChecklistId(checklistId);
 
     if (existingDraft) {
@@ -185,7 +168,7 @@ export class ChecklistVersionService extends BaseService<ChecklistVersionReposit
     }
   }
 
-  private toDraftItems(source: ChecklistVersionWithItems): VersionItemPersistenceInput[] {
+  toDraftItems(source: ChecklistVersionWithItems): VersionItemPersistenceInput[] {
     return source.items.map((item) => ({
       sourceVersionItemId: item.id,
       sourceChecklistItemId: item.sourceChecklistItemId,
@@ -233,3 +216,16 @@ export class ChecklistVersionService extends BaseService<ChecklistVersionReposit
 }
 
 export const checklistVersionService = new ChecklistVersionService();
+
+// Platform bootstrap uses the same canonical content and publication metadata.
+export function prepareChecklistPublication(
+  content: ChecklistContentHashInput,
+  publishedById: string | null,
+) {
+  return {
+    publishedById,
+    publishedAt: new Date(),
+    contentHash: createChecklistContentHash(content),
+    contentSchemaVersion: CHECKLIST_CONTENT_SCHEMA_VERSION,
+  };
+}

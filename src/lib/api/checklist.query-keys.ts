@@ -9,6 +9,7 @@ export function getChecklistListFilters(
     page: filters.page ?? 1,
     pageSize: filters.pageSize ?? 20,
     sortOrder: filters.sortOrder ?? "desc",
+    ...(filters.scope === undefined ? {} : { scope: filters.scope }),
     ...(filters.search === undefined ? {} : { search: filters.search }),
     ...(filters.sortBy === undefined ? {} : { sortBy: filters.sortBy }),
     ...(filters.isTemplate === undefined ? {} : { isTemplate: filters.isTemplate }),

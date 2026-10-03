@@ -41,6 +41,7 @@ export const updateChecklistSchema = checklistMutableFieldsSchema
 export const checklistFiltersSchema = listQuerySchema.extend({
   sortBy: checklistSortFieldSchema.optional(),
   createdById: z.string().uuid().optional(),
+  scope: z.enum(["official", "mine", "shared"]).optional(),
   isTemplate: z.coerce.boolean().optional(),
   isActive: z.coerce.boolean().optional(),
 });

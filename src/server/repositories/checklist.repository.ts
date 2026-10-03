@@ -5,7 +5,11 @@ import type { PaginatedResult, SortOrder } from "@/server/types";
 import { getPaginationOffset, normalizePagination } from "@/server/utils/pagination.utils";
 
 import { BaseRepository } from "./base.repository";
-import { checklistVersionRelations } from "./checklist-version.repository";
+import {
+  toVersionItemsCreate,
+  checklistVersionRelations,
+  type VersionItemPersistenceInput,
+} from "./checklist-version.repository";
 
 const checklistRelations = {
   versions: {
@@ -57,6 +61,7 @@ export interface ChecklistFindManyFilters {
   sortOrder?: SortOrder;
   createdById?: string;
   visibleToUserId?: string;
+  scope?: "official" | "mine" | "shared";
   isTemplate?: boolean;
   isActive?: boolean;
   includeDeleted?: boolean;
@@ -66,6 +71,7 @@ export interface InitialChecklistDraftInput {
   title: string;
   description: string | null;
   createdById: string;
+  items?: VersionItemPersistenceInput[];
 }
 
 export class ChecklistRepository extends BaseRepository<
@@ -90,8 +96,9 @@ export class ChecklistRepository extends BaseRepository<
   createWithDraft(
     data: Prisma.ChecklistCreateInput,
     draft: InitialChecklistDraftInput,
+    database: Pick<Prisma.TransactionClient, "checklist"> = prisma,
   ): Promise<ChecklistWithItems> {
-    return prisma.checklist.create({
+    return database.checklist.create({
       data: {
         ...data,
         versions: {
@@ -99,6 +106,7 @@ export class ChecklistRepository extends BaseRepository<
             versionNumber: 1,
             title: draft.title,
             description: draft.description,
+            items: { create: toVersionItemsCreate(draft.items ?? []) },
             createdBy: {
               connect: { id: draft.createdById },
             },
@@ -106,6 +114,33 @@ export class ChecklistRepository extends BaseRepository<
         },
       },
       include: checklistRelations,
+    });
+  }
+
+  createFromOfficialVersion(
+    sourceVersionId: string,
+    draft: InitialChecklistDraftInput,
+  ): Promise<ChecklistWithItems> {
+    return prisma.$transaction(async (transaction) => {
+      // Recheck availability in the same transaction that creates the private copy.
+      await transaction.checklistVersion.findFirstOrThrow({
+        where: {
+          id: sourceVersionId,
+          status: ChecklistVersionStatus.PUBLISHED,
+          checklist: { isOfficial: true, createdById: null, isActive: true, deletedAt: null },
+        },
+      });
+      return this.createWithDraft(
+        {
+          title: draft.title,
+          description: draft.description,
+          isOfficial: false,
+          isTemplate: false,
+          createdBy: { connect: { id: draft.createdById } },
+        },
+        draft,
+        transaction,
+      );
     });
   }
 
@@ -132,7 +167,7 @@ export class ChecklistRepository extends BaseRepository<
 
   findActiveOwnedById(id: string, userId: string): Promise<ChecklistWithItems | null> {
     return prisma.checklist.findFirst({
-      where: { id, createdById: userId, deletedAt: null },
+      where: { id, createdById: userId, isOfficial: false, deletedAt: null },
       include: checklistRelations,
     });
   }
@@ -157,7 +192,7 @@ export class ChecklistRepository extends BaseRepository<
     data: Prisma.ChecklistUpdateInput,
   ): Promise<ChecklistWithItems> {
     return prisma.checklist.update({
-      where: { id, createdById: userId, deletedAt: null },
+      where: { id, createdById: userId, isOfficial: false, deletedAt: null },
       data,
       include: checklistRelations,
     });
@@ -213,6 +248,12 @@ export class ChecklistRepository extends BaseRepository<
         ],
       });
     }
+
+    if (filters.scope === "official") conditions.push({ isOfficial: true });
+    if (filters.scope === "mine")
+      conditions.push({ createdById: filters.visibleToUserId, isOfficial: false });
+    if (filters.scope === "shared")
+      conditions.push({ createdById: { not: filters.visibleToUserId }, isOfficial: false });
 
     if (filters.isTemplate !== undefined) {
       conditions.push({ isTemplate: filters.isTemplate });

@@ -541,3 +541,13 @@ Todas as entidades devem:
 Estas entidades representam o domínio oficial do projeto.
 
 Novas entidades somente devem ser criadas quando realmente necessárias e após verificar compatibilidade com toda a documentação existente.
+
+# Extensão institucional de CHECKLIST e CHECKLIST_VERSION
+
+`Checklist` possui `isOfficial` (default false). Para templates da plataforma,
+`createdById` é NULL e `isTemplate=true`; para pessoais, o proprietário permanece
+obrigatório. `ChecklistVersion.createdById` também aceita NULL para autoria da
+plataforma, derivada do checklist pai. `publishedById=NULL` em uma publicação
+institucional não significa publicação anônima de usuário. As versões pessoais
+continuam atribuídas à sessão. Não foram criadas entidades de marketplace/RBAC.
+Ver [OfficialTemplates.md](./OfficialTemplates.md).

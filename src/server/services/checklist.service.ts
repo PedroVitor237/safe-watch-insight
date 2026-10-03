@@ -1,4 +1,4 @@
-import { ApiError, NotFoundError } from "@/server/errors";
+import { ApiError, ConflictError, NotFoundError } from "@/server/errors";
 import { Prisma } from "@/generated/prisma/client";
 import {
   checklistRepository,
@@ -8,10 +8,16 @@ import type { ChecklistFindManyFilters } from "@/server/repositories/checklist.r
 import type { Result } from "@/server/responses";
 import type { PaginatedResult } from "@/server/types";
 
+import {
+  CHECKLIST_CONTENT_SCHEMA_VERSION,
+  createChecklistContentHash,
+} from "@/server/utils/checklist-content-hash";
+
 import { BaseService } from "./base.service";
 import { checklistVersionService, ChecklistVersionService } from "./checklist-version.service";
 
 type ChecklistEntity = NonNullable<Awaited<ReturnType<ChecklistRepository["findActiveById"]>>>;
+type ChecklistView = ChecklistEntity & { canManage: boolean };
 type ChecklistListEntity = Awaited<
   ReturnType<ChecklistRepository["findManyPaginated"]>
 >["items"][number];
@@ -53,6 +59,30 @@ export class ChecklistService extends BaseService<ChecklistRepository> {
     });
   }
 
+  async useOfficialTemplate(id: string, userId: string): Promise<Result<ChecklistEntity>> {
+    return this.execute(async () => {
+      const template = await this.repository.findVisibleById(id, userId);
+      if (!template?.isOfficial || template.createdById !== null || !template.isActive) {
+        throw new NotFoundError("Checklist not found.");
+      }
+      const source = template.versions.find((version) => version.status === "PUBLISHED");
+      if (!source) throw new NotFoundError("Checklist version not found.");
+      if (
+        source.contentSchemaVersion !== CHECKLIST_CONTENT_SCHEMA_VERSION ||
+        source.contentHash !== createChecklistContentHash(source)
+      ) {
+        throw new ConflictError("Published checklist content failed its integrity check.");
+      }
+      const checklist = await this.repository.createFromOfficialVersion(source.id, {
+        title: `Meu checklist — ${source.title}`.slice(0, 255),
+        description: `Cópia pessoal do template Safe Watch Insight, versão ${source.versionNumber}.\n\n${source.description ?? ""}`,
+        createdById: userId,
+        items: this.versionService.toDraftItems(source),
+      });
+      return this.success(checklist);
+    });
+  }
+
   async updateChecklist(
     id: string,
     input: UpdateChecklistInput,
@@ -87,7 +117,7 @@ export class ChecklistService extends BaseService<ChecklistRepository> {
     });
   }
 
-  async getChecklistById(id: string, userId: string): Promise<Result<ChecklistEntity>> {
+  async getChecklistById(id: string, userId: string): Promise<Result<ChecklistView>> {
     return this.execute(async () => {
       const checklist = await this.repository.findVisibleById(id, userId);
 
@@ -96,10 +126,11 @@ export class ChecklistService extends BaseService<ChecklistRepository> {
       }
 
       return this.success(
-        checklist.createdById === userId
-          ? checklist
+        checklist.createdById === userId && !checklist.isOfficial
+          ? { ...checklist, canManage: true }
           : {
               ...checklist,
+              canManage: false,
               title:
                 checklist.versions.find((version) => version.status === "PUBLISHED")?.title ??
                 checklist.title,
@@ -115,7 +146,7 @@ export class ChecklistService extends BaseService<ChecklistRepository> {
   async listChecklists(
     filters: ChecklistFindManyFilters = {},
     userId: string,
-  ): Promise<Result<PaginatedResult<ChecklistListEntity>>> {
+  ): Promise<Result<PaginatedResult<ChecklistListEntity & { canManage: boolean }>>> {
     return this.execute(async () => {
       const checklists = await this.repository.findManyPaginated({
         ...filters,
@@ -126,10 +157,11 @@ export class ChecklistService extends BaseService<ChecklistRepository> {
       return this.success({
         ...checklists,
         items: checklists.items.map((checklist) =>
-          checklist.createdById === userId
-            ? checklist
+          checklist.createdById === userId && !checklist.isOfficial
+            ? { ...checklist, canManage: true }
             : {
                 ...checklist,
+                canManage: false,
                 title:
                   checklist.versions.find((version) => version.status === "PUBLISHED")?.title ??
                   checklist.title,

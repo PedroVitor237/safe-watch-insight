@@ -468,3 +468,10 @@ Nunca:
 # Objetivo Final
 
 Ao término deste plano, a plataforma deverá possuir um backend funcional, integrado ao banco de dados PostgreSQL, substituindo completamente os dados mockados do frontend e mantendo compatibilidade com futuras evoluções, incluindo sincronização offline, upload de imagens, autenticação avançada e eventual avaliação de migração de framework.
+
+## Incremento antes do QA final — templates oficiais
+
+Adicionar somente dois templates institucionais ao módulo de checklists, com
+propriedade explícita da plataforma, cópia pessoal transacional, bloqueio de
+mutações comuns, bootstrap independente do demo e testes de isolamento.
+Detalhamento: [AI/OfficialTemplates.md](./AI/OfficialTemplates.md).

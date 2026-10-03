@@ -25,10 +25,11 @@ entity "Company" as Company {
 entity "Checklist" as Checklist {
   * id : UUID <<PK>>
   --
-  createdById : UUID <<FK>>
+  createdById : UUID <<FK, NULL>>
   title : TEXT
   description : TEXT
   isTemplate : BOOLEAN
+  isOfficial : BOOLEAN
   isActive : BOOLEAN
   deletedAt : TIMESTAMP
 }
@@ -43,7 +44,7 @@ entity "ChecklistVersion" as ChecklistVersion {
   description : TEXT
   contentSchemaVersion : INTEGER
   contentHash : CHAR(64)
-  createdById : UUID <<FK>>
+  createdById : UUID <<FK, NULL>>
   publishedById : UUID <<FK>>
   publishedAt : TIMESTAMP
 }
@@ -190,8 +191,8 @@ entity "Report" as Report {
 }
 
 User ||--o{ Company
-User ||--o{ Checklist
-User ||--o{ ChecklistVersion : creates/publishes
+User |o--o{ Checklist
+User |o--o{ ChecklistVersion : creates/publishes
 User ||--o{ Inspection
 Company ||--o{ Inspection
 Checklist ||--|{ ChecklistVersion

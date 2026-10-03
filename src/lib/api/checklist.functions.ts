@@ -153,3 +153,13 @@ export const listChecklists = createServerFn({ method: "POST" })
 
     return toServerResult(await service.listChecklists(data, userResult.data.id));
   });
+
+export const useOfficialTemplate = createServerFn({ method: "POST" })
+  .inputValidator(checklistIdSchema.strict())
+  .handler(async ({ data }) => {
+    const service = await getChecklistService();
+    const { getAuthenticatedUser } = await getAuthSessionHelpers();
+    const userResult = await getAuthenticatedUser();
+    if (!userResult.success) return toServerResult<never>(userResult);
+    return toServerResult(await service.useOfficialTemplate(data.id, userResult.data.id));
+  });

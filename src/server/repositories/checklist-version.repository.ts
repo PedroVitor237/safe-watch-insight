@@ -46,7 +46,7 @@ export interface CreateDraftPersistenceInput {
 }
 
 export interface PublishVersionPersistenceInput {
-  publishedById: string;
+  publishedById: string | null;
   publishedAt: Date;
   contentHash: string;
   contentSchemaVersion: number;
@@ -105,7 +105,12 @@ export class ChecklistVersionRepository {
     return prisma.checklistVersion.create({
       data: {
         checklist: {
-          connect: { id: input.checklistId, createdById: input.createdById, deletedAt: null },
+          connect: {
+            id: input.checklistId,
+            createdById: input.createdById,
+            isOfficial: false,
+            deletedAt: null,
+          },
         },
         versionNumber: input.versionNumber,
         status: ChecklistVersionStatus.DRAFT,
@@ -115,37 +120,7 @@ export class ChecklistVersionRepository {
           connect: { id: input.createdById },
         },
         items: {
-          create: input.items.map((item) => ({
-            description: item.description,
-            orderIndex: item.orderIndex,
-            isRequired: item.isRequired,
-            ...(item.sourceVersionItemId
-              ? {
-                  sourceVersionItem: {
-                    connect: { id: item.sourceVersionItemId },
-                  },
-                }
-              : {}),
-            ...(item.sourceChecklistItemId
-              ? {
-                  sourceChecklistItem: {
-                    connect: { id: item.sourceChecklistItemId },
-                  },
-                }
-              : {}),
-            standards: {
-              create: item.standards.map((standard) => ({
-                standard: {
-                  connect: { id: standard.standardId },
-                },
-                type: standard.type,
-                code: standard.code,
-                title: standard.title,
-                summary: standard.summary,
-                officialUrl: standard.officialUrl,
-              })),
-            },
-          })),
+          create: toVersionItemsCreate(input.items),
         },
       },
       include: checklistVersionRelations,
@@ -169,7 +144,7 @@ export class ChecklistVersionRepository {
         where: {
           id: versionId,
           checklistId,
-          checklist: { createdById: userId, deletedAt: null },
+          checklist: { createdById: userId, isOfficial: false, deletedAt: null },
           status: ChecklistVersionStatus.DRAFT,
         },
         data: versionData,
@@ -182,7 +157,7 @@ export class ChecklistVersionRepository {
       }
 
       await transaction.checklist.update({
-        where: { id: checklistId, createdById: userId, deletedAt: null },
+        where: { id: checklistId, createdById: userId, isOfficial: false, deletedAt: null },
         data: checklistData,
       });
 
@@ -198,34 +173,13 @@ export class ChecklistVersionRepository {
     input: PublishVersionPersistenceInput,
     userId: string,
   ): Promise<ChecklistVersionWithItems> {
-    return prisma.$transaction(async (transaction) => {
-      const update = await transaction.checklistVersion.updateMany({
-        where: {
-          id,
-          checklist: { createdById: userId, deletedAt: null },
-          status: ChecklistVersionStatus.DRAFT,
-          updatedAt: input.expectedUpdatedAt,
-        },
-        data: {
-          status: ChecklistVersionStatus.PUBLISHED,
-          publishedById: input.publishedById,
-          publishedAt: input.publishedAt,
-          contentHash: input.contentHash,
-          contentSchemaVersion: input.contentSchemaVersion,
-        },
-      });
-
-      if (update.count !== 1) {
-        throw new ChecklistVersionPersistenceConflictError(
-          "Only a draft checklist version can be published.",
-        );
-      }
-
-      return transaction.checklistVersion.findUniqueOrThrow({
-        where: { id },
-        include: checklistVersionRelations,
-      });
-    });
+    return prisma.$transaction((transaction) =>
+      publishChecklistDraft(transaction, id, input, {
+        createdById: userId,
+        isOfficial: false,
+        deletedAt: null,
+      }),
+    );
   }
 
   retirePublished(id: string, userId: string): Promise<ChecklistVersionWithItems> {
@@ -233,7 +187,7 @@ export class ChecklistVersionRepository {
       const update = await transaction.checklistVersion.updateMany({
         where: {
           id,
-          checklist: { createdById: userId, deletedAt: null },
+          checklist: { createdById: userId, isOfficial: false, deletedAt: null },
           status: ChecklistVersionStatus.PUBLISHED,
         },
         data: {
@@ -256,3 +210,54 @@ export class ChecklistVersionRepository {
 }
 
 export const checklistVersionRepository = new ChecklistVersionRepository();
+
+// Shared persistence path for user publication and the deployment platform bootstrap.
+export async function publishChecklistDraft(
+  transaction: Prisma.TransactionClient,
+  id: string,
+  input: PublishVersionPersistenceInput,
+  checklist: Prisma.ChecklistWhereInput,
+): Promise<ChecklistVersionWithItems> {
+  const update = await transaction.checklistVersion.updateMany({
+    where: {
+      id,
+      checklist,
+      status: ChecklistVersionStatus.DRAFT,
+      updatedAt: input.expectedUpdatedAt,
+    },
+    data: {
+      status: ChecklistVersionStatus.PUBLISHED,
+      publishedById: input.publishedById,
+      publishedAt: input.publishedAt,
+      contentHash: input.contentHash,
+      contentSchemaVersion: input.contentSchemaVersion,
+    },
+  });
+  if (update.count !== 1) throw new ChecklistVersionPersistenceConflictError();
+  return transaction.checklistVersion.findUniqueOrThrow({
+    where: { id },
+    include: checklistVersionRelations,
+  });
+}
+
+export function toVersionItemsCreate(
+  items: VersionItemPersistenceInput[],
+): Prisma.ChecklistVersionItemCreateWithoutChecklistVersionInput[] {
+  return items.map((item) => ({
+    description: item.description,
+    orderIndex: item.orderIndex,
+    isRequired: item.isRequired,
+    ...(item.sourceVersionItemId
+      ? { sourceVersionItem: { connect: { id: item.sourceVersionItemId } } }
+      : {}),
+    ...(item.sourceChecklistItemId
+      ? { sourceChecklistItem: { connect: { id: item.sourceChecklistItemId } } }
+      : {}),
+    standards: {
+      create: item.standards.map(({ standardId, ...metadata }) => ({
+        ...metadata,
+        standard: { connect: { id: standardId } },
+      })),
+    },
+  }));
+}

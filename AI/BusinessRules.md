@@ -38,7 +38,8 @@ Um usuário pode:
 - registrar não conformidades;
 - gerar relatórios.
 
-Todo registro deve possuir um usuário responsável.
+Registros pessoais devem possuir um usuário responsável. Templates oficiais
+têm autoria institucional, conforme as regras abaixo.
 
 ---
 
@@ -455,3 +456,15 @@ Durante o desenvolvimento, sempre priorizar:
 - compatibilidade com a documentação do TCC.
 
 Em caso de dúvida, preservar a consistência entre regras de negócio, banco de dados e documentação antes de implementar novas funcionalidades.
+
+# Templates oficiais Safe Watch Insight
+
+Templates oficiais são conteúdo da plataforma (`isOfficial=true`, proprietário
+NULL), não documentos governamentais. Todos os usuários autenticados consultam
+as versões publicadas e podem criar uma cópia pessoal por “Usar template”.
+Nenhum usuário comum pode editar, excluir, alterar itens, criar drafts, publicar
+ou retirar versões institucionais. A cópia nasce com proprietário da sessão,
+`isOfficial=false`, itens próprios e draft v1; sua publicação segue o fluxo atual.
+`isTemplate` sozinho não representa oficialidade. A visibilidade preexistente
+dos checklists pessoais publicados permanece; drafts pessoais continuam privados.
+Detalhes, fontes e limites: [OfficialTemplates.md](./OfficialTemplates.md).

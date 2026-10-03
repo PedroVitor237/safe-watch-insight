@@ -137,6 +137,7 @@ function NovaInspecao() {
                     <SelectContent>
                       {publishedVersions.map(({ checklist, version }) => (
                         <SelectItem key={version.id} value={version.id}>
+                          {checklist.isOfficial ? "Oficial · Safe Watch Insight — " : ""}
                           {version.title} · v{version.versionNumber}
                         </SelectItem>
                       ))}
@@ -175,7 +176,11 @@ function NovaInspecao() {
                       Empresa: {selectedCompany?.tradeName ?? selectedCompany?.corporateName ?? "—"}
                     </li>
                     <li>
-                      Checklist: {selectedPublishedVersion?.version.title ?? "—"}
+                      Checklist:{" "}
+                      {selectedPublishedVersion?.checklist.isOfficial
+                        ? "Oficial · Safe Watch Insight — "
+                        : ""}
+                      {selectedPublishedVersion?.version.title ?? "—"}
                       {selectedPublishedVersion
                         ? ` · v${selectedPublishedVersion.version.versionNumber}`
                         : ""}

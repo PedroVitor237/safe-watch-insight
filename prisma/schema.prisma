@@ -139,13 +139,14 @@ model Checklist {
   title       String
   description String?
   isTemplate  Boolean   @default(false)
+  isOfficial  Boolean   @default(false)
   isActive    Boolean   @default(true)
-  createdById String    @db.Uuid
+  createdById String?   @db.Uuid
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
 
-  createdBy   User                          @relation(fields: [createdById], references: [id])
+  createdBy   User?                         @relation(fields: [createdById], references: [id])
   items       ChecklistItem[]
   versions    ChecklistVersion[]
   inspections Inspection[]
@@ -212,14 +213,14 @@ model ChecklistVersion {
   description          String?
   contentSchemaVersion Int                    @default(1)
   contentHash          String?                @db.Char(64)
-  createdById          String                 @db.Uuid
+  createdById          String?                @db.Uuid
   publishedById        String?                @db.Uuid
   publishedAt          DateTime?
   createdAt            DateTime               @default(now())
   updatedAt            DateTime               @updatedAt
 
   checklist   Checklist @relation(fields: [checklistId], references: [id], onDelete: Restrict)
-  createdBy   User      @relation("ChecklistVersionCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  createdBy   User?     @relation("ChecklistVersionCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
   publishedBy User?     @relation("ChecklistVersionPublishedBy", fields: [publishedById], references: [id], onDelete: Restrict)
 
   items       ChecklistVersionItem[]

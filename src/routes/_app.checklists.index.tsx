@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, ListChecks, Pencil, Trash2 } from "lucide-react";
 import {
   useChecklists,
+  useDeriveOfficialTemplate,
   useCreateChecklist,
   useDeleteChecklist,
   useUpdateChecklist,
@@ -31,12 +32,18 @@ export const Route = createFileRoute("/_app/checklists/")({
 });
 
 function ListaChecklists() {
+  const navigate = useNavigate();
+  const deriveTemplate = useDeriveOfficialTemplate();
+  const [scope, setScope] = useState<"official" | "mine" | "shared">("official");
+  const [page, setPage] = useState(1);
   const {
     data: checklistsResult,
     isError,
     isLoading,
   } = useChecklists({
     isActive: true,
+    scope,
+    page,
   });
   const createChecklist = useCreateChecklist();
   const updateChecklist = useUpdateChecklist();
@@ -49,6 +56,20 @@ function ListaChecklists() {
     checklistsResult && !checklistsResult.success
       ? checklistsResult.message
       : "Não foi possível carregar os checklists.";
+
+  async function handleUseTemplate(id: string) {
+    try {
+      const result = await deriveTemplate.mutateAsync(id);
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+      toast.success("Cópia pessoal criada. Revise os itens e publique sua versão.");
+      await navigate({ to: "/checklists/$id", params: { id: result.data.id } });
+    } catch {
+      toast.error("Não foi possível usar o template. Tente novamente.");
+    }
+  }
 
   function openCreateDialog() {
     setEditingChecklistId(null);
@@ -82,6 +103,8 @@ function ListaChecklists() {
 
       toast.success(editingChecklistId ? "Checklist atualizado." : "Checklist cadastrado.");
       setDialogOpen(false);
+      setScope("mine");
+      setPage(1);
     } catch {
       toast.error("Não foi possível salvar o checklist. Verifique os dados e tente novamente.");
     }
@@ -118,6 +141,33 @@ function ListaChecklists() {
           </Button>
         }
       />
+      <div className="flex flex-wrap gap-2 px-4 pt-4 sm:px-8" aria-label="Catálogos de checklist">
+        {(
+          [
+            ["official", "Templates oficiais"],
+            ["mine", "Meus checklists"],
+            ["shared", "Publicados por usuários"],
+          ] as const
+        ).map(([value, label]) => (
+          <Button
+            key={value}
+            variant={scope === value ? "default" : "outline"}
+            aria-pressed={scope === value}
+            onClick={() => {
+              setScope(value);
+              setPage(1);
+            }}
+          >
+            {label}
+          </Button>
+        ))}
+      </div>
+      {scope === "official" && (
+        <p className="px-4 pt-3 text-sm text-muted-foreground sm:px-8">
+          Templates oficiais da Safe Watch Insight. Não são documentos governamentais. Use um
+          template para criar sua cópia editável.
+        </p>
+      )}
       <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-8 lg:grid-cols-3">
         {isLoading &&
           Array.from({ length: 3 }).map((_, index) => (
@@ -156,7 +206,13 @@ function ListaChecklists() {
                   <ListChecks className="h-5 w-5" />
                 </div>
                 <div className="flex flex-wrap justify-end gap-1">
-                  <Badge variant="outline">{c.isTemplate ? "Template" : "Personalizado"}</Badge>
+                  <Badge variant="outline">
+                    {c.isOfficial
+                      ? "Oficial · Safe Watch Insight"
+                      : c.isTemplate
+                        ? "Template pessoal"
+                        : "Personalizado"}
+                  </Badge>
                   <ChecklistVersionBadge versions={c.versions} />
                 </div>
               </div>
@@ -176,20 +232,50 @@ function ListaChecklists() {
                     Abrir
                   </Link>
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => openEditDialog(c)}>
-                  <Pencil className="h-3.5 w-3.5" />
-                  Editar
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => handleDelete(c.id)}>
-                  <Trash2 className="h-3.5 w-3.5" />
-                  Excluir
-                </Button>
+                {c.isOfficial && (
+                  <Button
+                    size="sm"
+                    disabled={deriveTemplate.isPending}
+                    onClick={() => handleUseTemplate(c.id)}
+                  >
+                    Usar template
+                  </Button>
+                )}
+                {c.canManage && (
+                  <>
+                    <Button variant="outline" size="sm" onClick={() => openEditDialog(c)}>
+                      <Pencil className="h-3.5 w-3.5" />
+                      Editar
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => handleDelete(c.id)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Excluir
+                    </Button>
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
+      {checklistsResult?.success && checklistsResult.data.totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3 pb-4">
+          <Button variant="outline" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+            Anterior
+          </Button>
+          <span className="text-sm">
+            Página {page} de {checklistsResult.data.totalPages}
+          </span>
+          <Button
+            variant="outline"
+            disabled={page >= checklistsResult.data.totalPages}
+            onClick={() => setPage(page + 1)}
+          >
+            Próxima
+          </Button>
+        </div>
+      )}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -216,7 +302,7 @@ function ListaChecklists() {
               />
             </div>
             <div className="flex items-center justify-between rounded-md border p-3">
-              <Label htmlFor="checklist-template">Template oficial</Label>
+              <Label htmlFor="checklist-template">Template pessoal</Label>
               <Switch
                 id="checklist-template"
                 checked={form.isTemplate}

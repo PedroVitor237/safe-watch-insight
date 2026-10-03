@@ -440,3 +440,15 @@ Quando houver disponibilidade, priorizar:
 7. CI/CD.
 8. Observabilidade e monitoramento.
 9. Avaliação técnica de eventual migração de framework, sem compromisso nesta entrega.
+
+# Templates oficiais da plataforma — 3 de outubro de 2026
+
+Foi adotado `Checklist.isOfficial` com proprietário NULL para conteúdo curado
+pela Safe Watch Insight; `isTemplate` permanece independente. A restrição de
+propriedade no banco impede um usuário normal de ser dono de template oficial.
+Autores institucionais em versões são NULL e identificados pelo checklist pai.
+A publicação reutiliza o hash canônico e a persistência com controle otimista.
+“Usar template” cria uma identidade pessoal com draft v1, cópia transacional e
+linhagem dos itens. O bootstrap é separado do Demo Seed e explícito no deploy.
+Não houve nova autorização por perfil ou alteração do snapshot/offline.
+Detalhes: [AI/OfficialTemplates.md](./AI/OfficialTemplates.md).

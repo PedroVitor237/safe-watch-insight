@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowLeft, Pencil, Plus, Send, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -24,7 +24,7 @@ import {
   useDeleteChecklistItem,
   useUpdateChecklistItem,
 } from "@/hooks/useChecklistItems";
-import { useChecklist } from "@/hooks/useChecklists";
+import { useChecklist, useDeriveOfficialTemplate } from "@/hooks/useChecklists";
 import { usePublishChecklistVersion } from "@/hooks/useChecklistVersions";
 import { useStandards } from "@/hooks/useStandards";
 import { toast } from "sonner";
@@ -36,6 +36,8 @@ export const Route = createFileRoute("/_app/checklists/$id")({
 
 function EditorChecklist() {
   const { id } = Route.useParams();
+  const navigate = useNavigate();
+  const deriveTemplate = useDeriveOfficialTemplate();
   const { data: checklistResult, isError, isLoading } = useChecklist(id);
   const { data: itemsResult, isLoading: isLoadingItems } = useChecklistItems(id);
   const createItem = useCreateChecklistItem();
@@ -57,6 +59,20 @@ function EditorChecklist() {
 
   if (isError || !checklistResult?.success || !checklist) {
     return <div className="p-8">Checklist não encontrado.</div>;
+  }
+
+  async function handleUseTemplate() {
+    try {
+      const result = await deriveTemplate.mutateAsync(id);
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+      toast.success("Cópia pessoal criada. Revise os itens e publique sua versão.");
+      await navigate({ to: "/checklists/$id", params: { id: result.data.id } });
+    } catch {
+      toast.error("Não foi possível usar o template. Tente novamente.");
+    }
   }
 
   function openCreateDialog() {
@@ -154,7 +170,11 @@ function EditorChecklist() {
     <div>
       <PageHeader
         title={checklist.title}
-        description={checklist.description ?? "Sem descrição cadastrada."}
+        description={
+          (checklist.isOfficial
+            ? checklist.description?.split("\n\n")[0]
+            : checklist.description) ?? "Sem descrição cadastrada."
+        }
         actions={
           <Button asChild variant="outline">
             <Link to="/checklists">
@@ -170,7 +190,21 @@ function EditorChecklist() {
             <CardTitle className="text-base">Dados do checklist</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
-            <Badge variant="outline">{checklist.isTemplate ? "Template" : "Personalizado"}</Badge>
+            <Badge variant="outline">
+              {checklist.isOfficial
+                ? "Oficial · Safe Watch Insight"
+                : checklist.isTemplate
+                  ? "Template pessoal"
+                  : "Personalizado"}
+            </Badge>
+            <Badge variant="outline">{items.length} itens</Badge>
+            {[
+              ...new Set(items.flatMap((item) => item.standards.map((standard) => standard.code))),
+            ].map((code) => (
+              <Badge key={code} variant="outline">
+                {code}
+              </Badge>
+            ))}
             <StatusBadge value={checklist.isActive ? "ativo" : "inativo"} />
             {draftVersion ? (
               <Badge variant="secondary">Rascunho v{draftVersion.versionNumber}</Badge>
@@ -182,33 +216,55 @@ function EditorChecklist() {
           </CardContent>
         </Card>
 
+        {checklist.isOfficial && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Fonte e escopo do template</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="whitespace-pre-line text-sm text-muted-foreground">
+                {checklist.description?.split("\n\n").slice(1).join("\n\n")}
+              </p>
+              <Button onClick={handleUseTemplate} disabled={deriveTemplate.isPending}>
+                Usar template
+              </Button>
+              <p className="text-sm text-muted-foreground">
+                Cria um checklist pessoal com rascunho v1. Você poderá editar e publicar sua cópia.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between gap-3">
               <CardTitle className="text-base">Itens do checklist</CardTitle>
-              <div className="flex flex-wrap gap-2">
-                {draftVersion && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handlePublish}
-                    disabled={publishVersion.isPending}
-                  >
-                    <Send className="h-4 w-4" />
-                    Publicar v{draftVersion.versionNumber}
+              {checklist.canManage && (
+                <div className="flex flex-wrap gap-2">
+                  {draftVersion && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handlePublish}
+                      disabled={publishVersion.isPending}
+                    >
+                      <Send className="h-4 w-4" />
+                      Publicar v{draftVersion.versionNumber}
+                    </Button>
+                  )}
+                  <Button size="sm" onClick={openCreateDialog}>
+                    <Plus className="h-4 w-4" />
+                    Novo item
                   </Button>
-                )}
-                <Button size="sm" onClick={openCreateDialog}>
-                  <Plus className="h-4 w-4" />
-                  Novo item
-                </Button>
-              </div>
+                </div>
+              )}
             </div>
           </CardHeader>
           <CardContent>
             <p className="mb-4 text-xs text-muted-foreground">
-              Versões publicadas são imutáveis. Ao editar uma versão publicada, o sistema cria o
-              próximo rascunho automaticamente.
+              {checklist.canManage
+                ? "Versões publicadas são imutáveis. Ao editar uma versão publicada, o sistema cria o próximo rascunho automaticamente."
+                : "Esta versão publicada está disponível para consulta. Seu conteúdo original é preservado."}
             </p>
             {isLoadingItems && (
               <div className="py-8 text-center text-sm text-muted-foreground">
@@ -246,16 +302,18 @@ function EditorChecklist() {
                       </div>
                     )}
                   </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => openEditDialog(item)}>
-                      <Pencil className="h-3.5 w-3.5" />
-                      Editar
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleDelete(item.id)}>
-                      <Trash2 className="h-3.5 w-3.5" />
-                      Excluir
-                    </Button>
-                  </div>
+                  {checklist.canManage && (
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => openEditDialog(item)}>
+                        <Pencil className="h-3.5 w-3.5" />
+                        Editar
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleDelete(item.id)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Excluir
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

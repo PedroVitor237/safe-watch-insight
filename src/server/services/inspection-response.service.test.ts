@@ -320,6 +320,7 @@ function createInspection(
       title: "Catálogo mutável",
       description: null,
       isTemplate: false,
+      isOfficial: false,
       isActive: true,
       createdById: userId,
       createdAt: now,

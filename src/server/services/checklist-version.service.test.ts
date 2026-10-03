@@ -29,6 +29,7 @@ class FakeChecklistRepository extends ChecklistRepository {
       title: "Checklist",
       description: null,
       isTemplate: false,
+      isOfficial: false,
       isActive: true,
       createdById: USER_ID,
       createdAt: now,

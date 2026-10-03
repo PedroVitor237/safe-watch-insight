@@ -584,9 +584,9 @@ Templates básicos de Checklist
 
 As seeds devem ser idempotentes.
 
-O seed atual cadastra as NRs de `NR-1` a `NR-38`, mantém `NR-2` e `NR-27`
-inativas por estarem revogadas e associa normas aplicáveis aos itens do
-checklist demonstrativo. A fonte de consulta registrada é o catálogo oficial do
+O catálogo documentado abrange as NRs de `NR-1` a `NR-38`, com `NR-2` e
+`NR-27` inativas por estarem revogadas. O Demo Seed atual garante as normas
+necessárias ao dataset, sem sobrescrever um catálogo existente mais amplo. A fonte de consulta registrada é o catálogo oficial do
 Ministério do Trabalho e Emprego.
 
 ---
@@ -720,3 +720,21 @@ sem reset ou exclusão de dados.
 O banco de dados deve representar fielmente o domínio do problema e permanecer consistente com toda a documentação do projeto.
 
 Qualquer alteração estrutural deve ser refletida também na documentação do TCC.
+
+# Propriedade institucional de checklists
+
+Migration `20261003000000_add_official_checklist_templates`: adiciona
+`Checklist.isOfficial` com default false e permite NULL em
+`Checklist.createdById` e `ChecklistVersion.createdById`. O CHECK
+`Checklist_ownership_check` exige proprietário para pessoais e exige proprietário
+NULL e `isTemplate=true` para oficiais. Dados existentes mantêm seu proprietário.
+Versões da plataforma herdam autoria institucional do checklist pai e usam
+criador/publicador NULL; publicações pessoais continuam exigindo publicador.
+Hash, data, número, itens históricos e FKs permanecem. A descrição versionada
+inclui fonte, ano e limites do template; cópias mantêm linhagem dos itens.
+
+`npm run db:seed:platform` cria somente o conteúdo basal institucional e as NRs
+necessárias ausentes. O Demo Seed chama a mesma rotina. O seed atual de demo
+isoladamente contém oito NRs; o bootstrap institucional acrescenta NR-18 quando
+ausente e preserva qualquer catálogo mais completo existente. Consulte
+[OfficialTemplates.md](./OfficialTemplates.md) para implantação e idempotência.

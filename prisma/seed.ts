@@ -24,6 +24,7 @@ import { inspectionResponseService } from "../src/server/services/inspection-res
 import { inspectionService } from "../src/server/services/inspection.service";
 import { nonConformityService } from "../src/server/services/non-conformity.service";
 import { reportService } from "../src/server/services/report.service";
+import { officialChecklistService } from "../src/server/services/official-checklist.service";
 import { userService } from "../src/server/services/user.service";
 
 // All identities and business records below are synthetic TCC demonstration data.
@@ -768,6 +769,7 @@ async function verifyDataset(userId: string): Promise<void> {
 async function main(): Promise<void> {
   if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required for the TCC Demo Seed.");
   console.info("Safe Watch Insight — synthetic TCC Demo Seed");
+  await officialChecklistService.bootstrap();
   const userId = await ensureUser();
   const standards = await ensureStandards();
   const companies = await ensureCompanies(userId);

@@ -459,3 +459,16 @@ Uma tarefa só poderá ser marcada como concluída quando:
 # Objetivo Final
 
 Ao concluir todas as tarefas deste backlog, a plataforma deverá possuir um backend completo, integrado ao PostgreSQL via Prisma ORM, com frontend conectado aos dados reais, arquitetura preparada para evolução e documentação consistente com o projeto de TCC.
+
+# Incremento pré-QA — templates oficiais da plataforma
+
+- [x] Distinguir propriedade institucional sem vincular templates à conta demo
+- [x] Criar dois templates versionados com normas do catálogo e fonte acadêmica
+- [x] Permitir cópia pessoal com draft v1 e preservar o template publicado
+- [x] Proteger identidade, itens e versões no servidor
+- [x] Distinguir oficiais, pessoais e publicados por usuários na Biblioteca
+- [x] Adicionar bootstrap determinístico de produção e integração ao Demo Seed
+- [x] Documentar modelo, fonte, limites e implantação
+- [x] Concluir validação automatizada, integração PostgreSQL e E2E do incremento
+
+Referência: [AI/OfficialTemplates.md](./AI/OfficialTemplates.md).

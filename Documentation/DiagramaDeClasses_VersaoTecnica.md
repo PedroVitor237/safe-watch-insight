@@ -28,6 +28,8 @@ class Checklist {
   +String title
   +String description
   +Boolean isTemplate
+  +Boolean isOfficial
+  +UUID createdById
   +Boolean isActive
 }
 
@@ -202,8 +204,8 @@ class InspectionSnapshotIntegrityStatus {
 }
 
 User "1" --> "0..*" Company : creates
-User "1" --> "0..*" Checklist : creates
-User "1" --> "0..*" ChecklistVersion : creates/publishes
+User "0..1" --> "0..*" Checklist : creates
+User "0..1" --> "0..*" ChecklistVersion : creates/publishes
 User "1" --> "0..*" Inspection : performs
 
 Company "1" --> "0..*" Inspection
@@ -237,3 +239,19 @@ Inspection "1" --> "0..1" Report
 Checklist "1" --> "0..*" ChecklistItem : legacy
 ChecklistItem "1" --> "0..*" InspectionResponse : legacy compatibility
 ```
+
+## Propriedade dos templates institucionais
+
+`Checklist.isOfficial` é BOOLEAN NOT NULL DEFAULT false. `createdById` em
+Checklist e ChecklistVersion aceita NULL para autoria institucional. Um CHECK
+exige `isOfficial=true`, `isTemplate=true` e proprietário NULL para oficiais;
+pessoais exigem proprietário e `isOfficial=false`. As cardinalidades User →
+Checklist/ChecklistVersion são 0..1 do lado do autor, sem criar usuário fictício.
+Versões institucionais também possuem `publishedById=NULL`; continuam exigindo
+data e hash SHA-256 na publicação, com autoria herdada do checklist.
+
+A migration `20261003000000_add_official_checklist_templates` preserva todos os
+registros anteriores como pessoais. Linhagem das cópias usa a relação existente
+`ChecklistVersionItem.sourceVersionItemId`. Fonte, escopo e ano são descrição
+versionada, sem banco normativo adicional. Ver
+[Templates oficiais](../AI/OfficialTemplates.md).

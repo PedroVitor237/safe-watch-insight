@@ -208,3 +208,17 @@ persistidos no banco não são alterados.
 Use **Sair** no menu lateral. O sistema encerra a sessão remota quando possível,
 remove a sessão local e tenta limpar pacotes e operações offline do dispositivo.
 Se alguma etapa falhar, uma notificação informa a condição ao usuário.
+
+## Templates oficiais da Safe Watch Insight
+
+Na Biblioteca de checklists, “Templates oficiais” mostra os dois modelos
+fornecidos pela plataforma, identificados pelo selo “Oficial · Safe Watch
+Insight”. Abra o detalhe para consultar itens, NRs, versão publicada e fonte.
+“Usar template” cria sua cópia em rascunho v1; revise os itens e publique para
+utilizá-la nas inspeções. Ela aparece em “Meus checklists” e pode ser editada
+pelo proprietário. O original é preservado.
+
+“Publicados por usuários” mantém a consulta aos modelos publicados por outras
+pessoas. Modelos oficiais são conteúdo da plataforma, não documentos do governo
+ou garantia de conformidade atual. O modelo NR-18 adapta parte do Apêndice A de
+Murbach (2019); avalie o contexto e consulte as normas vigentes antes do uso.

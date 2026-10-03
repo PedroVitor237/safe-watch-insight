@@ -185,7 +185,7 @@ export class ChecklistVersionItemRepository {
     const update = await transaction.checklistVersion.updateMany({
       where: {
         id: checklistVersionId,
-        checklist: { createdById: userId, deletedAt: null },
+        checklist: { createdById: userId, isOfficial: false, deletedAt: null },
         status: ChecklistVersionStatus.DRAFT,
       },
       data: {

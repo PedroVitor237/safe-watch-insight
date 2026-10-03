@@ -457,3 +457,11 @@ Consulta do histórico
 Sincronização quando necessário
 
 Todo o desenvolvimento deve respeitar a documentação existente e preservar a consistência entre código, banco de dados e arquitetura.
+
+## Catálogo institucional de checklists
+
+A Biblioteca distingue templates oficiais Safe Watch Insight de checklists
+pessoais e publicados por usuários. Dois templates institucionais usam versões
+publicadas e permitem criar cópias pessoais com draft v1. A carga de produção
+é `npm run db:seed:platform`, após as migrations, sem executar o Demo Seed.
+Fonte NR-18, regras e limites: [AI/OfficialTemplates.md](./AI/OfficialTemplates.md).

@@ -6,6 +6,7 @@ import {
   getChecklistById,
   listChecklists,
   updateChecklist,
+  useOfficialTemplate as deriveOfficialTemplate,
 } from "@/lib/api/checklist.functions";
 import {
   checklistQueryKeys,
@@ -96,6 +97,17 @@ export function useDeleteChecklist() {
         queryClient.invalidateQueries({ queryKey: checklistQueryKeys.lists() }),
         queryClient.invalidateQueries({ queryKey: checklistQueryKeys.detail(id) }),
       ]);
+    },
+  });
+}
+
+export function useDeriveOfficialTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deriveOfficialTemplate({ data: { id } }),
+    onSuccess: async (result) => {
+      if (result.success)
+        await queryClient.invalidateQueries({ queryKey: checklistQueryKeys.lists() });
     },
   });
 }
