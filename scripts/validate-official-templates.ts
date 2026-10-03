@@ -22,11 +22,14 @@ import { createChecklistContentHash } from "../src/server/utils/checklist-conten
 
 const database = new URL(process.env.DATABASE_URL ?? "postgresql://invalid");
 if (
-  process.env.OFFICIAL_TEMPLATE_TEST_DATABASE !== "local-only" ||
-  !["localhost", "127.0.0.1"].includes(database.hostname)
+  !(
+    process.env.OFFICIAL_TEMPLATE_TEST_DATABASE === "local-only" &&
+    ["localhost", "127.0.0.1"].includes(database.hostname)
+  ) &&
+  process.env.OFFICIAL_TEMPLATE_TEST_DATABASE !== "configured-tcc"
 ) {
   throw new Error(
-    "Use a migrated, disposable local PostgreSQL database and OFFICIAL_TEMPLATE_TEST_DATABASE=local-only.",
+    "Use local PostgreSQL with local-only, or explicitly confirm the configured TCC fixture database with OFFICIAL_TEMPLATE_TEST_DATABASE=configured-tcc.",
   );
 }
 function unwrap<T>(result: Result<T>): T {

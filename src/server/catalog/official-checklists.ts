@@ -19,7 +19,7 @@ export const OFFICIAL_CHECKLISTS: readonly OfficialChecklistDefinition[] = [
     title: "Construção — treinamento, escavações e transporte vertical",
     description: [
       "NR-18 · Verificações iniciais no canteiro: capacitação, escavações/tubulões e equipamentos de transporte de pessoas e materiais. Recorte representativo, não exaustivo.",
-      "Fonte: adaptação do Apêndice A de Murbach (2019), páginas impressas 73–74, 83–84 e 113–114. Foram omitidos parâmetros numéricos e referências de subitens de 2019, sem revisão normativa ampla.",
+      "Fonte: adaptação do Apêndice A de Murbach (2019), páginas impressas 72–74, 83–84 e 113–114. Foram omitidos parâmetros numéricos e referências de subitens de 2019, sem revisão normativa ampla.",
       MURBACH_REFERENCE,
       MURBACH_URL,
       scopeNotice,

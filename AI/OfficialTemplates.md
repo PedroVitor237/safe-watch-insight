@@ -57,7 +57,7 @@ A adaptação efetivamente implementada usa:
 | Itens | Seções do apêndice                            | Páginas impressas |
 | ----- | --------------------------------------------- | ----------------- |
 | 1–3   | Treinamento                                   | 113–114           |
-| 4–7   | Escavações e tubulão a céu aberto             | 73–74             |
+| 4–7   | Escavações e tubulão a céu aberto             | 72–74             |
 | 8–12  | Movimentação/transporte vertical e elevadores | 83–84             |
 
 São perguntas reescritas e agrupadas por contexto. Não foram reproduzidos os
@@ -75,12 +75,20 @@ teórico do TCC não foram alterados.
 
 `Template oficial → Usar template → checklist pessoal + DRAFT v1`.
 
-A sessão define o proprietário da cópia. O Service valida o hash da última
-versão publicada; o Repository revalida a disponibilidade e cria checklist,
-draft, itens e normas em uma transação. A cópia é `isOfficial=false` e
-`isTemplate=false`, tem IDs próprios e mantém `sourceVersionItemId` como linhagem
-até a versão original. O título ganha o prefixo “Meu checklist” e a descrição
-registra a origem e o número da versão. Não há estado mutável compartilhado.
+A sessão define o proprietário da cópia. A operação única
+`ChecklistService.copyChecklist` também permite copiar checklists próprios e
+publicações acessíveis de outros usuários. O Repository lê e grava com o mesmo
+cliente transacional, usando inserts em lote ordenados. A cópia é
+`isOfficial=false` e `isTemplate=false`, possui UUIDs próprios e mantém referências
+de linhagem aos itens da origem. O título recebe “— Cópia”, seguido de numeração
+quando necessário. O proprietário copia seu draft atual ou a última publicação;
+terceiros copiam exclusivamente uma publicação acessível e íntegra.
+
+A referência atual inclui a página 72. Publicações institucionais antigas não
+são reescritas: uma errata bibliográfica explícita é exibida na interface e
+incorporada aos drafts das novas cópias. A fonte permanece atribuída à plataforma,
+baseada/adaptada de Murbach (2019). Detalhes da correção do P2003, transação,
+permissões e testes: [ChecklistCopy.md](./ChecklistCopy.md).
 
 O usuário revisa, edita e publica a cópia pelo fluxo existente. Antes de publicar,
 ela permanece privada. A regra preexistente de `8c0be44` continua: checklists
@@ -128,6 +136,8 @@ uma etapa de implantação específica; esta entrega não inclui gestão editori
 - `npx tsc --noEmit`, `npm run prisma:validate`, `npm run build`.
 - `OFFICIAL_TEMPLATE_TEST_DATABASE=local-only npm run validate:official-templates`:
   requer `DATABASE_URL` apontando para PostgreSQL local descartável já migrado.
+  Para fixtures no TCC configurado, usar confirmação explícita
+  `OFFICIAL_TEMPLATE_TEST_DATABASE=configured-tcc`.
   Exercita bootstrap concorrente/repetido, dois usuários, leitura, bloqueios,
   cópia, CRUD, publicação, inspeções, relatórios e integridade. Remove somente
   os fixtures temporários; conserva o catálogo institucional.
@@ -343,10 +353,91 @@ Ele não deve ser comparado ao fingerprint do TCC: são bancos/datasets distinto
 
 A auditoria alterou somente este documento no repositório; scripts de inspeção,
 fixtures do banco corrente, diagnósticos e logs foram mantidos em `/tmp/swi-*`.
-O script permanente de integração continua restrito a PostgreSQL local; sua
-proteção não foi removida. Nenhuma versão oficial foi sobrescrita e nenhum
+Naquela auditoria, o script permanente de integração continuava restrito a
+PostgreSQL local; sua proteção não havia sido removida. Nenhuma versão oficial foi sobrescrita e nenhum
 terceiro template foi criado. O código funcional permanece sujeito aos achados.
 
 **Parecer: NEEDS FIX BEFORE COMMIT.** Resolver os dois achados acima e repetir a
 validação da derivação com a configuração final antes de autorizar o commit.
 Repositório: 33 arquivos modificados, nove novos, nada staged, sem commit/push.
+
+## Correção e cópia reutilizável — validação final (3 de outubro de 2026)
+
+Esta validação resolve os dois achados da auditoria acima. A reprodução no Neon
+identificou o rollback por expiração da transação interativa durante a sequência
+N+1 de inserts aninhados, seguido de um insert ainda em execução que falhou em
+`ChecklistVersionItem_checklistVersionId_fkey`. O cliente transacional já era
+propagado corretamente. A correção usa inserts em lote ordenados para
+checklist/draft/itens/associações, sem alterar o timeout padrão. O mesmo mecanismo
+agora atende templates oficiais, drafts próprios e publicações acessíveis.
+Detalhes: [ChecklistCopy.md](./ChecklistCopy.md).
+
+A referência acadêmica atual foi corrigida para páginas 72–74. A v1 institucional
+já publicada permanece idêntica; a interface e os novos drafts derivados incluem
+uma errata explícita. Não foi criado terceiro template nem sobrescrita publicação.
+
+### Resultados executados
+
+Node 22.23.2, Chromium 151.0.7922.34 e `DATABASE_URL` do TCC/Neon configurado:
+
+| Verificação | Resultado |
+| --- | --- |
+| `npm test` final | **85/85**, zero falhas |
+| `npx tsc --noEmit` | Aprovado |
+| TypeScript ampliado para src + scripts alterados + seed + E2E de templates | Aprovado |
+| `npm run prisma:validate` | Schema válido |
+| Prisma generate | Executado com sucesso no build final, cliente 7.9.1 |
+| `npm run build` final | Artefato Vercel gerado |
+| `npm run lint` final | Zero erros; seis avisos preexistentes de Fast Refresh |
+| `git diff --check` | Sem erros |
+| `validate:official-templates`, confirmação `configured-tcc` | **8/8**, incluindo teste pai; derivação normal, autorização, CRUD, publicação, snapshots, conclusão e Reports |
+| `validate:checklist-copy`, confirmação `configured-tcc`, final | **10/10**, incluindo teste pai; propriedade, isolamento A/B, cópia publicada acessível, draft privado não exposto, nomes, exclusão de item na origem draft e rollback |
+| Quatro cópias institucionais repetidas, cliente normal | **941, 933, 946 e 937 ms**; sem P2003 em conteúdo válido |
+| Falha deliberada na última gravação de associação | FK `ChecklistVersionItemStandard_standardId_fkey` rejeitou norma inexistente; todos os registros da tentativa foram revertidos |
+| `validate:workflow-authorization` | Aprovado; dois usuários, leitura/mutação privada bloqueada, reutilização publicada e fluxo do proprietário |
+| `validate:checklist-versioning` | Aprovado; backfill legado, v1/v2, isolamento de itens/normas, NC histórica, inspeção concluída estável e rollback |
+| `validate:dashboard` | Aprovado; Reports, escopo por usuário, cinco recentes e leitura sem mutar status |
+| `test:e2e:templates` final | **1/1**; login, uso de template, edição, cópia pessoal, independência e chamada direta ao servidor por terceiro/sem sessão |
+| `test:e2e:offline` | **3/3**; instalação/cache, reabertura/retry/sincronização, edições/conclusão e conflito otimista |
+| Demo Seed completo no TCC | Duas execuções aprovadas; fingerprint idêntico à conferência anterior somente de leitura |
+| Platform Seed CLI no TCC | Duas execuções aprovadas; fontes institucionais preservadas |
+| Fluxo com a conta demo atual | Cópia oficial e de checklist próprio, edição de ambas, fontes intactas e limpeza das duas cópias |
+
+Uma checagem exploratória que incluiu **todos** os scripts/E2E além do `tsconfig`
+oficial encontrou 30 diagnósticos de nulabilidade em dois arquivos preexistentes
+não alterados: `e2e/offline-pwa.spec.ts` (24) e
+`scripts/validate-offline-sync-flow.ts` (6). Ela não passou e não é apresentada
+como aprovação. O TypeScript oficial e a configuração ampliada dos arquivos desta
+entrega passaram. A suíte Offline/PWA executada passou. Esses diagnósticos fora
+da configuração oficial não foram corrigidos nesta entrega para evitar alterações
+não relacionadas no fluxo offline.
+
+### Preservação final do banco
+
+A comparação por hashes de todas as linhas das **19 tabelas** da aplicação
+confirmou igualdade exata com a fotografia anterior ao trabalho: **499 registros,
+nenhuma linha alterada, removida ou acrescida** após a limpeza. Mantêm-se duas
+contas (legada e demo), nove empresas, 11 checklists (dois oficiais), 12 versões,
+65 itens de versão, 17 inspeções, 55 respostas e todo o histórico de snapshots,
+não conformidades, ações, evidências e operações offline. Não permanecem usuários,
+checklists, itens, versões, inspeções ou snapshots temporários. Não houve reset,
+migration ou alteração de FKs; todas as FKs consultadas estão validadas.
+
+Fingerprint integral desta comparação (formato próprio do runner desta etapa):
+`14d6d1a222e217d467a597dc4fa7109f9c566bcdfda49b7bd55fdf93a518dd64`.
+Não comparar diretamente com fingerprints de outros formatos usados na auditoria
+anterior. O Demo Seed manteve o fingerprint
+`ce0c77240a24f7db87dc890938117783f980ee0807b90e46b4cc79a8f1275f56` nas três
+conferências (leitura inicial e duas execuções completas).
+
+Os hashes oficiais permanecem:
+
+- NR-18: `08553a27db11f0792f53c979a9ec7c10d284d658a720c4eb89572ff41c578458`.
+- Altura: `8c4366ebc0e76b746c0c29c6b3d288668c45377ef7eb2d88bfe88ff084c7072a`.
+
+Logs e runners diagnósticos desta etapa estão em `/tmp/swi-copy-*`. Nenhum segredo
+ou URL de conexão integra a documentação. O HEAD continua
+`efa1d03ae652154a3b5eddbfe5a84b499fd958f0`, com 15 arquivos modificados e quatro
+novos, nada staged. Nenhum commit ou push foi executado nesta tarefa.
+
+**Parecer desta entrega: READY FOR COMMIT.**

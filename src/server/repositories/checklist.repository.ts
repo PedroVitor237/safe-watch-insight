@@ -1,4 +1,6 @@
-import { ChecklistVersionStatus, type Checklist, type Prisma } from "@/generated/prisma/client";
+import { randomUUID } from "node:crypto";
+
+import { ChecklistVersionStatus, type Checklist, Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/server/prisma/client";
 import { paginate } from "@/server/responses/pagination";
 import type { PaginatedResult, SortOrder } from "@/server/types";
@@ -117,31 +119,82 @@ export class ChecklistRepository extends BaseRepository<
     });
   }
 
-  createFromOfficialVersion(
-    sourceVersionId: string,
-    draft: InitialChecklistDraftInput,
+  copyFromSource(
+    sourceId: string,
+    userId: string,
+    prepare: (source: ChecklistWithItems, existingTitles: string[]) => InitialChecklistDraftInput,
   ): Promise<ChecklistWithItems> {
-    return prisma.$transaction(async (transaction) => {
-      // Recheck availability in the same transaction that creates the private copy.
-      await transaction.checklistVersion.findFirstOrThrow({
-        where: {
-          id: sourceVersionId,
-          status: ChecklistVersionStatus.PUBLISHED,
-          checklist: { isOfficial: true, createdById: null, isActive: true, deletedAt: null },
-        },
-      });
-      return this.createWithDraft(
-        {
-          title: draft.title,
-          description: draft.description,
-          isOfficial: false,
-          isTemplate: false,
-          createdBy: { connect: { id: draft.createdById } },
-        },
-        draft,
-        transaction,
-      );
-    });
+    return prisma.$transaction(
+      async (transaction) => {
+        const source = await transaction.checklist.findFirstOrThrow({
+          where: {
+            id: sourceId,
+            deletedAt: null,
+            OR: [
+              { createdById: userId, isOfficial: false },
+              { isActive: true, versions: { some: { status: ChecklistVersionStatus.PUBLISHED } } },
+            ],
+          },
+          include: checklistRelations,
+        });
+        const existing = await transaction.checklist.findMany({
+          where: { createdById: userId, deletedAt: null },
+          select: { title: true },
+        });
+        const draft = prepare(
+          source,
+          existing.map(({ title }) => title),
+        );
+        // Ownership comes from the trusted session argument, never the source or prepared content.
+        const checklistId = randomUUID();
+        const versionId = randomUUID();
+        await transaction.checklist.create({
+          data: {
+            id: checklistId,
+            title: draft.title,
+            description: draft.description,
+            createdById: userId,
+            isOfficial: false,
+            isTemplate: false,
+          },
+        });
+        await transaction.checklistVersion.create({
+          data: {
+            id: versionId,
+            checklistId,
+            versionNumber: 1,
+            status: ChecklistVersionStatus.DRAFT,
+            title: draft.title,
+            description: draft.description,
+            createdById: userId,
+          },
+        });
+        // Bounded bulk writes avoid per-item connect/create round trips inside the transaction.
+        const items = (draft.items ?? []).map((item) => ({ ...item, id: randomUUID() }));
+        if (items.length) {
+          await transaction.checklistVersionItem.createMany({
+            data: items.map(({ standards: _standards, ...item }) => ({
+              ...item,
+              checklistVersionId: versionId,
+            })),
+          });
+          const standards = items.flatMap((item) =>
+            item.standards.map((standard) => ({
+              ...standard,
+              checklistVersionItemId: item.id,
+            })),
+          );
+          if (standards.length) {
+            await transaction.checklistVersionItemStandard.createMany({ data: standards });
+          }
+        }
+        return transaction.checklist.findUniqueOrThrow({
+          where: { id: checklistId },
+          include: checklistRelations,
+        });
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+    );
   }
 
   updateWithItems(

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  copyChecklist,
   createChecklist,
   deleteChecklist,
   getChecklistById,
@@ -105,6 +106,17 @@ export function useDeriveOfficialTemplate() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deriveOfficialTemplate({ data: { id } }),
+    onSuccess: async (result) => {
+      if (result.success)
+        await queryClient.invalidateQueries({ queryKey: checklistQueryKeys.lists() });
+    },
+  });
+}
+
+export function useCopyChecklist() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => copyChecklist({ data: { id } }),
     onSuccess: async (result) => {
       if (result.success)
         await queryClient.invalidateQueries({ queryKey: checklistQueryKeys.lists() });

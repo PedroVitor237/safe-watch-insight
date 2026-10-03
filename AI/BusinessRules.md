@@ -468,3 +468,13 @@ ou retirar versões institucionais. A cópia nasce com proprietário da sessão,
 `isTemplate` sozinho não representa oficialidade. A visibilidade preexistente
 dos checklists pessoais publicados permanece; drafts pessoais continuam privados.
 Detalhes, fontes e limites: [OfficialTemplates.md](./OfficialTemplates.md).
+
+## Cópia de checklist
+
+O usuário autenticado pode copiar um template oficial ativo/publicado, seu
+checklist próprio não excluído ou a publicação de outro usuário que já seja
+acessível pela regra vigente. O proprietário copia o draft atual ou, sem draft,
+a última publicação. Terceiros nunca copiam drafts nem versões retiradas.
+A cópia é privada, não oficial, pertence à sessão e começa em draft v1 com
+identidade/itens próprios. Publicações de origem devem ter hash íntegro; a origem
+permanece intocada. Detalhes: [ChecklistCopy.md](./ChecklistCopy.md).

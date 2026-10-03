@@ -452,3 +452,15 @@ A publicação reutiliza o hash canônico e a persistência com controle otimist
 linhagem dos itens. O bootstrap é separado do Demo Seed e explícito no deploy.
 Não houve nova autorização por perfil ou alteração do snapshot/offline.
 Detalhes: [AI/OfficialTemplates.md](./AI/OfficialTemplates.md).
+
+## 3 de outubro de 2026 — cópia independente e P2003
+
+Uma única operação de domínio cria cópias de templates oficiais, conteúdo próprio
+e publicações acessíveis. A visibilidade existente permanece; draft pessoal tem
+preferência somente para o proprietário. O Repository lê a origem e persiste a
+nova identidade/draft/itens/normas no mesmo cliente transacional, com isolamento
+`RepeatableRead`, UUIDs pré-gerados e inserts em lote na ordem das FKs. Esta
+escolha elimina o plano N+1 que ultrapassava a transação interativa no Neon e
+continuava enviando inserts após o rollback, causando P2003. Mantém-se o timeout
+padrão, sem retries ou alterações de schema. A errata Murbach inclui página 72
+sem recalcular hashes de publicações históricas. Ver [AI/ChecklistCopy.md](./AI/ChecklistCopy.md).

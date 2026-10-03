@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, Pencil, Plus, Send, Trash2 } from "lucide-react";
+import { ArrowLeft, Copy, Pencil, Plus, Send, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,9 +24,10 @@ import {
   useDeleteChecklistItem,
   useUpdateChecklistItem,
 } from "@/hooks/useChecklistItems";
-import { useChecklist, useDeriveOfficialTemplate } from "@/hooks/useChecklists";
+import { useChecklist, useCopyChecklist, useDeriveOfficialTemplate } from "@/hooks/useChecklists";
 import { usePublishChecklistVersion } from "@/hooks/useChecklistVersions";
 import { useStandards } from "@/hooks/useStandards";
+import { getOfficialChecklistDescription } from "@/lib/official-checklist-attribution";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/checklists/$id")({
@@ -37,6 +38,7 @@ export const Route = createFileRoute("/_app/checklists/$id")({
 function EditorChecklist() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
+  const copyChecklist = useCopyChecklist();
   const deriveTemplate = useDeriveOfficialTemplate();
   const { data: checklistResult, isError, isLoading } = useChecklist(id);
   const { data: itemsResult, isLoading: isLoadingItems } = useChecklistItems(id);
@@ -61,9 +63,9 @@ function EditorChecklist() {
     return <div className="p-8">Checklist não encontrado.</div>;
   }
 
-  async function handleUseTemplate() {
+  async function handleCopy() {
     try {
-      const result = await deriveTemplate.mutateAsync(id);
+      const result = await (checklist?.isOfficial ? deriveTemplate : copyChecklist).mutateAsync(id);
       if (!result.success) {
         toast.error(result.message);
         return;
@@ -71,7 +73,7 @@ function EditorChecklist() {
       toast.success("Cópia pessoal criada. Revise os itens e publique sua versão.");
       await navigate({ to: "/checklists/$id", params: { id: result.data.id } });
     } catch {
-      toast.error("Não foi possível usar o template. Tente novamente.");
+      toast.error("Não foi possível copiar o checklist. Tente novamente.");
     }
   }
 
@@ -176,12 +178,20 @@ function EditorChecklist() {
             : checklist.description) ?? "Sem descrição cadastrada."
         }
         actions={
-          <Button asChild variant="outline">
-            <Link to="/checklists">
-              <ArrowLeft className="h-4 w-4" />
-              Voltar
-            </Link>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {!checklist.isOfficial && (draftVersion || publishedVersion) && (
+              <Button variant="outline" onClick={handleCopy} disabled={copyChecklist.isPending}>
+                <Copy className="h-4 w-4" />
+                Copiar checklist
+              </Button>
+            )}
+            <Button asChild variant="outline">
+              <Link to="/checklists">
+                <ArrowLeft className="h-4 w-4" />
+                Voltar
+              </Link>
+            </Button>
+          </div>
         }
       />
       <div className="space-y-4 p-4 sm:p-8">
@@ -223,9 +233,12 @@ function EditorChecklist() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="whitespace-pre-line text-sm text-muted-foreground">
-                {checklist.description?.split("\n\n").slice(1).join("\n\n")}
+                {getOfficialChecklistDescription(checklist.id, checklist.description)
+                  ?.split("\n\n")
+                  .slice(1)
+                  .join("\n\n")}
               </p>
-              <Button onClick={handleUseTemplate} disabled={deriveTemplate.isPending}>
+              <Button onClick={handleCopy} disabled={deriveTemplate.isPending}>
                 Usar template
               </Button>
               <p className="text-sm text-muted-foreground">

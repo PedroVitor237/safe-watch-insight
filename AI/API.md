@@ -1327,3 +1327,24 @@ Esses módulos devem seguir o mesmo fluxo arquitetural quando forem implementado
 - Bootstrap institucional não é exposto por Server Function.
 
 Fluxo e referência acadêmica: [OfficialTemplates.md](./OfficialTemplates.md).
+
+## `copyChecklist`
+
+- **Método/arquivo:** `POST`, `src/lib/api/checklist.functions.ts`.
+- **Entrada:** somente `{ id: UUID }`; campos extras são rejeitados por Zod.
+- **Autenticação:** obrigatória; a sessão define o proprietário da nova cópia.
+- **Regra:** origem própria não excluída ou checklist ativo com publicação
+  acessível. Proprietário usa draft atual ou última publicação; terceiros usam
+  somente a última publicação. Versões retiradas não são origem da cópia.
+- **Resultado:** checklist pessoal ativo com draft v1, novos UUIDs, itens e
+  associações normativas independentes; título com sufixo “— Cópia”.
+- **Erros:** `401` sem sessão; `404` origem/conteúdo indisponível; `409` hash
+  publicado inválido; validação Zod para UUID inválido ou campos extras.
+- **Compatibilidade:** `useOfficialTemplate` delega à mesma operação, exigindo
+  origem oficial. Nenhuma autoria/oficialidade é transferida da origem.
+
+```ts
+await copyChecklist({ data: { id: sourceChecklistId } });
+```
+
+Regras, transação e validação: [ChecklistCopy.md](./ChecklistCopy.md).

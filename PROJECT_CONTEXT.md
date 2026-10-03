@@ -465,3 +465,10 @@ pessoais e publicados por usuários. Dois templates institucionais usam versões
 publicadas e permitem criar cópias pessoais com draft v1. A carga de produção
 é `npm run db:seed:platform`, após as migrations, sem executar o Demo Seed.
 Fonte NR-18, regras e limites: [AI/OfficialTemplates.md](./AI/OfficialTemplates.md).
+
+A ação **Copiar checklist** reutiliza a operação de derivação institucional para
+checklists próprios e publicações já acessíveis. Toda cópia pertence à sessão,
+começa em draft v1, tem itens independentes e pode ser publicada normalmente.
+A persistência usa inserts em lote na mesma transação, corrigindo o P2003
+reproduzido no Neon sem aumentar timeouts. Consultar
+[AI/ChecklistCopy.md](./AI/ChecklistCopy.md).

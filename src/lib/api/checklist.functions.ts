@@ -163,3 +163,13 @@ export const useOfficialTemplate = createServerFn({ method: "POST" })
     if (!userResult.success) return toServerResult<never>(userResult);
     return toServerResult(await service.useOfficialTemplate(data.id, userResult.data.id));
   });
+
+export const copyChecklist = createServerFn({ method: "POST" })
+  .inputValidator(checklistIdSchema.strict())
+  .handler(async ({ data }) => {
+    const service = await getChecklistService();
+    const { getAuthenticatedUser } = await getAuthSessionHelpers();
+    const userResult = await getAuthenticatedUser();
+    if (!userResult.success) return toServerResult<never>(userResult);
+    return toServerResult(await service.copyChecklist(data.id, userResult.data.id));
+  });

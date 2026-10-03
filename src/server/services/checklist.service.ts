@@ -1,3 +1,4 @@
+import { getOfficialChecklistDescription } from "@/lib/official-checklist-attribution";
 import { ApiError, ConflictError, NotFoundError } from "@/server/errors";
 import { Prisma } from "@/generated/prisma/client";
 import {
@@ -59,25 +60,48 @@ export class ChecklistService extends BaseService<ChecklistRepository> {
     });
   }
 
-  async useOfficialTemplate(id: string, userId: string): Promise<Result<ChecklistEntity>> {
+  useOfficialTemplate(id: string, userId: string): Promise<Result<ChecklistEntity>> {
+    return this.copyChecklist(id, userId, true);
+  }
+
+  async copyChecklist(
+    id: string,
+    userId: string,
+    officialOnly = false,
+  ): Promise<Result<ChecklistEntity>> {
     return this.execute(async () => {
-      const template = await this.repository.findVisibleById(id, userId);
-      if (!template?.isOfficial || template.createdById !== null || !template.isActive) {
-        throw new NotFoundError("Checklist not found.");
-      }
-      const source = template.versions.find((version) => version.status === "PUBLISHED");
-      if (!source) throw new NotFoundError("Checklist version not found.");
-      if (
-        source.contentSchemaVersion !== CHECKLIST_CONTENT_SCHEMA_VERSION ||
-        source.contentHash !== createChecklistContentHash(source)
-      ) {
-        throw new ConflictError("Published checklist content failed its integrity check.");
-      }
-      const checklist = await this.repository.createFromOfficialVersion(source.id, {
-        title: `Meu checklist — ${source.title}`.slice(0, 255),
-        description: `Cópia pessoal do template Safe Watch Insight, versão ${source.versionNumber}.\n\n${source.description ?? ""}`,
-        createdById: userId,
-        items: this.versionService.toDraftItems(source),
+      const checklist = await this.repository.copyFromSource(id, userId, (source, titles) => {
+        if (officialOnly && (!source.isOfficial || source.createdById !== null)) {
+          throw new NotFoundError("Checklist not found.");
+        }
+        const ownsSource = !source.isOfficial && source.createdById === userId;
+        const version =
+          (ownsSource && source.versions.find((item) => item.status === "DRAFT")) ||
+          source.versions.find((item) => item.status === "PUBLISHED");
+        if (!version) throw new NotFoundError("Checklist version not found.");
+        if (
+          version.status === "PUBLISHED" &&
+          (version.contentSchemaVersion !== CHECKLIST_CONTENT_SCHEMA_VERSION ||
+            version.contentHash !== createChecklistContentHash(version))
+        ) {
+          throw new ConflictError("Published checklist content failed its integrity check.");
+        }
+        const items = this.versionService.toDraftItems(version);
+        if (version.status === "DRAFT") {
+          // Never pin a mutable source draft item with a RESTRICT lineage FK.
+          // Keep its existing ancestry, rather than the editable item's identity.
+          items.forEach((item, index) => {
+            item.sourceVersionItemId = version.items[index].sourceVersionItemId;
+          });
+        }
+        return {
+          title: getChecklistCopyTitle(version.title, titles),
+          description: source.isOfficial
+            ? getOfficialChecklistDescription(source.id, version.description)
+            : version.description,
+          createdById: userId,
+          items,
+        };
       });
       return this.success(checklist);
     });
@@ -226,3 +250,12 @@ export class ChecklistService extends BaseService<ChecklistRepository> {
 }
 
 export const checklistService = new ChecklistService();
+
+export function getChecklistCopyTitle(title: string, existingTitles: readonly string[]): string {
+  const existing = new Set(existingTitles);
+  for (let number = 1; ; number++) {
+    const suffix = number === 1 ? " — Cópia" : ` — Cópia (${number})`;
+    const candidate = title.slice(0, 255 - suffix.length) + suffix;
+    if (!existing.has(candidate)) return candidate;
+  }
+}

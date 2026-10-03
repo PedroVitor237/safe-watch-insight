@@ -30,6 +30,7 @@ test.afterAll(async () => {
 
 test("login → official catalogue → private editable copy preserves platform source", async ({
   page,
+  browser,
 }) => {
   const [source] = await officialChecklistService.bootstrap();
   const original = structuredClone(source);
@@ -86,10 +87,67 @@ test("login → official catalogue → private editable copy preserves platform 
   await expect(
     page.getByText("Verificação ajustada pelo proprietário", { exact: true }),
   ).toBeVisible();
+  const copyRequestPromise = page.waitForRequest(
+    (request) => request.method() === "POST" && (request.postData()?.includes(copyId) ?? false),
+  );
+  await page.getByRole("button", { name: "Copiar checklist", exact: true }).click();
+  const copyRequest = await copyRequestPromise;
+  await expect(page).not.toHaveURL(new RegExp(copyId));
+  await expect(
+    page.getByText("Verificação ajustada pelo proprietário", { exact: true }),
+  ).toBeVisible();
+  const duplicateId = new URL(page.url()).pathname.split("/").at(-1)!;
+  expect(duplicateId).not.toBe(copyId);
+  await page.getByRole("button", { name: "Editar", exact: true }).first().click();
+  await page.getByLabel("Descrição", { exact: true }).fill("Item da segunda cópia");
+  await page.getByRole("button", { name: "Salvar alterações", exact: true }).click();
+  await expect(page.getByText("Item da segunda cópia", { exact: true })).toBeVisible();
+  const originalItem = await prisma.checklistVersionItem.findFirstOrThrow({
+    where: { checklistVersion: { checklistId: copyId }, orderIndex: 1 },
+  });
+  expect(originalItem.description).toBe("Verificação ajustada pelo proprietário");
   await page.getByRole("link", { name: "Voltar", exact: true }).click();
   await page.getByRole("button", { name: "Meus checklists", exact: true }).click();
   await expect(page.getByText(copy.title, { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Templates oficiais", exact: true }).click();
   await expect(page.getByText("Oficial · Safe Watch Insight", { exact: true })).toHaveCount(2);
+  // Replay the actual Server Function request with a different authenticated session.
+  const foreign = await browser.newContext();
+  try {
+    const foreignPage = await foreign.newPage();
+    await foreignPage.goto("/login");
+    await foreignPage.waitForFunction(() => {
+      const form = document.querySelector('input[name="password"]')?.closest("form");
+      return form && Object.keys(form).some((key) => key.startsWith("__reactProps$"));
+    });
+    await foreignPage.getByLabel("E-mail").fill("demo.user@example.test");
+    await foreignPage.getByLabel("Senha", { exact: true }).fill("Demo@12345");
+    await foreignPage.getByRole("button", { name: "Entrar", exact: true }).click();
+    await expect(foreignPage).toHaveURL(/\/dashboard$/);
+    const headers = Object.fromEntries(
+      Object.entries(copyRequest.headers()).filter(
+        ([key]) =>
+          key === "content-type" ||
+          key === "origin" ||
+          key.startsWith("sec-fetch") ||
+          key.startsWith("x-tsr"),
+      ),
+    );
+    headers.origin = new URL(copyRequest.url()).origin;
+    headers["sec-fetch-site"] = "same-origin";
+    const forbidden = await foreign.request.post(copyRequest.url(), {
+      data: copyRequest.postData()!,
+      headers,
+    });
+    expect(await forbidden.text()).toContain("NOT_FOUND");
+    await foreign.clearCookies();
+    const unauthenticated = await foreign.request.post(copyRequest.url(), {
+      data: copyRequest.postData()!,
+      headers,
+    });
+    expect(await unauthenticated.text()).toContain("UNAUTHORIZED");
+  } finally {
+    await foreign.close();
+  }
   expect(await new OfficialChecklistRepository().findById(source.id)).toEqual(original);
 });

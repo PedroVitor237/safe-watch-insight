@@ -472,3 +472,15 @@ Ao concluir todas as tarefas deste backlog, a plataforma deverá possuir um back
 - [x] Concluir validação automatizada, integração PostgreSQL e E2E do incremento
 
 Referência: [AI/OfficialTemplates.md](./AI/OfficialTemplates.md).
+
+## Cópia de checklist — 3 de outubro de 2026
+
+- [x] Identificar o P2003 no Neon por rastreio de SQL/rollback e corrigir a escrita.
+- [x] Reutilizar uma operação para templates, conteúdo próprio e publicações acessíveis.
+- [x] Integrar ação “Copiar checklist”, nomes, propriedade e draft v1.
+- [x] Preservar fontes, versões/hash, FKs e isolamento entre usuários.
+- [x] Corrigir referência Murbach com errata para publicações imutáveis.
+- [x] Adicionar testes de cópia e estender E2E com invocação direta ao servidor.
+
+Evidências e validação final: [AI/ChecklistCopy.md](./AI/ChecklistCopy.md) e
+[AI/OfficialTemplates.md](./AI/OfficialTemplates.md). Sem commit/push nesta etapa.
