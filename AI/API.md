@@ -1277,7 +1277,7 @@ await finishInspection({ data: { inspectionId } });
   do snapshot de uma inspeção do mesmo usuário. O `userId` vem exclusivamente da
   sessão. O arquivo é enviado ao Cloudinary por requisição assinada no servidor e
   o segredo da API não é exposto. Se a persistência falhar, o arquivo recém-enviado
-  é removido por compensação.
+  tem remoção tentada por compensação; essa tentativa pode falhar e deixar órfão.
 - **Metadados persistidos:** `publicId`, `storageUrl`, `fileName`, `mimeType`, `fileSize`, `width`, `height`, `caption` e timestamps.
 - **Exemplo de chamada:**
 
@@ -1316,8 +1316,8 @@ await uploadEvidence({ data: formData });
 - **Regras relacionadas:** localiza e arquiva somente evidência pertencente ao
   usuário autenticado. A autorização ocorre antes de qualquer chamada ao
   Cloudinary. Aplica soft delete antes da remoção externa; se o Cloudinary falhar,
-  restaura `deletedAt` com o mesmo escopo de propriedade para não apresentar
-  sucesso parcial. Resultado `not found` do provedor é idempotente e aceito.
+  tenta restaurar `deletedAt` com o mesmo escopo de propriedade; restauração
+  também pode falhar ou não encontrar contexto ativo, sem atomicidade distribuída. Resultado `not found` do provedor é idempotente e aceito.
 - **Erros possíveis:** `401`, `404`, `422`, `500`, `502`.
 
 ---
@@ -1543,3 +1543,38 @@ Referências técnicas: [Architecture.md](./Architecture.md),
 [README backend](../src/server/README.md),
 [Especificação acadêmica](../Documentation/EspecificacaoAPIREST.md) e
 [Relatório da Fase 5](../Documentation/RelatorioFase5.md).
+
+## Precisões de contratos operacionais — Fase 6
+
+Conferência estática em 4 de outubro de 2026. Complementa contratos da Fase 5,
+sem criar endpoints. Domínio/matriz de autorização/fórmulas/diagramas:
+[BusinessRules.md](./BusinessRules.md); sincronização: [Offline.md](./Offline.md).
+
+| Function                       | Precisão do contrato/saída                                                                                                                                           |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| deleteInspection               | Soft delete próprio em qualquer estado; sem botão na UI; não apaga filhos nem arquivos Cloudinary                                                                    |
+| saveInspectionResponse         | observation opcional sem max no schema; trim/vazio/omissão vira NULL; revisão só conferida quando metadados offline presentes                                        |
+| finishInspection               | Não fornece edição/reabertura/cancelamento; retry retorna recurso atual; clientCreatedAt vai para confirmação, não substitui updatedAt remoto                        |
+| uploadEvidence                 | 1 File por chamada; limite inclusive 4.194.304 bytes; MIME exato e assinatura/bytes conferidos no servidor; dimensões do provedor, nullable; XOR também em CHECK SQL |
+| listEvidence                   | DTO omite publicId/deletedAt; ordena createdAt DESC/id DESC; upload/lista exigem snapshot no contexto                                                                |
+| removeEvidence                 | Autoriza alvo/contexto ativos; não exige inspeção aberta; soft delete/destroy com restore tentado; ok/not found externo aceitos                                      |
+| listAvailableInspectionReports | Array sem paginação; COMPLETED/snapshot/dono; inspectionDate DESC/id DESC; não consulta Report                                                                       |
+| getInspectionReport            | DTO sob demanda; snapshot + cadastros/tratativas atuais; sem filtro COMPLETED; sem persistência Report/PDF                                                           |
+| getDashboard                   | DTO summary/compliance/inspectionStatusDistribution/recentInspections; sem filtros de entrada/persistência de métricas                                               |
+
+No relatório, summary tem totalItems, answeredItems, compliantItems,
+nonCompliantItems, notApplicableItems, pendingItems e completionPercentage.
+Preenchimento = round(100 × respondidos/total), ou 0 sem itens. NOT_APPLICABLE
+conta como respondido. NC/ação vencida é derivada no DTO, sem markOverdue.
+Dashboard: round(100 × COMPLIANT/(COMPLIANT+NON_COMPLIANT)), somente respostas
+com snapshotItemId em COMPLETED; percentage=NULL sem aplicáveis e UI “—”.
+NOT_APPLICABLE/pendentes não entram. Recentes: até cinco, inspectionDate DESC,
+createdAt DESC, id DESC. Ações vencidas contam só sob NC OPEN/IN_PROGRESS/OVERDUE;
+Requer atenção soma planejadas + NCs vencidas + ações vencidas na UI.
+
+No frontend, respostas/conclusão usam Dexie mesmo online; não são chamadas
+online diretas sem revisão pelo caminho de UI. Sessão local não substitui
+getAuthenticatedUser de cada Function. userId dos filtros de inspeção é
+sobrescrito pelo ID da sessão, inclusive em leituras que alimentam histórico.
+Relatório/dashboard têm queries online sem pacote offline próprio. Impressão
+usa window.print() no cliente, sem Function de gerar/baixar PDF.

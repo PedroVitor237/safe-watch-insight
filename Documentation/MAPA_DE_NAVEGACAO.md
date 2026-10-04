@@ -163,24 +163,30 @@ A sincronização não cria uma rota separada:
 
 ## 5. Matriz de transições explícitas
 
-| Origem                   | Destino                  | Gatilho                         |
-| ------------------------ | ------------------------ | ------------------------------- |
-| `/`                      | `/login`                 | Redirecionamento inicial        |
-| `/login`                 | `/dashboard`             | Login válido ou sessão já ativa |
-| Qualquer rota sem sessão | `/login`                 | Guard do layout                 |
-| `/dashboard`             | `/inspecoes`             | **Ver todas**                   |
-| `/inspecoes`             | `/inspecoes/nova`        | **Nova inspeção**               |
-| `/inspecoes`             | `/inspecoes/$id`         | Seleção de uma inspeção         |
-| `/inspecoes/nova`        | `/inspecoes`             | Criação concluída               |
-| `/inspecoes/$id`         | `/inspecoes`             | **Voltar** ou conclusão         |
-| `/checklists`            | `/checklists/$id`        | **Abrir**                       |
-| `/checklists/$id`        | `/checklists`            | **Voltar**                      |
-| `/nao-conformidades`     | `/nao-conformidades/$id` | Seleção de cartão ou linha      |
-| `/nao-conformidades/$id` | `/inspecoes/$id`         | Link da inspeção de origem      |
-| `/nao-conformidades/$id` | `/nao-conformidades`     | **Voltar** ou arquivamento      |
-| Barra superior           | `/configuracoes`         | Clique no avatar                |
-| Menu lateral             | qualquer módulo interno  | Seleção do item                 |
-| Menu lateral             | `/login`                 | **Sair**                        |
+| Origem                   | Destino                         | Gatilho                                |
+| ------------------------ | ------------------------------- | -------------------------------------- |
+| `/`                      | `/login`                        | Redirecionamento inicial               |
+| `/login`                 | `/dashboard`                    | Login válido ou sessão já ativa        |
+| Qualquer rota sem sessão | `/login`                        | Guard do layout                        |
+| `/dashboard`             | `/inspecoes`                    | **Ver todas** ou pendências planejadas |
+| `/dashboard`             | `/inspecoes/nova`               | **Nova inspeção**                      |
+| `/dashboard`             | `/inspecoes/$id`                | Recente não concluída                  |
+| `/dashboard`             | `/relatorios?inspectionId=UUID` | Recente concluída: **Ver relatório**   |
+| `/dashboard`             | `/nao-conformidades`            | Pendências de NCs/ações vencidas       |
+| `/inspecoes/$id`         | `/relatorios?inspectionId=UUID` | **Ver relatório** em COMPLETED         |
+| `/relatorios`            | `/relatorios?inspectionId=UUID` | Seleção, replace da busca              |
+| `/inspecoes`             | `/inspecoes/nova`               | **Nova inspeção**                      |
+| `/inspecoes`             | `/inspecoes/$id`                | Seleção de uma inspeção                |
+| `/inspecoes/nova`        | `/inspecoes`                    | Criação concluída                      |
+| `/inspecoes/$id`         | `/inspecoes`                    | **Voltar** ou conclusão                |
+| `/checklists`            | `/checklists/$id`               | **Abrir**                              |
+| `/checklists/$id`        | `/checklists`                   | **Voltar**                             |
+| `/nao-conformidades`     | `/nao-conformidades/$id`        | Seleção de cartão ou linha             |
+| `/nao-conformidades/$id` | `/inspecoes/$id`                | Link da inspeção de origem             |
+| `/nao-conformidades/$id` | `/nao-conformidades`            | **Voltar** ou arquivamento             |
+| Barra superior           | `/configuracoes`                | Clique no avatar                       |
+| Menu lateral             | qualquer módulo interno         | Seleção do item                        |
+| Menu lateral             | `/login`                        | **Sair**                               |
 
 ## 6. Persistência por módulo
 
@@ -190,3 +196,19 @@ Dashboard e relatórios consultam dados persistidos próprios; o relatório comb
 conteúdo histórico do checklist com dados operacionais atuais. Equipe permanece
 demonstrativa. Configurações combina preferências locais e dados demonstrativos
 com indicadores reais do IndexedDB e da fila de sincronização.
+
+## Relatórios e limites de navegação — Fase 6
+
+/relatorios usa search opcional inspectionId UUID; valor inválido vira ausente.
+Sem parâmetro usa o primeiro relatório disponível (data DESC/id DESC). O seletor
+lista somente concluídas próprias com snapshot; parâmetro válido consulta direto,
+sem exigir presença na lista ou COMPLETED no backend. Imprimir chama window.print()
+na mesma tela; não navega a rota de download/PDF. Fluxo/read models:
+[BusinessRules.md](../AI/BusinessRules.md).
+
+Não há telas/operações públicas de edição geral/cancelamento/reabertura da
+inspeção; CANCELLED é consultável, sem ação correspondente. deleteInspection
+existe na API/hook, sem botão atual. Respostas/conclusão locais precedem sync;
+**Ver relatório** após conclusão local pode anteceder confirmação remota, e o
+relatório usa dados remotos. Fila em conflito exige revisão futura, sem rota de
+reconciliação assistida. concerns: [RelatorioFase6.md](./RelatorioFase6.md).

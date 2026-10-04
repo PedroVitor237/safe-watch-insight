@@ -6,9 +6,9 @@ O Safe Watch Insight, identificado na interface como **SST Inspeções**, apoia 
 registro e o acompanhamento de inspeções, auditorias e fiscalizações de
 Segurança e Saúde no Trabalho.
 
-O fluxo principal utiliza dados persistidos no backend. Dashboard, relatórios e
-equipe ainda são prévias demonstrativas e aparecem identificados dessa forma na
-interface. O funcionamento offline cobre a continuidade de inspeções já
+O fluxo principal, dashboard e relatórios utilizam dados persistidos próprios.
+Equipe e controles de perfil demonstrativo continuam identificados como prévias
+na interface. O funcionamento offline cobre a continuidade de inspeções já
 disponibilizadas no dispositivo, mas ainda não representa suporte offline
 completo.
 
@@ -55,7 +55,7 @@ Para cadastrar:
 
 Os botões **Editar** e **Excluir** permitem atualizar ou remover uma empresa. A
 validação é executada no backend, inclusive para os campos obrigatórios e a
-unicidade do CNPJ ativo.
+unicidade do CNPJ, inclusive entre registros excluídos logicamente.
 
 ## 5. Checklists e versões
 
@@ -103,8 +103,10 @@ Clique em **Criar inspeção**. O sistema cria a inspeção e seu snapshot hist�
 na mesma operação e retorna à lista. Abra a linha recém-criada para iniciar a
 execução.
 
-O usuário responsável é o usuário autenticado. A interface não solicita uma
-unidade, um título independente ou outro inspetor nesse assistente.
+O usuário responsável é o usuário autenticado e só pode selecionar empresa
+própria e checklist ativo acessível com publicação. A inspeção nasce Planejada;
+responder a um item muda para Em andamento. A interface não solicita unidade,
+título independente ou outro inspetor. Criação exige conexão.
 
 ## 7. Executar e concluir uma inspeção
 
@@ -120,7 +122,9 @@ Na aba **Execução do checklist**, escolha uma resposta para cada item:
 Após responder, use o campo de observação para registrar contexto adicional. Uma
 resposta **NC** cria ou restaura automaticamente a não conformidade associada;
 alterar a resposta para outro estado arquiva a não conformidade automática
-quando a regra de negócio permitir.
+sem apagar fisicamente seu histórico. NC nova recebe severidade Média e prazo
+de sete dias; restaurada volta a Aberta conservando prazo e dados anteriores.
+Editar observação não reescreve descrição/severidade/prazo de NC já ativa.
 
 As respostas são gravadas primeiro no dispositivo e enfileiradas para envio. A
 mensagem de sucesso local não deve ser interpretada como confirmação de
@@ -136,10 +140,15 @@ servidor. Evidências já enviadas podem ser abertas ou removidas.
 ### Conclusão
 
 Na aba **Encerrar**, clique em **Concluir inspeção**. Itens obrigatórios precisam
-estar respondidos. Após a conclusão, a inspeção não aceita novas respostas e o
-sistema retorna à lista.
+estar respondidos; N/A conta como resposta e opcionais podem ficar pendentes.
+NCs e ações não precisam estar resolvidas/concluídas; fotos não são obrigatórias.
+A conclusão é salva localmente e retorna à lista; aguarde confirmação da fila
+para considerar persistida no servidor. Novas respostas/observações ficam
+bloqueadas, enquanto NCs, ações e evidências continuam podendo ser mantidas.
 
-A assinatura digital ainda não está disponível.
+Em concluídas, **Ver relatório** abre o documento da inspeção. Não há edição de
+dados gerais, cancelamento ou reabertura de inspeção nas telas atuais. A
+assinatura digital ainda não está disponível.
 
 ## 8. Funcionamento offline
 
@@ -161,7 +170,14 @@ Limitações atuais:
 - não é possível criar uma inspeção completamente offline;
 - conflitos ainda não possuem resolução assistida na interface;
 - arquivos de evidência não entram na fila offline;
-- a homologação está concentrada no Chromium local.
+- não há compressão ou gestão de quota de evidências offline;
+- erro/conflito na primeira operação impede o avanço da fila; **Sincronizar
+  agora** pode retentar erros, mas não resolve conflitos;
+- sincronizar requer sessão aceita pelo servidor; sessão local expira em oito horas;
+- a homologação funcional está concentrada no Chromium local; HTTPS publicado
+  teve assets/registro/fallback validados, sem fluxo autenticado completo em produção;
+- dashboard/relatório não têm pacote offline próprio nem incluem alterações
+  locais ainda não sincronizadas.
 
 ## 9. Não conformidades e ações corretivas
 
@@ -178,8 +194,12 @@ abrir a inspeção de origem e acompanhar o histórico.
 
 O painel de ações corretivas permite cadastrar, editar, concluir e excluir
 ações. Ele registra descrição, justificativa, local, responsável, prazo, método,
-custo estimado e status conforme os campos aplicáveis do 5W2H. Evidências
-fotográficas também podem ser vinculadas diretamente à não conformidade.
+custo estimado e status conforme os campos aplicáveis do 5W2H. Só a descrição
+é conteúdo obrigatório; os demais campos são opcionais. Criar ação em NC Aberta
+muda a NC para Em tratativa; concluir ações não resolve NC automaticamente.
+Escolha Resolvida explicitamente no status da NC quando aplicável. Atrasos são
+atualizados ao consultar NCs/ações; mudar somente prazo não restaura status.
+Evidências fotográficas online também podem ser vinculadas diretamente à NC.
 
 ## 10. Normas Regulamentadoras
 
@@ -188,13 +208,36 @@ código, título ou descrição e filtrar normas vigentes, revogadas ou todas. O
 registros que possuem endereço oficial oferecem o link **Consultar fonte
 oficial**.
 
-## 11. Módulos demonstrativos
+## 11. Relatórios, dashboard e módulos demonstrativos
 
-Os módulos abaixo ainda não representam dados reais do fluxo integrado:
+### Relatórios e impressão
 
-- **Dashboard:** apresenta KPIs, gráficos e listas demonstrativas.
-- **Relatórios:** exibe uma prévia baseada em dados locais demonstrativos;
-  impressão e PDF estão desabilitados.
+1. Abra **Relatórios** pelo menu ou **Ver relatório** na inspeção concluída/dashboard.
+2. Selecione uma inspeção concluída própria. O relatório combina checklist e NRs
+   do snapshot com empresa/inspetor, respostas, NCs, ações e evidências atuais.
+3. Clique em **Imprimir** e escolha impressora ou **Salvar como PDF**, se essa
+   opção estiver disponível no navegador.
+
+A aplicação exibe HTML e abre o diálogo de impressão; não há download automático
+nem PDF gerado no servidor. O resumo pode conter itens opcionais pendentes.
+Preenchimento conta N/A como respondido; sem itens exibe 0%.
+
+### Dashboard
+
+Mostra total de inspeções, concluídas, em andamento, NCs abertas e conformidade,
+gráfico por status, Requer atenção e até cinco inspeções recentes. Os dados
+pertencem ao usuário autenticado. Recentes são ordenadas pela data de inspeção,
+com desempate pela criação e ID; não é uma lista de próximas inspeções.
+
+Conformidade conta respostas conformes entre conformes + não conformes de
+inspeções concluídas. N/A e pendentes ficam fora; sem aplicáveis aparece **—**.
+Requer atenção soma planejadas, NCs vencidas e ações vencidas, podendo representar
+mais de uma pendência da mesma inspeção. Não há filtros analíticos/BI/exportação.
+
+### Prévias demonstrativas
+
+Os controles abaixo ainda não representam dados reais do fluxo integrado:
+
 - **Equipe:** apresenta profissionais e métricas demonstrativas.
 - **Perfil ativo em Configurações:** afeta apenas telas mockadas e não altera o
   usuário autenticado nem permissões do servidor.

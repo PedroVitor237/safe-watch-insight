@@ -45,26 +45,39 @@ sessão já ativa também evita a reapresentação do formulário.
 ## 2. Dashboard
 
 - **Rota:** `/dashboard`
-- **Estado:** demonstrativo
+- **Estado:** integrado
 
 ### Objetivo
 
-Apresentar uma prévia da visão analítica de inspeções e conformidade.
+Exibir a visão operacional das inspeções do usuário autenticado, com agregações
+reais do PostgreSQL via useDashboard/getDashboard/Service/Repository.
 
 ### Componentes
 
-- aviso **Dados demonstrativos**;
-- cards de KPI;
-- gráficos de inspeções e não conformidades;
-- listas de não conformidades críticas e próximas inspeções;
-- botão **Ver todas** para a lista de inspeções.
+- cinco cards: Total de inspeções, Concluídas, Em andamento, NCs abertas e
+  Conformidade;
+- gráfico de barras **Inspeções por status** (Planejadas, Em andamento,
+  Concluídas e Canceladas);
+- **Requer atenção**: planejadas, NCs vencidas e ações vencidas; o badge soma
+  essas contagens, sem deduplicar inspeções;
+- até cinco **Inspeções recentes**, título/versão do snapshot, empresa/inspetor
+  atuais e status;
+- **Nova inspeção**, **Ver todas**, **Ver inspeção** ou **Ver relatório** para
+  concluídas (/relatorios?inspectionId=UUID);
+- skeletons, erro com **Tentar novamente** e estado sem inspeções.
 
-Os valores não são consultas agregadas do PostgreSQL.
+Recentes são ordenadas por inspectionDate DESC, createdAt DESC, id DESC.
+NCs abertas incluem OPEN/IN_PROGRESS/OVERDUE. Conformidade =
+round(100 × COMPLIANT/(COMPLIANT+NON_COMPLIANT)) nas respostas com snapshotItemId
+em inspeções COMPLETED. N/A e pendentes ficam fora; sem aplicáveis exibe **—**.
+Atrasos são calculados sem alterar status no banco. Não há BI, filtros avançados,
+séries históricas ou exportação. A query não tem pacote offline próprio.
+Fórmulas completas: [BusinessRules.md](../AI/BusinessRules.md).
 
 ## 3. Lista de inspeções
 
 - **Rota:** `/inspecoes`
-- **Estado:** integrado
+- **Estado:** integrado com offline parcial
 
 ### Objetivo
 
@@ -79,7 +92,10 @@ Consultar inspeções persistidas e abrir o fluxo de criação ou execução.
   status;
 - estados de carregamento, erro e lista vazia.
 
-Cada registro navega para `/inspecoes/$id`.
+Cada registro navega para `/inspecoes/$id`. Lista própria com fallback para
+pacotes previamente cacheados no dispositivo; não inclui todo o banco offline.
+Não há ação de edição/cancelamento/reabertura/exclusão nessa UI, embora exclusão
+lógica exista na Server Function/hook.
 
 ## 4. Nova inspeção
 
@@ -99,8 +115,9 @@ O assistente possui três etapas:
 3. data/hora e resumo.
 
 Os botões **Voltar**, **Avançar** e **Criar inspeção** controlam o fluxo. A
-criação usa o usuário autenticado como responsável e retorna à lista de
-inspeções.
+criação online usa o usuário autenticado como responsável, empresa própria,
+checklist ativo acessível e versão PUBLISHED; persiste PLANNED/SYNCED com snapshot
+na mesma transação e retorna à lista de inspeções.
 
 Não há seleção de unidade, título independente ou outro inspetor nesta versão da
 tela.
@@ -133,7 +150,12 @@ sem conexão.
 
 A aba de encerramento informa a imutabilidade após conclusão e apresenta o botão
 **Concluir inspeção**. A assinatura não está disponível. Respostas e conclusão
-são persistidas localmente antes da tentativa de sincronização.
+são persistidas localmente antes da tentativa de sincronização, inclusive online.
+N/A atende item obrigatório; opcionais podem ficar pendentes. Não exige NC
+resolvida/fotos/ações concluídas. COMPLETED/CANCELLED desabilitam respostas e
+observações; não congela NCs/ações/evidências. Em COMPLETED aparece **Ver relatório**
+com inspectionId na busca; encerramento retorna à lista e só se confirma no
+servidor após sync. Sem reabertura de inspeção.
 
 ## 6. Biblioteca de checklists
 
@@ -215,26 +237,52 @@ Tratar uma não conformidade sem perder o contexto histórico da inspeção.
 - painel de evidências;
 - ações **Arquivar** e **Voltar**.
 
-O identificador da inspeção de origem é um link para `/inspecoes/$id`.
+O identificador da inspeção de origem é um link para `/inspecoes/$id`. A NC é
+isolada pela inspeção do usuário; descrição/severidade/prazo/status continuam
+editáveis após conclusão da inspeção. Arquivar oculta NC/filhos na API sem
+exclusão física; mudar resposta de NC para Conforme/N/A também arquiva a NC.
+Nova NC automática é MEDIUM/OPEN com prazo de sete dias; restauração conserva
+prazo/descrição/severidade/filhos e volta a OPEN.
+
+No 5W2H, apenas descrição é conteúdo obrigatório; justificativa, local,
+responsável, prazo, método e custo são opcionais. Criar ação em NC OPEN muda NC
+para IN_PROGRESS; concluir ações não resolve NC automaticamente. completedAt
+é do servidor. Listas/detalhes de NC e listagem de ações persistem atrasos,
+diferentemente de dashboard/relatório. UI possui histórico derivado de datas,
+sem audit log completo. Coerção de prazo vazio/NULL e concerns em
+[BusinessRules.md](../AI/BusinessRules.md).
 
 ## 10. Relatórios
 
-- **Rota:** `/relatorios`
-- **Estado:** demonstrativo
+- **Rota:** `/relatorios`, busca opcional `inspectionId` UUID
+- **Estado:** integrado
 
 ### Objetivo
 
-Apresentar uma prévia visual do relatório previsto.
+Visualizar relatório por inspeção própria, montado sob demanda a partir de dados
+persistidos, e imprimir pelo navegador.
 
 ### Componentes
 
-- aviso de que os dados são locais e demonstrativos;
-- seletor de inspeção demonstrativa concluída;
-- prévia com dados cadastrais, resumo, respostas e não conformidades;
-- botões **Impressão indisponível** e **PDF indisponível**, desabilitados.
+- seletor de inspeções COMPLETED próprias com snapshot, ordenadas por data DESC/
+  id DESC; sem busca seleciona a primeira disponível;
+- identificação, empresa e inspetor atuais, título/versão/captura do snapshot;
+- alerta UNVERIFIED_LEGACY quando aplicável;
+- resumo (total/respondidos/conformes/NC/N/A/pendentes/preenchimento), notas,
+  resultados item a item, fundamentação normativa, evidências gerais, NCs e
+  ações corretivas/evidências ativas;
+- skeletons, ausência de concluídas, erros e **Tentar novamente**;
+- **Imprimir** habilitado quando há relatório: window.print() → diálogo do
+  navegador → impressão ou salvar como PDF. CSS A4 oculta menu/controles.
 
-Esta tela não representa inspeções persistidas e não recebe redirecionamento
-automático ao concluir o fluxo real.
+O parâmetro inspectionId consulta diretamente mesmo fora da lista: backend
+valida dono/snapshot, sem exigir COMPLETED. Essa diferença está registrada para
+Final QA em [RelatorioFase6.md](./RelatorioFase6.md). Nenhuma visualização insere
+Report ou gera arquivo PDF backend; Report é model persistível separado.
+Preenchimento conta N/A e retorna 0 sem itens; não é taxa de conformidade.
+Opcionais pendentes podem existir em concluídas. Conclusão não redireciona
+automaticamente a esta tela; **Ver relatório** existe no detalhe/dashboard.
+Não há pacote/fila offline dedicado para relatórios.
 
 ## 11. Empresas
 
@@ -321,12 +369,12 @@ O componente raiz oferece telas para:
 | Tela              | Estado                      | Responsabilidade                                   |
 | ----------------- | --------------------------- | -------------------------------------------------- |
 | Login             | Integrado                   | Autenticação e sessão                              |
-| Dashboard         | Demonstrativo               | Prévia analítica                                   |
-| Inspeções         | Integrado                   | Consulta e criação                                 |
+| Dashboard         | Integrado                   | Indicadores operacionais próprios                  |
+| Inspeções         | Integrado + offline parcial | Consulta e criação                                 |
 | Execução          | Integrado + offline parcial | Respostas, evidências e conclusão                  |
 | Checklists        | Integrado                   | Catálogo, itens, normas e versões                  |
 | Não conformidades | Integrado                   | Tratativa, ações e evidências                      |
-| Relatórios        | Demonstrativo               | Prévia do documento                                |
+| Relatórios        | Integrado                   | DTO/HTML sob demanda e impressão nativa            |
 | Empresas          | Integrado                   | Cadastro de empresas                               |
 | Normas            | Integrado                   | Consulta de NRs                                    |
 | Equipe            | Demonstrativo               | Prévia da equipe                                   |

@@ -156,6 +156,11 @@ hash presente sem recálculo do formato 0; cópia exige formato 1 íntegro.
 
 O sistema deve permitir registrar não conformidades identificadas durante a inspeção.
 
+Entregue: NON_COMPLIANT cria/restaura NC por resposta do snapshot. Nova NC
+usa MEDIUM/OPEN e prazo servidor + sete dias; NC ativa conserva dados e arquivada
+volta a OPEN sem renovar prazo. Conforme/N/A arquiva, sem marcar RESOLVED.
+Criação explícita requer severidade/descrição e não aplica prazo automático.
+
 ---
 
 ## RF08 – Associação de Normas
@@ -197,11 +202,20 @@ formulário atual; observações não equivalem a implementar esse requisito.
 
 O sistema deve gerar relatórios estruturados com base nas informações registradas.
 
+Entregue: relatório por inspeção própria, DTO/HTML sob demanda de snapshot/
+respostas/NCs/ações/evidências ativas e empresa/inspetor atuais. Lista exige
+COMPLETED; consulta por ID não exige esse estado, mas exige dono/snapshot.
+Não insere Report a cada visualização. Impressão/Salvar como PDF via window.print()
+e diálogo do navegador, sem arquivo PDF gerado no backend.
+
 ---
 
 ## RF14 – Modelos de Relatórios
 
 O sistema deve disponibilizar modelos padronizados de relatório.
+
+Entregue parcialmente: um componente padronizado InspectionReport, sem catálogo
+de modelos editáveis. Geração customizada/armazenamento/download direto PDF futuros.
 
 ---
 
@@ -209,11 +223,21 @@ O sistema deve disponibilizar modelos padronizados de relatório.
 
 O sistema deve permitir registrar ações corretivas associadas às não conformidades.
 
+Entregue: vínculo obrigatório com NC própria ativa. description é obrigatório;
+why/location/responsible/dueDate/method/estimatedCost são opcionais/nullable.
+Status PENDING/IN_PROGRESS/COMPLETED/OVERDUE; completedAt calculado no servidor.
+Criar ação em NC OPEN muda NC para IN_PROGRESS; concluir ações não resolve NC.
+
 ---
 
 ## RF16 – Definição de Prazo
 
 O sistema deve permitir definir prazo para correção de não conformidades.
+
+Entregue: prazo opcional editável. Consultar lista/detalhe de NC ou lista de
+ações persiste OVERDUE para estados ativos vencidos; relatório/dashboard
+calculam atraso sem escrita. Adiar prazo sozinho não reverte OVERDUE. Coerção
+JSON null → epoch é concern conhecido, não correção desta fase.
 
 ---
 
@@ -221,11 +245,18 @@ O sistema deve permitir definir prazo para correção de não conformidades.
 
 O sistema deve permitir identificar ações corretivas pendentes, concluídas ou vencidas.
 
+Entregue: status/lista de ações e pendências no dashboard. Ações vencidas do
+dashboard exigem NC OPEN/IN_PROGRESS/OVERDUE; não há notificações/job de atraso.
+
 ---
 
 ## RF18 – Consulta ao Histórico
 
 O sistema deve permitir consultar inspeções realizadas anteriormente.
+
+Entregue: lista/detalhe próprios com conteúdo de checklist capturado. Snapshot
+não congela cadastro/tratativas. Sem edição geral/cancelamento/reabertura públicos;
+soft delete de inspeção existe na API, sem ação nas telas. Não há audit log completo.
 
 ---
 
@@ -233,17 +264,33 @@ O sistema deve permitir consultar inspeções realizadas anteriormente.
 
 O sistema deve apresentar indicadores resumidos sobre inspeções, não conformidades e ações corretivas.
 
+Entregue: totais de inspeções por quatro estados, NCs totais/abertas/resolvidas,
+NCs e ações vencidas, gráfico por status e até cinco recentes (inspectionDate
+DESC/createdAt DESC/id DESC). Conformidade = round(100 × COMPLIANT/(COMPLIANT +
+NON_COMPLIANT)), com snapshotItemId em COMPLETED; N/A/pendentes excluídos.
+Sem aplicáveis: NULL/UI “—”. Sem BI/filtros analíticos/comparação temporal/exportação.
+
 ---
 
 ## RF20 – Operação Offline
 
 O sistema deve permitir o registro de inspeções mesmo sem conexão com a internet.
 
+Parcial: execução/respostas/conclusão local-first de inspeções criadas online
+e previamente cacheadas em Dexie/IndexedDB por usuário, com snapshot. Não cria
+inspeção integralmente offline; NC local é projeção da resposta. Evidências
+binárias/CRUD de ações/relatórios/dashboard não possuem fluxo offline próprio.
+
 ---
 
 ## RF21 – Sincronização Automática
 
 O sistema deve sincronizar automaticamente os dados armazenados localmente quando houver conexão disponível.
+
+Entregue no incremento de RF20: fila FIFO por usuário, UUID/dependências/revisão
+esperada, retry e deduplicação remota atômica com mutação. Sessão reautenticada no
+servidor; conflito bloqueia fila sem resolução automática/assistida. Logout limpa
+dados locais. Sem garantia global de concorrência entre abas/dispositivos.
 
 ---
 
@@ -253,6 +300,12 @@ O sistema deve permitir selecionar, visualizar, enviar, consultar e remover
 fotografias relacionadas à inspeção ou a uma não conformidade. O arquivo deve
 permanecer em armazenamento externo e o banco deve guardar somente URL e
 metadados. O MVP aceita JPEG, PNG e WebP com até 4 MB.
+
+Entregue online: XOR inspeção ou NC; autorização pela inspeção da sessão e
+contexto de snapshot; MIME/assinatura/tamanho/nome/legenda validados. Limite exato
+4.194.304 bytes. Cloudinary guarda imagem, PostgreSQL metadados; soft delete/
+destroy com compensações tentadas, sem transação distribuída. Sem upload/fila
+binária/compressão/quota de evidências offline.
 
 ---
 
@@ -335,6 +388,12 @@ O histórico de inspeções não deverá ser excluído fisicamente do sistema.
 ## RN05
 
 Os registros realizados offline deverão manter sua data e horário originais após sincronização.
+
+Incremento atual: clientCreatedAt da operação preservado; respostas guardam-no
+em clientUpdatedAt. updatedAt permanece revisão do servidor. Conclusão preserva
+horário do dispositivo na confirmação OfflineSyncOperation, sem campo dedicado
+de data original de conclusão em Inspection. Datas provisórias/IDs locais de
+NC/resposta não equivalem aos defaults/IDs gerados no servidor.
 
 ---
 
@@ -421,3 +480,17 @@ usam ownership da sessão, sem acesso administrativo global. Matriz e regras
 vigentes: [BusinessRules.md](../AI/BusinessRules.md). IDs/fontes/errata:
 [OfficialTemplates.md](../AI/OfficialTemplates.md). Resultados históricos não
 são testes desta revisão: [RelatorioFase3.md](./RelatorioFase3.md).
+
+## Delimitação da Fase 6 — 4 de outubro de 2026
+
+RF07/RF13–RF22 e RN05 foram reconciliados com código sobre `5080142`, mantendo
+requisitos desejados separados da entrega atual. RN06 aceita N/A e opcionais
+pendentes; não exige fotos, ações concluídas ou NCs resolvidas. RN08 usa normas
+copiadas do snapshot, sem reconstrução pelo catálogo atual. Isolamento remoto
+usa sessão/Inspection.userId; papel não concede visão global.
+
+O checkpoint Offline/PWA de agosto acima é histórico: homologação de setembro
+validou assets/registro/fallback em HTTPS publicado, sem fluxo autenticado completo
+em produção nem outros navegadores. Não há nova homologação ou Final QA aprovado
+nesta revisão. Regras/fórmulas/autorizações: [BusinessRules.md](../AI/BusinessRules.md).
+Achados: [RelatorioFase6.md](./RelatorioFase6.md).

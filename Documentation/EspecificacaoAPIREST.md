@@ -253,3 +253,42 @@ Functions documentada em [AI/API.md](../AI/API.md).
 
 Esta especificação teve origem na documentação acadêmica da Atividade 2 e foi
 mantida como referência permanente após a evolução da implementação.
+
+## 10.8 Precisões operacionais da Fase 6
+
+Não altera inventário da Fase 5. Inspection nasce PLANNED/SYNCED; respostas
+iniciam IN_PROGRESS; finishInspection exige obrigatórios respondidos (N/A válido,
+opcionais pendentes permitidos), sem exigir NC resolvida/fotos/ações concluídas.
+COMPLETED/CANCELLED bloqueiam novas respostas; NCs/ações/evidências continuam
+tratáveis em contextos próprios ativos. deleteInspection é soft delete em
+qualquer estado, sem ação UI; não há cancelamento/reabertura/edição geral públicos.
+
+5W2H: description=what obrigatório; why, location=where, dueDate=when,
+responsible=who, method=how e estimatedCost opcionais/nullable; completedAt do
+servidor. NC nova automática: MEDIUM/OPEN/+sete dias; arquivada restaura OPEN
+conservando prazo/dados/filhos. Concluir ações não resolve NC automaticamente.
+
+Evidência: um File por FormData; MIME JPEG/PNG/WebP, até 4.194.304 bytes,
+assinatura/tamanho real/nome/legenda validados; XOR também em CHECK SQL.
+Upload e destroy externos são compensados por tentativas, sem rollback conjunto;
+arquivo órfão/restauração incompleta são possíveis. Não há evidência binária offline.
+
+Relatório: resumo de itens/respondidos/conformes/NC/N/A/pendentes/preenchimento;
+preenchimento inclui N/A e é 0 sem itens. DTO de snapshot + empresa/inspetor e
+tratativas atuais; atrasos apenas derivados. Lista de disponíveis sem paginação
+por inspectionDate DESC/id DESC; detalhe por ID sem exigir COMPLETED.
+Report persistível é distinto da projeção; sem PDF backend/registro por leitura.
+
+Dashboard: conformidade arredondada COMPLIANT/(COMPLIANT+NON_COMPLIANT) em
+respostas com snapshotItemId de COMPLETED; sem aplicáveis NULL, N/A/pendentes
+fora. Recentes até cinco por inspectionDate DESC/createdAt DESC/id DESC.
+Ações vencidas só sob NC OPEN/IN_PROGRESS/OVERDUE; atenção soma planejadas +
+NCs vencidas + ações vencidas. Sem filtros avançados/BI/pacote offline próprio.
+
+Sincronização local-first conserva revisão remota esperada no payload;
+clientCreatedAt vira clientUpdatedAt da resposta, sem substituir updatedAt
+remoto. UUID/identidade/hash e mutação são persistidos juntos; conflito bloqueia
+fila. Sessão local não autoriza persistência remota. Matriz completa e fluxos
+Mermaid/PlantUML: [BusinessRules.md](../AI/BusinessRules.md) e
+[Offline.md](../AI/Offline.md). Concerns e validação documental:
+[RelatorioFase6.md](./RelatorioFase6.md).

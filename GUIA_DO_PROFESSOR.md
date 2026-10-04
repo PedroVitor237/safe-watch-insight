@@ -250,15 +250,18 @@ Além do fluxo consolidado no marco da Atividade 2, o projeto atualmente possui:
 - catálogo e associação reais de Normas Regulamentadoras;
 - inspeções, respostas e conclusão persistidas;
 - não conformidades e ações corretivas integradas;
-- evidências fotográficas com Cloudinary;
+- evidências fotográficas online em Cloudinary, com metadados/XOR/autorização no backend;
+- relatórios reais sob demanda (snapshot + cadastros/tratativas atuais), sem inserir Report ao visualizar;
+- impressão HTML/Salvar como PDF por window.print() e diálogo nativo, sem arquivo PDF backend;
+- dashboard agregado por usuário, conformidade de respostas aplicáveis em COMPLETED e cinco recentes;
 - primeiro incremento Offline/PWA do fluxo principal validado em Chromium;
 - testes automatizados concentrados em versionamento, regras do fluxo,
   evidências e sincronização offline.
 
 Permanecem em desenvolvimento:
 
-- relatórios reais e exportação PDF;
-- dashboard com dados reais;
+- geração customizada, armazenamento e download direto de PDF;
+- BI, filtros analíticos e comparativos avançados de dashboard;
 - tela de equipe integrada ao backend;
 - criação integral de inspeções offline;
 - reconciliação assistida e evidências binárias offline;
@@ -271,3 +274,22 @@ Este é um projeto de TCC em evolução. Documentos permanentes descrevem o esta
 atual; planos, backlogs, wireframes e este guia preservam também a história das
 entregas acadêmicas. Em caso de dúvida sobre implementação vigente, consulte
 `README.md`, `PROJECT_CONTEXT.md`, `TASKS.md` e `TECH_DECISIONS.md`.
+
+## Conferência documental da Fase 6
+
+Para demonstração: crie inspeção online com empresa própria/publicação, execute
+snapshot e conclua obrigatórios (N/A válido), aguarde sync e abra **Ver relatório**.
+NCs/ações/evidências podem continuar em tratamento depois da conclusão; concluir
+uma ação não resolve NC automaticamente. Snapshot não congela empresa/inspetor.
+Dashboard mostra dados do usuário, conformidade arredondada de
+COMPLIANT/(COMPLIANT+NON_COMPLIANT) em concluídas, excluindo N/A; sem aplicáveis
+exibe “—”. Recentes: até cinco por data de inspeção decrescente.
+
+Evidências: JPEG/PNG/WebP até 4.194.304 bytes, online; sem fila binária/compressão/
+quota offline. Offline permite respostas/conclusão de pacotes existentes;
+conflito bloqueia fila, sem resolução assistida. A consulta de relatório por ID
+não exige COMPLETED, embora o seletor só liste concluídas. Essa diferença e
+riscos de cache/concorrência estão em
+[RelatorioFase6.md](./Documentation/RelatorioFase6.md). Esta etapa é documentação,
+sem novo teste funcional ou aprovação de Final QA. Fluxos/fórmulas:
+[BusinessRules.md](./AI/BusinessRules.md) e [Offline.md](./AI/Offline.md).

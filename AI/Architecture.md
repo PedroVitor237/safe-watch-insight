@@ -369,3 +369,21 @@ em vite.config.ts; não se afirma handler global de toda API. Códigos reais em
 - [ChecklistCopy.md](./ChecklistCopy.md): cópia, transação, linhagem.
 - [README das rotas](../src/routes/README.md): guard e fluxos locais.
 - [RelatorioFase5.md](../Documentation/RelatorioFase5.md): validação e concerns.
+
+## Fluxos operacionais detalhados — Fase 6
+
+Inspeção/snapshot/resposta/NC/ação e os fluxos externos/read models estão em
+[BusinessRules.md](./BusinessRules.md), com Mermaid equivalentes aos standalone:
+[inspection.puml](../Documentation/diagrams/flows/inspection.puml),
+[evidence.puml](../Documentation/diagrams/flows/evidence.puml) e
+[reports-dashboard.puml](../Documentation/diagrams/flows/reports-dashboard.puml).
+[Offline.md](./Offline.md) contém o Mermaid de execução local equivalente a
+[offline-inspection.puml](../Documentation/diagrams/flows/offline-inspection.puml).
+Diagramas têm escopo de fluxo, sem substituir cardinalidades físicas dos modelos.
+
+Atrasos de relatório também são derivados sem escrita, enquanto consultas de NC
+e ações podem persistir OVERDUE. Snapshot de checklist não congela cadastro de
+empresa/inspetor nem andamento de tratativas. Autorização remota por sessão é
+separada da retenção local em React Query/IndexedDB/Cache Storage. Concorrência
+entre abas/dispositivos e cache de queries após troca de conta exigem Final QA:
+[RelatorioFase6.md](../Documentation/RelatorioFase6.md). Sem alteração de código.

@@ -81,7 +81,7 @@ Persistência local
 
 - IndexedDB
 
-Biblioteca recomendada
+Biblioteca implementada
 
 - Dexie.js
 
@@ -169,13 +169,14 @@ O IndexedDB será o banco de dados local da aplicação.
 
 Ele armazenará temporariamente os dados até que possam ser enviados ao servidor.
 
-Nenhum dado deverá ser perdido durante interrupções de conexão.
+Pacote e operação são gravados na mesma transação Dexie. Não há garantia de
+retenção contra limpeza/evicção de armazenamento pelo navegador, quota ou logout.
 
 ---
 
 # Dexie.js
 
-A biblioteca recomendada para acesso ao IndexedDB é o Dexie.js.
+O incremento implementado utiliza Dexie.js para acesso ao IndexedDB.
 
 Motivos:
 
@@ -227,9 +228,15 @@ Remover fila
 
 # Ordem da Sincronização
 
-A sincronização deverá respeitar dependências entre entidades.
+**Atual:** apenas SAVE_INSPECTION_RESPONSE e FINISH_INSPECTION, ordenadas por
+sequence/UUID para o usuário. Respostas do mesmo item dependem da confirmação
+anterior; a conclusão fica atrás das operações já enfileiradas. A primeira
+operação em erro/conflito, com dependência ou aguardando retry impede avanço
+da fila desse usuário, inclusive de outras inspeções. NC é efeito da resposta,
+não operação independente.
 
-Ordem sugerida:
+**Proposta futura, não implementada:** ordem entre entidades se CRUD offline
+amplo vier a existir:
 
 1. Empresas
 
@@ -282,7 +289,11 @@ Este controle facilitará futuras implementações.
 
 # Resolução de Conflitos
 
-Em versões futuras poderão ocorrer conflitos.
+**Atual:** conflito já é detectado por revisão esperada e identidade/hash da
+operação; status CONFLICT bloqueia a fila. Sincronizar agora repõe ERROR, sem
+liberar CONFLICT. Não existe resolução automática nem assistida na UI.
+
+**Diretriz futura para outros módulos:**
 
 Exemplo:
 
@@ -301,6 +312,10 @@ snapshot antes de aceitar o evento sincronizado.
 
 # Versionamento e Snapshot no Dispositivo
 
+**Atual:** pacote de inspeção criada online, com snapshot vindo do servidor.
+Não há criação local de inspeção nem recaptura de publicação na sincronização.
+
+**Diretriz futura de criação offline, não implementada:**
 O pacote local necessário para iniciar uma inspeção deve conter uma versão
 `PUBLISHED` completa e identificada por `checklistVersionId`,
 `contentSchemaVersion` e `contentHash`. A criação offline deve congelar desse
@@ -358,7 +373,13 @@ Evitar armazenar permanentemente:
 
 # Evidências Fotográficas
 
-As fotografias poderão ser armazenadas temporariamente no dispositivo.
+**Atual:** evidências online em Cloudinary com metadados no PostgreSQL. Seleção/
+prévia usa memória da UI, sem persistência binária offline. Não há upload offline,
+fila binária, compressão offline ou quota de evidências offline. A UI desabilita
+seleção/upload sem rede e exige selecionar/enviar após reconectar. Não há
+pacote offline próprio de relatórios/dashboard.
+
+**Proposta futura:** fotografias poderão ser armazenadas temporariamente no dispositivo.
 
 O MVP online envia a imagem por Server Function para uma implementação de
 `StorageService`; a fila offline futura deverá reutilizar o mesmo contrato de
@@ -649,3 +670,87 @@ escopo.
 O funcionamento offline é considerado um requisito estratégico da plataforma.
 
 Toda decisão arquitetural deve preservar a possibilidade de execução de inspeções sem conexão com a internet, garantindo continuidade das atividades em campo, integridade dos dados e sincronização automática quando a conectividade for restabelecida.
+
+## Conexão com o ciclo de inspeção — Fase 6
+
+Reconferência estática sobre `5080142`, sem repetir as homologações históricas.
+Fontes: [inspection-store](../src/offline/inspection-store.ts),
+[sync-manager](../src/offline/sync-manager.ts),
+[inspection-client](../src/offline/inspection-client.ts),
+[session](../src/offline/session.ts) e
+[InspectionResponseRepository](../src/server/repositories/inspection-response.repository.ts).
+
+```mermaid
+flowchart TD
+    O["Inspeção criada / consultada online com snapshot"]
+    D["Pacote próprio em IndexedDB / Dexie"]
+    L["Resposta local ou conclusão local / validar obrigatórios"]
+    Q["Transação Dexie: pacote + UUID / sequência / dependências / revisão esperada"]
+    S["Sync manager: online / sessão local / tentativa de sessão remota"]
+    A["Server Function: Zod / sessão real / ownership"]
+    R["Repository: deduplicação e revisão esperada"]
+    P["Transação remota: mutação + OfflineSyncOperation"]
+    K["Confirmação: atualizar pacote e dependências / remover operação local"]
+    T["Retry: mesmo UUID / backoff / até cinco tentativas"]
+    E["ERROR: 401 / 422 / tentativas esgotadas"]
+    C["CONFLICT: 409 / bloqueio da fila sem reconciliação assistida"]
+    O --> D
+    D --> L
+    L --> Q
+    Q --> S
+    S --> A
+    A --> R
+    R -->|Nova operação válida| P
+    P -->|Sucesso| K
+    R -->|Retry já confirmado| K
+    A -.->|Falha transitória / exceção| T
+    T -.->|PENDING elegível| S
+    T -.->|Tentativas esgotadas| E
+    A -.->|401 / 422| E
+    R -.->|Revisão ou identidade/hash divergente| C
+    E -.->|Retry manual de ERROR| S
+```
+
+PlantUML equivalente: [offline-inspection.puml](../Documentation/diagrams/flows/offline-inspection.puml).
+Fluxo implementado; setas não representam cardinalidades físicas nem garantias globais de atomicidade.
+
+- A abertura/lista/criação online cacheia pacote do usuário se não houver
+  operação pendente; pacote com alterações pendentes tem prioridade sobre
+  refetch. Lista offline limita-se ao conjunto previamente cacheado, não a todo
+  histórico do banco. Inspeção excluída remotamente pode permanecer no pacote
+  até atualização/limpeza; sincronização exige contexto remoto ativo.
+- Resposta altera pacote para IN_PROGRESS/PENDING e cria operação no mesmo
+  commit Dexie. NC local é projeção provisória; UUID local de resposta/NC não
+  é enviado como identidade de criação remota. Servidor define IDs/defaults.
+- Conclusão local verifica obrigatórios e falhas/conflitos da inspeção,
+  marca COMPLETED/PENDING e enfileira FINISH_INSPECTION; não confirma remoto.
+  Dados de checklist congelados permanecem os mesmos durante a sincronização.
+- updatedAt local pode usar relógio do dispositivo; expectedResponseUpdatedAt
+  é revisão remota no payload. Nova resposta espera NULL; edição encadeada recebe
+  revisão retornada pela operação anterior. clientCreatedAt é preservado como
+  clientUpdatedAt remoto da resposta; updatedAt remoto continua do servidor.
+- Manager tenta sync ao montar indicador, no evento online e a cada 30 segundos
+  enquanto online. navigator.onLine não garante acesso ao servidor. Mutex
+  activeSynchronization vale somente na instância JS, sem coordenação entre abas.
+- getAppSession tenta validar remoto, podendo cair em sessão local em exceção;
+  **cada Server Function reautentica no servidor** antes de persistir. 401 em
+  envelope vira ERROR; 409 vira CONFLICT; 422 vira ERROR; demais falhas e exceções
+  lançadas usam retry (exceção classificada NETWORK_ERROR). Não há garantia de
+  classificar corretamente toda origem de exceção.
+- Até cinco tentativas automáticas; atraso min(2^tentativa × 1000 ms, 5 minutos).
+  Recupera SYNCING interrompido como PENDING mantendo UUID/payload. Sincronizar
+  agora zera tentativas de ERROR; não resolve CONFLICT. Fila só remove operação
+  após sucesso remoto e atualiza pacote/dependências na transação local.
+- Deduplicação remota compara UUID/usuário/inspeção/tipo/hash, sem payload completo.
+  Registro de confirmação e mutação são atômicos; isso não representa garantia
+  global de concorrência entre dispositivos/abas. Riscos estáticos de leitura
+  de revisão e confirmação local constam de
+  [RelatorioFase6.md](../Documentation/RelatorioFase6.md).
+- Logout limpa sessão/pacotes/fila IndexedDB e navegação; troca de identidade
+  cacheada limpa dados anteriores. Sessão local segura expira em oito horas e
+  não estende cookie remoto. Sem criptografia local/quota/retention avançada.
+
+A homologação de 5 de setembro (acima) atualiza os limites do checkpoint de agosto:
+HTTPS publicado teve assets/registro/fallback validados; fluxo autenticado completo
+em produção/outros navegadores e reinício completo do processo seguem pendentes.
+Não se declara suporte offline completo nem novo QA aprovado nesta fase.

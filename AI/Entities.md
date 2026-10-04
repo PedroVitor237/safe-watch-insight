@@ -86,6 +86,13 @@ na criação; checklist pode ser próprio, de terceiro ou oficial. Inicia PLANNE
 resposta inicia IN_PROGRESS; conclusão exige obrigatórios respondidos.
 COMPLETED/CANCELLED bloqueiam novas respostas; enum não implica UI de cancelamento.
 
+Estados persistidos: PLANNED/IN_PROGRESS/COMPLETED/CANCELLED. A conclusão pode
+partir também de PLANNED se nenhum obrigatório estiver pendente. Sem operação
+pública de edição de empresa/checklist/versão/data/notas, cancelamento ou
+reabertura; existe deleteInspection (soft delete, qualquer estado), sem botão
+nas telas atuais. Imutabilidade após conclusão refere-se às respostas/conteúdo
+capturado, não às tratativas de NCs/ações/evidências ou cadastros atuais.
+
 Tem respostas, evidências diretas, operações offline e Report opcional. Versão
 nullable/snapshot zero ou um no schema; fluxo atual exige ambos na execução,
 criando inspeção/snapshot na transação. Sem campo solicitante (RF12/RN07 não entregues).
@@ -121,6 +128,11 @@ no snapshot da própria inspeção; referência legada permanece opcional. Contr
 exige um identificador; CHECK físico exige ao menos um, permitindo ambos.
 Tem zero ou uma NC, inclusive arquivada. updatedAt é revisão remota;
 clientUpdatedAt guarda horário local, sem decidir conflito por relógio do cliente.
+
+No pacote local, updatedAt é provisoriamente horário do dispositivo. A revisão
+esperada é preservada no payload da fila e substituída pela confirmação remota
+para a próxima operação dependente. IDs locais de resposta/NC não são enviados
+como IDs de criação ao servidor. Timestamp do servidor não é timestamp do cliente.
 
 ## NonConformity
 
@@ -177,6 +189,13 @@ Company e Checklist são raízes independentes. Inspection combina referências,
 possui snapshot/respostas e define ownership das tratativas. Evidence tem dois
 contextos exclusivos; relatório sob demanda projeta essas relações.
 Não é cadeia linear Company → Checklist → Report → Evidence.
+
+Contratos operacionais, métricas e fluxos da Fase 6:
+[BusinessRules.md](./BusinessRules.md), [API.md](./API.md) e
+[RelatorioFase6.md](../Documentation/RelatorioFase6.md). A regra XOR de Evidence
+é validada por schema/Service e CHECK SQL; as FKs não validam presença de snapshot
+nem propriedade. InspectionResponse → NC é 1 → 0..1; NC → ação/evidência é
+1 → 0..N. Evidence não aponta diretamente a InspectionResponse ou CorrectiveAction.
 
 Regras: [BusinessRules.md](./BusinessRules.md). Curadoria:
 [OfficialTemplates.md](./OfficialTemplates.md). Modelos/constraints:

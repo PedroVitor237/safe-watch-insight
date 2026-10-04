@@ -1,0 +1,31 @@
+@startuml
+title Evidência online e compensações
+top to bottom direction
+rectangle "Sessão / contexto próprio ativo" as S
+rectangle "XOR: Inspection com snapshot OU NC com snapshotItemId" as X
+rectangle "Validar File / MIME / bytes / assinatura / nome / legenda" as U
+rectangle "Cloudinary: upload assinado / imagem" as C
+rectangle "PostgreSQL: revalidar contexto / persistir metadados" as M
+rectangle "EvidenceDto / sucesso online" as O
+rectangle "Tentar destroy do arquivo / conservar erro original" as Q
+rectangle "Falha da compensação: possível órfão" as H
+rectangle "Remover: localizar evidência própria ativa" as R
+rectangle "Soft delete de metadados" as D
+rectangle "Cloudinary: destroy / invalidate" as E
+rectangle "Tentar restoreOwned / retornar falha" as F
+rectangle "Falha ou ausência na restauração: estado parcial" as G
+rectangle "Sucesso de remoção / ok ou not found externo" as Z
+S --> X : Upload ou lista
+X --> U : Upload
+U --> C
+C --> M
+M --> O : Persistência confirmada
+M ..> Q : Persistência falhou
+Q ..> H : Destroy falhou
+S --> R : Remover
+R --> D
+D --> E
+E --> Z : ok / not found
+E ..> F : Falha externa
+F ..> G : Restauração incompleta
+@enduml

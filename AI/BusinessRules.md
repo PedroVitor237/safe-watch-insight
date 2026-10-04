@@ -385,7 +385,7 @@ Fontes: [schema Zod](../src/server/schemas/corrective-action.schema.ts),
 [CorrectiveActionService](../src/server/services/corrective-action.service.ts) e
 [Repository](../src/server/repositories/corrective-action.repository.ts).
 
-## Evidências, relatórios e offline
+## Evidências, relatórios e offline — visão geral
 
 Evidence pertence exatamente à inspeção **ou** NC, nunca ação corretiva. Upload/
 listagem exigem contexto próprio não excluído com snapshot (NC exige também item
@@ -414,3 +414,307 @@ Correções documentais e limites da implementação constam do
 [RelatorioFase4.md](../Documentation/RelatorioFase4.md); o
 [RelatorioFase3.md](../Documentation/RelatorioFase3.md) preserva a revisão anterior. Fluxo de acesso:
 Tela → React Query → Server Function → Service → Repository → Prisma → PostgreSQL.
+
+## Operações de inspeção — Fase 6
+
+Conferência estática em 4 de outubro de 2026 sobre `5080142`. Os quatro estados
+Prisma são distintos das operações públicas:
+
+| Operação                                    | Estado e efeito                                                  | Disponibilidade                                |
+| ------------------------------------------- | ---------------------------------------------------------------- | ---------------------------------------------- |
+| Criar                                       | PLANNED, SYNCED e snapshot criado junto                          | Server Function e assistente                   |
+| Responder/observar                          | PLANNED ou IN_PROGRESS → IN_PROGRESS                             | UI local-first e Server Function               |
+| Concluir                                    | PLANNED ou IN_PROGRESS → COMPLETED, obrigatórios respondidos     | UI local-first e Server Function               |
+| Consultar histórico                         | Própria não excluída; detalhe exige versão e snapshot            | Lista/detalhe                                  |
+| Excluir                                     | deletedAt preenchido; sem filtro por estado; filhos não apagados | deleteInspection e hook, sem ação na UI        |
+| Editar dados da inspeção, cancelar, reabrir | Sem operação pública                                             | CANCELLED é apenas estado modelado/consultável |
+
+Após concluir, não há edição de resposta/observação ou troca de checklist,
+empresa, data, notas e snapshot pelo contrato atual. NCs, ações e evidências
+continuam acessíveis nos contextos ativos; dados atuais de empresa/inspetor
+podem alterar a projeção do relatório. Não há audit log completo nem relatório
+congelado de toda a operação. Histórico de tratativas na UI é derivado dos
+registros/timestamps, não uma coleção persistida de todos os eventos.
+
+```mermaid
+flowchart TD
+    S["Sessão autenticada"]
+    C["Empresa própria não excluída"]
+    K["Checklist visível ativo"]
+    V["Versão PUBLISHED do checklist / hash elegível"]
+    T["Transação: Inspection + snapshot + itens + normas"]
+    P["PLANNED / SYNCED"]
+    R["Salvar resposta no item do snapshot / estado elegível"]
+    N["Transação: resposta + NC + IN_PROGRESS / confirmação se offline"]
+    I["IN_PROGRESS"]
+    F["Concluir: obrigatórios respondidos / estado elegível"]
+    D["COMPLETED / respostas bloqueadas"]
+    A["NCs, ações e evidências continuam tratáveis"]
+    S --> C
+    C --> K
+    K --> V
+    V --> T
+    T --> P
+    P --> R
+    R --> N
+    N --> I
+    I -->|Editar resposta| R
+    I --> F
+    P -->|Sem obrigatórios pendentes| F
+    F --> D
+    D --> A
+```
+
+PlantUML equivalente: [inspection.puml](../Documentation/diagrams/flows/inspection.puml).
+Fluxo implementado; setas não representam cardinalidades físicas nem garantias globais de atomicidade.
+
+## Respostas e relógios
+
+O schema exige exatamente um snapshotItemId ou checklistItemId legado; o Service
+resolve esse ID dentro do snapshot da inspeção própria. O Repository faz upsert
+por inspectionId/snapshotItemId. Observação é opcional, aparada, vazia/omitida
+resulta em NULL no salvamento; não há limite máximo definido nesse schema.
+O status é COMPLIANT/NON_COMPLIANT/NOT_APPLICABLE, sem valor remoto PENDING.
+Ausência de resposta representa pendência.
+
+| Dado                             | Significado real                                                                |
+| -------------------------------- | ------------------------------------------------------------------------------- |
+| updatedAt remoto                 | Revisão do servidor, comparada por milissegundos                                |
+| expectedResponseUpdatedAt        | Revisão remota esperada no payload; NULL espera ausência de resposta            |
+| clientCreatedAt da operação      | Horário original do dispositivo; participa do hash                              |
+| clientUpdatedAt remoto           | Horário do dispositivo preservado ao sincronizar resposta; não ordena conflitos |
+| updatedAt local                  | Estado provisório do pacote; pode ser horário local até confirmação             |
+| OfflineSyncOperation.completedAt | Confirmação remota; não é horário original da conclusão local                   |
+
+Sem metadados offline, a chamada direta não confere revisão esperada e não grava
+clientUpdatedAt novo. Com metadados, ID/horário/revisão formam conjunto completo;
+UUID + usuário + inspeção + tipo + hash identificam retry. Repetição retorna
+estado atual do recurso, sem armazenar cópia integral da resposta original da
+operação. A deduplicação de resposta precede a verificação de estado editável,
+permitindo retry já confirmado após conclusão. Não há Last Write Wins por
+relógio do cliente. UI grava pacote/fila primeiro inclusive online.
+
+## Mapeamento 5W2H
+
+Os termos de UI não são sete campos com esses nomes no Prisma:
+
+| Termo              | Campo real    | Obrigatoriedade na criação |
+| ------------------ | ------------- | -------------------------- |
+| what / O quê?      | description   | Obrigatório                |
+| why / Por quê?     | why           | Opcional/nullable          |
+| where / Onde?      | location      | Opcional/nullable          |
+| when / Quando?     | dueDate       | Opcional/nullable          |
+| who / Quem?        | responsible   | Opcional/nullable, texto   |
+| how / Como?        | method        | Opcional/nullable          |
+| how much / Quanto? | estimatedCost | Opcional/nullable, texto   |
+
+Não há campos separados what/where/when/who/how. completedAt é calculado no
+servidor ao enviar status COMPLETED e limpo ao enviar outro status. Concluir
+uma ação não exige todos os campos 5W2H nem encerra a NC.
+
+## Evidências online: validação, persistência e remoção
+
+Fontes: [EvidenceService](../src/server/services/evidence.service.ts),
+[schema](../src/server/schemas/evidence.schema.ts),
+[Repository](../src/server/repositories/evidence.repository.ts) e
+[CloudinaryStorageService](../src/server/storage/cloudinary-storage.service.server.ts).
+
+- FormData com File e exatamente um UUID inspectionId/nonConformityId (XOR).
+  Contexto deve ser próprio e não excluído; inspeção precisa de snapshot e NC
+  precisa também de snapshotItemId na resposta. Não exige COMPLETED nem inspeção
+  aberta. XOR é também CHECK SQL; FKs simples não garantem ownership/snapshot.
+- MIME exato image/jpeg, image/png ou image/webp; tamanho maior que zero e
+  no máximo **4 × 1024 × 1024 = 4.194.304 bytes**, inclusive; bytes lidos devem
+  corresponder ao tamanho declarado. Nome não vazio, até 255 caracteres; Service
+  retira caminho antes de validá-lo. Legenda opcional, trim, até 500 caracteres
+  no schema da Function. Não exige extensão do nome correspondente ao MIME.
+- Service confere prefixo JPEG/PNG; WebP exige RIFF e marcador WEBP nos bytes
+  8–11. Essa checagem não é garantia de decodificação completa da imagem.
+  Dimensões vêm da resposta do provedor e são nullable; não há limite de pixels.
+- StorageService recebe bytes no servidor. Cloudinary recebe upload assinado
+  SHA-1, publicId pasta/UUID, overwrite=false e timeout de 15 segundos. Resposta
+  exige publicId esperado, URL HTTPS, resource_type=image e tamanho igual.
+  Segredo permanece no servidor; não há upload direto autenticado pelo cliente.
+- PostgreSQL persiste id, alvo exclusivo, publicId único, storageUrl, fileName,
+  mimeType, fileSize BigInt, width/height, caption e createdAt/updatedAt/deletedAt;
+  não guarda binário/Base64. DTO omite publicId/deletedAt e converte tamanho para
+  number. Lista de evidências ordena createdAt DESC, id DESC.
+- Após upload, Repository revalida contexto/propriedade na transação dos
+  metadados. Falha tenta remover arquivo; falha da compensação é suprimida e
+  preserva erro original, podendo deixar arquivo órfão.
+- Remoção busca evidência própria ativa, preenche deletedAt e chama destroy com
+  invalidate=true. Provedor aceita ok/not found. Falha tenta restoreOwned;
+  restauração pode falhar ou não encontrar contexto já arquivado. Não há
+  transação conjunta PostgreSQL/Cloudinary nem garantia de rollback externo.
+- Arquivar inspeção/NC não chama destroy para cada filho. Filhos ficam no banco
+  e deixam de ser acessíveis pelo contexto ativo da API. URL externa usada em
+  img/link não exige sessão da aplicação por download.
+- Seleção múltipla na UI envia um arquivo por chamada, sequencialmente; sucesso
+  parcial não constitui lote atômico. Sem compressão automática neste fluxo.
+
+```mermaid
+flowchart TD
+    S["Sessão / contexto próprio ativo"]
+    X["XOR: Inspection com snapshot OU NC com snapshotItemId"]
+    U["Validar File / MIME / bytes / assinatura / nome / legenda"]
+    C["Cloudinary: upload assinado / imagem"]
+    M["PostgreSQL: revalidar contexto / persistir metadados"]
+    O["EvidenceDto / sucesso online"]
+    Q["Tentar destroy do arquivo / conservar erro original"]
+    H["Falha da compensação: possível órfão"]
+    R["Remover: localizar evidência própria ativa"]
+    D["Soft delete de metadados"]
+    E["Cloudinary: destroy / invalidate"]
+    F["Tentar restoreOwned / retornar falha"]
+    G["Falha ou ausência na restauração: estado parcial"]
+    Z["Sucesso de remoção / ok ou not found externo"]
+    S -->|Upload ou lista| X
+    X -->|Upload| U
+    U --> C
+    C --> M
+    M -->|Persistência confirmada| O
+    M -.->|Persistência falhou| Q
+    Q -.->|Destroy falhou| H
+    S -->|Remover| R
+    R --> D
+    D --> E
+    E -->|ok / not found| Z
+    E -.->|Falha externa| F
+    F -.->|Restauração incompleta| G
+```
+
+PlantUML equivalente: [evidence.puml](../Documentation/diagrams/flows/evidence.puml).
+Fluxo implementado; setas não representam cardinalidades físicas nem garantias globais de atomicidade.
+
+Evidência online está implementada; upload/fila de binários, compressão offline
+e quota de evidências offline não estão implementados. Metadados em memória
+não equivalem a arquivo disponível offline nem a upload confirmado.
+
+## Relatórios sob demanda e dashboard
+
+Fontes: [ReportService](../src/server/services/report.service.ts),
+[ReportRepository](../src/server/repositories/report.repository.ts),
+[DashboardService](../src/server/services/dashboard.service.ts),
+[DashboardRepository](../src/server/repositories/dashboard.repository.ts).
+
+| Parte do relatório                                                             | Origem                                                                                        |
+| ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| Identificação, data, status, notas e timestamps                                | Inspection atual                                                                              |
+| Razão social, nome fantasia, CNPJ, CNAE, risco, funcionários, endereço         | Company atual; não há snapshot cadastral                                                      |
+| Nome, e-mail e role do inspetor                                                | User atual da inspeção, não gerador de Report                                                 |
+| Título/descrição, versão, captura, origem/integridade, itens e obrigatoriedade | InspectionChecklistSnapshot e InspectionSnapshotItem                                          |
+| Fundamentação normativa                                                        | InspectionSnapshotItemStandard; DTO tem tipo/código/título/resumo/URL, UI exibe código/título |
+| Status/observação/revisão da resposta                                          | InspectionResponse associada por snapshotItemId; legadas sem esse ID ficam fora               |
+| NCs e suas ações/evidências                                                    | Registros atuais não excluídos, por resposta; NC arquivada não integra o DTO                  |
+| Evidências gerais                                                              | Evidence direta da inspeção, não excluída                                                     |
+| Resumo e atrasos                                                               | Calculados pelo Service, sem escrita                                                          |
+
+Itens: orderIndex ASC/id ASC; normas: type ASC/code ASC; ações/evidências no
+relatório: createdAt ASC/id ASC. Resumo conta total de itens, respondidos,
+conformes, não conformes, N/A e pendentes. Pendentes = total − respondidos;
+preenchimento = round(100 × respondidos/total), ou **0** se total=0; N/A conta
+como respondido. Esse preenchimento não é a conformidade do dashboard.
+O relatório mantém opcionais pendentes mesmo em inspeção concluída. Atraso
+transforma OPEN/IN_PROGRESS de NC ou PENDING/IN_PROGRESS de ação em OVERDUE no
+DTO quando dueDate < Date.now(); OVERDUE existente permanece como está.
+
+Report é entidade persistível (zero ou um por inspeção pela FK única). A
+consulta atual lê Inspection e monta InspectionReportDto/HTML; não insere
+Report, não incrementa sua version e não guarda PDF. A lista disponível exige
+COMPLETED/snapshot/ownership; o detalhe exige ownership e snapshot, **sem filtro
+COMPLETED**. /relatorios aceita inspectionId UUID opcional na busca e consulta-o
+mesmo fora da lista; preocupação de política registrada no relatório da fase.
+Sem parâmetro seleciona o primeiro disponível. Imprimir chama window.print()
+sobre HTML com CSS A4; salvar como PDF depende do diálogo do navegador. Sem
+biblioteca PDF, download direto ou geração de arquivo PDF backend. Rodapé
+“Impressão em” usa new Date() da renderização, sem registro persistido do evento.
+
+### Métricas do dashboard
+
+Escopo base: Inspection.userId da sessão e deletedAt=NULL. NC/ação segue essa
+inspeção e exclusões dos seus contextos; não se exige COMPLETED para contar NC.
+Consulta não persiste métricas/OVERDUE; agregações independentes em Promise.all
+não constituem snapshot transacional único.
+
+| Indicador                | Fórmula/filtro implementado                                                                                        |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| Total e distribuição     | Contagem das inspeções próprias não excluídas por cada um dos quatro estados                                       |
+| NCs totais/resolvidas    | NCs não excluídas nesse escopo; resolvidas = status RESOLVED                                                       |
+| NCs abertas              | totalNonConformities − resolvedNonConformities; inclui OPEN/IN_PROGRESS/OVERDUE                                    |
+| NCs vencidas             | OVERDUE persistido OU OPEN/IN_PROGRESS com dueDate < instante de referência                                        |
+| Ações vencidas           | Ação não excluída, NC OPEN/IN_PROGRESS/OVERDUE não excluída; ação OVERDUE OU PENDING/IN_PROGRESS com prazo vencido |
+| Requer atenção           | Planejadas + NCs vencidas + ações vencidas; soma de recursos, não inspeções distintas                              |
+| Conformidade             | round(100 × COMPLIANT / (COMPLIANT + NON_COMPLIANT)), somente respostas com snapshotItemId em COMPLETED            |
+| Sem respostas aplicáveis | percentage=NULL e UI “—”; não é 0% nem 100%                                                                        |
+| Recentes                 | Até cinco; inspectionDate DESC, createdAt DESC, id DESC; todos os estados                                          |
+
+NOT_APPLICABLE, pendentes, respostas sem snapshotItemId e inspeções não
+concluídas ficam fora da conformidade. A fórmula agrega respostas, não média
+de percentuais por inspeção nem proporção de NCs resolvidas. Atraso persistido
+continua contado mesmo após adiar prazo, até mudança explícita de status.
+Ações de NC RESOLVED ficam fora da contagem de ações vencidas do dashboard.
+Recentes usam título/versão do snapshot e empresa/inspetor atuais; snapshot
+faltante exibe “Histórico indisponível”/versão NULL. UI mostra cinco cards,
+gráfico de barras por status, Requer atenção e recentes; concluídas abrem
+/relatorios?inspectionId=UUID. Sem BI/filtros avançados/séries temporais/
+exportação. Dashboard/relatório não têm pacote/fila offline dedicados.
+
+```mermaid
+flowchart TD
+    S["Sessão autenticada / Inspection.userId / não excluída"]
+    L["Lista de relatórios: COMPLETED com snapshot"]
+    R["Detalhe: inspeção própria com snapshot / sem exigir COMPLETED"]
+    H["Snapshot: título / versão / itens / normas"]
+    C["Inspection / Company / User atuais"]
+    N["Respostas / NCs / ações / evidências ativas atuais"]
+    T["ReportService: DTO / resumo / atraso sem escrita"]
+    U["HTML InspectionReport / sem inserir Report"]
+    P["window.print() / CSS A4"]
+    F["Diálogo: impressão ou salvar PDF no navegador"]
+    D["DashboardRepository: agregações próprias sem escrita"]
+    M["DashboardService: contagens / conformidade / cinco recentes"]
+    V["UI: cards / barras por status / atenção / recentes"]
+    S --> L
+    L -->|Seleção| R
+    S -->|inspectionId direto| R
+    R --> T
+    H --> T
+    C --> T
+    N --> T
+    T --> U
+    U -->|Imprimir| P
+    P --> F
+    S --> D
+    D --> M
+    M --> V
+    V -->|Ver relatório de concluída| R
+```
+
+PlantUML equivalente: [reports-dashboard.puml](../Documentation/diagrams/flows/reports-dashboard.puml).
+Fluxo implementado; setas não representam cardinalidades físicas nem garantias globais de atomicidade.
+
+### Matriz operacional de autorização
+
+Todas as operações exigem identidade revalidada da sessão no servidor, sem
+RBAC por papel ou autorização por userId enviado no cliente.
+
+| Recurso               | Operação    | Regra de acesso                                                                                                   |
+| --------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------- |
+| Inspection            | create      | Sessão define userId; empresa própria ativa; checklist visível ativo e publicação elegível                        |
+| Inspection            | read/list   | Inspection.userId da sessão e deletedAt=NULL; detalhe exige snapshot/versão                                       |
+| InspectionResponse    | write       | Inspeção própria ativa em PLANNED/IN_PROGRESS; item do seu snapshot; retry confirmado tem deduplicação            |
+| Inspection            | finish      | Própria ativa, snapshot/obrigatórios respondidos e estado elegível; retry com mesma identidade/hash               |
+| Inspection            | delete      | Própria ativa; soft delete, sem condição de estado                                                                |
+| NonConformity         | read/write  | Resposta → inspeção própria ativa; NC ativa para ler/editar/excluir; criação exige NON_COMPLIANT e ausência de NC |
+| CorrectiveAction      | read/write  | NC ativa → resposta → inspeção própria ativa; ação ativa nas mutações                                             |
+| Evidence              | upload/list | XOR inspeção própria ativa com snapshot OU NC própria ativa com resposta em item do snapshot                      |
+| Evidence              | delete      | Evidência ativa e contexto próprio ativo, validado também em soft delete/restore; sem exigir estado aberto        |
+| Relatório sob demanda | read/list   | Própria ativa; detalhe com snapshot; lista COMPLETED com snapshot                                                 |
+| Dashboard             | read        | Agregações limitadas à inspeção própria ativa e filhos/contextos ativos                                           |
+
+Recurso privado alheio e inexistente têm mesma semântica NOT_FOUND; conhecer
+UUID, URL de navegação ou ser dono do checklist compartilhado não dá acesso.
+URL Cloudinary possui política de entrega própria, distinta da API de metadados.
+Riscos locais de cache/concorrência estão separados em
+[RelatorioFase6.md](../Documentation/RelatorioFase6.md); não anulam filtros
+remotos nem representam correções efetuadas nesta revisão.

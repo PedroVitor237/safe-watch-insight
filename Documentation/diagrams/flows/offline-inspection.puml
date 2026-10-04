@@ -1,0 +1,31 @@
+@startuml
+title Execução local de inspeção existente e sincronização
+top to bottom direction
+rectangle "Inspeção criada / consultada online com snapshot" as O
+rectangle "Pacote próprio em IndexedDB / Dexie" as D
+rectangle "Resposta local ou conclusão local / validar obrigatórios" as L
+rectangle "Transação Dexie: pacote + UUID / sequência / dependências / revisão esperada" as Q
+rectangle "Sync manager: online / sessão local / tentativa de sessão remota" as S
+rectangle "Server Function: Zod / sessão real / ownership" as A
+rectangle "Repository: deduplicação e revisão esperada" as R
+rectangle "Transação remota: mutação + OfflineSyncOperation" as P
+rectangle "Confirmação: atualizar pacote e dependências / remover operação local" as K
+rectangle "Retry: mesmo UUID / backoff / até cinco tentativas" as T
+rectangle "ERROR: 401 / 422 / tentativas esgotadas" as E
+rectangle "CONFLICT: 409 / bloqueio da fila sem reconciliação assistida" as C
+O --> D
+D --> L
+L --> Q
+Q --> S
+S --> A
+A --> R
+R --> P : Nova operação válida
+P --> K : Sucesso
+R --> K : Retry já confirmado
+A ..> T : Falha transitória / exceção
+T ..> S : PENDING elegível
+T ..> E : Tentativas esgotadas
+A ..> E : 401 / 422
+R ..> C : Revisão ou identidade/hash divergente
+E ..> S : Retry manual de ERROR
+@enduml
