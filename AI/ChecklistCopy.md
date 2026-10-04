@@ -2,8 +2,8 @@
 
 ## Estado atual e fontes
 
-Conferência documental em 3 de outubro de 2026, após o checkpoint `0a19b44`
-da Fase 2. Regras conferidas em
+Conferência documental da Fase 4 em 3 de outubro de 2026, sobre `42aeb64`
+(Fase 3), com modelo estrutural preservado de `0a19b44` (Fase 2). Regras conferidas em
 [ChecklistService](../src/server/services/checklist.service.ts),
 [ChecklistRepository](../src/server/repositories/checklist.repository.ts),
 [ChecklistVersionService](../src/server/services/checklist-version.service.ts),
@@ -20,13 +20,15 @@ origem institucional. As Server Functions recebem somente `{ id: UUID }`,
 rejeitam propriedades extras e obtêm o proprietário da sessão autenticada.
 Nenhum ID de usuário, versão, item ou status é escolhido pelo cliente.
 
-| Origem                                               | Conteúdo copiado                                         | Quem pode copiar                                          |
-| ---------------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------------- |
-| Template oficial ativo                               | Última versão `PUBLISHED` íntegra                        | Usuário autenticado                                       |
-| Checklist próprio não excluído                       | Draft atual; na ausência dele, última publicação íntegra | Proprietário, inclusive se estiver inativo                |
-| Checklist de outro usuário ativo                     | Somente última versão `PUBLISHED` íntegra                | Usuário autenticado, conforme a visibilidade preexistente |
-| Privado de terceiro, inativo de terceiro ou excluído | Nenhum                                                   | Operação retorna `NOT_FOUND`                              |
-| Somente versões `RETIRED`, sem draft elegível        | Nenhum                                                   | Operação retorna `NOT_FOUND`                              |
+| Origem                                                            | Conteúdo copiado                                         | Quem pode copiar                                                 |
+| ----------------------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------- |
+| Template oficial ativo                                            | Última versão `PUBLISHED` íntegra                        | Usuário autenticado                                              |
+| Checklist próprio não excluído                                    | Draft atual; na ausência dele, última publicação íntegra | Proprietário, inclusive se estiver inativo                       |
+| Checklist de outro usuário ativo                                  | Somente última versão `PUBLISHED` íntegra                | Usuário autenticado, conforme a visibilidade preexistente        |
+| Privado de terceiro, inativo de terceiro ou excluído              | Nenhum                                                   | Operação retorna `NOT_FOUND`                                     |
+| Somente versões `RETIRED`, sem draft elegível                     | Nenhum                                                   | Operação retorna `NOT_FOUND`                                     |
+| Sem draft próprio ou publicação elegível                          | Nenhum                                                   | Operação retorna `NOT_FOUND`                                     |
+| Publicação legada/formato diferente de 1, selecionada como origem | Nenhum                                                   | Operação retorna `CONFLICT`, mesmo que sirva para criar inspeção |
 
 Um draft mais recente de terceiro nunca é usado como origem. O hash de uma
 publicação é verificado antes de criar a cópia; inconsistência retorna
@@ -34,7 +36,9 @@ publicação é verificado antes de criar a cópia; inconsistência retorna
 recalculado; formato 0 e outros formatos são rejeitados para cópia. Draft próprio
 não passa por checagem de hash publicado. Cliente escolhe somente checklist,
 sem selecionar versão: Service resolve draft próprio ou publicação de maior
-número. Nenhuma regra de RBAC/marketplace foi criada.
+número. Não busca publicação anterior se a selecionada falhar na integridade;
+um draft próprio elegível tem preferência mesmo havendo publicação legada.
+Nenhuma regra de RBAC/marketplace foi criada.
 
 Isso difere da **criação de inspeção**, que exige hash presente, mas só recalcula
 no formato 1 e aceita outros formatos, inclusive legado 0. Não confundir essa
@@ -90,6 +94,27 @@ original ou nas cópias de outros usuários.
 Qualquer erro desfaz checklist, versão, itens e associações. O timeout padrão do
 Prisma permanece intacto. Não há espera artificial, retry, FK desativada ou
 alteração estrutural do banco.
+
+### Linhagem da origem e do item copiado
+
+| Origem selecionada                            | ID do novo item | `sourceVersionItemId` do novo item             |
+| --------------------------------------------- | --------------- | ---------------------------------------------- |
+| Item A de versão publicada                    | UUID novo B     | A, preservando referência à publicação estável |
+| Item D do draft, derivado de item publicado A | UUID novo B     | A (valor anterior de D), nunca D               |
+| Item D do draft sem ancestral                 | UUID novo B     | NULL                                           |
+
+`sourceChecklistItemId` também é conservado quando houver referência legada.
+Na derivação de próximo draft dentro do mesmo checklist, `toDraftItems` referencia
+o item da publicação/retirada de origem. A cópia independente de um draft aplica
+o ajuste adicional que conserva o ancestral já registrado. A FK não verifica
+se esse ancestral está publicado: a estabilidade decorre dos fluxos da aplicação,
+não de uma constraint que imponha status à linhagem.
+
+As associações normativas têm PK composta (`checklistVersionItemId`, `standardId`),
+sem UUID próprio: o novo ID do item cria uma associação independente, reutilizando
+o ID de Standard e copiando `type`, `code`, `title`, `summary`, `officialUrl`.
+Falha em leitura, preparação, inserts ou leitura final aborta a transação;
+`RepeatableRead` não serializa reserva de nomes nem garante unicidade de títulos.
 
 ## Fluxo implementado
 
@@ -211,4 +236,5 @@ por terceiro/sem sessão. O teste negativo reutiliza os headers de mesma origem
 para alcançar a autorização do domínio sem desligar a proteção CSRF.
 
 Resultados finais daquela execução: [OfficialTemplates.md](./OfficialTemplates.md).
-Validações documentais desta fase: [RelatorioFase3.md](../Documentation/RelatorioFase3.md).
+Validações documentais atuais: [RelatorioFase4.md](../Documentation/RelatorioFase4.md).
+Revisão anterior: [RelatorioFase3.md](../Documentation/RelatorioFase3.md).

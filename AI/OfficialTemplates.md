@@ -1,8 +1,9 @@
 # Templates oficiais da plataforma
 
-## Estado atual — conferência documental da Fase 3
+## Estado atual — conferência documental da Fase 4
 
-Em 3 de outubro de 2026, após o checkpoint `0a19b44`, foram conferidos catálogo,
+Em 3 de outubro de 2026, sobre a Fase 3 consolidada em `42aeb64` e a referência
+estrutural da Fase 2 (`0a19b44`), foram reconferidos catálogo,
 Services/Repositories, API e telas. Os dois achados do parecer histórico
 **NEEDS FIX BEFORE COMMIT** abaixo foram resolvidos pelo incremento de cópia
 independente. Parecer antigo descreve o momento da auditoria, não a condição
@@ -32,7 +33,9 @@ A migration `20261003000000_add_official_checklist_templates` adiciona
 Nas versões da plataforma, criador e publicador são NULL; a autoria institucional
 é identificada pelo checklist pai. Versões pessoais mantêm autores da sessão.
 A restrição de publicação continua exigindo hash e data e permite publicador
-NULL quando o criador é institucional. Não há usuário técnico fictício, conta
+NULL quando `ChecklistVersion.createdById` é NULL. Esse CHECK não consulta o
+checklist pai nem prova autoria institucional sozinho; a coerência é validada
+pelo bootstrap/fluxo pessoal. Não há usuário técnico fictício, conta
 demo proprietária, painel administrativo ou nova camada RBAC.
 
 As consultas/mutações pessoais usam `createdById` e `isOfficial=false` nos
@@ -79,6 +82,16 @@ paralelo. No primeiro bootstrap, somente as quatro normas necessárias ausentes
 são inseridas pelos códigos já documentados no catálogo da aplicação; registros
 existentes nunca são sobrescritos. Norma inativa ou com tipo incompatível faz a
 carga falhar explicitamente.
+
+Dois é o número de definições do catálogo atual, **sem constraint SQL limitando
+a quantidade de oficiais**. O bootstrap atribui `orderIndex` de 1 em diante e
+`isRequired=true` a todos os 20 itens; associação normativa copia metadados.
+Ao encontrar a identidade fixa já existente, valida atividade, propriedade
+institucional e publicações formato 1/hash íntegro, sem sobrescrever conteúdo,
+autores, hashes ou datas. Não compara a publicação antiga com toda a definição
+atual para forçar atualização; isso preserva a referência histórica original.
+Fonte do comportamento: [OfficialChecklistService](../src/server/services/official-checklist.service.ts)
+e [Repository institucional](../src/server/repositories/official-checklist.repository.ts).
 
 ## Fonte acadêmica e limites
 
@@ -489,6 +502,7 @@ novos, nada staged. Nenhum commit ou push foi executado nesta tarefa.
 
 **Parecer histórico da entrega funcional: READY FOR COMMIT.**
 
-Na Fase 3, o código já corresponde ao incremento validado acima. A revisão
-documental não repete essas operações de banco; suas verificações/limites estão
-em [RelatorioFase3.md](../Documentation/RelatorioFase3.md).
+O incremento funcional acima antecede as Fases 3 e 4. Nenhuma dessas revisões
+documentais repete suas operações de banco. Verificações atuais/limites:
+[RelatorioFase4.md](../Documentation/RelatorioFase4.md); revisão anterior:
+[RelatorioFase3.md](../Documentation/RelatorioFase3.md).

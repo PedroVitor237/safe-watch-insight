@@ -1,7 +1,8 @@
 # API da Plataforma
 
 Este documento descreve a API implementada no **Safe Watch Insight**.
-Autenticação/autorização/checklists conferidos na Fase 3 em 3 de outubro de 2026.
+Autenticação/autorização/regras/cópia reconferidas na Fase 4 em 3 de outubro de 2026,
+sobre a Fase 3 consolidada em `42aeb64`.
 Não é uma especificação de funcionalidades futuras. Regras de domínio e matriz
 de acesso: [BusinessRules.md](./BusinessRules.md).
 
@@ -985,6 +986,11 @@ await listInspectionResponses({ data: { inspectionId } });
 - **Status aceitos:** `COMPLIANT`, `NON_COMPLIANT`, `NOT_APPLICABLE`.
 - **Regras relacionadas:** deve ser enviado exatamente um entre `snapshotItemId` e o `checklistItemId` legado. O item precisa pertencer ao snapshot da inspeção; o identificador legado é resolvido para esse snapshot antes da persistência. A resposta é única por inspeção + item do snapshot; inspeção `PLANNED` passa para `IN_PROGRESS`; validação de estado, resposta e criação/restauração/arquivamento da não conformidade são atômicos. A descrição e as normas históricas vêm do snapshot. Inspeções concluídas ou canceladas não aceitam alterações.
 - **Sincronização offline:** `operationId`, `clientCreatedAt` e `expectedResponseUpdatedAt` são opcionais para chamadas online normais, mas formam um conjunto obrigatório quando qualquer um é enviado. O usuário sempre vem da sessão. O servidor calcula hash canônico, confere a revisão esperada e grava `OfflineSyncOperation` atomicamente. Mesmo ID/hash é retry idempotente; mesmo ID com conteúdo diferente ou revisão divergente retorna `409`.
+- **NC automática:** nova NC usa `MEDIUM`/`OPEN`, descrição da observação aparada
+  ou do item histórico e prazo atual + sete dias UTC. NC ativa conserva dados e
+  status; arquivada volta a `OPEN` sem renovar prazo/descrição/severidade. Resposta
+  `COMPLIANT`/`NOT_APPLICABLE` arquiva NC, sem apagar ações/evidências. Retry de
+  operação já confirmada não cria nova mutação, mesmo após conclusão.
 - **Exemplo de chamada:**
 
 ```ts
@@ -1021,6 +1027,9 @@ await saveInspectionResponse({
 - **Query parameters:** não se aplica.
 - **Path parameters:** `inspectionId` no body.
 - **Regras relacionadas:** inspeção e snapshot devem existir; todos os itens obrigatórios do snapshot devem possuir resposta por `snapshotItemId`; status passa para `COMPLETED`; inspeções concluídas ou canceladas não podem ser concluídas novamente. Com metadados offline, a conclusão e o registro idempotente são atômicos; retry do mesmo ID/hash retorna a inspeção já concluída.
+- **Completude:** `NOT_APPLICABLE` conta como resposta; opcionais podem ficar sem
+  resposta. Não exige observações, fotos, NCs resolvidas ou ações concluídas.
+  Conclusão bloqueia novas respostas, preservando manutenção de NCs/ações/evidências.
 - **Limitação atual:** assinatura digital ainda não está disponível na interface nem é persistida.
 - **Exemplo de chamada:**
 
@@ -1029,7 +1038,7 @@ await finishInspection({ data: { inspectionId } });
 ```
 
 - **Exemplo de resposta:** inspeção atualizada para `COMPLETED`.
-- **Erros possíveis:** `401`, `404`, `422`, `500`.
+- **Erros possíveis:** `401`, `404`, `409` obrigatórios pendentes, snapshot indisponível, estado não editável ou conflito offline, `422`, `500`.
 
 ---
 
@@ -1067,9 +1076,13 @@ await finishInspection({ data: { inspectionId } });
 - **Método:** `POST`
 - **Arquivo:** `src/lib/api/non-conformity.functions.ts`
 - **Autenticação:** exige sessão.
-- **Body:** `inspectionResponseId`, `description`, `severity`, `dueDate` opcional e `status`.
+- **Body:** `inspectionResponseId`, `description` e `severity` obrigatórios;
+  `dueDate` opcional; `status` opcional, padrão `OPEN`.
 - **Validação:** `createNonConformitySchema`.
-- **Regras relacionadas:** a resposta deve existir, estar `NON_COMPLIANT` e não pode possuir outra não conformidade.
+- **Regras relacionadas:** resposta da inspeção própria não excluída, `NON_COMPLIANT`,
+  sem NC inclusive arquivada. Prazo omitido vira NULL; não aplica o prazo automático
+  de sete dias. JSON null para prazo sofre coerção para data epoch no schema atual;
+  string vazia resulta em NULL. Ver Implementation Concern em BusinessRules.
 - **Erros possíveis:** `401`, `404`, `409`, `422`, `500`.
 
 ### `getNonConformityById`
@@ -1082,6 +1095,8 @@ await finishInspection({ data: { inspectionId } });
 - **Validação:** `nonConformityIdSchema`.
 - **Regras relacionadas:** limita a consulta à inspeção pertencente ao usuário
   autenticado, impedindo exposição indireta de evidências de outro usuário.
+  Antes da leitura, persiste `OVERDUE` nas NCs ativas do usuário em `OPEN` ou
+  `IN_PROGRESS` com prazo vencido; não depende de job agendado.
 - **Erros possíveis:** `401`, `404`, `422`, `500`.
 
 ### `listNonConformities`
@@ -1105,6 +1120,10 @@ await finishInspection({ data: { inspectionId } });
 - **Autenticação:** exige sessão.
 - **Body:** `{ "id": "uuid", "data": { ... } }`.
 - **Validação:** `updateNonConformityInputSchema`.
+- **Regras relacionadas:** NC própria e contexto não excluído; ao menos um campo.
+  Status aceita qualquer valor do enum, sem validar uma sequência adicional de
+  transições ou exigir ações concluídas para `RESOLVED`. Alterar prazo sozinho
+  não reverte `OVERDUE`; NC pode ser mantida após conclusão da inspeção.
 - **Erros possíveis:** `401`, `404`, `422`, `500`.
 
 ### `deleteNonConformity`
@@ -1127,9 +1146,17 @@ await finishInspection({ data: { inspectionId } });
 - **Método:** `POST`
 - **Arquivo:** `src/lib/api/corrective-action.functions.ts`
 - **Autenticação:** exige sessão.
-- **Body:** `nonConformityId`, `description` (o quê), `why` (por quê), `location` (onde), `responsible` (quem), `dueDate` (quando), `method` (como), `estimatedCost` (quanto) e `status`.
+- **Body:** `nonConformityId` e `description` obrigatórios; `why`, `location`,
+  `responsible`, `dueDate`, `method`, `estimatedCost` opcionais; `status` opcional,
+  padrão `PENDING`. `completedAt` não é campo editável; schema remove esse campo
+  desconhecido e Service calcula o valor.
 - **Validação:** `createCorrectiveActionSchema`.
-- **Regras relacionadas:** a não conformidade deve existir; a criação da primeira ação e a transição de uma NC aberta para `IN_PROGRESS` ocorrem na mesma transação.
+- **Regras relacionadas:** NC própria e contexto não excluído. Criar qualquer ação
+  enquanto a NC está `OPEN` muda a NC para `IN_PROGRESS` atomicamente; em outro
+  estado não a altera. Permite ação já `COMPLETED`, definindo `completedAt`.
+  Responsável/custo são textos opcionais, sem permissão/FK ou validação monetária.
+  Prazo omitido ou string vazia resulta em NULL; JSON null vira data epoch pela
+  coerção atual (Implementation Concern). Limites de texto em BusinessRules.
 - **Erros possíveis:** `401`, `404`, `409` alteração concorrente da NC, `422`, `500`.
 
 ### `listCorrectiveActions`
@@ -1140,7 +1167,8 @@ await finishInspection({ data: { inspectionId } });
 - **Autenticação:** exige sessão.
 - **Body:** `{ "nonConformityId": "uuid" }`.
 - **Validação:** `correctiveActionsByNonConformitySchema`.
-- **Regras relacionadas:** ações vencidas ainda pendentes são marcadas como `OVERDUE`.
+- **Regras relacionadas:** exige NC própria ativa; persiste `OVERDUE` em ações
+  ativas do usuário com prazo vencido e status `PENDING` ou `IN_PROGRESS`.
 - **Erros possíveis:** `401`, `404`, `422`, `500`.
 
 ### `updateCorrectiveAction`
@@ -1151,7 +1179,11 @@ await finishInspection({ data: { inspectionId } });
 - **Autenticação:** exige sessão.
 - **Body:** `{ "id": "uuid", "data": { ... } }`.
 - **Validação:** `updateCorrectiveActionInputSchema`.
-- **Regras relacionadas:** `COMPLETED` preenche `completedAt`; reabertura remove `completedAt`.
+- **Regras relacionadas:** ação/NC/inspeção próprias não excluídas; ao menos um
+  campo. Campos omitidos conservam valor; opcionais textuais vazios/NULL limpam
+  valor. Enviar `COMPLETED` define `completedAt` atual; outro status limpa-o;
+  omitir status conserva-o. Não resolve NC automaticamente nem exige inspeção
+  aberta. Alterar prazo sozinho não reverte `OVERDUE`.
 - **Erros possíveis:** `401`, `404`, `422`, `500`.
 
 ### `deleteCorrectiveAction`
@@ -1382,4 +1414,4 @@ nomes com “ — Cópia” não são garantia SQL de unicidade concorrente.
 Snapshot congela conteúdo de checklist, sem empresa/usuário/operação inteira.
 Errata Murbach de UI/cópias não atualiza publicação/snapshot/relatório histórico
 automaticamente. Validação documental/limites:
-[RelatorioFase3.md](../Documentation/RelatorioFase3.md).
+[RelatorioFase4.md](../Documentation/RelatorioFase4.md).

@@ -85,8 +85,11 @@ Não consulta o checklist pai. Imutabilidade de versão publicada/snapshot,
 monotonicidade da versão e validação do hash são garantias da aplicação,
 sem trigger SQL de bloqueio de conteúdo.
 
-Na criação atual, inspeção/snapshot/itens/normas são gravados na mesma transação
-de versão publicada íntegra. Fisicamente Inspection.checklistVersionId é
+Na criação atual, inspeção/snapshot/itens/normas são gravados na mesma transação.
+A versão deve estar publicada e ter hash presente; formato 1 é recalculado,
+mas outros formatos, inclusive legado 0, são aceitos sem essa verificação.
+Cópia de publicação exige formato 1 íntegro, conforme
+[ChecklistCopy.md](./ChecklistCopy.md). Fisicamente Inspection.checklistVersionId é
 nullable e Inspection admite zero ou um snapshot; não converter essa regra
 de fluxo em NOT NULL ou cardinalidade obrigatória no diagrama físico.
 

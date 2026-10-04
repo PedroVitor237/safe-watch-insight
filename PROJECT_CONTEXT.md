@@ -308,6 +308,19 @@ O fluxo principal já utiliza dados reais integrados ao backend: login, empresas
 checklists, itens de checklist, criação de inspeção, execução, respostas e
 conclusão.
 
+O cadastro público em `/register` recebe nome/e-mail/senha/confirmação, normaliza
+e-mail, valida senha de no mínimo oito caracteres, gera bcrypt com custo 12 e
+atribui `TECHNICIAN` no servidor. Não inicia sessão: encaminha para `/login`.
+Autenticação usa cookie `safe_watch_session` por oito horas, HttpOnly,
+SameSite=lax, Secure em produção e `SESSION_SECRET` obrigatório em produção.
+O servidor reconsulta o usuário não excluído; papéis armazenados não implementam
+RBAC, gestão de equipe ou administração de usuários.
+
+Empresas e checklists pessoais têm proprietário; inspeções são isoladas por
+`Inspection.userId`. NCs, ações e evidências seguem o contexto da inspeção.
+Consultar/reutilizar checklist publicado não dá acesso à inspeção de outro
+usuário. Regras atuais: [AI/BusinessRules.md](./AI/BusinessRules.md).
+
 Alguns módulos secundários ainda utilizam dados mockados, como equipe. O antigo
 controle de simulação offline foi substituído por
 estado real de conectividade, IndexedDB e fila de sincronização.
@@ -320,6 +333,13 @@ inspeção captura atomicamente um snapshot relacional da versão publicada; ite
 normas, respostas e não conformidades históricas não dependem do checklist
 mutável. Inspeções anteriores à migration foram estabilizadas como backfill
 legado não verificável.
+
+Conclusão exige respostas nos itens obrigatórios do snapshot; `NOT_APPLICABLE`
+conta como resposta e itens opcionais podem ficar pendentes. Novas respostas
+ficam bloqueadas em `COMPLETED`/`CANCELLED`; NCs, ações e evidências continuam
+podendo ser mantidas após conclusão. Responsável, prazo, motivo, local, método
+e custo de ação corretiva são opcionais. Concluir ações não resolve NC
+automaticamente. Detalhes e concern da coerção de prazos estão em BusinessRules.
 
 As telas de inspeção e não conformidade permitem selecionar, pré-visualizar,
 enviar, listar e remover evidências fotográficas reais.
@@ -466,9 +486,24 @@ publicadas e permitem criar cópias pessoais com draft v1. A carga de produção
 é `npm run db:seed:platform`, após as migrations, sem executar o Demo Seed.
 Fonte NR-18, regras e limites: [AI/OfficialTemplates.md](./AI/OfficialTemplates.md).
 
+`isTemplate` e `isOfficial` são independentes: modelo pessoal mantém dono usuário;
+oficial exige `isOfficial=true`, `isTemplate=true` e dono NULL. Os dois oficiais
+codificados são construção (12 itens, NR-18) e altura (8 itens, NR-1/NR-6/NR-35).
+Esse número não é limite imposto pelo banco. Retirada existe no backend/hook,
+sem ação nas telas; a interface de histórico de versões permanece incompleta.
+
 A ação **Copiar checklist** reutiliza a operação de derivação institucional para
 checklists próprios e publicações já acessíveis. Toda cópia pertence à sessão,
 começa em draft v1, tem itens independentes e pode ser publicada normalmente.
 A persistência usa inserts em lote na mesma transação, corrigindo o P2003
 reproduzido no Neon sem aumentar timeouts. Consultar
 [AI/ChecklistCopy.md](./AI/ChecklistCopy.md).
+
+Origem própria prefere draft, mesmo inativa; terceiro/oficial usa a publicação
+acessível de maior número. Publicação para cópia exige formato 1 e hash íntegro;
+criar inspeção pode aceitar formato legado 0 com hash presente sem recálculo.
+Cópia não transfere oficialidade/template, inspeções, respostas, snapshots ou
+tratativas. A linhagem dos itens conserva ancestral publicado anterior ao copiar
+draft, sem referenciar seu item mutável. Errata bibliográfica afeta exibição e
+novas cópias, sem reescrever publicações/snapshots históricos. Conferência estática
+da Fase 4: [RelatorioFase4.md](./Documentation/RelatorioFase4.md).

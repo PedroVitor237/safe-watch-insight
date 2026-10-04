@@ -2,8 +2,8 @@
 
 ## Estado atual e fontes
 
-Revisão documental da Fase 3 em 3 de outubro de 2026, após o checkpoint
-`0a19b4447d9b62356cbcb0a6eaa0b58dce220e57` da Fase 2. Esta referência normativa
+Revisão documental da Fase 4 em 3 de outubro de 2026, sobre a Fase 3 consolidada
+em `42aeb64`, preservando a referência estrutural da Fase 2 (`0a19b44`). Esta referência normativa
 descreve o comportamento existente. Em divergência com documentação antiga,
 prevalece o código; diferenças frente a regras desejadas devem ser registradas,
 sem mudar a aplicação nesta fase.
@@ -84,6 +84,13 @@ sincronização. Limites: [Offline.md](./Offline.md).
 
 ## Ownership e autorização
 
+Autenticação identifica o usuário por sessão e reconsulta sua conta no servidor.
+Autorização decide acesso/mutação pela propriedade do recurso e seu contexto.
+Visibilidade permite consultar publicação acessível sem transferir propriedade.
+Estado editorial pertence à versão (`DRAFT`, `PUBLISHED`, `RETIRED`); atividade
+e exclusão pertencem à identidade do checklist. Um papel armazenado, um nome de
+responsável ou a marcação de template não substituem essas verificações.
+
 Server Functions de negócio obtêm usuário da sessão e repassam aos Services e
 Repositories. userId/createdById/autoria enviados pelo cliente não determinam
 identidade confiável. Schemas comuns removem campos desconhecidos; cadastro e
@@ -149,6 +156,16 @@ Consulta interna de disponibilidade não é uma API de leitura de empresas alhei
 
 ## Checklists, itens e visibilidade
 
+| Classificação                        | Identidade e conteúdo                                                             | Acesso implementado                                                                         |
+| ------------------------------------ | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Checklist pessoal                    | `isOfficial=false`, proprietário obrigatório; `isTemplate=false` no personalizado | Proprietário mantém conteúdo no draft                                                       |
+| Checklist pessoal publicado          | Mesma identidade pessoal, com uma ou mais versões `PUBLISHED`                     | Outros usuários autenticados consultam publicações enquanto identidade ativa e não excluída |
+| Template pessoal                     | Pessoal com `isTemplate=true`; pode ter draft e/ou publicação                     | Mesmas regras de ownership/visibilidade do pessoal                                          |
+| Checklist oficial / template oficial | Institucional, `isOfficial=true`, `isTemplate=true`, proprietário NULL            | Publicação institucional ativa consultável/reutilizável; sem mutação pela API pessoal       |
+
+“Publicado” é estado da versão, não flag de compartilhamento na identidade.
+`isTemplate` não publica conteúdo nem implica `isOfficial`.
+
 Criar pessoal cria atomicamente identidade e **DRAFT v1**, dono/autor da sessão.
 Título aparado 1–255 caracteres, descrição opcional; padrões isOfficial=false,
 isTemplate=false e isActive=true. Cliente pode marcar template pessoal/atividade,
@@ -206,6 +223,20 @@ UI tem Biblioteca, edição, publicação no detalhe, **Copiar checklist**, **Us
 template**, e seleção de publicação na nova inspeção. Retirada tem Server
 Function/hook, **sem ação nas telas atuais**; histórico/editoria institucional
 não têm interface completa.
+
+### Garantias físicas e regras da aplicação
+
+| Regra                 | Garantia física vigente                                                                    | Regra do fluxo implementado                                                                   |
+| --------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| Draft e numeração     | UNIQUE parcial limita a um `DRAFT`; UNIQUE de checklist/número e CHECK de número positivo  | Próximo draft usa máximo existente + 1                                                        |
+| Publicação            | CHECK exige metadados de publicação e formato hexadecimal do hash                          | Service calcula SHA-256 formato 1 e Repository confere `expectedUpdatedAt`/estado/propriedade |
+| Autoria institucional | CHECK do Checklist exige template oficial sem proprietário; autores de versão aceitam NULL | Bootstrap grava criador/publicador NULL; CHECK de versão não consulta o pai                   |
+| Imutabilidade         | FKs/CHECKs protegem referências e forma; não há trigger de bloqueio de conteúdo            | Edição limitada a draft; retirada conserva conteúdo e snapshots                               |
+| Snapshot da inspeção  | Versão nullable e no máximo um snapshot por inspeção                                       | Criação atual grava inspeção, snapshot, itens e normas atomicamente                           |
+
+Referência física: [Database.md](./Database.md) e
+[Dicionário de Dados](../Documentation/DicionarioDeDados.md). A revisão esperada
+da publicação não é a revisão de resposta usada na sincronização offline.
 
 ## Templates e cópia
 
@@ -266,24 +297,95 @@ COMPLETED/CANCELLED bloqueiam novas respostas/conclusão. Retry idempotente de
 operação confirmada não é nova mutação. NCs/ações/evidências podem continuar
 sendo mantidas depois da conclusão.
 
+Itens opcionais podem permanecer sem resposta. A conclusão verifica presença de
+resposta por `snapshotItemId`, sem exigir observação, evidência, resolução de NC
+ou conclusão das ações. Uma inspeção sem itens obrigatórios pendentes também
+pode ser concluída; não há regra de mínimo de respostas no Service.
+
 Errata Murbach inclui **72–74** em catálogo atual, exibição institucional e
 novos drafts de cópia, sem reescrever v1/hash/datas/snapshots. Inspeção direta da
 publicação histórica copia descrição original; relatório desse snapshot não
 aplica automaticamente errata. Ver [templates](./OfficialTemplates.md).
 
-## NCs, ações, evidências, relatórios e offline
+## Não conformidades
 
-NON_COMPLIANT cria/restaura uma NC única por resposta, inicialmente MEDIUM/OPEN,
-descrição da observação ou item histórico, prazo de sete dias. Outra situação
-arquiva logicamente. Criação explícita exige resposta própria NON_COMPLIANT e
-ausência de NC inclusive arquivada. NC/ações isoladas pela inspeção.
+Salvar uma resposta e manter sua NC ocorre na mesma transação, junto da mudança
+da inspeção para `IN_PROGRESS` e da confirmação offline quando presente:
 
-Ação exige descrição; demais 5W2H opcionais, inclusive responsável/prazo.
-responsible é texto, não User/FK/permissão. Criar ação em NC OPEN muda NC para
-IN_PROGRESS na transação. COMPLETED define completedAt; reabertura por status
-limpa-o. Concluir todas as ações não resolve NC automaticamente. Leituras dos
-Services de NC/ações podem persistir OVERDUE; Dashboard/Reports apenas derivam
-atraso na leitura.
+| Resposta e registro existente             | Efeito real                                                                                                                                            |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `NON_COMPLIANT`, sem NC                   | Cria NC `MEDIUM`/`OPEN`; descrição da observação aparada não vazia ou do item do snapshot; prazo calculado no servidor como data atual + 7 dias em UTC |
+| `NON_COMPLIANT`, NC ativa                 | Conserva descrição, severidade, prazo e status existentes; editar observação não reescreve a NC                                                        |
+| `NON_COMPLIANT`, NC arquivada             | Limpa `deletedAt` e volta para `OPEN`, conservando descrição, severidade, prazo, ações e evidências existentes                                         |
+| `COMPLIANT` ou `NOT_APPLICABLE`, NC ativa | Preenche `deletedAt`; não marca `RESOLVED` nem exclui fisicamente ações/evidências                                                                     |
+
+Há no máximo uma NC por resposta, inclusive arquivada, pela FK única. Criação
+explícita exige resposta própria `NON_COMPLIANT` e ausência de qualquer NC:
+descrição e severidade obrigatórias, prazo opcional (NULL quando omitido), status
+padrão `OPEN`. O prazo automático de sete dias não é default de banco nem regra
+da criação explícita.
+
+Atualização aceita descrição, severidade, prazo e qualquer valor do enum
+`OPEN`/`IN_PROGRESS`/`RESOLVED`/`OVERDUE`, com pelo menos um campo. Não há máquina
+de transições adicional nem exigência de todas as ações concluídas para escolher
+`RESOLVED`. Exclusão explícita é soft delete. A propriedade vem de
+NC → resposta → inspeção não excluída do usuário; não depende do status de
+conclusão da inspeção.
+
+Detalhe e lista de NCs chamam `markOverdue` antes da consulta: marcam `OVERDUE`
+as NCs não excluídas do usuário com prazo anterior ao instante da consulta e
+status `OPEN` ou `IN_PROGRESS`. Não há job agendado nem retorno automático ao
+status anterior ao adiar o prazo. Atraso em Reports/Dashboard é derivado sem escrita.
+
+Fontes: [InspectionResponseService](../src/server/services/inspection-response.service.ts),
+[persistência da resposta/NC](../src/server/repositories/inspection-response.repository.ts),
+[NonConformityService](../src/server/services/non-conformity.service.ts) e
+[Repository de NC](../src/server/repositories/non-conformity.repository.ts).
+
+## Ações corretivas
+
+A NC deve estar não excluída e vinculada à inspeção não excluída do usuário.
+`description` é o conteúdo obrigatório; o plano 5W2H não exige preencher todos
+os campos. Schemas Zod e Service reconciliam os campos nullable do Prisma:
+
+| Campo                                      | Entrada pública implementada                                                                                |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| `nonConformityId`                          | UUID obrigatório na criação; vínculo não editável pelo contrato de atualização                              |
+| `description`                              | Texto aparado, 1–2000 caracteres na criação; opcional na atualização, com o mesmo limite se enviado         |
+| `why`, `method`                            | Opcionais/nullable, texto aparado até 2000 caracteres; vazio vira NULL                                      |
+| `location`, `responsible`, `estimatedCost` | Opcionais/nullable, texto aparado até 255 caracteres; vazio vira NULL                                       |
+| `dueDate`                                  | Opcional; data coercível; string vazia vira NULL; sem exigência de data futura (ver coerção de NULL abaixo) |
+| `status`                                   | Padrão `PENDING` na criação; atualização aceita `PENDING`, `IN_PROGRESS`, `COMPLETED`, `OVERDUE`            |
+| `completedAt`                              | Definido pelo servidor; não é campo editável do contrato                                                    |
+
+`responsible` é texto, não User/FK/permissão; `estimatedCost` é texto, sem
+validação monetária. Na criação, campos opcionais omitidos viram NULL. Na
+atualização, omissão conserva o valor; exige ao menos um campo reconhecido.
+
+**Implementation Concern — coerção de prazo:** nos schemas de NC e ação, a
+união testa `z.coerce.date()` antes de `z.null()`. Com a dependência instalada,
+JSON `null` é convertido em `1970-01-01T00:00:00.000Z`, enquanto string vazia
+resulta em NULL. Omissão na criação continua resultando em NULL pelo Service.
+Esse comportamento foi conferido localmente sem banco; a nulabilidade física
+não equivale à semântica de limpar prazo enviando JSON null. Não foi corrigido.
+
+Criar qualquer ação quando a NC está `OPEN` muda a NC para `IN_PROGRESS` na
+mesma transação, inclusive se a ação já nascer `COMPLETED`. Em outros estados
+da NC, a criação não muda seu status. Enviar `COMPLETED` define `completedAt`
+com a data atual; enviar outro status limpa-o; sem status, conserva-o. Concluir
+todas as ações não resolve NC automaticamente; remover ação não reabre NC.
+
+Listar ações de NC própria chama `markOverdue`: persiste `OVERDUE` em ações
+ativas do usuário com prazo vencido e status `PENDING`/`IN_PROGRESS`. NCs
+arquivadas ocultam o acesso às ações pela API, sem apagar os registros.
+Alterar prazo sozinho não reverte `OVERDUE`. Nenhuma dessas mutações exige
+inspeção ainda aberta.
+
+Fontes: [schema Zod](../src/server/schemas/corrective-action.schema.ts),
+[CorrectiveActionService](../src/server/services/corrective-action.service.ts) e
+[Repository](../src/server/repositories/corrective-action.repository.ts).
+
+## Evidências, relatórios e offline
 
 Evidence pertence exatamente à inspeção **ou** NC, nunca ação corretiva. Upload/
 listagem exigem contexto próprio não excluído com snapshot (NC exige também item
@@ -309,5 +411,6 @@ reconciliação assistida e evidências binárias são futuras.
 
 Conferência estática, sem seeds/migrations/fixtures/consultas ao banco nesta fase.
 Correções documentais e limites da implementação constam do
-[RelatorioFase3.md](../Documentation/RelatorioFase3.md). Fluxo de acesso:
+[RelatorioFase4.md](../Documentation/RelatorioFase4.md); o
+[RelatorioFase3.md](../Documentation/RelatorioFase3.md) preserva a revisão anterior. Fluxo de acesso:
 Tela → React Query → Server Function → Service → Repository → Prisma → PostgreSQL.

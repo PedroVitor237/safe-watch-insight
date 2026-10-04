@@ -791,18 +791,18 @@ físicas. @id/@@id, @unique/@@unique e @@index expressam parte delas no Prisma;
 CHECKs e índice parcial exigem a leitura das migrations. @updatedAt e uuid()
 são comportamentos do Prisma sem default/trigger equivalentes no SQL.
 
-| Regra                        | Banco permite/garante                                                       | Aplicação no fluxo atual                                                                       |
-| ---------------------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Inspeção com versão/snapshot | Versão nullable; no máximo um snapshot                                      | InspectionService + createWithSnapshot exigem publicação íntegra e criam snapshot na transação |
-| Resposta histórica           | Ao menos um item; FKs simples; dois UNIQUE compostos                        | InspectionResponseService resolve item no snapshot da mesma inspeção                           |
-| Autoria institucional        | Ownership do checklist por CHECK; autoria de versão nullable                | Bootstrap grava criador/publicador NULL para checklist oficial; fluxo pessoal atribui sessão   |
-| Imutabilidade histórica      | RESTRICT e CHECKs protegem vínculos/forma, não bloqueiam UPDATE de conteúdo | Services/Repositories limitam edição a draft e verificam hashes                                |
-| Hash                         | Formato hexadecimal minúsculo de 64 caracteres                              | Utilitários calculam SHA-256 do conteúdo ou operação canônica                                  |
-| Evidência                    | Exatamente uma FK e pai existente                                           | EvidenceService exige contexto histórico, proprietário e arquivo válido                        |
-| Operação offline             | PK única e formato de hash; nenhuma coluna status/payload                   | Transação confirma mutação; retry compara usuário/inspeção/tipo/hash                           |
-| Conflito de resposta         | updatedAt é coluna de horário; sem contador/CHECK de revisão                | Repository compara revisão esperada à remota antes da escrita                                  |
-| Relatório                    | Zero ou um registro Report por inspeção                                     | ReportRepository consulta Inspection; DTO/HTML não cria registro automaticamente               |
-| Ação concluída/custo         | completedAt nullable; estimatedCost TEXT                                    | Service trata conclusão; não há tipo monetário físico                                          |
+| Regra                        | Banco permite/garante                                                       | Aplicação no fluxo atual                                                                                                      |
+| ---------------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Inspeção com versão/snapshot | Versão nullable; no máximo um snapshot                                      | InspectionService exige publicação/hash presente, recalcula somente formato 1; createWithSnapshot grava snapshot na transação |
+| Resposta histórica           | Ao menos um item; FKs simples; dois UNIQUE compostos                        | InspectionResponseService resolve item no snapshot da mesma inspeção                                                          |
+| Autoria institucional        | Ownership do checklist por CHECK; autoria de versão nullable                | Bootstrap grava criador/publicador NULL para checklist oficial; fluxo pessoal atribui sessão                                  |
+| Imutabilidade histórica      | RESTRICT e CHECKs protegem vínculos/forma, não bloqueiam UPDATE de conteúdo | Services/Repositories limitam edição a draft e verificam hashes                                                               |
+| Hash                         | Formato hexadecimal minúsculo de 64 caracteres                              | Utilitários calculam SHA-256 do conteúdo ou operação canônica                                                                 |
+| Evidência                    | Exatamente uma FK e pai existente                                           | EvidenceService exige contexto histórico, proprietário e arquivo válido                                                       |
+| Operação offline             | PK única e formato de hash; nenhuma coluna status/payload                   | Transação confirma mutação; retry compara usuário/inspeção/tipo/hash                                                          |
+| Conflito de resposta         | updatedAt é coluna de horário; sem contador/CHECK de revisão                | Repository compara revisão esperada à remota antes da escrita                                                                 |
+| Relatório                    | Zero ou um registro Report por inspeção                                     | ReportRepository consulta Inspection; DTO/HTML não cria registro automaticamente                                              |
+| Ação concluída/custo         | completedAt nullable; estimatedCost TEXT                                    | Service trata conclusão; não há tipo monetário físico                                                                         |
 
 ### Fontes de aplicação usadas para delimitar as garantias
 

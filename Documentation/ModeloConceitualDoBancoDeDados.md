@@ -118,7 +118,12 @@ nome para esse conceito e não criam registros automaticamente.
 
 ## 6.5 História preservada
 
-Capturas novas são verificadas no fluxo de criação. O legado importado é
+Capturas novas recebem `INSPECTION_CREATION`/`VERIFIED` no fluxo de criação;
+o hash só é recalculado para publicação de formato 1. Publicação legada 0 com
+hash presente pode iniciar inspeção sem recálculo: o rótulo não comprova sua
+integridade canônica. Cópia dessa publicação exige formato 1, como delimitado
+em [BusinessRules.md](../AI/BusinessRules.md#inspeções-e-snapshot-limites-relevantes).
+O legado importado pelo backfill é
 explicitamente não verificável: o banco anterior não permitia reconstruir o
 conteúdo original na data da inspeção. Itens legados e suas relações não foram
 removidos. Imutabilidade é uma garantia do fluxo de aplicação apoiada por

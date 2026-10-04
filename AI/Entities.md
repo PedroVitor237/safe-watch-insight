@@ -2,7 +2,7 @@
 
 ## Estado atual e fontes
 
-Consolidado na Fase 3 em 3 de outubro de 2026. Explica o papel dos **19 models**
+Reconferido na Fase 4 em 3 de outubro de 2026, sobre a Fase 3 (`42aeb64`). Explica o papel dos **19 models**
 implementados. Campos/tipos/enums/chaves/nullability/defaults pertencem ao
 [Dicionário de Dados](../Documentation/DicionarioDeDados.md) e à
 [referência de banco](./Database.md). Fontes: [schema](../prisma/schema.prisma),
@@ -40,6 +40,11 @@ fluxo de aplicação. Vários números únicos por checklist, no máximo um draf
 Criação pessoal/cópia inicia v1; edição de publicação deriva próximo draft na
 mesma identidade. Publicar conserva ID/número e adiciona hash/autoria/data.
 Retirar impede novas inspeções sem eliminar histórico.
+
+Revisão otimista da publicação é `updatedAt` lido pelo Service, não número
+enviado pelo cliente. Unicidade de draft/número é física; imutabilidade e
+SHA-256 correspondente ao conteúdo são regras da aplicação. Histórico completo
+e retirada não possuem interface completa, embora existam operações de backend.
 
 Criador da versão, publicador e dono do Checklist são conceitos distintos.
 Bootstrap institucional usa autores NULL, sem conceder direito de editar.
@@ -124,12 +129,23 @@ Dono vem de resposta → Inspection.userId, sem owner direto/solicitante/norma
 direta. Fundamentação usa item histórico. Pode ter várias ações/evidências.
 NON_COMPLIANT cria/restaura; outra resposta arquiva, sem eliminar histórico.
 
+Criação automática usa `MEDIUM`, `OPEN` e prazo de sete dias; restauração de NC
+arquivada volta a `OPEN`, conservando descrição, severidade, prazo e filhos.
+Criação explícita exige severidade e não aplica prazo automático. Mudança de
+observação não reescreve NC ativa; conclusão de ações não resolve NC sozinha.
+
 ## CorrectiveAction
 
 Tratamento 5W2H: descrição obrigatória; responsável/prazo/porquê/local/método/custo
 opcionais. Responsável/custo são texto, sem FK User ou valor monetário calculável.
 Dono é o da inspeção da NC; nome do responsável não recebe acesso. Conclusão
 registra completedAt; reabertura por status limpa-o. Sem Evidence direta à ação.
+
+Status padrão `PENDING`; criar ação em NC `OPEN` muda a NC para `IN_PROGRESS`.
+Omissão dos campos opcionais na criação resulta em NULL; na atualização,
+campos omitidos são preservados. A nulabilidade física de `dueDate` não garante
+que toda entrada pública NULL o limpe: a coerção atual está registrada como
+Implementation Concern em [BusinessRules.md](./BusinessRules.md#ações-corretivas).
 
 ## Evidence
 
