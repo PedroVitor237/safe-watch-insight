@@ -1,4 +1,4 @@
-# Guia do Professor — contexto acadêmico da Atividade 2
+# Guia do Professor — demonstração atual e histórico acadêmico
 
 # 1. Apresentação
 
@@ -10,17 +10,21 @@ Desenvolvimento de Sistemas. Este guia preserva o contexto de avaliação da
 documentação técnica e acadêmica. O desenvolvimento continuou após esse marco;
 o estado atual está resumido no `README.md` e em `PROJECT_CONTEXT.md`.
 
-O fluxo que estruturou o marco acadêmico foi:
+O marco original da Atividade 2 é referência histórica. O roteiro de
+avaliação atual, reconciliado na Fase 8 em 4 de outubro de 2026, é:
 
 ```text
 Login
 -> Cadastro de empresa
 -> Cadastro de checklist
--> Cadastro de itens do checklist
+-> Cadastro de itens e associação de normas
+-> Publicação de versão (ou uso de publicação acessível)
 -> Criação de inspeção
 -> Execução da inspeção
 -> Registro das respostas
--> Conclusão da inspeção
+-> Conclusão local e confirmação de sincronização
+-> Relatório e impressão pelo navegador
+-> Dashboard com indicadores próprios
 ```
 
 # 2. Como executar o projeto
@@ -29,7 +33,7 @@ As instruções abaixo assumem que o projeto foi recebido como um arquivo ZIP co
 
 ## Pré-requisitos
 
-- Node.js 22 ou superior recomendado.
+- Node.js `^22.12.0`, conforme `package.json`; `.nvmrc` fixa 22.23.2. Não significa qualquer versão superior.
 - npm instalado.
 - Banco PostgreSQL disponível. A documentação do projeto considera o uso do Neon.
 - Editor de código, preferencialmente VS Code.
@@ -244,7 +248,8 @@ As decisões mais importantes para esta entrega são:
 
 Além do fluxo consolidado no marco da Atividade 2, o projeto atualmente possui:
 
-- autenticação real, sessão e proteção de rotas;
+- cadastro público sem login automático, autenticação real, sessão e proteção de rotas;
+- templates oficiais consultáveis e cópia pessoal independente com rascunho v1;
 - CRUD de empresas, checklists e itens;
 - versões publicadas e snapshots históricos por inspeção;
 - catálogo e associação reais de Normas Regulamentadoras;
@@ -275,21 +280,86 @@ atual; planos, backlogs, wireframes e este guia preservam também a história da
 entregas acadêmicas. Em caso de dúvida sobre implementação vigente, consulte
 `README.md`, `PROJECT_CONTEXT.md`, `TASKS.md` e `TECH_DECISIONS.md`.
 
-## Conferência documental da Fase 6
+# 9. Roteiro de demonstração atual
 
-Para demonstração: crie inspeção online com empresa própria/publicação, execute
-snapshot e conclua obrigatórios (N/A válido), aguarde sync e abra **Ver relatório**.
-NCs/ações/evidências podem continuar em tratamento depois da conclusão; concluir
-uma ação não resolve NC automaticamente. Snapshot não congela empresa/inspetor.
-Dashboard mostra dados do usuário, conformidade arredondada de
-COMPLIANT/(COMPLIANT+NON_COMPLIANT) em concluídas, excluindo N/A; sem aplicáveis
-exibe “—”. Recentes: até cinco por data de inspeção decrescente.
+Este roteiro é uma orientação de avaliação. Preparação de ambiente acima e
+passos de demonstração abaixo **não foram executados nesta fase documental**.
+Use ambiente preparado e aguarde as notificações/indicadores de cada operação.
 
-Evidências: JPEG/PNG/WebP até 4.194.304 bytes, online; sem fila binária/compressão/
-quota offline. Offline permite respostas/conclusão de pacotes existentes;
-conflito bloqueia fila, sem resolução assistida. A consulta de relatório por ID
-não exige COMPLETED, embora o seletor só liste concluídas. Essa diferença e
-riscos de cache/concorrência estão em
-[RelatorioFase6.md](./Documentation/RelatorioFase6.md). Esta etapa é documentação,
-sem novo teste funcional ou aprovação de Final QA. Fluxos/fórmulas:
-[BusinessRules.md](./AI/BusinessRules.md) e [Offline.md](./AI/Offline.md).
+## Fluxo principal
+
+1. **Login:** entre com conta própria ou com as credenciais expostas no bloco
+   de demonstração, quando o ambiente estiver preparado. O usuário é técnico,
+   sem acesso administrativo global; login abre o Dashboard.
+2. **Empresa:** em Empresas, cadastre uma empresa própria com razão social,
+   CNAE, grau de risco e funcionários. CNPJ é opcional e, quando informado,
+   único inclusive entre empresas arquivadas.
+3. **Checklist:** crie um modelo pessoal, adicione verificações obrigatórias e
+   opcionais, associe NRs se necessário e confirme **Publicar vN**. Mostre a
+   distinção entre rascunho editável e publicação preservada.
+4. **Inspeção:** em **Nova inspeção**, selecione empresa e versão publicada,
+   observações opcionais e data/hora (vazia usa Agora). Crie e abra na lista.
+   Explique que a inspeção preserva o conteúdo de checklist capturado.
+5. **Respostas:** marque Conforme, NC e N/A em itens distintos quando o modelo
+   permitir. Inclua observação e saia do campo para salvá-la. O andamento inicia
+   com a resposta. Aguarde sincronização para demonstrar a NC no módulo próprio.
+6. **Tratativa:** no detalhe da NC, ajuste descrição/severidade/prazo e crie
+   ação em **Nova ação**. Só **O quê?** é obrigatório; os demais campos 5W2H
+   são opcionais. Conclua a ação por Editar/Status/Concluída; mostre que resolver
+   a NC exige alteração explícita de seu status.
+7. **Conclusão:** responda obrigatórios (N/A é válido); opcionais podem ficar
+   pendentes. Em **Encerrar**, conclua. Fotos, ações concluídas e NCs resolvidas
+   não são condições de encerramento. Aguarde confirmação da fila.
+8. **Relatório:** abra **Ver relatório** na inspeção concluída ou selecione-a
+   em Relatórios. Mostre resumo, itens/normas, empresa/inspetor, NCs, ações e
+   evidências. **Imprimir → Salvar como PDF** usa o diálogo do navegador;
+   a aplicação não gera nem baixa um arquivo PDF diretamente.
+9. **Dashboard:** mostre contagens, gráfico por status, atenção e até cinco
+   recentes. Conformidade usa Conforme/(Conforme + NC) em concluídas, excluindo
+   N/A e pendentes; sem aplicáveis aparece **—**. Os dados são próprios,
+   não indicadores gerenciais globais ou BI.
+
+Respostas/conclusão são salvas no dispositivo antes do envio, inclusive online.
+A inspeção concluída bloqueia novas respostas, mas NCs/ações/evidências seguem
+tratáveis. Cadastro atual de empresa/inspetor e tratativas não são congelados
+com o checklist; podem alterar o relatório consultado posteriormente.
+
+## Demonstrações complementares
+
+- **Cadastro:** abra Criar conta no login, preencha nome/e-mail/senha/confirmação,
+  demonstre validação e navegação ao login sem autenticação automática. Não há
+  escolha de papel, confirmação de e-mail ou recuperação de senha.
+- **Template e cópia:** na Biblioteca, abra Templates oficiais e consulte fonte
+  e escopo. **Usar template** abre uma cópia pessoal v1, editável/publicável;
+  o original permanece preservado. **Copiar checklist** no detalhe próprio ou
+  publicado acessível também cria nova identidade e itens independentes, sem
+  copiar inspeções. Construção adapta Murbach; altura é curadoria da plataforma.
+- **Evidência:** com upload configurado e conexão, envie JPEG/PNG/WebP até 4 MB
+  na inspeção ou NC, confira prévia/legenda/lista, abra a imagem e demonstre
+  remoção confirmada. Não há evidência diretamente associada à ação corretiva.
+- **Offline:** ainda online, abra/liste a inspeção que será demonstrada e confira
+  o armazenamento em Configurações. Sem conexão, responda e, se cabível, conclua.
+  Reconecte com sessão válida, acompanhe pendências e use Sincronizar agora
+  para retry de erros quando necessário. Conflitos bloqueiam e não possuem
+  resolução assistida. Sincronize antes de sair/trocar conta, pois dados locais
+  e alterações pendentes são limpos nesses caminhos.
+
+## Limites para avaliação
+
+Equipe e seleção de perfil em Configurações são demonstrativos. Não demonstrar
+como entregues: RBAC/administração, solicitante (RF12/RN07), assinatura,
+criação integral de inspeção offline, binários de evidências offline, BI ou
+múltiplos modelos editáveis de relatório (RF14 parcial). RF20/RNF03 são parciais.
+
+Relatório/dashboard consultam remoto e podem não refletir pendências locais.
+Consulta por identificador direto permite relatório de inspeção própria aberta,
+embora o seletor liste só concluídas; há concerns de cache entre identidades,
+concorrência offline, projeção durante sync e coerção de prazo vazio. São
+pendências para Final QA, sem correção nesta fase. A homologação histórica do
+fluxo offline é concentrada no Chromium local; o fluxo autenticado completo em
+produção/outros navegadores ainda requer avaliação.
+
+[Telas](./Documentation/ESPECIFICACAO_DE_TELAS.md),
+[Guia do usuário](./Documentation/GUIA_USUARIO.md),
+[Templates oficiais](./AI/OfficialTemplates.md), [Offline](./AI/Offline.md) e
+[Relatório da Fase 6](./Documentation/RelatorioFase6.md) detalham esses limites.

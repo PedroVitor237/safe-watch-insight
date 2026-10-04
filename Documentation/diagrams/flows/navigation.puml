@@ -48,5 +48,14 @@ Checklist --> Checklist : Copiar / Usar template: novo id
 NCs --> NC : Abrir
 NC --> Inspection : Abrir inspeção de origem
 NC --> NCs : Voltar ou arquivar
+Login --> Dashboard : Sessão já válida / login concluído
+Dashboard --> NewInspection : Nova inspeção
+Dashboard --> Inspections : Ver todas / planejadas
+Dashboard --> Inspection : Ver inspeção recente não concluída
+Dashboard --> Reports : Ver relatório de concluída: inspectionId
+Dashboard --> NCs : NCs / ações vencidas
+Inspection --> Reports : Ver relatório em Concluída: inspectionId
+Reports --> Reports : Selecionar: inspectionId na busca
+App --> Settings : Avatar da barra superior
 App --> Login : Sair pelo menu lateral
 @enduml

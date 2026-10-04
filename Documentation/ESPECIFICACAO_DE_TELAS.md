@@ -2,8 +2,11 @@
 
 Este documento descreve as interfaces atuais da plataforma de apoio a
 inspeções, auditorias e fiscalizações de Segurança e Saúde no Trabalho (SST).
-Ele compõe a documentação de requisitos e do TCC, mas organiza as telas por
-responsabilidade permanente do produto.
+Revisão da Fase 8 em **4 de outubro de 2026**, sobre
+`5d323ae8d1e26d87198592564876616b04936f14`. A conferência é estática, sem
+nova validação em navegador. O [mapa de navegação](./MAPA_DE_NAVEGACAO.md)
+inventaria todas as URLs; o [guia do usuário](./GUIA_USUARIO.md) explica as tarefas.
+[Wireframes](./WIREFRAMES.md) são referência histórica de design.
 
 ## Convenções de estado
 
@@ -17,6 +20,13 @@ responsabilidade permanente do produto.
 Todas as telas internas usam o `AppShell`, com menu lateral recolhível, barra
 superior, indicador de sincronização, notificações e acesso ao usuário
 autenticado. O menu é dividido entre **Operação** e **Cadastros**.
+
+**Acesso:** `/login` e `/register` são públicos; todas as telas das seções 2–14
+exigem sessão pelo layout autenticado. Recursos pessoais pertencem ao usuário;
+NCs, ações e evidências seguem a inspeção de origem. Não existe acesso global
+administrativo por papel. `$id` é substituído pelo identificador do registro.
+`/` apenas encaminha para `/login`; `_app` e `__root` são layouts, sem URL própria.
+O sino da barra superior não oferece um fluxo de notificações implementado.
 
 ## 1. Login
 
@@ -35,12 +45,35 @@ Autenticar um usuário cadastrado e iniciar uma sessão protegida.
 - bloco com as credenciais do ambiente demonstrativo.
 
 O formulário não possui seletor de perfil. Credenciais inválidas são rejeitadas
-pelo backend.
+pelo backend. E-mail inválido e senha vazia também são rejeitados; falhas são
+apresentadas por notificações, sem prometer mensagens de campo como no cadastro.
+O botão mostra **Entrando...** durante envio. **Criar conta** abre `/register`.
+O bloco **Ambiente de demonstração** expõe **Usuário Demonstração** (técnico),
+`demo.user@example.test` / `Demo@12345`; o ambiente precisa conter essa conta.
+A sessão dura oito horas; após expiração, pode ser necessário entrar novamente.
+A validade local offline não substitui a autenticação para sincronizar.
 
 ### Navegação
 
 `/` redireciona para esta tela. Um login válido leva a `/dashboard`; uma
 sessão já ativa também evita a reapresentação do formulário.
+
+## 1.1 Cadastro público
+
+- **Rota:** `/register`
+- **Estado:** integrado; acesso público
+- **Objetivo:** criar uma conta para entrar posteriormente.
+- **Campos:** Nome, E-mail, Senha e Confirmar senha; não há seleção de papel.
+- **Validação:** nome não vazio após retirar espaços nas extremidades, e-mail
+  válido normalizado para minúsculas, senha de pelo menos oito caracteres e
+  confirmação idêntica. Erros de campo aparecem no formulário.
+- **Feedback:** botão **Criando conta...** durante envio; duplicidade de e-mail
+  é recusada, inclusive para conta excluída logicamente. Falhas retornadas são
+  notificadas; exceções podem produzir mensagem genérica de nova tentativa.
+- **Sucesso:** **Conta criada. Entre com seu e-mail e senha.** e navegação para
+  `/login`, sem login automático. Link **Entrar** também leva a `/login`.
+- **Limites:** papel técnico (`TECHNICIAN`) fixado pelo servidor; não há confirmação
+  de e-mail, recuperação de senha ou administração de usuários. Cadastro exige conexão.
 
 ## 2. Dashboard
 
@@ -119,8 +152,13 @@ criação online usa o usuário autenticado como responsável, empresa própria,
 checklist ativo acessível e versão PUBLISHED; persiste PLANNED/SYNCED com snapshot
 na mesma transação e retorna à lista de inspeções.
 
-Não há seleção de unidade, título independente ou outro inspetor nesta versão da
-tela.
+**Avançar** exige empresa no primeiro passo e versão publicada no segundo.
+Sem publicações, a tela orienta publicar um checklist. Data/hora é opcional:
+se vazia, usa o momento da criação e o resumo mostra **Agora**. Erros são
+notificados e o botão fica indisponível durante envio. Não há atalho para criar
+empresa nesse assistente: use `/empresas` no menu e depois retorne.
+Não há seleção de unidade, solicitante, título independente ou outro inspetor.
+Criação exige conexão; a publicação oficial também pode ser utilizada diretamente.
 
 ## 5. Detalhe e execução de inspeção
 
@@ -144,9 +182,12 @@ históricas. As respostas disponíveis são **Conforme**, **NC** e **N/A**. Apó
 uma resposta, o campo de observação é exibido. Uma resposta NC gera a não
 conformidade correspondente por regra de negócio.
 
-A aba de evidências permite seleção múltipla, prévia, legenda, upload, consulta e
-remoção de JPEG, PNG ou WebP de até 4 MB por arquivo. O upload fica indisponível
-sem conexão.
+A aba de evidências permite seleção múltipla, prévia, legenda opcional (até 500
+caracteres), upload, consulta e remoção de JPEG, PNG ou WebP de até 4 MB por
+arquivo. Arquivos vazios/formato/tamanho inválidos são recusados; envios podem
+ter sucesso parcial e apresentam notificações. A lista exibe foto, nome, tamanho,
+dimensões quando disponíveis e legenda; abrir usa imagem/link e remover pede
+confirmação para arquivar. Seleção/upload ficam indisponíveis sem conexão.
 
 A aba de encerramento informa a imutabilidade após conclusão e apresenta o botão
 **Concluir inspeção**. A assinatura não está disponível. Respostas e conclusão
@@ -160,42 +201,76 @@ servidor após sync. Sem reabertura de inspeção.
 ## 6. Biblioteca de checklists
 
 - **Rota:** `/checklists`
-- **Estado:** integrado
+- **Estado:** integrado; operações online
+- **Objetivo:** consultar conteúdo disponível e manter checklists pessoais.
 
-### Objetivo
+A abertura inicia em **Templates oficiais**. **Meus checklists** mostra recursos
+próprios; **Publicados por usuários** mostra publicações acessíveis de terceiros.
+A Biblioteca lista somente ativos, com paginação **Anterior/Próxima** quando
+necessária. Desativar um pessoal faz com que deixe de aparecer nessa lista;
+não há filtro de inativos na tela atual.
 
-Manter o catálogo de checklists ativos.
+Os cartões exibem título, descrição, tipo, atividade, versão de trabalho e
+quantidade de itens. Existem estados de carregamento, falha e **Nenhum checklist
+cadastrado**. **Abrir** navega para `/checklists/$id`. **Usar template** em oficial
+cria uma cópia pessoal e abre seu novo detalhe.
 
-### Componentes
+**Novo modelo** abre diálogo com título obrigatório (1–255 caracteres após
+aparar espaços), descrição opcional, **Template pessoal** e **Ativo**. Salvar
+cria rascunho v1 e seleciona **Meus checklists**. **Editar** metadados e **Excluir**
+com confirmação aparecem somente nos recursos próprios. Exclusão é lógica e
+preserva o histórico de inspeções. Envios mostram sucesso/falha por notificações.
+Não há formulário para criar ou editar templates oficiais.
 
-- cards com título, descrição, tipo, estado, versão e quantidade de itens;
-- botão **Novo modelo**;
-- ações **Abrir**, **Editar** e **Excluir**;
-- diálogos de criação e edição com título, descrição, indicação de template e
-  estado ativo;
-- estados de carregamento, erro e lista vazia.
-
-## 7. Editor de checklist
+## 7. Detalhe, editor e cópia de checklist
 
 - **Rota:** `/checklists/$id`
-- **Estado:** integrado
+- **Estado:** integrado; operações online
+- **Objetivo:** consultar itens publicados ou manter o conteúdo pessoal e publicar.
 
-### Objetivo
+Exibe título/descrição, tipo, atividade, versão, quantidade/ordem dos itens,
+obrigatoriedade e NRs. O proprietário vê o rascunho atual quando disponível;
+terceiros e oficiais expõem publicação, sem permitir editar draft alheio.
+Há carregamento, recurso não encontrado e ausência/carregamento de itens.
+**Voltar** retorna à Biblioteca.
 
-Manter itens e associações normativas do rascunho e publicar versões imutáveis.
+**Novo item**, **Editar** e **Excluir** por item são controles pessoais. O diálogo
+exige descrição e permite indicar obrigatoriedade e selecionar NRs vigentes;
+a associação normativa é opcional. Excluir item e publicar pedem confirmação;
+erros e sucessos são notificados. A tela mostra ordem, sem controle completo de
+reordenação.
 
-### Componentes
+**Publicar vN**, quando há rascunho próprio, fixa o conteúdo daquela versão.
+Alterações seguintes criam/reutilizam o próximo rascunho na mesma identidade,
+preservando publicação e inspeções antigas. A nova publicação não retira as
+anteriores automaticamente. `RETIRED` é estado de versão no backend; não existe
+botão de retirada nem interface completa de histórico/seleção de versões nesta tela.
 
-- dados e badges do checklist e da versão;
-- lista ordenada de itens;
-- botão **Novo item**;
-- ações **Editar** e **Excluir** por item;
-- seleção de NRs aplicáveis no diálogo do item;
-- botão **Publicar vN** quando há rascunho;
-- botão **Voltar**.
+| Termo               | Comportamento atual                                                                                        |
+| ------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Checklist pessoal   | Pertence ao usuário; rascunho editável, inicialmente privado                                               |
+| Checklist publicado | Versão imutável; quando a identidade está ativa, pode ser consultada/reutilizada por usuários autenticados |
+| Template oficial    | Conteúdo institucional Safe Watch Insight; original consultável, sem manutenção pelo usuário comum         |
+| Cópia independente  | Novo checklist pessoal ativo, rascunho v1 e itens com identidades próprias                                 |
 
-A interface informa que editar conteúdo já publicado cria o próximo rascunho e
-não altera versões anteriores.
+**Copiar checklist** aparece no detalhe pessoal/publicado quando há draft ou
+publicação; **Usar template** aparece no oficial, com fonte/escopo e aviso de
+curadoria da plataforma. Sucesso abre `/checklists/$id` com **novo identificador**
+e orienta revisar/publicar. Não há rota separada de cópia ou edição.
+
+Origem própria prefere seu draft; na ausência, última publicação elegível,
+inclusive para próprio inativo não excluído. Origem de terceiro/oficial exige
+identidade ativa e última publicação acessível íntegra, sem copiar draft alheio.
+Só versões retiradas, conteúdo excluído ou publicação legada/inconsistente
+podem impedir a cópia; a tela apresenta a falha da operação.
+
+Itens/associações/metadados normativos são independentes; a linhagem disponível
+por item é preservada, incluindo ancestral publicado ao copiar um draft, quando
+existente. Não transfere autoria institucional, marca de template, inspeções,
+respostas ou histórico de tratativas. Detalhes:
+[ChecklistCopy.md](../AI/ChecklistCopy.md). Definições e fontes:
+[OfficialTemplates.md](../AI/OfficialTemplates.md). Construção adapta Murbach
+(2019); trabalho em altura é curadoria da plataforma, sem atribuição a Murbach.
 
 ## 8. Lista de não conformidades
 
@@ -245,9 +320,12 @@ Nova NC automática é MEDIUM/OPEN com prazo de sete dias; restauração conserv
 prazo/descrição/severidade/filhos e volta a OPEN.
 
 No 5W2H, apenas descrição é conteúdo obrigatório; justificativa, local,
-responsável, prazo, método e custo são opcionais. Criar ação em NC OPEN muda NC
-para IN_PROGRESS; concluir ações não resolve NC automaticamente. completedAt
-é do servidor. Listas/detalhes de NC e listagem de ações persistem atrasos,
+responsável, prazo, método e custo são opcionais. Ações oferecem status Pendente,
+Em andamento, Concluída e Vencida, com criação/edição e exclusão confirmada. Criar ação
+em NC OPEN muda NC para IN_PROGRESS; concluir ações não resolve NC automaticamente.
+A conclusão ocorre por **Editar → Status → Concluída → Salvar alterações**;
+a data é registrada automaticamente, sem campo para preenchê-la.
+Listas/detalhes de NC e listagem de ações persistem atrasos,
 diferentemente de dashboard/relatório. UI possui histórico derivado de datas,
 sem audit log completo. Coerção de prazo vazio/NULL e concerns em
 [BusinessRules.md](../AI/BusinessRules.md).
@@ -302,7 +380,19 @@ Manter as empresas fiscalizadas utilizadas nas inspeções.
 - diálogo com razão social, nome fantasia, CNPJ, CNAE, grau de risco,
   funcionários, endereço e observações.
 
-Não há rota de detalhe da empresa.
+**Acesso e validação:** lista somente empresas próprias não excluídas. Razão
+social e CNAE são obrigatórios; grau de risco é inteiro entre 1 e 4 e funcionários
+é inteiro não negativo. Nome fantasia, CNPJ, endereço e observações são opcionais.
+CNPJ informado aceita 14 dígitos, com ou sem máscara, e é normalizado; não há
+consulta externa nem validação prometida de dígitos verificadores. Unicidade
+abrange o banco, inclusive empresas excluídas logicamente e de outros usuários.
+Não equivale a acesso ao cadastro alheio.
+
+**Estados e feedback:** carregamento, falha e **Nenhuma empresa cadastrada**;
+salvar notifica sucesso/falha e desabilita envio enquanto processa. **Excluir**
+pede confirmação e arquiva logicamente, retirando o registro da lista/seleção de
+novas inspeções. Não há botão de restauração, detalhe ou atalho direto para
+inspeções no cartão. Use o menu **Inspeções → Nova inspeção** para selecioná-la.
 
 ## 12. Normas Regulamentadoras
 
@@ -354,8 +444,38 @@ módulos demonstrativos.
   operações pendentes, falhas, conflitos e **Sincronizar agora**;
 - **Dados do protótipo:** restauração somente dos dados demonstrativos.
 
+O modo escuro é um controle da tela, sem persistência de preferência entre
+aberturas. O texto de **Dados do protótipo** ainda cita dashboard/relatórios;
+esses módulos atuais consultam dados reais e não são restaurados por esse botão.
+Não há edição persistida de perfil ou administração de usuários.
+
 Não existe alternância manual para simular conectividade. O estado online vem do
 navegador e o resultado das operações é confirmado pelo servidor.
+
+## 14.1 Continuidade offline, sincronização e saída
+
+Inspeções próprias criadas, listadas ou abertas online podem ser disponibilizadas
+localmente. A lista/detalhe usam esses pacotes offline; disponibilidade da página
+após reabertura também depende de ter sido carregada/armazenada no dispositivo.
+Respostas, observações e conclusão são salvas localmente, inclusive online;
+não representam confirmação remota. Concluir valida obrigatórios e bloqueios
+locais de falha/conflito, retorna à lista e deixa envio pendente.
+
+O indicador superior mostra Online/Offline, pendências, sincronização, falhas ou
+conflitos. Há retry no botão **Sincronizar dados locais** da barra e em
+**Sincronizar agora** nas Configurações. A fila pode reenviar automaticamente
+com conexão e sessão remota válida. Erro pode ser retentado; conflito bloqueia
+avanço e não possui resolução automática ou assistida. A primeira operação
+bloqueada pode impedir envios de outras inspeções.
+
+**Sair** retorna a `/login` e tenta limpar sessão, inspeções, alterações pendentes
+e cache local de navegação. Trocar a identidade autenticada também limpa dados
+anteriores. **Sincronize antes de sair ou trocar de conta**; falhas de limpeza
+ou logout remoto geram notificações. Não há promessa de retenção contra limpeza
+do navegador. Cadastro/criação de inspeção/checklist, manutenção de NCs/ações e
+upload de imagens exigem conexão; relatório/dashboard não têm pacote offline
+próprio. Referências: [Offline.md](../AI/Offline.md) e
+[offline-inspection.puml](./diagrams/flows/offline-inspection.puml).
 
 ## 15. Estados globais
 
@@ -368,6 +488,7 @@ O componente raiz oferece telas para:
 
 | Tela              | Estado                      | Responsabilidade                                   |
 | ----------------- | --------------------------- | -------------------------------------------------- |
+| Cadastro          | Integrado                   | Conta pública sem login automático                 |
 | Login             | Integrado                   | Autenticação e sessão                              |
 | Dashboard         | Integrado                   | Indicadores operacionais próprios                  |
 | Inspeções         | Integrado + offline parcial | Consulta e criação                                 |

@@ -24,7 +24,7 @@ O fluxo principal já usa autenticação real, Server Functions, Services,
 Repositories, Prisma e PostgreSQL. Estão integrados ao backend:
 
 - empresas;
-- checklists, itens, normas e publicação de versões;
+- checklists, itens, normas, publicação de versões, templates oficiais e cópia pessoal independente;
 - criação, listagem e execução de inspeções;
 - respostas e conclusão de inspeções;
 - não conformidades e ações corretivas;
@@ -53,11 +53,27 @@ Autenticação
 -> Registro das respostas e não conformidades
 -> Tratamento por ações corretivas
 -> Upload de evidências fotográficas
--> Conclusão da inspeção
+-> Conclusão da inspeção e confirmação de sincronização
+-> Consulta do relatório / impressão pelo navegador
+-> Acompanhamento no dashboard
 ```
 
 Uma edição posterior do checklist cria ou utiliza um novo rascunho e não altera
-o conteúdo histórico capturado por inspeções existentes.
+o conteúdo histórico capturado por inspeções existentes. Tratativas e evidências
+não são obrigatórias para concluir; podem continuar após a conclusão.
+**Copiar checklist/Usar template** cria novo checklist pessoal com itens
+independentes e rascunho v1; não transfere inspeções ou seu histórico.
+
+O cadastro em `/register` pede nome, e-mail, senha (mínimo oito caracteres) e
+confirmação, atribui papel técnico no servidor e encaminha para `/login`.
+Após login, abre `/dashboard`. O roteiro de tarefas e as rotas atuais estão no
+[Guia do usuário](./Documentation/GUIA_USUARIO.md) e no
+[Mapa de navegação](./Documentation/MAPA_DE_NAVEGACAO.md).
+
+**Sincronize pendências antes de sair ou trocar de conta:** esses caminhos limpam
+os dados offline locais. Relatórios/dashboard consultam remoto; confira a
+sincronização antes de imprimir. **Imprimir → Salvar como PDF** usa o navegador,
+sem geração/download direto de PDF pela aplicação.
 
 ## Arquitetura
 
@@ -252,7 +268,7 @@ de homologação. Esses resultados são históricos, sem nova execução nesta r
   proteção das rotas autenticadas;
 - CRUD de empresas, checklists e itens;
 - catálogo de NRs com busca, filtro de vigência e fonte oficial;
-- associação normativa aos itens e publicação imutável de versões;
+- associação normativa aos itens, publicação imutável, consulta de templates oficiais e cópia de checklist;
 - criação e execução de inspeções baseadas em snapshot histórico;
 - respostas, observações, geração automática de não conformidades e conclusão;
 - gestão de não conformidades, ações corretivas e status;

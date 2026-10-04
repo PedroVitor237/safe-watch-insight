@@ -2,7 +2,10 @@
 
 Este documento registra as rotas atuais da aplicação, os controles de acesso e
 as transições observadas no código em `src/routes/`. Ele integra a documentação
-permanente do projeto e também serve como artefato do TCC.
+permanente do projeto e também serve como artefato do TCC. Conferência estática
+na Fase 8, em **4 de outubro de 2026**, sobre
+`5d323ae8d1e26d87198592564876616b04936f14`, sem nova execução em navegador.
+`$id` representa identificador dinâmico; `_app` é layout sem segmento de URL.
 
 ## 1. Regras gerais de acesso
 
@@ -28,7 +31,7 @@ permanente do projeto e também serve como artefato do TCC.
 | `/register`              | Cadastro público                   | Backend real; TECHNICIAN atribuído no servidor; sem auto-login |
 | `/login`                 | Autenticação                       | Backend e sessão reais                                         |
 | `/dashboard`             | Dashboard                          | Agregados reais das inspeções do usuário                       |
-| `/inspecoes`             | Lista de inspeções                 | Backend real                                                   |
+| `/inspecoes`             | Lista de inspeções                 | Backend e fallback para inspeções locais                       |
 | `/inspecoes/nova`        | Criação de inspeção                | Backend real                                                   |
 | `/inspecoes/$id`         | Execução e detalhe da inspeção     | Backend e persistência offline parcial                         |
 | `/checklists`            | Biblioteca de checklists           | Backend real                                                   |
@@ -79,6 +82,15 @@ flowchart TD
     NC -->|Abrir inspeção de origem| Inspection
     NC -->|Voltar ou arquivar| NCs
 
+    Login -->|Sessão já válida / login concluído| Dashboard
+    Dashboard -->|Nova inspeção| NewInspection
+    Dashboard -->|Ver todas / planejadas| Inspections
+    Dashboard -->|Ver inspeção recente não concluída| Inspection
+    Dashboard -->|Ver relatório de concluída: inspectionId| Reports
+    Dashboard -->|NCs / ações vencidas| NCs
+    Inspection -->|Ver relatório em Concluída: inspectionId| Reports
+    Reports -->|Selecionar: inspectionId na busca| Reports
+    App -->|Avatar da barra superior| Settings
     App -->|Sair pelo menu lateral| Login
 ```
 
@@ -86,6 +98,36 @@ O menu lateral conecta o layout autenticado a cada módulo. Essas arestas foram
 representadas uma única vez para manter o diagrama legível. A aresta de cópia
 retorna à mesma rota com **outro `$id`**, não compartilha a identidade original.
 PlantUML equivalente: [navigation.puml](./diagrams/flows/navigation.puml).
+Relatório mantém a rota `/relatorios`, alterando apenas a busca
+`?inspectionId=UUID`; impressão e sincronização são ações, sem URL adicional.
+
+### Organização do menu atual
+
+```text
+Público
+├── /login
+└── /register
+
+Autenticado — Operação
+├── /dashboard
+├── /inspecoes
+│   ├── /inspecoes/nova
+│   └── /inspecoes/$id
+├── /checklists
+│   └── /checklists/$id — consulta/itens/publicação/cópia
+├── /nao-conformidades
+│   └── /nao-conformidades/$id — dados/ações/evidências
+└── /relatorios — seleção pela busca inspectionId
+
+Autenticado — Cadastros
+├── /empresas — diálogos na mesma rota
+├── /normas
+├── /equipe — demonstrativo
+└── /configuracoes — preferências/diagnóstico/retry
+```
+
+O menu **Cadastros** não representa autorização administrativa. Não existe rota
+própria para ações corretivas, evidências, cópia, edição de empresa ou sincronização.
 
 ## 4. Fluxos principais
 
@@ -100,8 +142,8 @@ PlantUML equivalente: [navigation.puml](./diagrams/flows/navigation.puml).
 ```
 
 Login envia e-mail/senha e cria sessão após autenticação; não há seletor de perfil.
-Cadastro recebe nome/e-mail/senha/confirmação, valida Zod, normaliza e-mail,
-gera bcrypt e atribui TECHNICIAN no servidor; não inicia sessão. Cadastro não
+Cadastro recebe nome/e-mail/senha/confirmação, valida campos e atribui papel
+técnico no servidor; não inicia sessão. Cadastro não
 redireciona automaticamente usuário já autenticado. [Fluxo de autenticação](../AI/Architecture.md).
 
 ### 4.2 Empresas
@@ -186,7 +228,11 @@ A sincronização não cria uma rota separada:
 - o indicador da barra superior apresenta o estado geral;
 - `/configuracoes` mostra dados armazenados, pendências, falhas e conflitos e
   oferece **Sincronizar agora**;
-- reconexão pode disparar a fila automaticamente.
+- reconexão pode disparar a fila automaticamente;
+- o botão de retry também existe na barra superior quando há pendências/falhas;
+- não há destino de resolução assistida de conflitos;
+- sincronize antes de sair ou trocar de conta, pois sessão/pacotes/fila e cache
+  local de navegação são limpos nos caminhos implementados.
 
 ## 5. Matriz de transições explícitas
 
@@ -244,9 +290,11 @@ existe na API/hook, sem botão atual. Respostas/conclusão locais precedem sync;
 relatório usa dados remotos. Fila em conflito exige revisão futura, sem rota de
 reconciliação assistida. concerns: [RelatorioFase6.md](./RelatorioFase6.md).
 
-## Sincronização documental — Fase 7
+## Referências históricas e conferência atual
 
-Rotas conferidas em `src/routes/` sobre `da43f71`; `$id` é parâmetro TanStack,
+O registro da Fase 7 conferiu as rotas sobre `da43f71`. A Fase 8 reconferiu os
+16 destinos (incluindo `/`, login e cadastro) e os layouts sobre o HEAD inicial
+indicado acima; `$id` é parâmetro TanStack,
 não rota adicional por ação. Domínio/casos oficiais:
 [DiagramaDeClasses_VersaoTecnica.md](./DiagramaDeClasses_VersaoTecnica.md) e
 [DiagramaDeCasosDeUso.md](./DiagramaDeCasosDeUso.md). Personas e `/equipe` não

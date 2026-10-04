@@ -83,9 +83,12 @@ O sistema deverá oferecer os seguintes módulos:
 
 O sistema deve permitir que usuários autenticados acessem a plataforma por meio de login.
 
-Entregue: cadastro público em /register (nome/e-mail/senha/confirmação), sem
-auto-login, bcrypt custo 12 e role TECHNICIAN; login por sessão TanStack Start
-com cookie HttpOnly de oito horas e validação de usuário não excluído.
+Entregue: cadastro público em `/register` com nome/e-mail/senha/confirmação,
+e-mail válido normalizado, senha de pelo menos oito caracteres e confirmação
+idêntica. Duplicidade de e-mail é recusada, inclusive em conta excluída. O servidor
+atribui TECHNICIAN; sucesso leva a `/login`, sem auto-login. Login com e-mail/senha
+leva a `/dashboard`; erros são notificados e sessão válida evita reapresentar
+login. A sessão dura oito horas.
 ADMIN/TECHNICIAN/SUPERVISOR/AUDITOR são papéis armazenados, sem RBAC funcional.
 Recuperação de senha, confirmação de e-mail e gestão de usuários não entregues.
 
@@ -103,6 +106,14 @@ Cada empresa poderá possuir:
 - CNAE;
 - Quantidade de funcionários;
 - Observações.
+
+Entregue em `/empresas`, com criação/edição em diálogo e exclusão lógica
+confirmada. Razão social/CNAE, grau de risco inteiro de 1 a 4 e funcionários
+inteiro não negativo são obrigatórios; nome fantasia/CNPJ/endereço/observações
+são opcionais. CNPJ informado contém 14 dígitos e é único no banco, inclusive
+entre registros excluídos logicamente; não é unicidade limitada a ativos.
+Recursos são próprios; não há tela de detalhe, consulta automática de CNPJ ou
+acesso administrativo global às empresas.
 
 ---
 
@@ -159,7 +170,8 @@ O sistema deve permitir registrar não conformidades identificadas durante a ins
 Entregue: NON_COMPLIANT cria/restaura NC por resposta do snapshot. Nova NC
 usa MEDIUM/OPEN e prazo servidor + sete dias; NC ativa conserva dados e arquivada
 volta a OPEN sem renovar prazo. Conforme/N/A arquiva, sem marcar RESOLVED.
-Criação explícita requer severidade/descrição e não aplica prazo automático.
+Criação explícita requer severidade/descrição e não aplica prazo automático,
+mas é operação de backend: não há formulário autônomo de criação na UI.
 
 ---
 
@@ -513,3 +525,20 @@ nem reconciliação automática/assistida. RF18 não implica CRUD completo de in
 CANCELLED é estado modelado, não ação de cancelar, e não há edição geral/reabertura
 públicas. Report persistível não implica gravação por visualização ou PDF backend.
 Resultados históricos/concerns não foram reexecutados ou corrigidos nesta fase.
+
+## Superfície de uso reconciliada — Fase 8
+
+Conferência estática em 4 de outubro de 2026 sobre
+`5d323ae8d1e26d87198592564876616b04936f14`. [Telas](./ESPECIFICACAO_DE_TELAS.md),
+[navegação](./MAPA_DE_NAVEGACAO.md) e [guia](./GUIA_USUARIO.md) descrevem o estado
+atual sem converter as lacunas em entrega integral. RF05 possui consulta de
+oficiais e cópia pessoal; copiar cria novos itens/draft v1 com metadados e
+linhagem disponíveis, sem copiar inspeções. Retirada de versões não tem botão.
+RF13 usa relatório HTML e **Imprimir → Salvar como PDF** no navegador;
+RF14 continua parcial, com um modelo. RF19 é dashboard real próprio, sem BI.
+RF20/RNF03 continuam parciais; RF21 cobre respostas/conclusão de pacotes existentes,
+com retry de erros e bloqueio de conflitos. Logout/troca de identidade limpa
+dados offline; o guia orienta sincronizar antes dessas ações. RF22 é online.
+RF12/RN07 (solicitante) continuam não entregues; administração/RBAC permanecem
+futuros. Módulo Equipe/perfil demonstrativo não implementa essas permissões.
+Nenhuma validação runtime, mudança de código ou conclusão de Final QA nesta fase.
