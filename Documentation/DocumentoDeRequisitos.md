@@ -494,3 +494,22 @@ validou assets/registro/fallback em HTTPS publicado, sem fluxo autenticado compl
 em produção nem outros navegadores. Não há nova homologação ou Final QA aprovado
 nesta revisão. Regras/fórmulas/autorizações: [BusinessRules.md](../AI/BusinessRules.md).
 Achados: [RelatorioFase6.md](./RelatorioFase6.md).
+
+## Rastreabilidade de classes e casos de uso — Fase 7
+
+Revisão em 4 de outubro de 2026 sobre `da43f71`, sem mudar o escopo dos requisitos.
+O [modelo de classes](./DiagramaDeClasses_VersaoTecnica.md) distingue persistência,
+legado, projeção de relatório e confirmação de sincronização; existência de
+model/enum não declara uma função entregue. Os
+[casos de uso oficiais](./DiagramaDeCasosDeUso.md) e o
+[mapa de navegação](./MAPA_DE_NAVEGACAO.md) representam telas/operações reais.
+
+Continuam **não entregues** RF12/RN07 (solicitante) e administração/RBAC/gestão
+de usuários; persona não autoriza acesso gerencial global. RF14 possui um
+componente de relatório, sem múltiplos modelos editáveis; RF20/RNF03 permanecem
+parciais, restritos a pacotes de inspeções já criadas online. Não há criação
+integral offline, empresas/checklists offline, binários de evidências offline
+nem reconciliação automática/assistida. RF18 não implica CRUD completo de inspeção:
+CANCELLED é estado modelado, não ação de cancelar, e não há edição geral/reabertura
+públicas. Report persistível não implica gravação por visualização ou PDF backend.
+Resultados históricos/concerns não foram reexecutados ou corrigidos nesta fase.

@@ -1,47 +1,5 @@
 @startuml
-title Safe Watch Insight — funcionalidades disponíveis na UI
-left to right direction
-actor "Visitante" as V
-actor "Usuário autenticado" as U
-rectangle "Safe Watch Insight" {
-  usecase "Criar conta" as REG
-  usecase "Entrar" as LOG
-  usecase "Gerenciar empresas próprias" as EMP
-  usecase "Criar e editar checklist pessoal" as CHK
-  usecase "Publicar draft pessoal" as PUB
-  usecase "Consultar conteúdo publicado acessível" as CAT
-  usecase "Copiar checklist ou usar template oficial" as COPY
-  usecase "Consultar e associar normas aos itens próprios" as NOR
-  usecase "Criar e executar inspeção própria" as INS
-  usecase "Consultar e manter NC própria" as NC
-  usecase "Manter ações corretivas próprias" as AC
-  usecase "Enviar e remover evidência online própria" as EV
-  usecase "Consultar histórico próprio" as HIS
-  usecase "Consultar e imprimir relatório próprio" as REP
-  usecase "Ver indicadores próprios" as DASH
-  usecase "Responder e concluir inspeção disponível offline" as OFF
-  usecase "Sair" as OUT
-}
-V --> REG
-V --> LOG
-U --> EMP
-U --> CHK
-U --> PUB
-U --> CAT
-U --> COPY
-U --> NOR
-U --> INS
-U --> NC
-U --> AC
-U --> EV
-U --> HIS
-U --> REP
-U --> DASH
-U --> OFF
-U --> OUT
-note bottom of U
-  Personas e roles armazenados não implementam RBAC.
-  Recursos operacionais são próprios da sessão.
-  Draft de terceiro é privado.
-end note
+' Caminho anterior preservado; não contém modelo independente.
+title Referência substituída — Safe Watch Insight
+note "Diagrama oficial atual:\n../domain/use-cases.puml\nMermaid e regras: ../../DiagramaDeCasosDeUso.md" as OfficialReference
 @enduml

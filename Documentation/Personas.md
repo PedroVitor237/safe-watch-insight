@@ -2,6 +2,20 @@
 
 As personas representam perfis fictícios construídos com base nas características, necessidades e comportamentos observados em profissionais da área de Segurança e Saúde no Trabalho (SST). Elas auxiliam na compreensão dos usuários da plataforma e orientam decisões relacionadas à usabilidade, funcionalidades e experiência do usuário.
 
+## Limite entre pesquisa e implementação — Fase 7
+
+**Persona / responsabilidade organizacional ≠ permissão implementada.**
+As narrativas abaixo preservam o levantamento de necessidades, sem declarar
+entrega integral. ADMIN/TECHNICIAN/SUPERVISOR/AUDITOR são papéis armazenados;
+a aplicação atual usa ownership da sessão, sem RBAC/administração ou visão
+de equipe por perfil. Solicitante (RF12/RN07), offline amplo e múltiplos modelos
+de relatório permanecem lacunas/parciais, não capacidades derivadas da persona.
+
+Comportamento entregue: [Casos de uso](./DiagramaDeCasosDeUso.md),
+[Requisitos](./DocumentoDeRequisitos.md) e
+[BusinessRules.md](../AI/BusinessRules.md). O dashboard usa dados reais próprios;
+offline cobre execução de inspeções previamente disponíveis, não cadastro integral.
+
 ---
 
 # Persona 1 – Técnico de Segurança do Trabalho
@@ -20,27 +34,27 @@ As personas representam perfis fictícios construídos com base nas característ
 
 ## Objetivos
 
-* Realizar inspeções de forma rápida e organizada;
-* Registrar não conformidades durante as vistorias;
-* Consultar normas regulamentadoras relacionadas aos itens inspecionados;
-* Produzir relatórios técnicos com maior agilidade;
-* Manter histórico das inspeções realizadas.
+- Realizar inspeções de forma rápida e organizada;
+- Registrar não conformidades durante as vistorias;
+- Consultar normas regulamentadoras relacionadas aos itens inspecionados;
+- Produzir relatórios técnicos com maior agilidade;
+- Manter histórico das inspeções realizadas.
 
 ## Necessidades
 
-* Funcionamento offline em locais sem internet;
-* Checklists personalizáveis;
-* Consulta rápida às NRs relacionadas aos itens avaliados;
-* Registro estruturado de não conformidades;
-* Emissão simplificada de relatórios.
+- Funcionamento offline em locais sem internet;
+- Checklists personalizáveis;
+- Consulta rápida às NRs relacionadas aos itens avaliados;
+- Registro estruturado de não conformidades;
+- Emissão simplificada de relatórios.
 
 ## Dificuldades Atuais
 
-* Uso excessivo de formulários em papel;
-* Informações dispersas em planilhas e documentos;
-* Dificuldade para consultar inspeções anteriores;
-* Retrabalho na elaboração de relatórios;
-* Necessidade de acessar normas em diferentes fontes.
+- Uso excessivo de formulários em papel;
+- Informações dispersas em planilhas e documentos;
+- Dificuldade para consultar inspeções anteriores;
+- Retrabalho na elaboração de relatórios;
+- Necessidade de acessar normas em diferentes fontes.
 
 ## Como a Plataforma Ajuda
 
@@ -64,26 +78,26 @@ A plataforma permite executar inspeções digitais, registrar não conformidades
 
 ## Objetivos
 
-* Acompanhar o cumprimento das exigências de SST;
-* Monitorar não conformidades e ações corretivas;
-* Garantir que os prazos de adequação sejam cumpridos;
-* Consultar relatórios e indicadores gerenciais;
-* Padronizar os processos de inspeção da empresa.
+- Acompanhar o cumprimento das exigências de SST;
+- Monitorar não conformidades e ações corretivas;
+- Garantir que os prazos de adequação sejam cumpridos;
+- Consultar relatórios e indicadores gerenciais;
+- Padronizar os processos de inspeção da empresa.
 
 ## Necessidades
 
-* Acompanhamento do status das ações corretivas;
-* Visualização consolidada das inspeções realizadas;
-* Dashboard com indicadores;
-* Relatórios padronizados;
-* Histórico completo de inspeções.
+- Acompanhamento do status das ações corretivas;
+- Visualização consolidada das inspeções realizadas;
+- Dashboard com indicadores;
+- Relatórios padronizados;
+- Histórico completo de inspeções.
 
 ## Dificuldades Atuais
 
-* Controle manual de pendências;
-* Dificuldade para acompanhar prazos de adequação;
-* Informações distribuídas em diferentes documentos;
-* Falta de centralização dos registros.
+- Controle manual de pendências;
+- Dificuldade para acompanhar prazos de adequação;
+- Informações distribuídas em diferentes documentos;
+- Falta de centralização dos registros.
 
 ## Como a Plataforma Ajuda
 
@@ -107,26 +121,26 @@ A plataforma centraliza inspeções, não conformidades e ações corretivas, pe
 
 ## Objetivos
 
-* Organizar inspeções de diferentes clientes;
-* Produzir relatórios técnicos fundamentados em normas;
-* Manter registros históricos das vistorias;
-* Acompanhar reincidências e pendências;
-* Demonstrar conformidade documental aos contratantes.
+- Organizar inspeções de diferentes clientes;
+- Produzir relatórios técnicos fundamentados em normas;
+- Manter registros históricos das vistorias;
+- Acompanhar reincidências e pendências;
+- Demonstrar conformidade documental aos contratantes.
 
 ## Necessidades
 
-* Cadastro de empresas e clientes;
-* Registro de solicitantes das inspeções;
-* Histórico de inspeções por empresa;
-* Relatórios estruturados;
-* Acesso rápido às normas aplicáveis.
+- Cadastro de empresas e clientes;
+- Registro de solicitantes das inspeções;
+- Histórico de inspeções por empresa;
+- Relatórios estruturados;
+- Acesso rápido às normas aplicáveis.
 
 ## Dificuldades Atuais
 
-* Controle manual de documentos;
-* Armazenamento disperso dos relatórios;
-* Dificuldade em recuperar informações antigas;
-* Necessidade constante de consultar normas técnicas.
+- Controle manual de documentos;
+- Armazenamento disperso dos relatórios;
+- Dificuldade em recuperar informações antigas;
+- Necessidade constante de consultar normas técnicas.
 
 ## Como a Plataforma Ajuda
 
