@@ -17,8 +17,9 @@ Este arquivo permanece na pasta `Documentation/` por fazer parte do conjunto aca
 
 ```text
 React
--> React Query
+-> Hook / React Query ou chamada direta
 -> TanStack Start Server Functions
+-> Validação Zod / sessão
 -> Services
 -> Repositories
 -> Prisma ORM
@@ -31,8 +32,13 @@ Responsabilidades:
 - React Query gerencia cache, loading e invalidação.
 - Server Functions recebem chamadas do frontend e validam entradas.
 - Services concentram regras de negócio.
-- Repositories executam persistência.
+- Repositories executam persistência com ownership, transações e controles de revisão/deduplicação.
 - Prisma acessa o PostgreSQL.
+
+Login chama a Function diretamente; beforeLoad/getAppSession protege navegação.
+Respostas/conclusão usam Dexie/fila e sincronizam pela mesma fronteira. Essa
+variação não muda a autoridade de sessão/autorização no servidor. Arquitetura e
+diagramas: [AI/Architecture.md](../AI/Architecture.md).
 
 ---
 
@@ -61,8 +67,12 @@ Senha: Demo@12345
 
 ## 10.4 Padrão de Respostas
 
-Os exemplos abaixo são envelopes dos handlers. Validação Zod anterior ao handler
-pode produzir erro do framework, sem garantir esse mesmo envelope.
+Os exemplos abaixo são envelopes dos handlers de aplicação. getGreeting retorna
+objeto auxiliar diretamente. Validação Zod anterior ao handler e exceções
+inesperadas podem produzir erro do framework, sem esse envelope. statusCode é
+lógico e não garante status HTTP. Result não tem campo error; cliente confere
+success além de tratar exceções. Alguns Services normalizam genéricos, outros
+os relançam: não há conversor global de erro garantido.
 
 Sucesso:
 
@@ -87,6 +97,11 @@ Erro:
 ---
 
 ## 10.5 Server Functions Implementadas
+
+Inventário reconferido na Fase 5: 48 Functions/14 arquivos, 45 POST/3 GET; 43
+operações de negócio exigem sessão. Login/register públicos, logout sem exigir
+sessão válida, getCurrentSession usa sessão se existir e getGreeting é auxiliar
+público. Métodos são os de createServerFn, sem URLs REST manuais.
 
 ### Autenticação
 
@@ -157,6 +172,10 @@ Os contratos de inspeção preservam compatibilidade progressiva:
   operação offline; a Server Function usa o usuário da sessão e o backend grava
   a deduplicação na mesma transação da mutação.
 
+Não há startInspection: a primeira resposta inicia IN_PROGRESS. Não há
+updateInspection/cancelInspection expostos; enums não implicam operações.
+Snapshot nasce com inspeção, sem CRUD próprio.
+
 ### Normas
 
 - `getStandardById`
@@ -177,6 +196,11 @@ Os contratos de inspeção preservam compatibilidade progressiva:
 - `updateCorrectiveAction`
 - `deleteCorrectiveAction`
 
+Conclusão de ação usa updateCorrectiveAction com COMPLETED; reabertura de NC
+arquivada ocorre por resposta NON_COMPLIANT, sem Function própria de reabertura.
+Listagens/detalhes de NC e listagem de ações podem persistir OVERDUE; dashboard
+somente calcula atraso na leitura.
+
 ### Evidências
 
 - `uploadEvidence` (`FormData`, imagem e exatamente um contexto histórico);
@@ -184,7 +208,9 @@ Os contratos de inspeção preservam compatibilidade progressiva:
 - `removeEvidence` (remoção externa e soft delete compensado).
 
 O upload é assinado exclusivamente no servidor por uma implementação de
-`StorageService`. O cliente nunca recebe o segredo do Cloudinary. O contrato
+`StorageService`. O cliente nunca recebe o segredo do Cloudinary. Banco guarda
+metadados, provedor guarda binário; compensação não é atomicidade distribuída. URL externa não exige
+sessão da aplicação em cada download. O contrato
 detalhado, validações e erros estão documentados em
 [AI/API.md](../AI/API.md).
 
@@ -200,6 +226,10 @@ detalhado, validações e erros estão documentados em
 
 Consultas limitadas às inspeções do usuário da sessão. Relatório é montado sob
 demanda, sem inserir Report ou armazenar PDF; a UI imprime pelo navegador.
+Report existe como model persistível, sem CRUD web atual. Disponíveis exige
+inspeções COMPLETED; detalhe backend exige snapshot/ownership, sem COMPLETED.
+Dashboard usa agregações reais, não mocks. OfflineSyncOperation é confirmação
+interna das mutações de resposta/conclusão, sem endpoint universal de fila.
 
 ---
 

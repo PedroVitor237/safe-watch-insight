@@ -1,8 +1,8 @@
 # API da Plataforma
 
 Este documento descreve a API implementada no **Safe Watch Insight**.
-Autenticação/autorização/regras/cópia reconferidas na Fase 4 em 3 de outubro de 2026,
-sobre a Fase 3 consolidada em `42aeb64`.
+Arquitetura e contratos reconferidos na Fase 5 em 4 de outubro de 2026, sobre
+`edc6170`, preservando regras/cópia da Fase 4 e modelo de banco da Fase 2.
 Não é uma especificação de funcionalidades futuras. Regras de domínio e matriz
 de acesso: [BusinessRules.md](./BusinessRules.md).
 
@@ -22,8 +22,9 @@ Fluxo oficial:
 
 ```text
 Tela
--> React Query
+-> Hook / React Query ou chamada direta
 -> Server Function
+-> Validação Zod / sessão
 -> Service
 -> Repository
 -> Prisma
@@ -34,9 +35,47 @@ Regras:
 
 - Server Functions ficam em `src/lib/api`.
 - Validações ficam em `src/server/schemas`.
-- Regras de negócio ficam em `src/server/services`.
-- Persistência fica em `src/server/repositories`.
+- Services coordenam domínio/autorização/DTOs; schemas e helpers também validam/preparam contratos.
+- Repositories encapsulam persistência, filtros de ownership, transações, deduplicação e revisão.
 - Prisma nunca deve ser acessado diretamente por telas, hooks ou Server Functions.
+
+Login chama a função diretamente; proteção de rota usa beforeLoad/getAppSession.
+Respostas/conclusão no frontend usam fila Dexie mesmo online e depois retornam
+a estas Functions. Essa camada local não torna o cliente autoridade do backend.
+Diagrama e limites: [Architecture.md](./Architecture.md).
+
+## Inventário da fronteira
+
+São **48 Server Functions em 14 arquivos**, com **45 POST e 3 GET**. As 43
+Functions de negócio exigem sessão; login/register são públicos, logout não
+exige sessão válida, getCurrentSession resolve sessão se existir e getGreeting
+é exemplo público. As 47 Functions de aplicação usam Result/ServerResult;
+somente getGreeting retorna objeto diretamente. Não há CRUD universal por model.
+
+| Arquivo em src/lib/api           | Quantidade | Grupo / delegação                                  | Método         |
+| -------------------------------- | ---------: | -------------------------------------------------- | -------------- |
+| auth.functions.ts                |          4 | UserService e helpers de sessão                    | 3 POST / 1 GET |
+| company.functions.ts             |          5 | CompanyService                                     | POST           |
+| checklist.functions.ts           |          7 | ChecklistService, incluindo cópia/template         | POST           |
+| checklist-version.functions.ts   |          3 | ChecklistVersionService                            | POST           |
+| checklist-item.functions.ts      |          4 | ChecklistItemService sobre itens de versão         | POST           |
+| inspection.functions.ts          |          4 | InspectionService                                  | POST           |
+| inspection-response.functions.ts |          3 | InspectionResponseService; inclui sync             | POST           |
+| standard.functions.ts            |          2 | StandardService / catálogo compartilhado           | POST           |
+| non-conformity.functions.ts      |          5 | NonConformityService                               | POST           |
+| corrective-action.functions.ts   |          4 | CorrectiveActionService                            | POST           |
+| evidence.functions.ts            |          3 | EvidenceService / StorageService                   | POST           |
+| report.functions.ts              |          2 | ReportService, sem gravação em Report              | 1 POST / 1 GET |
+| dashboard.functions.ts           |          1 | DashboardService                                   | GET            |
+| example.functions.ts             |          1 | getGreeting; configuração server-only, sem Service | POST           |
+
+Todas as Functions com payload usam Zod em inputValidator/validator; upload
+usa parseEvidenceUploadFormData. getCurrentSession/logout/getDashboard/
+listAvailableInspectionReports não recebem entrada nem têm schema de payload.
+Wrappers companyIdSchema/updateCompanyInputSchema, checklistIdSchema/
+updateChecklistInputSchema e inspectionIdSchema são locais aos arquivos de
+Functions; demais contratos ficam em src/server/schemas, com cadastro
+reexportado de src/lib/validation/registration.schema.ts.
 
 ---
 
@@ -74,17 +113,42 @@ Envelope de erro de validação quando tratado pela camada de respostas:
 }
 ```
 
+Exemplos de sucesso abaixo são recortes ilustrativos de data, não uma lista
+exaustiva de campos. Tipos concretos vêm dos Services/Repositories e do
+transporte tipado do Start; datas não são universalmente strings JSON.
+`toServerResult` adapta errors para JsonValue, preservando sucesso.
+
 Observação: em Server Functions, o transporte HTTP pode não refletir diretamente o `statusCode` lógico do corpo de resposta. Para tratamento no frontend, usar `success`, `message`, `code` e `statusCode`.
 
 Schemas executados em inputValidator/validator podem lançar erro Zod antes do
 handler, sem passar pelo envelope do Service. O cliente precisa tratar também
 exceções de transporte/validação; não se garante o JSON acima para todo input inválido.
 
+Services geralmente convertem ApiError e relançam inesperados; alguns mapeiam
+Prisma P2002/P2025/conflitos internos. EvidenceService e DashboardService usam
+resultFromError também para genéricos. Não existe conversão global garantida
+de toda exceção em Result. Uma mutation com success=false retornado pode entrar
+em onSuccess; o cliente confere success além de tratar erro lançado.
+
+| Origem                                        | code real                   | statusCode lógico |
+| --------------------------------------------- | --------------------------- | ----------------: |
+| UnauthorizedError                             | UNAUTHORIZED                |               401 |
+| NotFoundError                                 | NOT_FOUND                   |               404 |
+| ConflictError / conflitos internos traduzidos | CONFLICT                    |               409 |
+| ValidationError                               | VALIDATION_ERROR            |               422 |
+| StorageError                                  | STORAGE_ERROR               |               502 |
+| ApiError de configuração Cloudinary           | STORAGE_CONFIGURATION_ERROR |               500 |
+| resultFromError genérico                      | INTERNAL_SERVER_ERROR       |               500 |
+
+Os erros possíveis listados por operação incluem classes de falha. A menção a
+422/500 não promete envelope nem status HTTP para rejeição pré-handler ou
+exceção inesperada; 422 em envelope só existe quando ValidationError é convertido.
+
 ---
 
 # Status Codes Lógicos
 
-- `200`: operação executada com sucesso.
+- Sucesso é success=true; não há campo statusCode=200 obrigatório nesse envelope.
 - `401`: usuário não autenticado ou credenciais inválidas.
 - `404`: recurso não encontrado.
 - `409`: conflito de regra de negócio.
@@ -167,7 +231,7 @@ Listagens usam `listQuerySchema`:
 Regras:
 
 - `page`: inteiro positivo, padrão `1`.
-- `pageSize`: inteiro positivo, máximo `100`, padrão `20`.
+- `pageSize`: inteiro positivo, máximo `100`, padrão `20` (normas usam `100`).
 - `sortOrder`: `asc` ou `desc`, padrão `desc`.
 
 Resposta paginada:
@@ -232,8 +296,8 @@ await register({
 ```
 
 - **Validação:** `loginSchema`.
-- **Query parameters:** não se aplica.
-- **Path parameters:** não se aplica.
+- **Filtros na chamada:** não se aplica.
+- **Identificador no payload:** não se aplica.
 - **Regras relacionadas:** normaliza e-mail; busca usuário não excluído; compara bcrypt custo 12; não retorna password. Cadastro não inicia sessão; login cria cookie após autenticação bem-sucedida.
 - **Exemplo de chamada:**
 
@@ -265,8 +329,8 @@ await login({ data: { email: "demo.user@example.test", password: "Demo@12345" } 
 - **Autenticação:** usa sessão se existir.
 - **Body:** não possui.
 - **Validação:** não possui input.
-- **Query parameters:** não se aplica.
-- **Path parameters:** não se aplica.
+- **Filtros na chamada:** não se aplica.
+- **Identificador no payload:** não se aplica.
 - **Regras relacionadas:** reconsulta usuário não excluído; limpa sessão se ausente/excluído. Retorna erro do Service (404 nesse caso), ou 401 se não houver identidade de sessão.
 - **Exemplo de chamada:**
 
@@ -298,8 +362,8 @@ await getCurrentSession();
 - **Autenticação:** não exige sessão válida, apenas tenta limpar o cookie.
 - **Body:** não possui.
 - **Validação:** não possui input.
-- **Query parameters:** não se aplica.
-- **Path parameters:** não se aplica.
+- **Filtros na chamada:** não se aplica.
+- **Identificador no payload:** não se aplica.
 - **Regras relacionadas:** remove sessão HTTP-only. UI também limpa IndexedDB/cache privado; falha remota é informada e não significa revogação remota confirmada. Sessão local offline não autoriza Server Functions.
 - **Exemplo de chamada:**
 
@@ -317,7 +381,7 @@ await logout();
 }
 ```
 
-- **Erros possíveis:** `500` erro ao limpar sessão.
+- **Erros possíveis:** `401` configuração de sessão ausente em produção; `500` erro ao limpar sessão.
 
 ---
 
@@ -345,8 +409,8 @@ await logout();
 ```
 
 - **Validação:** `createCompanyClientSchema`.
-- **Query parameters:** não se aplica.
-- **Path parameters:** não se aplica.
+- **Filtros na chamada:** não se aplica.
+- **Identificador no payload:** não se aplica.
 - **Regras relacionadas:** `createdById` vem da sessão; CNPJ é normalizado para dígitos; o CNPJ deve ser único inclusive entre registros excluídos logicamente, preservando a identidade e o histórico da empresa.
 - **Exemplo de chamada:**
 
@@ -390,8 +454,8 @@ await createCompany({ data: payload });
 ```
 
 - **Validação:** `updateCompanyInputSchema` com `id` UUID e `updateCompanySchema`.
-- **Query parameters:** não se aplica.
-- **Path parameters:** `id` é enviado no body da Server Function.
+- **Filtros na chamada:** não se aplica.
+- **Identificador no payload:** `id` é enviado no body da Server Function.
 - **Regras relacionadas:** exige ao menos um campo; valida existência; preserva CNPJ único.
 - **Exemplo de chamada:**
 
@@ -417,8 +481,8 @@ await updateCompany({ data: { id, data: { tradeName: "Novo Nome" } } });
 ```
 
 - **Validação:** `companyIdSchema`.
-- **Query parameters:** não se aplica.
-- **Path parameters:** `id` no body.
+- **Filtros na chamada:** não se aplica.
+- **Identificador no payload:** `id` no body.
 - **Regras relacionadas:** usa soft delete (`deletedAt`).
 - **Exemplo de chamada:**
 
@@ -444,8 +508,8 @@ await deleteCompany({ data: { id } });
 ```
 
 - **Validação:** `companyIdSchema`.
-- **Query parameters:** não se aplica.
-- **Path parameters:** `id` no body.
+- **Filtros na chamada:** não se aplica.
+- **Identificador no payload:** `id` no body.
 - **Regras relacionadas:** não retorna empresas excluídas logicamente.
 - **Exemplo de chamada:**
 
@@ -475,8 +539,8 @@ await getCompanyById({ data: { id } });
 ```
 
 - **Validação:** `companyClientFiltersSchema`.
-- **Query parameters:** enviados no body da Server Function.
-- **Path parameters:** não se aplica.
+- **Filtros na chamada:** enviados no body da Server Function.
+- **Identificador no payload:** não se aplica.
 - **Filtros:** `search`, `page`, `pageSize`, `sortBy`, `sortOrder`.
 - **Ordenação:** `corporateName`, `tradeName`, `cnae`, `riskLevel`, `employeeCount`, `createdAt`, `updatedAt`.
 - **Regras relacionadas:** lista apenas registros ativos.
@@ -511,8 +575,8 @@ await listCompanies({ data: { page: 1, pageSize: 20 } });
 ```
 
 - **Validação:** `createChecklistClientSchema`.
-- **Query parameters:** não se aplica.
-- **Path parameters:** não se aplica.
+- **Filtros na chamada:** não se aplica.
+- **Identificador no payload:** não se aplica.
 - **Regras relacionadas:** createdById vem da sessão; cria somente pessoal, isOfficial=false. isTemplate pode marcar template pessoal. Criação atômica com DRAFT v1 e autor da sessão, inicialmente privado. Campos desconhecidos de autoria/oficialidade são removidos pelo schema comum; não devem ser descritos como aceitos pelo contrato.
 - **Exemplo de chamada:**
 
@@ -542,8 +606,8 @@ await createChecklist({ data: payload });
 ```
 
 - **Validação:** `updateChecklistInputSchema`.
-- **Query parameters:** não se aplica.
-- **Path parameters:** `id` no body.
+- **Filtros na chamada:** não se aplica.
+- **Identificador no payload:** `id` no body.
 - **Regras relacionadas:** exige ao menos um campo e ownership pessoal não excluído. title/description vão ao draft, derivado da publicação/retirada mais recente se necessário. isTemplate/isActive atualizam identidade; alteração apenas desses indicadores não cria draft. Publicação/oficial não é editada diretamente.
 - **Exemplo de chamada:**
 
@@ -569,8 +633,8 @@ await updateChecklist({ data: { id, data: { title: "Novo título" } } });
 ```
 
 - **Validação:** `checklistIdSchema`.
-- **Query parameters:** não se aplica.
-- **Path parameters:** `id` no body.
+- **Filtros na chamada:** não se aplica.
+- **Identificador no payload:** `id` no body.
 - **Regras relacionadas:** exige proprietário pessoal e usa soft delete (deletedAt), preservando versões/snapshots. Oficial ou checklist alheio retorna NOT_FOUND.
 - **Exemplo de chamada:**
 
@@ -596,8 +660,8 @@ await deleteChecklist({ data: { id } });
 ```
 
 - **Validação:** `checklistIdSchema`.
-- **Query parameters:** não se aplica.
-- **Path parameters:** `id` no body.
+- **Filtros na chamada:** não se aplica.
+- **Identificador no payload:** `id` no body.
 - **Regras relacionadas:** dono recebe versões/draft/histórico, com canManage=true. Terceiro/oficial exige checklist ativo com PUBLISHED; retorna somente publicações, título/descrição da última e canManage=false. Nunca expõe draft privado alheio. Frontend mantém draft e seleciona publicação para inspeção.
 - **Exemplo de chamada:**
 
@@ -629,8 +693,8 @@ await getChecklistById({ data: { id } });
 ```
 
 - **Validação:** `checklistClientFiltersSchema`.
-- **Query parameters:** enviados no body.
-- **Path parameters:** não se aplica.
+- **Filtros na chamada:** enviados no body.
+- **Identificador no payload:** não se aplica.
 - **Filtros:** search, isTemplate, isActive, scope (official/mine/shared), paginação e ordenação.
 - **Ordenação:** `title`, `isTemplate`, `isActive`, `createdAt`, `updatedAt`.
 - **Regras relacionadas:** lista visível à sessão com resumo/contagem de versões. Dono recebe drafts/histórico; terceiro/oficial apenas publicações de checklist ativo. Dados devolvidos de título/descrição são publicados para terceiros, mas busca/ordenação consultam campos atuais da identidade. Ver limite no relatório da Fase 3.
@@ -706,8 +770,8 @@ await listChecklists({ data: { isActive: true } });
 ```
 
 - **Validação:** `createChecklistItemSchema`.
-- **Query parameters:** não se aplica.
-- **Path parameters:** não se aplica.
+- **Filtros na chamada:** não se aplica.
+- **Identificador no payload:** não se aplica.
 - **Regras relacionadas:** checklist deve existir; o Service usa ou cria o próximo draft; se `orderIndex` não for informado, usa o próximo índice disponível; todas as normas devem existir e estar ativas; tipo, código, título, resumo e URL são copiados para a associação da versão.
 - **Exemplo de chamada:**
 
@@ -716,7 +780,7 @@ await createChecklistItem({ data: { checklistId, description, isRequired: true }
 ```
 
 - **Exemplo de resposta:** item criado.
-- **Erros possíveis:** `401`, `404` checklist não encontrado, `422`, `500`.
+- **Erros possíveis:** `401`, `404` checklist não encontrado, `409` conflito de draft/ordem/linhagem, `422`, `500`.
 
 ### `updateChecklistItem`
 
@@ -739,8 +803,8 @@ await createChecklistItem({ data: { checklistId, description, isRequired: true }
 ```
 
 - **Validação:** `updateChecklistItemInputSchema`.
-- **Query parameters:** não se aplica.
-- **Path parameters:** `id` no body.
+- **Filtros na chamada:** não se aplica.
+- **Identificador no payload:** `id` no body.
 - **Regras relacionadas:** `id` identifica um `ChecklistVersionItem`. Se o item recebido pertence a versão publicada/retirada, o Service cria o próximo draft e localiza o item derivado pela linhagem antes de editar. Exige ao menos um campo; `standardIds` substitui atomicamente as cópias normativas; a versão é tocada para proteger publicação concorrente.
 - **Exemplo de chamada:**
 
@@ -749,7 +813,7 @@ await updateChecklistItem({ data: { id, data: { description: "Nova descrição" 
 ```
 
 - **Exemplo de resposta:** item atualizado.
-- **Erros possíveis:** `401`, `404`, `422`, `500`.
+- **Erros possíveis:** `401`, `404`, `409` conflito de draft/ordem/linhagem, `422`, `500`.
 
 ### `deleteChecklistItem`
 
@@ -766,8 +830,8 @@ await updateChecklistItem({ data: { id, data: { description: "Nova descrição" 
 ```
 
 - **Validação:** `checklistItemIdSchema`.
-- **Query parameters:** não se aplica.
-- **Path parameters:** `id` no body.
+- **Filtros na chamada:** não se aplica.
+- **Identificador no payload:** `id` no body.
 - **Regras relacionadas:** `id` identifica um `ChecklistVersionItem`; se necessário, o Service deriva o próximo draft e remove o item correspondente somente nele. Versões publicadas, snapshots e respostas permanecem intactos.
 - **Exemplo de chamada:**
 
@@ -775,7 +839,7 @@ await updateChecklistItem({ data: { id, data: { description: "Nova descrição" 
 await deleteChecklistItem({ data: { id } });
 ```
 
-- **Exemplo de resposta:** item excluído.
+- **Exemplo de resposta:** `success: true, data: null`.
 - **Erros possíveis:** `401`, `404`, `409` conflito de versão/ordem, `422`, `500`.
 
 ### `listChecklistItems`
@@ -793,8 +857,8 @@ await deleteChecklistItem({ data: { id } });
 ```
 
 - **Validação:** `checklistItemsByChecklistIdSchema`.
-- **Query parameters:** não se aplica.
-- **Path parameters:** `checklistId` no body.
+- **Filtros na chamada:** não se aplica.
+- **Identificador no payload:** `checklistId` no body.
 - **Regras relacionadas:** checklist visível. Prefere draft somente para dono; depois última publicação; sem ambos, dono pode receber versão mais recente (retirada). Terceiro/oficial recebe só publicação. Ordem/metadados são de versão, sem expor draft alheio.
 - **Exemplo de chamada:**
 
@@ -828,8 +892,8 @@ await listChecklistItems({ data: { checklistId } });
 ```
 
 - **Validação:** `createInspectionSchema`.
-- **Query parameters:** não se aplica.
-- **Path parameters:** não se aplica.
+- **Filtros na chamada:** não se aplica.
+- **Identificador no payload:** não se aplica.
 - **Regras relacionadas:** usuário da sessão, empresa própria não excluída, checklist visível ativo; versão do mesmo checklist PUBLISHED. Sem versão explícita, última publicação. Hash presente obrigatório; formato 1 recalculado, outros formatos (inclusive legado 0) aceitos sem recálculo, diferente da cópia. Gravação de inspeção/snapshot/itens/normas é atômica; leitura/preparação precede transação. Define PLANNED/SYNCED/INSPECTION_CREATION/VERIFIED inclusive no caminho legado aceito.
 - **Exemplo de chamada:**
 
@@ -855,8 +919,8 @@ await createInspection({ data: payload });
 ```
 
 - **Validação:** `inspectionIdSchema`.
-- **Query parameters:** não se aplica.
-- **Path parameters:** `id` no body.
+- **Filtros na chamada:** não se aplica.
+- **Identificador no payload:** `id` no body.
 - **Regras relacionadas:** retorna inspeção com usuário, empresa, identidade do checklist, versão de origem, snapshot, itens do snapshot, metadados normativos copiados e respostas. Snapshot e versão ausentes geram conflito, pois o backend não reconstrói histórico a partir do catálogo mutável.
 - **Exemplo de chamada:**
 
@@ -888,9 +952,9 @@ await getInspectionById({ data: { id } });
 ```
 
 - **Validação:** `inspectionFiltersSchema`.
-- **Query parameters:** enviados no body.
-- **Path parameters:** não se aplica.
-- **Filtros:** `userId`, `companyId`, `checklistId`, `status`, `syncStatus`, `search`, paginação e ordenação.
+- **Filtros na chamada:** enviados no body.
+- **Identificador no payload:** não se aplica.
+- **Filtros:** companyId, checklistId, status, syncStatus, search, paginação e ordenação. Schema também aceita userId, mas Service o sobrescreve pela sessão, sem acesso a dados de outro dono.
 - **Ordenação:** `inspectionDate`, `status`, `syncStatus`, `createdAt`, `updatedAt`.
 - **Regras relacionadas:** lista apenas inspeções não excluídas; pesquisa por empresa, título capturado no snapshot e notas. A representação do checklist vem do snapshot, não do título atual do catálogo.
 - **Exemplo de chamada:**
@@ -917,8 +981,8 @@ await listInspections({ data: { status: "PLANNED" } });
 ```
 
 - **Validação:** `inspectionIdSchema`.
-- **Query parameters:** não se aplica.
-- **Path parameters:** `id` no body.
+- **Filtros na chamada:** não se aplica.
+- **Identificador no payload:** `id` no body.
 - **Regras relacionadas:** usa soft delete (`deletedAt`).
 - **Exemplo de chamada:**
 
@@ -948,8 +1012,8 @@ await deleteInspection({ data: { id } });
 ```
 
 - **Validação:** `inspectionResponseIdSchema`.
-- **Query parameters:** não se aplica.
-- **Path parameters:** `inspectionId` no body.
+- **Filtros na chamada:** não se aplica.
+- **Identificador no payload:** `inspectionId` no body.
 - **Regras relacionadas:** inspeção deve existir.
 - **Exemplo de chamada:**
 
@@ -981,8 +1045,8 @@ await listInspectionResponses({ data: { inspectionId } });
 ```
 
 - **Validação:** `saveInspectionResponseSchema`.
-- **Query parameters:** não se aplica.
-- **Path parameters:** não se aplica.
+- **Filtros na chamada:** não se aplica.
+- **Identificador no payload:** não se aplica.
 - **Status aceitos:** `COMPLIANT`, `NON_COMPLIANT`, `NOT_APPLICABLE`.
 - **Regras relacionadas:** deve ser enviado exatamente um entre `snapshotItemId` e o `checklistItemId` legado. O item precisa pertencer ao snapshot da inspeção; o identificador legado é resolvido para esse snapshot antes da persistência. A resposta é única por inspeção + item do snapshot; inspeção `PLANNED` passa para `IN_PROGRESS`; validação de estado, resposta e criação/restauração/arquivamento da não conformidade são atômicos. A descrição e as normas históricas vêm do snapshot. Inspeções concluídas ou canceladas não aceitam alterações.
 - **Sincronização offline:** `operationId`, `clientCreatedAt` e `expectedResponseUpdatedAt` são opcionais para chamadas online normais, mas formam um conjunto obrigatório quando qualquer um é enviado. O usuário sempre vem da sessão. O servidor calcula hash canônico, confere a revisão esperada e grava `OfflineSyncOperation` atomicamente. Mesmo ID/hash é retry idempotente; mesmo ID com conteúdo diferente ou revisão divergente retorna `409`.
@@ -1023,9 +1087,9 @@ await saveInspectionResponse({
 }
 ```
 
-- **Validação:** `inspectionResponseIdSchema`.
-- **Query parameters:** não se aplica.
-- **Path parameters:** `inspectionId` no body.
+- **Validação:** `finishInspectionSchema` (estende inspectionResponseIdSchema e valida conjunto de metadados offline).
+- **Filtros na chamada:** não se aplica.
+- **Identificador no payload:** `inspectionId` no body.
 - **Regras relacionadas:** inspeção e snapshot devem existir; todos os itens obrigatórios do snapshot devem possuir resposta por `snapshotItemId`; status passa para `COMPLETED`; inspeções concluídas ou canceladas não podem ser concluídas novamente. Com metadados offline, a conclusão e o registro idempotente são atômicos; retry do mesmo ID/hash retorna a inspeção já concluída.
 - **Completude:** `NOT_APPLICABLE` conta como resposta; opcionais podem ficar sem
   resposta. Não exige observações, fotos, NCs resolvidas ou ações concluídas.
@@ -1328,8 +1392,8 @@ await uploadEvidence({ data: formData });
 ```
 
 - **Validação:** objeto com `name` string obrigatória.
-- **Query parameters:** não se aplica.
-- **Path parameters:** não se aplica.
+- **Filtros na chamada:** não se aplica.
+- **Identificador no payload:** não se aplica.
 - **Regras relacionadas:** nenhuma regra de negócio de SST; não faz parte do fluxo principal.
 - **Exemplo de chamada:**
 
@@ -1346,7 +1410,7 @@ await getGreeting({ data: { name: "Ada" } });
 }
 ```
 
-- **Erros possíveis:** `422`, `500`.
+- **Erros possíveis:** exceção de validação Zod ou erro inesperado; sem Result/statusCode lógico garantido.
 
 ---
 
@@ -1415,3 +1479,67 @@ Snapshot congela conteúdo de checklist, sem empresa/usuário/operação inteira
 Errata Murbach de UI/cópias não atualiza publicação/snapshot/relatório histórico
 automaticamente. Validação documental/limites:
 [RelatorioFase4.md](../Documentation/RelatorioFase4.md).
+
+## Saídas e efeitos por grupo
+
+Complementa os contratos de entrada/operação acima. Os retornos estão em data
+no sucesso, salvo o exemplo getGreeting. Nenhuma Function aceita o proprietário
+como autoridade; autenticação/autorização gerais continuam valendo para cada grupo.
+
+| Grupo              | Saída real / cardinalidade                                                         | Efeitos colaterais                                                                                                                  |
+| ------------------ | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Auth               | register: RegisteredUser; login/sessão: SafeUser; logout: null                     | Cadastro persiste usuário sem sessão; login cria cookie; sessão reconsulta conta/limpa cookie de conta ausente; logout limpa cookie |
+| Company            | Entidade em criação/edição/detalhe/exclusão; PaginatedResult na lista              | Exclusão lógica não libera CNPJ nem apaga inspeções                                                                                 |
+| Checklist          | Identidade com versões; views com canManage; lista paginada                        | Criação/cópia geram DRAFT v1; edição pode derivar draft; exclusão lógica preserva história                                          |
+| ChecklistVersion   | Versão com itens/normas; lista de versões                                          | Publicação muda draft com hash/autoria/data; retirada muda estado sem apagar conteúdo                                               |
+| ChecklistItem      | Item de versão com normas; lista; delete retorna null                              | Edição/exclusão somente no draft, podendo derivá-lo; toca updatedAt da versão                                                       |
+| Inspection         | InspectionWithRelations ou lista paginada                                          | Criação PLANNED/SYNCED e snapshot atômicos; delete lógico; sem update/start/cancel expostos                                         |
+| InspectionResponse | Lista ou resposta com contexto; finish retorna inspeção                            | Primeira resposta inicia IN_PROGRESS, cria/restaura/arquiva NC; conclusão muda estado; sync registra confirmação remota             |
+| Standard           | Norma ou lista paginada                                                            | Leitura somente; sem criação/edição/exclusão pública                                                                                |
+| NonConformity      | NC com relações; lista paginada; NC arquivada no delete                            | Criação manual/edição/arquivo; lista/detalhe persistem OVERDUE do usuário antes de ler                                              |
+| CorrectiveAction   | Ação criada/atualizada/arquivada; lista por NC                                     | Criação pode transitar NC OPEN para IN_PROGRESS; update COMPLETED define completedAt; listagem persiste OVERDUE do usuário          |
+| Evidence           | EvidenceDto ou array                                                               | Upload/destroy Cloudinary e metadados compensados; DTO omite publicId e converte tamanho para number                                |
+| Report             | AvailableInspectionReportDto[] ou InspectionReportDto                              | Consulta não insere Report; impressão/PDF nativo só no cliente                                                                      |
+| Dashboard          | DashboardDto: summary, compliance, inspectionStatusDistribution, recentInspections | Leitura agregada sem mutação de atrasos; percentage=null sem respostas aplicáveis                                                   |
+
+Assinaturas dos DTOs de relatório/dashboard/evidência ficam respectivamente em
+[report.service.ts](../src/server/services/report.service.ts),
+[dashboard.service.ts](../src/server/services/dashboard.service.ts) e
+[evidence.service.ts](../src/server/services/evidence.service.ts). Entidades com
+relações derivam dos includes dos Repositories, sem CRUD automático por model.
+
+### Operações que não têm Function própria
+
+Não há startInspection: salvar primeira resposta faz a transição PLANNED →
+IN_PROGRESS. Também não há updateInspection/cancelInspection expostos, mesmo
+existindo enums e métodos de persistência. Reabrir NC arquivada é efeito de
+saveInspectionResponse NON_COMPLIANT; atualizar status da NC usa updateNonConformity,
+sem Function específica reopen. Concluir ação usa updateCorrectiveAction com
+status COMPLETED, sem completeCorrectiveAction. Tratativas combinam NC/ações/
+evidências, sem entidade/endpoint separado.
+
+ChecklistVersion tem listagem/publicação/retirada, sem CRUD universal; snapshot
+é criado com inspeção e consultado dentro de sua representação, sem editor.
+Report persistível não tem CRUD web; OfflineSyncOperation não tem endpoint de
+fila: confirmação é interna às transações de saveInspectionResponse/finishInspection.
+Bootstrap oficial não é operação pública de API.
+
+### Sincronização e armazenamento externo
+
+Save exige operationId/clientCreatedAt/expectedResponseUpdatedAt completos se
+qualquer metadado offline for enviado; revisão esperada pode ser null para nova
+resposta. Finish exige operationId/clientCreatedAt juntos. Functions continuam
+as mesmas online/offline: não existe endpoint sync genérico. Serviço calcula
+hash; Repository confere identidade/revisão/deduplicação na transação. Retry
+confirmado não reaplica mutação; conflito impede avanço da fila local.
+
+Upload valida entrada FormData no schema e bytes no Service. PostgreSQL guarda
+metadados/publicId; EvidenceDto expõe URL, sem binário e sem publicId. Autorização
+da aplicação não é verificada a cada download da URL pública Cloudinary.
+Compensações são tentativas: falha ao remover upload órfão conserva erro original;
+não existe transação conjunta banco/provedor. Binários offline são futuros.
+
+Referências técnicas: [Architecture.md](./Architecture.md),
+[README backend](../src/server/README.md),
+[Especificação acadêmica](../Documentation/EspecificacaoAPIREST.md) e
+[Relatório da Fase 5](../Documentation/RelatorioFase5.md).

@@ -143,7 +143,7 @@ PostgreSQL. Upload offline permanece futuro.
 
 ## Relatórios
 
-O sistema deverá gerar relatórios contendo:
+O módulo atual monta relatórios sob demanda com dados reais, contendo:
 
 - dados da inspeção;
 - empresa;
@@ -173,7 +173,7 @@ Os checklists poderão ser associados às normas aplicáveis.
 
 O funcionamento offline é um requisito essencial.
 
-Arquitetura prevista:
+Arquitetura do incremento implementado:
 
 Usuário
 
@@ -251,13 +251,17 @@ assistida de conflito e evidências binárias offline continuam pendentes.
 
 A aplicação utiliza arquitetura em camadas.
 
-Fluxo esperado:
+Fluxo principal implementado:
 
-Frontend
+Tela / Hook / React Query ou chamada direta
 
 ↓
 
-Server Functions / API
+TanStack Start Server Functions
+
+↓
+
+Validação Zod / sessão
 
 ↓
 
@@ -275,7 +279,13 @@ Prisma
 
 PostgreSQL
 
-Nenhuma tela deve acessar diretamente o banco.
+Nenhuma tela acessa Prisma diretamente. Frontend/SSR/Server Functions pertencem
+ao mesmo projeto TanStack Start; Nitro usa preset Vercel, sem backend REST
+separado. Login é chamada direta e guard beforeLoad/getAppSession antecede
+renderização. Respostas/conclusão são locais primeiro, mesmo online, e retornam
+à fronteira Server Function na sincronização. Repositories também aplicam
+ownership, transações, revisão/deduplicação; schemas/helpers têm responsabilidades
+próprias além dos Services. Detalhes: [AI/Architecture.md](./AI/Architecture.md).
 
 ---
 
@@ -294,7 +304,9 @@ Concluído:
 - Modelo Físico
 - Dicionário de Dados
 - Especificação da API
-- Schema Prisma inicial
+- Schema Prisma vigente com versões, snapshots, sincronização e oficialidade
+- Dicionário e modelos conceitual/lógico/físico reconciliados com schema/migrations
+- Arquitetura e contratos de Server Functions, com diagramas Mermaid/PlantUML
 
 ---
 
@@ -360,8 +372,10 @@ não conformidade, conclusão pendente, retry e indicadores de sincronização. 
 manifest e o service worker são incluídos no build Vercel. O cenário completo
 com fechamento/reabertura e conferência final no Neon foi validado no Chromium
 contra o servidor local; o artefato Vercel também foi validado por build. O
-domínio HTTPS publicado e outros navegadores ainda exigem homologação, e as
-funcionalidades offline futuras impedem declarar suporte offline completo.
+domínio HTTPS publicado teve assets/registro/fallback conferidos no Chromium;
+o fluxo autenticado completo em produção e outros navegadores ainda exigem
+homologação. Funcionalidades futuras impedem declarar suporte offline completo.
+Resultados históricos em [AI/Offline.md](./AI/Offline.md), sem nova execução aqui.
 
 ---
 
@@ -381,9 +395,24 @@ Módulos integrados nesta etapa:
 - normas e associação aos itens;
 - não conformidades;
 - ações corretivas;
-- evidências fotográficas em Cloudinary, vinculadas ao contexto histórico da inspeção.
+- evidências fotográficas em Cloudinary, vinculadas ao contexto histórico da inspeção;
+- relatórios históricos sob demanda, sem inserir Report a cada visualização;
+- dashboard agregado com dados reais por usuário;
+- sincronização idempotente de respostas/conclusão por Server Functions.
 
-O objetivo continua sendo substituir gradualmente os mocks remanescentes por persistência real utilizando Prisma e PostgreSQL. Evidências agora possuem upload seguro no servidor, listagem, prévia e remoção lógica; arquivos ficam no Cloudinary e somente metadados são persistidos.
+Mocks remanescentes devem ser substituídos gradualmente. Evidências possuem
+upload autorizado no servidor, listagem, prévia e remoção lógica; Cloudinary
+guarda arquivos, PostgreSQL guarda metadados. Falhas usam compensações, sem
+transação conjunta. URL do provedor não exige sessão da aplicação por download.
+
+Erros usam Result com success/message/code/statusCode/errors, mas validação
+pré-handler e exceções inesperadas podem lançar fora desse envelope. statusCode
+é lógico. Não existe CRUD web universal para toda entidade Prisma.
+
+O PWA cacheia navegações/assets, sem cache de Server Functions. HTML autenticado
+pode ser armazenado; cache de navegação não tem chave por usuário/expiração de
+sessão. Limpeza ocorre nos caminhos de logout/troca de usuário/401 remoto.
+Limites e concerns: [AI/Architecture.md](./AI/Architecture.md).
 
 ---
 
@@ -406,12 +435,21 @@ Pasta AI/
 - AI/Database.md
 - AI/Entities.md
 - AI/Offline.md
+- AI/OfficialTemplates.md
+- AI/ChecklistCopy.md
+
+Referências locais do backend e rotas:
+
+- src/server/README.md
+- src/routes/README.md
 
 Pasta Documentation/
 
 - Documento de Requisitos
 - Diagramas UML
-- Modelagem do Banco
+- Modelagem do Banco e Documentation/DicionarioDeDados.md
+- Documentation/diagrams/architecture/application.puml
+- Documentation/diagrams/architecture/authentication.puml
 - Personas
 - Especificação da API
 - Especificação de telas

@@ -540,9 +540,26 @@ O preset Nitro/Vercel envia `application/manifest+json` para o manifest, além d
 um MIME genérico e verifica atualizações do worker a cada navegação.
 
 Como TanStack Start usa SSR, a rota precisa ter sido interceptada pelo service
-worker antes de poder ser reaberta offline. Esse comportamento foi comprovado no
-Chromium usado pelo Playwright contra o servidor local e no domínio HTTPS da
-Vercel; ainda precisa ser homologado em Chrome/Edge/Android adicionais.
+worker antes de poder ser reaberta offline. A reabertura autenticada foi
+comprovada no Chromium usado pelo Playwright contra
+o servidor local. No domínio HTTPS da Vercel, a homologação final abaixo
+confirmou assets/registro/fallback, sem repetir o fluxo autenticado completo;
+Chrome/Edge/Android adicionais permanecem pendentes.
+
+## Delimitação arquitetural do cache — Fase 5
+
+Conferência estática em 4 de outubro de 2026, sem nova homologação: sw.js guarda
+resposta OK de navegação GET da mesma origem, exceto pathname /login. Portanto,
+**HTML autenticado pode ser armazenado**. Cache de navegação não tem chave por
+usuário nem expiração alinhada à sessão, diferentemente dos pacotes IndexedDB.
+
+Logout e troca de identidade cacheada limpam navegação via clearAllOfflineData;
+resposta remota 401 em getAppSession também pede limpeza. Excluir somente sessão
+local vencida não limpa esse cache. Guard cliente e servidor revalidando mutações
+não significam ausência de HTML privado no dispositivo. Assets/cache de HTML não
+são uma API offline cacheada de Server Functions. Concern e Final QA:
+[RelatorioFase5.md](../Documentation/RelatorioFase5.md). Diagrama atual:
+[Architecture.md](./Architecture.md).
 
 # Evidência Browser/E2E — execução original em 7 de agosto de 2026
 

@@ -1,240 +1,140 @@
-# Server Architecture
+# Backend do Safe Watch Insight
 
-Esta pasta contém toda a infraestrutura do backend do **Safe Watch Insight**.
+Referência local da implementação, reconferida na Fase 5. Visão completa:
+[Arquitetura](../../AI/Architecture.md). Contratos expostos:
+[API](../../AI/API.md). Esta pasta contém domínio/infraestrutura; a fronteira
+TanStack Start fica em [src/lib/api](../lib/api/).
 
-O objetivo é manter uma arquitetura em camadas, desacoplada e reutilizável, facilitando manutenção, testes e evolução do sistema.
-
----
-
-# Arquitetura Geral
-
-```text
-Frontend (TanStack Start)
-
-        ↓
-
-React Query
-
-        ↓
-
-Server Functions
-
-        ↓
-
-Services
-
-        ↓
-
-Repositories
-
-        ↓
-
-Prisma Client
-
-        ↓
-
-PostgreSQL (Neon)
-```
-
-Cada camada possui responsabilidades bem definidas e **não deve assumir responsabilidades de outras camadas**.
-
----
-
-# Estrutura
+## Fluxo e fronteira
 
 ```text
-server/
-
-├── prisma/
-├── repositories/
-├── services/
-├── schemas/
-├── errors/
-├── responses/
-├── types/
-└── utils/
+Tela → Hook/React Query ou chamada direta → Server Function
+     → Zod → sessão → Service → Repository → Prisma → PostgreSQL
 ```
 
----
+Handlers carregam Services e sessão por imports dinâmicos, obtêm identidade no
+servidor e repassam-na às operações. Não há backend REST separado. Login é
+chamada direta; sessão/logout são helpers; getGreeting é exemplo sem persistência
+ou Result. Offline grava respostas/conclusão em Dexie antes da sincronização.
+Guard beforeLoad da rota protege navegação, sem substituir autorização backend.
 
-# Responsabilidades
+## Organização e responsabilidades
 
-## prisma/
+| Pasta         | Papel real                                                                                                     |
+| ------------- | -------------------------------------------------------------------------------------------------------------- |
+| auth/         | session.ts cria/lê/limpa sessão; password.ts aplica bcrypt custo 12                                            |
+| catalog/      | Definições dos templates institucionais, consumidas pelo bootstrap                                             |
+| prisma/       | Prisma Client gerado/adapter-pg, DATABASE_URL e reutilização global em desenvolvimento                         |
+| repositories/ | Consultas/joins/filtros de propriedade, nested writes, transações, deduplicação/revisão e updates condicionais |
+| services/     | Elegibilidade/autorização, versionamento, snapshot/cópia, diretivas de estado, hashes, storage e DTOs          |
+| schemas/      | Zod para contrato de entrada; cadastro reexporta schema compartilhado                                          |
+| storage/      | StorageService e CloudinaryStorageService: upload/destroy assinados no servidor                                |
+| errors/       | ApiError e subclasses de domínio/infraestrutura                                                                |
+| responses/    | Result, resultFromError, success/failure e paginação                                                           |
+| types/        | Tipos compartilhados, sem CRUD implícito                                                                       |
+| utils/        | Hashes canônicos de checklist/operação offline e helpers                                                       |
 
-Contém exclusivamente a configuração do Prisma.
+Services não acessam Prisma para consultar/persistir; podem importar tipos/enums
+ou reconhecer erros Prisma. Repositories aplicam garantias de persistência,
+sem substituir decisões de domínio. Nem todo Service herda BaseService, nem
+cada fluxo tem um único Repository. ChecklistItemRepository é legado; edição
+atual usa ChecklistVersionItemRepository.
 
-Responsável por:
+## Identidade e autorização
 
-* Prisma Client Singleton
-* Configuração da conexão
-* Acesso ao banco
+session.ts configura safe_watch_session, userId, oito horas, HttpOnly,
+SameSite=lax, Path=/ e Secure em produção. SESSION_SECRET obrigatório em produção;
+fallback apenas em desenvolvimento/outros ambientes. getAuthenticatedUser
+reconsulta conta não excluída via UserService/UserRepository. Sem identidade:
+UNAUTHORIZED; conta ausente: NOT_FOUND e cookie limpo. Registro não inicia
+sessão; retorna id/name/email e define TECHNICIAN no servidor, sem RBAC.
 
-Nunca implementar regras de negócio aqui.
+Identidade de operação vem da sessão. Filtros userId não são autoridade:
+InspectionService sobrescreve-os. Repositories restringem Company/Checklist por
+dono, Inspection por userId e NC/ação/evidência por contexto da inspeção.
+Publicação acessível permite reutilizar conteúdo, sem compartilhar inspeções.
+Oficiais não têm dono usuário nem mutações pessoais, inclusive para ADMIN.
+Matriz: [BusinessRules](../../AI/BusinessRules.md).
 
----
+## Contrato de retorno e erros
 
-## repositories/
-
-Responsável pelo acesso ao banco de dados.
-
-Funções desta camada:
-
-* consultas
-* filtros
-* persistência
-* paginação
-* operações CRUD
-
-Repositories **não** devem conter regras de negócio.
-
----
-
-## services/
-
-Contêm toda a lógica de negócio da aplicação.
-
-Exemplos:
-
-* validar regras
-* impedir operações inválidas
-* executar fluxos
-* coordenar múltiplos repositories
-
-Services nunca devem acessar o banco diretamente.
-
-Sempre utilizar repositories.
-
----
-
-## schemas/
-
-Validação utilizando Zod.
-
-Todo dado recebido do frontend deve ser validado antes de chegar aos Services.
-
-Nenhuma validação deve ser feita diretamente nas rotas.
-
----
-
-## errors/
-
-Erros padronizados da aplicação.
-
-Exemplos:
-
-* ValidationError
-* NotFoundError
-* ConflictError
-* UnauthorizedError
-
-Todos devem herdar de ApiError.
-
----
-
-## responses/
-
-Padronização das respostas retornadas para o frontend.
-
-Exemplo:
+[responses/result.ts](./responses/result.ts) define:
 
 ```ts
-{
-    success: true,
-    data: ...
+interface SuccessResult<TData> {
+  success: true;
+  data: TData;
+  message?: string;
 }
-```
-
-ou
-
-```ts
-{
-    success: false,
-    error: ...
+interface ErrorResult {
+  success: false;
+  message: string;
+  code: string;
+  statusCode: number;
+  errors?: unknown;
 }
+type Result<TData> = SuccessResult<TData> | ErrorResult;
 ```
 
----
+Não existe campo `error` nesse envelope. toServerResult em lib/api/server-result.ts
+(e versões locais nas Functions) adapta errors para JsonValue, incluindo Date
+nos detalhes, e preserva resultado de sucesso. O transporte do Start preserva
+os valores tipados; não se presume que todo dado retornado seja JSON puro.
+statusCode é lógico, não uma definição de status HTTP da chamada.
 
-## types/
+| Classe / origem                                | code                        | statusCode lógico |
+| ---------------------------------------------- | --------------------------- | ----------------- |
+| UnauthorizedError                              | UNAUTHORIZED                | 401               |
+| NotFoundError                                  | NOT_FOUND                   | 404               |
+| ConflictError                                  | CONFLICT                    | 409               |
+| ValidationError                                | VALIDATION_ERROR            | 422               |
+| StorageError                                   | STORAGE_ERROR               | 502               |
+| ApiError de configuração Cloudinary            | STORAGE_CONFIGURATION_ERROR | 500               |
+| internalErrorResult / resultFromError genérico | INTERNAL_SERVER_ERROR       | 500               |
 
-Tipos compartilhados entre múltiplas camadas.
+ValidationError.details gera errors com pares field/message. resultFromError
+converte ApiError ou usa falha interna genérica; não cobre automaticamente todas
+as Server Functions. Services geralmente capturam ApiError, alguns mapeiam
+P2002/P2025; outros erros são relançados. EvidenceService/DashboardService
+normalizam também genéricos. Conflitos internos
+ChecklistVersionPersistenceConflictError, InspectionStatePersistenceConflictError,
+InspectionResponseRevisionConflictError, OfflineOperationPayloadConflictError e
+NonConformityStatePersistenceConflictError são traduzidos para CONFLICT nos fluxos
+correspondentes.
 
-Evitar duplicação de interfaces.
+Zod em inputValidator/validator pode lançar antes do handler; sessão/imports e
+exceções inesperadas também podem rejeitar sem envelope. Cliente trata success
+false e erro lançado; falha Result pode chegar ao onSuccess do React Query.
+Não há conversor global demonstrado que garanta Result em toda falha.
 
----
+## Histórico, atomicidade e efeitos de leitura
 
-## utils/
+Publicação: hash canônico e revisão do draft. Inspeção: escrita atômica de
+snapshot/itens/normas após preparação no Service. Cópia: transação RepeatableRead
+com leitura/preparação e inserts em lote. Resposta: estado/resposta/NC e, quando
+offline, registro idempotente na transação. Conclusão: atualização condicional
+com confirmação offline quando presente; validação de completude precede a
+transação. Criação de ação coordena estado da NC na mesma transação.
 
-Funções utilitárias reutilizáveis.
+Não há atomicidade global de Server Function, fila inteira, dashboard ou
+Cloudinary/PostgreSQL. NC lista/detalhe e listagem de ações podem persistir
+OVERDUE na leitura; dashboard calcula atrasos sem mutar. Migrations têm CHECKs
+/índices além do schema: [Database](../../AI/Database.md).
 
-Exemplos:
+## Integrações e utilitários
 
-* paginação
-* tratamento de erros
-* helpers
+EvidenceService autoriza contexto/snapshot, valida bytes e usa StorageService.
+Cloudinary guarda binário; EvidenceRepository guarda metadados. Falha de
+persistência tenta remover upload; falha de destroy tenta restaurar soft delete.
+URL externa não exige sessão da aplicação em cada download. Offline binário futuro.
 
-Nunca colocar regras de negócio nesta pasta.
+ReportService/ReportRepository montam DTO de Inspection, sem inserir Report.
+DashboardService/DashboardRepository agregam dados reais próprios. Hooks/telas
+consomem esses read models; impressão/PDF usa diálogo nativo no cliente.
 
----
-
-# Fluxo de uma requisição
-
-Exemplo:
-
-```text
-Tela Empresas
-
-↓
-
-React Query
-
-↓
-
-Server Function
-
-↓
-
-CompanyService
-
-↓
-
-CompanyRepository
-
-↓
-
-Prisma Client
-
-↓
-
-PostgreSQL
-```
-
-O retorno percorre o caminho inverso até o frontend.
-
----
-
-# Boas práticas
-
-* Cada Service deve possuir um Repository correspondente.
-* Nunca acessar Prisma diretamente fora dos Repositories.
-* Nunca acessar o banco a partir do frontend.
-* Toda entrada deve ser validada com Zod.
-* Toda regra de negócio deve ficar em Services.
-* Toda resposta deve utilizar o padrão Result.
-* Toda exceção deve utilizar os erros padronizados.
-
----
-
-# Evolução do projeto
-
-Os módulos serão implementados incrementalmente seguindo esta ordem:
-
-1. Company
-2. Authentication
-3. Checklist
-4. Inspection
-5. NonConformity
-6. Report
-7. Offline Synchronization
-
-Cada módulo deverá seguir rigorosamente esta arquitetura para manter consistência em todo o backend.
+Demo Seed e Platform Seed são utilitários explícitos fora da aplicação web.
+Podem usar Prisma direto e Services; bootstrap não é Server Function. Scripts
+operacionais seguem seu próprio ciclo e alguns escrevem fixtures. Contratos
+web não ganham CRUD de Report, Snapshot ou OfflineSyncOperation por isso.
+Detalhes: [OfficialTemplates](../../AI/OfficialTemplates.md),
+[ChecklistCopy](../../AI/ChecklistCopy.md), [Offline](../../AI/Offline.md).

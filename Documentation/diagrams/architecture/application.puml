@@ -1,0 +1,37 @@
+@startuml
+' Modelo equivalente ao flowchart de AI/Architecture.md.
+title Safe Watch Insight — arquitetura implementada
+component "Frontend: rotas e componentes React" as UI
+component "Hooks / React Query / chamada direta" as CLIENT
+component "Server Functions: src/lib/api" as SF
+component "Schemas Zod: entrada" as ZOD
+component "Authentication: sessão e UserService" as AUTH
+component "Services: domínio e autorização" as SVC
+component "Repositories: escopo e persistência" as REPO
+component "Prisma Client" as ORM
+database "PostgreSQL / Neon" as PG
+component "Camada offline cliente" as LOCAL
+database "IndexedDB / Dexie: pacotes e fila por usuário" as IDB
+component "Sync manager: respostas e conclusão" as SYNC
+component "StorageService / CloudinaryStorageService" as STORAGE
+cloud "Cloudinary: binários de evidência" as CLOUD
+component "Service worker: navegação e assets" as SW
+database "Cache Storage: HTML e assets" as CACHE
+UI --> CLIENT
+CLIENT --> SF
+SF --> ZOD
+SF --> AUTH
+SF --> SVC
+SVC --> REPO
+AUTH --> REPO
+REPO --> ORM
+ORM --> PG
+CLIENT --> LOCAL
+LOCAL --> IDB
+IDB --> SYNC
+SYNC --> SF
+SVC --> STORAGE
+STORAGE --> CLOUD
+UI --> SW
+SW --> CACHE
+@enduml
