@@ -229,7 +229,10 @@ fictícia, quatro empresas fictícias, quatro checklists publicados e oito
 inspeções com snapshots (quatro concluídas, duas em andamento e duas planejadas),
 respostas, não conformidades e ações corretivas. Os dados alimentam os
 relatórios e o dashboard reais. Evidências fotográficas devem ser enviadas na
-demonstração ao vivo. O seed não altera dados já criados em uma nova execução.
+demonstração ao vivo. Reexecuções preservam respostas existentes e atividade do
+avaliador; podem completar um fixture de inspeção destinado a ser concluído
+quando sua carga foi interrompida e os registros ainda correspondem ao dataset.
+Esse caso não equivale a restaurar inspeções alteradas pelo usuário.
 
 O banco configurado para o TCC é de teste. Após o TCC, caso a plataforma seja
 usada com dados operacionais reais, execute o Demo Seed somente em um banco ou
@@ -279,7 +282,7 @@ de homologação. Esses resultados são históricos, sem nova execução nesta r
 - relatórios com snapshot histórico e impressão/Salvar como PDF pelo navegador;
 - dashboard com métricas reais e cinco inspeções recentes próprias.
 
-### Em desenvolvimento
+### Evoluções futuras e pendências
 
 - geração customizada e download direto de PDF pelo backend;
 - filtros e análises avançadas do dashboard;

@@ -1430,7 +1430,8 @@ Esses módulos devem seguir o mesmo fluxo arquitetural quando forem implementado
 - `listChecklists` aceita `scope?: "official" | "mine" | "shared"`. O filtro
   restringe a consulta à plataforma, ao usuário da sessão ou a publicações de
   outros usuários. Sem scope, preserva a listagem visível anterior.
-- Lista e detalhe retornam `isOfficial`, `createdById` opcional e `canManage`,
+- Lista e detalhe retornam `isOfficial`, `createdById` presente e nullable (NULL
+  no oficial) e `canManage`,
   calculado pelo Service para orientar a UI; autorização continua no servidor.
 - `getChecklistById`, `listChecklistItems` e `listChecklistVersions` permitem
   leitura autenticada das versões publicadas dos templates oficiais.

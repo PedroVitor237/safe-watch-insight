@@ -22,6 +22,8 @@ A [matriz de acesso](../AI/BusinessRules.md#matriz-de-autorização) detalha lei
 mutação, atividade/exclusão e conteúdo institucional. Bootstrap de templates é
 operação de implantação, fora da sessão e dos casos de uso web.
 
+<a id="visão-de-funcionalidades"></a>
+
 ## Diagrama oficial atual
 
 Mermaid usa flowchart como representação de atores/funcionalidades, sem notação

@@ -208,8 +208,9 @@ A arquitetura atual é organizada em camadas:
 
 ```text
 React
--> React Query
+-> Hook / React Query ou chamada direta
 -> TanStack Start Server Functions
+-> Validação Zod / sessão
 -> Services
 -> Repositories
 -> Prisma
@@ -222,11 +223,17 @@ Responsabilidades:
 - **React Query:** gerencia cache, loading, refetch e invalidação de dados.
 - **Server Functions:** recebem chamadas do frontend, validam entrada e chamam Services.
 - **Services:** concentram regras de negócio.
-- **Repositories:** executam operações de persistência.
+- **Repositories:** executam persistência, filtros de propriedade, transações,
+  revisão e deduplicação.
 - **Prisma:** faz o mapeamento objeto-relacional.
 - **PostgreSQL:** armazena os dados da aplicação.
 
 Essa separação evita acesso direto ao banco pelas telas e facilita manutenção futura.
+
+Login chama a Server Function diretamente; respostas/conclusão são gravadas
+primeiro em Dexie/fila, inclusive online, e enviadas pelas mesmas Functions.
+O guard de navegação é separado da revalidação de sessão no servidor.
+Fluxos completos: [Arquitetura](./AI/Architecture.md).
 
 # 6. Decisões técnicas
 
@@ -263,7 +270,7 @@ Além do fluxo consolidado no marco da Atividade 2, o projeto atualmente possui:
 - testes automatizados concentrados em versionamento, regras do fluxo,
   evidências e sincronização offline.
 
-Permanecem em desenvolvimento:
+Permanecem como evoluções futuras e pendências:
 
 - geração customizada, armazenamento e download direto de PDF;
 - BI, filtros analíticos e comparativos avançados de dashboard;
