@@ -1,0 +1,288 @@
+@startuml
+title Safe Watch Insight - Modelo Lógico
+hide circle
+skinparam linetype ortho
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+
+entity "User" as User {
+  * id : UUID <<PK,NOT NULL>>
+  * name : String <<NOT NULL>>
+  * email : String <<UK,NOT NULL>>
+  * password : String <<NOT NULL>>
+  * role : UserRole <<NOT NULL>>
+  * createdAt : DateTime <<NOT NULL>>
+  * updatedAt : DateTime <<NOT NULL>>
+  deletedAt : DateTime <<NULL>>
+}
+
+entity "Company" as Company {
+  * id : UUID <<PK,NOT NULL>>
+  * corporateName : String <<NOT NULL>>
+  tradeName : String <<NULL>>
+  cnpj : String <<UK,NULL>>
+  * cnae : String <<NOT NULL>>
+  * riskLevel : Int <<NOT NULL>>
+  * employeeCount : Int <<NOT NULL>>
+  address : String <<NULL>>
+  notes : String <<NULL>>
+  * createdById : UUID <<FK,NOT NULL>>
+  * createdAt : DateTime <<NOT NULL>>
+  * updatedAt : DateTime <<NOT NULL>>
+  deletedAt : DateTime <<NULL>>
+}
+
+entity "Standard" as Standard {
+  * id : UUID <<PK,NOT NULL>>
+  * type : StandardType <<NOT NULL>>
+  * code : String <<UK,NOT NULL>>
+  * title : String <<NOT NULL>>
+  summary : String <<NULL>>
+  officialUrl : String <<NULL>>
+  * isActive : Boolean <<NOT NULL>>
+}
+
+entity "Checklist" as Checklist {
+  * id : UUID <<PK,NOT NULL>>
+  * title : String <<NOT NULL>>
+  description : String <<NULL>>
+  * isTemplate : Boolean <<NOT NULL>>
+  * isOfficial : Boolean <<NOT NULL>>
+  * isActive : Boolean <<NOT NULL>>
+  createdById : UUID <<FK,NULL>>
+  * createdAt : DateTime <<NOT NULL>>
+  * updatedAt : DateTime <<NOT NULL>>
+  deletedAt : DateTime <<NULL>>
+}
+
+entity "ChecklistItem" as ChecklistItem {
+  * id : UUID <<PK,NOT NULL>>
+  * checklistId : UUID <<FK,NOT NULL>>
+  * description : String <<NOT NULL>>
+  * orderIndex : Int <<NOT NULL>>
+  * isRequired : Boolean <<NOT NULL>>
+}
+
+entity "ChecklistItemStandard" as ChecklistItemStandard {
+  * checklistItemId : UUID <<PK, FK,NOT NULL>>
+  * standardId : UUID <<PK, FK,NOT NULL>>
+}
+
+entity "ChecklistVersion" as ChecklistVersion {
+  * id : UUID <<PK,NOT NULL>>
+  * checklistId : UUID <<FK,NOT NULL>>
+  * versionNumber : Int <<NOT NULL>>
+  * status : ChecklistVersionStatus <<NOT NULL>>
+  * title : String <<NOT NULL>>
+  description : String <<NULL>>
+  * contentSchemaVersion : Int <<NOT NULL>>
+  contentHash : String <<NULL>>
+  createdById : UUID <<FK,NULL>>
+  publishedById : UUID <<FK,NULL>>
+  publishedAt : DateTime <<NULL>>
+  * createdAt : DateTime <<NOT NULL>>
+  * updatedAt : DateTime <<NOT NULL>>
+}
+
+entity "ChecklistVersionItem" as ChecklistVersionItem {
+  * id : UUID <<PK,NOT NULL>>
+  * checklistVersionId : UUID <<FK,NOT NULL>>
+  sourceVersionItemId : UUID <<FK,NULL>>
+  sourceChecklistItemId : UUID <<FK,NULL>>
+  * description : String <<NOT NULL>>
+  * orderIndex : Int <<NOT NULL>>
+  * isRequired : Boolean <<NOT NULL>>
+  * createdAt : DateTime <<NOT NULL>>
+  * updatedAt : DateTime <<NOT NULL>>
+}
+
+entity "ChecklistVersionItemStandard" as ChecklistVersionItemStandard {
+  * checklistVersionItemId : UUID <<PK, FK,NOT NULL>>
+  * standardId : UUID <<PK, FK,NOT NULL>>
+  * type : StandardType <<NOT NULL>>
+  * code : String <<NOT NULL>>
+  * title : String <<NOT NULL>>
+  summary : String <<NULL>>
+  officialUrl : String <<NULL>>
+}
+
+entity "Inspection" as Inspection {
+  * id : UUID <<PK,NOT NULL>>
+  * userId : UUID <<FK,NOT NULL>>
+  * companyId : UUID <<FK,NOT NULL>>
+  * checklistId : UUID <<FK,NOT NULL>>
+  checklistVersionId : UUID <<FK,NULL>>
+  * inspectionDate : DateTime <<NOT NULL>>
+  * status : InspectionStatus <<NOT NULL>>
+  * syncStatus : SyncStatus <<NOT NULL>>
+  notes : String <<NULL>>
+  * createdAt : DateTime <<NOT NULL>>
+  * updatedAt : DateTime <<NOT NULL>>
+  deletedAt : DateTime <<NULL>>
+}
+
+entity "InspectionChecklistSnapshot" as InspectionChecklistSnapshot {
+  * id : UUID <<PK,NOT NULL>>
+  * inspectionId : UUID <<FK, UK,NOT NULL>>
+  * sourceChecklistId : UUID <<FK,NOT NULL>>
+  * sourceChecklistVersionId : UUID <<FK,NOT NULL>>
+  * sourceVersionNumber : Int <<NOT NULL>>
+  * title : String <<NOT NULL>>
+  description : String <<NULL>>
+  * isTemplate : Boolean <<NOT NULL>>
+  * snapshotSchemaVersion : Int <<NOT NULL>>
+  * contentHash : String <<NOT NULL>>
+  * origin : InspectionSnapshotOrigin <<NOT NULL>>
+  * integrityStatus : InspectionSnapshotIntegrityStatus <<NOT NULL>>
+  * capturedAt : DateTime <<NOT NULL>>
+}
+
+entity "InspectionSnapshotItem" as InspectionSnapshotItem {
+  * id : UUID <<PK,NOT NULL>>
+  * snapshotId : UUID <<FK,NOT NULL>>
+  * sourceVersionItemId : UUID <<FK,NOT NULL>>
+  sourceChecklistItemId : UUID <<FK,NULL>>
+  * description : String <<NOT NULL>>
+  * orderIndex : Int <<NOT NULL>>
+  * isRequired : Boolean <<NOT NULL>>
+}
+
+entity "InspectionSnapshotItemStandard" as InspectionSnapshotItemStandard {
+  * snapshotItemId : UUID <<PK, FK,NOT NULL>>
+  * standardId : UUID <<PK, FK,NOT NULL>>
+  * type : StandardType <<NOT NULL>>
+  * code : String <<NOT NULL>>
+  * title : String <<NOT NULL>>
+  summary : String <<NULL>>
+  officialUrl : String <<NULL>>
+}
+
+entity "InspectionResponse" as InspectionResponse {
+  * id : UUID <<PK,NOT NULL>>
+  * inspectionId : UUID <<FK,NOT NULL>>
+  checklistItemId : UUID <<FK,NULL>>
+  snapshotItemId : UUID <<FK,NULL>>
+  * status : ResponseStatus <<NOT NULL>>
+  observation : String <<NULL>>
+  clientUpdatedAt : DateTime <<NULL>>
+  * createdAt : DateTime <<NOT NULL>>
+  * updatedAt : DateTime <<NOT NULL>>
+}
+
+entity "NonConformity" as NonConformity {
+  * id : UUID <<PK,NOT NULL>>
+  * inspectionResponseId : UUID <<FK, UK,NOT NULL>>
+  * description : String <<NOT NULL>>
+  * severity : Severity <<NOT NULL>>
+  dueDate : DateTime <<NULL>>
+  * status : NonConformityStatus <<NOT NULL>>
+  * createdAt : DateTime <<NOT NULL>>
+  * updatedAt : DateTime <<NOT NULL>>
+  deletedAt : DateTime <<NULL>>
+}
+
+entity "CorrectiveAction" as CorrectiveAction {
+  * id : UUID <<PK,NOT NULL>>
+  * nonConformityId : UUID <<FK,NOT NULL>>
+  * description : String <<NOT NULL>>
+  why : String <<NULL>>
+  location : String <<NULL>>
+  responsible : String <<NULL>>
+  dueDate : DateTime <<NULL>>
+  method : String <<NULL>>
+  estimatedCost : String <<NULL>>
+  * status : CorrectiveActionStatus <<NOT NULL>>
+  completedAt : DateTime <<NULL>>
+  * createdAt : DateTime <<NOT NULL>>
+  * updatedAt : DateTime <<NOT NULL>>
+  deletedAt : DateTime <<NULL>>
+}
+
+entity "Evidence" as Evidence {
+  * id : UUID <<PK,NOT NULL>>
+  inspectionId : UUID <<FK,NULL>>
+  nonConformityId : UUID <<FK,NULL>>
+  * publicId : String <<UK,NOT NULL>>
+  * storageUrl : String <<NOT NULL>>
+  * fileName : String <<NOT NULL>>
+  * mimeType : String <<NOT NULL>>
+  * fileSize : BigInt <<NOT NULL>>
+  width : Int <<NULL>>
+  height : Int <<NULL>>
+  caption : String <<NULL>>
+  * createdAt : DateTime <<NOT NULL>>
+  * updatedAt : DateTime <<NOT NULL>>
+  deletedAt : DateTime <<NULL>>
+}
+
+entity "Report" as Report {
+  * id : UUID <<PK,NOT NULL>>
+  * inspectionId : UUID <<FK, UK,NOT NULL>>
+  * generatedById : UUID <<FK,NOT NULL>>
+  * version : Int <<NOT NULL>>
+  * generatedAt : DateTime <<NOT NULL>>
+  observations : String <<NULL>>
+}
+
+entity "OfflineSyncOperation" as OfflineSyncOperation {
+  * id : UUID <<PK,NOT NULL>>
+  * userId : UUID <<FK,NOT NULL>>
+  * inspectionId : UUID <<FK,NOT NULL>>
+  * type : OfflineOperationType <<NOT NULL>>
+  * payloadHash : String <<NOT NULL>>
+  * clientCreatedAt : DateTime <<NOT NULL>>
+  * completedAt : DateTime <<NOT NULL>>
+}
+
+User ||..o{ Company : createdById
+User |o..o{ Checklist : createdById
+Checklist ||..o{ ChecklistItem : checklistId
+ChecklistItem ||..o{ ChecklistItemStandard : checklistItemId
+Standard ||..o{ ChecklistItemStandard : standardId
+User ||..o{ Inspection : userId
+Company ||..o{ Inspection : companyId
+Checklist ||..o{ Inspection : checklistId
+Inspection ||..o{ InspectionResponse : inspectionId
+ChecklistItem |o..o{ InspectionResponse : checklistItemId
+InspectionResponse ||..o| NonConformity : inspectionResponseId
+NonConformity ||..o{ CorrectiveAction : nonConformityId
+Inspection ||..o| Report : inspectionId
+User ||..o{ Report : generatedById
+Checklist ||..o{ ChecklistVersion : checklistId
+User |o..o{ ChecklistVersion : createdById
+User |o..o{ ChecklistVersion : publishedById
+ChecklistVersion ||..o{ ChecklistVersionItem : checklistVersionId
+ChecklistVersionItem |o..o{ ChecklistVersionItem : sourceVersionItemId
+ChecklistItem |o..o{ ChecklistVersionItem : sourceChecklistItemId
+ChecklistVersionItem ||..o{ ChecklistVersionItemStandard : checklistVersionItemId
+Standard ||..o{ ChecklistVersionItemStandard : standardId
+ChecklistVersion |o..o{ Inspection : checklistVersionId
+Inspection ||..o| InspectionChecklistSnapshot : inspectionId
+Checklist ||..o{ InspectionChecklistSnapshot : sourceChecklistId
+ChecklistVersion ||..o{ InspectionChecklistSnapshot : sourceChecklistVersionId
+InspectionChecklistSnapshot ||..o{ InspectionSnapshotItem : snapshotId
+ChecklistVersionItem ||..o{ InspectionSnapshotItem : sourceVersionItemId
+ChecklistItem |o..o{ InspectionSnapshotItem : sourceChecklistItemId
+InspectionSnapshotItem ||..o{ InspectionSnapshotItemStandard : snapshotItemId
+Standard ||..o{ InspectionSnapshotItemStandard : standardId
+InspectionSnapshotItem |o..o{ InspectionResponse : snapshotItemId
+Inspection |o..o{ Evidence : inspectionId
+NonConformity |o..o{ Evidence : nonConformityId
+User ||..o{ OfflineSyncOperation : userId
+Inspection ||..o{ OfflineSyncOperation : inspectionId
+
+note as Integridade
+  PK composta = par de FKs nas três associações.
+  versionNumber único com checklistId.
+  orderIndex único com o contêiner.
+  Resposta: snapshotItemId OR checklistItemId (inclusivo).
+  Evidência: inspectionId XOR nonConformityId.
+  Inspection admite zero ou um snapshot no banco.
+  Um DRAFT/checklist: UNIQUE parcial SQL.
+  Checklist oficial: template e proprietário NULL.
+  FKs: ON DELETE RESTRICT; ON UPDATE CASCADE nas migrations.
+  Checklist.createdById: schema gera SET NULL; SQL mantém RESTRICT.
+  Sem trigger SQL de imutabilidade ou de updatedAt.
+end note
+
+@enduml

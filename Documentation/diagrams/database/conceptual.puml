@@ -1,0 +1,99 @@
+@startuml
+title Safe Watch Insight - Modelo Conceitual
+hide circle
+skinparam linetype ortho
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+
+entity "User" as User {
+}
+
+entity "Company" as Company {
+}
+
+entity "Standard" as Standard {
+}
+
+entity "Checklist" as Checklist {
+}
+
+entity "ChecklistItem" as ChecklistItem {
+}
+
+entity "ChecklistVersion" as ChecklistVersion {
+}
+
+entity "ChecklistVersionItem" as ChecklistVersionItem {
+}
+
+entity "Inspection" as Inspection {
+}
+
+entity "InspectionChecklistSnapshot" as InspectionChecklistSnapshot {
+}
+
+entity "InspectionSnapshotItem" as InspectionSnapshotItem {
+}
+
+entity "InspectionResponse" as InspectionResponse {
+}
+
+entity "NonConformity" as NonConformity {
+}
+
+entity "CorrectiveAction" as CorrectiveAction {
+}
+
+entity "Evidence" as Evidence {
+}
+
+entity "Report" as Report {
+}
+
+entity "OfflineSyncOperation" as OfflineSyncOperation {
+}
+
+User ||..o{ Company : proprietario
+User |o..o{ Checklist : proprietario
+Checklist ||..o{ ChecklistItem : checklist
+User ||..o{ Inspection : responsavel
+Company ||..o{ Inspection : empresa
+Checklist ||..o{ Inspection : checklist
+Inspection ||..o{ InspectionResponse : inspecao
+ChecklistItem |o..o{ InspectionResponse : item_legado
+InspectionResponse ||..o| NonConformity : resposta_de_origem
+NonConformity ||..o{ CorrectiveAction : tratativa
+Inspection ||..o| Report : inspecao
+User ||..o{ Report : gerador
+Checklist ||..o{ ChecklistVersion : checklist
+User |o..o{ ChecklistVersion : autor
+User |o..o{ ChecklistVersion : publicador
+ChecklistVersion ||..o{ ChecklistVersionItem : versao
+ChecklistVersionItem |o..o{ ChecklistVersionItem : origem_do_item
+ChecklistItem |o..o{ ChecklistVersionItem : origem_legada
+ChecklistVersion |o..o{ Inspection : versao
+Inspection ||..o| InspectionChecklistSnapshot : inspecao
+Checklist ||..o{ InspectionChecklistSnapshot : checklist_de_origem
+ChecklistVersion ||..o{ InspectionChecklistSnapshot : versao_de_origem
+InspectionChecklistSnapshot ||..o{ InspectionSnapshotItem : captura
+ChecklistVersionItem ||..o{ InspectionSnapshotItem : origem_do_item
+ChecklistItem |o..o{ InspectionSnapshotItem : origem_legada
+InspectionSnapshotItem |o..o{ InspectionResponse : item_capturado
+Inspection |o..o{ Evidence : inspecao
+NonConformity |o..o{ Evidence : tratativa
+User ||..o{ OfflineSyncOperation : responsavel
+Inspection ||..o{ OfflineSyncOperation : inspecao
+Standard }o..o{ ChecklistItem : fundamenta
+Standard }o..o{ ChecklistVersionItem : fundamenta
+Standard }o..o{ InspectionSnapshotItem : fundamenta
+
+note as Escopo
+  Associações normativas abstraídas como N:N.
+  Item legado é conceito de compatibilidade.
+  Checklist oficial admite autoria institucional.
+  Evidência: inspeção XOR não conformidade.
+  Relatório é registro persistível, distinto do HTML.
+  Cardinalidades incluem a compatibilidade vigente.
+end note
+
+@enduml

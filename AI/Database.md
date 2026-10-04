@@ -1,740 +1,180 @@
-# Database.md
-
-# Banco de Dados
-
-Este documento define os padrões de modelagem, implementação e manutenção do banco de dados da plataforma **Safe Watch Insight**.
-
-Toda implementação deve permanecer compatível com:
-
-- Documento de Requisitos
-- Diagrama de Classes
-- Modelo Conceitual
-- Modelo Lógico
-- Modelo Físico
-- Dicionário de Dados
-- Schema Prisma
-
-O banco de dados oficial do projeto é **PostgreSQL**, utilizando **Prisma ORM** como camada de acesso aos dados.
-
----
-
-# Objetivos
-
-O banco de dados deve atender aos seguintes requisitos:
-
-- consistência dos dados;
-- rastreabilidade das inspeções;
-- escalabilidade;
-- facilidade de manutenção;
-- compatibilidade com funcionamento offline;
-- compatibilidade com Prisma ORM.
-
----
-
-# Tecnologias
-
-Banco de Dados
-
-- PostgreSQL
-
-Hospedagem
-
-- Neon
-
-ORM
-
-- Prisma ORM
-
-Migrações
-
-- Prisma Migrate
-
-Cliente
-
-- Prisma Client
-
----
-
-# Convenções Gerais
-
-## Idioma
-
-Toda a estrutura do banco deve utilizar inglês.
-
-Exemplos:
-
-User
-
-Company
-
-Inspection
-
-Checklist
-
-Evidence
-
-Report
-
-Nunca utilizar nomes em português.
-
----
-
-## Nome das tabelas
-
-Utilizar PascalCase no Prisma.
-
-Exemplo
-
-```prisma
-model User
-model Company
-model Inspection
-```
-
-O Prisma fará automaticamente o mapeamento para PostgreSQL.
-
----
-
-## Nome dos campos
-
-Utilizar camelCase.
-
-Exemplo
-
-```text
-createdAt
-
-updatedAt
-
-inspectionDate
-
-employeeCount
-```
-
----
-
-## Chaves Primárias
-
-Todas as entidades utilizarão UUID.
-
-Exemplo
-
-```prisma
-id String @id @default(cuid())
-```
-
-Caso futuramente seja desejado utilizar UUID nativo do PostgreSQL, a alteração deverá ser transparente para a aplicação.
-
----
-
-# Datas
-
-Todos os registros importantes devem possuir:
-
-```text
-createdAt
-
-updatedAt
-```
-
-Sempre utilizar:
-
-```prisma
-createdAt DateTime @default(now())
-
-updatedAt DateTime @updatedAt
-```
-
----
-
-# Exclusão
-
-Evitar exclusão física.
-
-Sempre que possível utilizar Soft Delete.
-
-Caso seja implementado:
-
-```text
-deletedAt DateTime?
-```
-
----
-
-# Relacionamentos
-
-Sempre utilizar relacionamentos explícitos do Prisma.
-
-Exemplo
-
-```prisma
-user User @relation(fields: [userId], references: [id])
-
-userId String
-```
-
-Evitar informações duplicadas, exceto cópias históricas deliberadas e
-documentadas em versões publicadas e snapshots de inspeção.
-
----
-
-# Cardinalidade
-
-As seguintes cardinalidades devem ser preservadas.
-
-## User
-
-1:N Company
-
-1:N Checklist
-
-1:N Inspection
-
-1:N Report
-
----
-
-## Company
-
-1:N Inspection
-
----
-
-## Checklist
-
-1:N ChecklistVersion
-
-1:N Inspection
-
-1:N InspectionChecklistSnapshot como identidade de origem
-
-`ChecklistItem` permanece somente como estrutura legada de compatibilidade.
-
----
-
-## ChecklistVersion
-
-1:N ChecklistVersionItem
-
-1:N Inspection
-
-1:N InspectionChecklistSnapshot como versão de origem
-
----
-
-## ChecklistVersionItem
-
-N:N Standard por `ChecklistVersionItemStandard`
-
-1:N InspectionSnapshotItem como linhagem
-
----
-
-## InspectionChecklistSnapshot
-
-1:1 Inspection
-
-1:N InspectionSnapshotItem
-
----
-
-## InspectionSnapshotItem
-
-N:N Standard por `InspectionSnapshotItemStandard`
-
-1:N InspectionResponse
-
----
-
-## Inspection
-
-1:1 InspectionChecklistSnapshot
-
-1:N InspectionResponse
-
-1:N Evidence
-
-1:1 Report
-
----
-
-## InspectionResponse
-
-0..1 NonConformity
-
----
-
-## NonConformity
-
-1:N CorrectiveAction
-
-1:N Evidence
-
----
-
-## OfflineSyncOperation
-
-User 1:N OfflineSyncOperation
-
-Inspection 1:N OfflineSyncOperation
-
----
-
-# Tipos de Dados
-
-## Texto pequeno
-
-String
-
----
-
-## Texto longo
-
-String
-
-(PostgreSQL armazenará como TEXT quando necessário.)
-
----
-
-## Datas
-
-DateTime
-
----
-
-## Apenas data
-
-DateTime
-
-A camada de aplicação decidirá se utilizará apenas a data.
-
----
-
-## Booleanos
-
-Boolean
-
----
-
-## Quantidades
-
-Int
-
----
-
-## Arquivos
-
-Tamanho
-
-BigInt
-
-Nunca utilizar Float para tamanho de arquivos.
-
----
-
-# Evidências
-
-As imagens NÃO serão armazenadas no banco.
-
-O banco armazenará apenas:
-
-- storageUrl
-
-- publicId
-
-- fileName
-
-- mimeType
-
-- fileSize
-
-- width
-
-- height
-
-- caption
-
-- createdAt
-
-- updatedAt
-
-O arquivo físico ficará em armazenamento externo.
-
-Inicialmente:
-
-Cloudinary.
-
-Cada registro pertence a exatamente um contexto histórico: uma `Inspection`
-que possui seu snapshot imutável ou uma `NonConformity` ligada à resposta e ao
-item do snapshot. A migration aplica um `CHECK` para impedir registros órfãos
-ou simultaneamente associados aos dois contextos. `publicId` é único e permite
-remover o arquivo no provedor sem derivar identificadores da URL.
-
----
-
-# Idempotência Offline
-
-`OfflineSyncOperation` contém somente a identidade necessária para deduplicar
-uma mutação já aceita:
-
-- `id`: UUID gerado no cliente e chave primária;
-- `userId` e `inspectionId`: contexto autenticado;
-- `type`: `SAVE_INSPECTION_RESPONSE` ou `FINISH_INSPECTION`;
-- `payloadHash`: SHA-256 canônico;
-- `clientCreatedAt`: horário original informado pelo dispositivo;
-- `completedAt`: horário de confirmação do servidor.
-
-O payload completo não é persistido nessa tabela. O registro é criado na mesma
-transação da resposta/NC ou conclusão. Repetir ID e hash é idempotente; repetir o
-ID com conteúdo diferente é conflito.
-
-`InspectionResponse.clientUpdatedAt` preserva o horário do evento offline.
-`InspectionResponse.updatedAt` continua controlado pelo servidor e funciona como
-revisão otimista, evitando depender do relógio potencialmente incorreto do
-dispositivo.
-
----
-
-# Plano de Ação 5W2H
-
-`CorrectiveAction` representa o plano 5W2H sem serialização ou duplicação de
-entidades:
-
-- `description`: o quê;
-- `why`: por quê;
-- `location`: onde;
-- `responsible`: quem;
-- `dueDate`: quando;
-- `method`: como;
-- `estimatedCost`: quanto.
-
-Os campos adicionais são opcionais para manter compatibilidade com ações
-corretivas simples e registros anteriores.
-
----
-
-# Índices
-
-Criar índices para campos frequentemente utilizados.
-
-Exemplos
-
-Company
-
-- cnpj
-
-Inspection
-
-- companyId
-
-- userId
-
-- inspectionDate
-
-Checklist
-
-- createdById
-
-ChecklistVersion
-
-- checklistId + versionNumber (unique)
-
-- checklistId + status
-
-- status
-
-- publishedAt
-
-ChecklistVersionItem
-
-- checklistVersionId + orderIndex (unique)
-
-- sourceVersionItemId
-
-InspectionChecklistSnapshot
-
-- inspectionId (unique)
-
-- sourceChecklistId
-
-- sourceChecklistVersionId
-
-- integrityStatus
-
-InspectionSnapshotItem
-
-- snapshotId + orderIndex (unique)
-
-- sourceVersionItemId
-
-Standard
-
-- code
-
----
-
-# Versionamento e Snapshot de Inspeção
-
-`Checklist` representa a identidade reutilizável. O conteúdo editável pertence
-a `ChecklistVersion`; cada versão possui número monotônico dentro do checklist e
-estado `DRAFT`, `PUBLISHED` ou `RETIRED`. Há no máximo um draft por checklist,
-garantido por índice único parcial da migration. Versões publicadas possuem
-`publishedAt`, `publishedById`, `contentSchemaVersion` e `contentHash` SHA-256.
-
-Itens de versão e suas associações normativas são registros próprios. A tabela
-de associação copia `type`, `code`, `title`, `summary` e `officialUrl`, além de
-manter a referência ao catálogo `Standard`. Isso preserva o conteúdo regulatório
-da versão mesmo se o catálogo for atualizado.
-
-Cada `Inspection` nova possui uma `InspectionChecklistSnapshot` exclusiva,
-criada na mesma transação da inspeção. O snapshot registra:
-
-- checklist e versão de origem;
-- número da versão, título, descrição e indicador de template;
-- versão do formato, hash, origem e situação de integridade;
-- descrição, ordem e obrigatoriedade dos itens;
-- metadados das normas relevantes para exibição histórica.
-
-`InspectionResponse.snapshotItemId` é a referência histórica autoritativa. Os
-campos opcionais `Inspection.checklistVersionId`,
-`InspectionResponse.checklistItemId` e as tabelas antigas de item foram mantidos
-na expansão do schema para compatibilidade. Novas gravações sempre preenchem a
-versão e o snapshot; o backend não executa inspeções sem snapshot.
-
-As FKs do modelo histórico usam `ON DELETE RESTRICT`. Ordens são únicas dentro
-da versão e do snapshot, versões são únicas por checklist/número, snapshots são
-únicos por inspeção e respostas são únicas por inspeção/item do snapshot.
-
-## Backfill legado
-
-A migration `20260803150000_add_checklist_versions_and_inspection_snapshots`
-cria uma versão inicial a partir do melhor estado disponível de cada checklist,
-gera um snapshot para cada inspeção existente e remapeia respostas para os itens
-do snapshot. O processo é determinístico e aborta se alguma resposta não puder
-ser mapeada.
-
-Como o banco antigo não permite provar qual conteúdo existia na data da
-inspeção, esses snapshots são identificados por:
-
-- `origin = LEGACY_BACKFILL`;
-- `integrityStatus = UNVERIFIED_LEGACY`;
-- `snapshotSchemaVersion = 0`.
-
-Snapshots criados normalmente usam `INSPECTION_CREATION`, `VERIFIED` e o formato
-canônico atual. O marcador legado não deve ser promovido para `VERIFIED` sem uma
-fonte histórica externa confiável.
-
----
-
-# Unicidade
-
-Devem possuir restrição UNIQUE:
-
-User.email
-
-Company.cnpj
-
-Standard.code
-
-ChecklistVersion(checklistId, versionNumber)
-
-Um único ChecklistVersion `DRAFT` por checklist (índice único parcial)
-
-ChecklistVersionItem(checklistVersionId, orderIndex)
-
-InspectionChecklistSnapshot.inspectionId
-
-InspectionSnapshotItem(snapshotId, orderIndex)
-
-InspectionResponse(inspectionId, snapshotItemId)
-
-OfflineSyncOperation.id
-
----
-
-# Integridade Referencial
-
-Todos os relacionamentos devem utilizar Foreign Keys.
-
-Nunca armazenar IDs órfãos.
-
----
-
-# Migrações
-
-Toda alteração estrutural deverá ser realizada utilizando:
-
-```bash
-npx prisma migrate dev
-```
-
-Nunca modificar diretamente o banco de produção.
-
----
-
-# Seeds
-
-Criar seeds para:
-
-Normas Regulamentadoras
-
-Usuário administrador
-
-Templates básicos de Checklist
-
-As seeds devem ser idempotentes.
-
-O catálogo documentado abrange as NRs de `NR-1` a `NR-38`, com `NR-2` e
-`NR-27` inativas por estarem revogadas. O Demo Seed atual garante as normas
-necessárias ao dataset, sem sobrescrever um catálogo existente mais amplo. A fonte de consulta registrada é o catálogo oficial do
-Ministério do Trabalho e Emprego.
-
----
-
-# Prisma Client
-
-Todo acesso ao banco deve ocorrer através do Prisma Client.
-
-Nunca utilizar SQL bruto sem necessidade.
-
-Fluxo obrigatório:
-
-Repository
-
-↓
-
-Prisma Client
-
-↓
-
-PostgreSQL
-
----
-
-# Repository Pattern
-
-Repositories possuem apenas responsabilidades de persistência.
-
-Exemplos:
-
-create()
-
-update()
-
-delete()
-
-findById()
-
-findMany()
-
-exists()
-
-count()
-
-Nenhuma regra de negócio deve existir nos repositories.
-
----
-
-# Services
-
-Toda regra de negócio pertence aos Services.
-
-Exemplos:
-
-validações
-
-fluxos
-
-regras
-
-permissões
-
-consistência
-
-Nunca implementar regras de negócio dentro do Prisma.
-
----
-
-# Performance
-
-Sempre evitar:
-
-consultas N+1
-
-duplicação de dados
-
-consultas desnecessárias
-
-Sempre preferir:
-
-include
-
-select
-
-paginação
-
-índices
-
----
-
-# Escalabilidade
-
-O modelo deve suportar futuramente:
-
-- múltiplas empresas;
-
-- múltiplos usuários;
-
-- permissões por perfil;
-
-- sincronização offline;
-
-- notificações;
-
-- dashboards;
-
-- BI;
-
-- armazenamento de documentos;
-
-- assinatura digital;
-
-- geolocalização.
-
-Nenhuma decisão atual deve impedir essas futuras implementações.
-
----
-
-# Compatibilidade com Offline
-
-A estrutura do banco é sincronizada com IndexedDB por IDs estáveis. Operações de
-resposta/conclusão usam UUID gerado no cliente, hash, revisão esperada e
-timestamp original. A migration
-`20260806220000_add_offline_sync_idempotency` é aditiva e foi aplicada no Neon
-sem reset ou exclusão de dados.
-
----
-
-# Objetivo
-
-O banco de dados deve representar fielmente o domínio do problema e permanecer consistente com toda a documentação do projeto.
-
-Qualquer alteração estrutural deve ser refletida também na documentação do TCC.
-
-# Propriedade institucional de checklists
-
-Migration `20261003000000_add_official_checklist_templates`: adiciona
-`Checklist.isOfficial` com default false e permite NULL em
-`Checklist.createdById` e `ChecklistVersion.createdById`. O CHECK
-`Checklist_ownership_check` exige proprietário para pessoais e exige proprietário
-NULL e `isTemplate=true` para oficiais. Dados existentes mantêm seu proprietário.
-Versões da plataforma herdam autoria institucional do checklist pai e usam
-criador/publicador NULL; publicações pessoais continuam exigindo publicador.
-Hash, data, número, itens históricos e FKs permanecem. A descrição versionada
-inclui fonte, ano e limites do template; cópias mantêm linhagem dos itens.
-
-`npm run db:seed:platform` cria somente o conteúdo basal institucional e as NRs
-necessárias ausentes. O Demo Seed chama a mesma rotina. O seed atual de demo
-isoladamente contém oito NRs; o bootstrap institucional acrescenta NR-18 quando
-ausente e preserva qualquer catálogo mais completo existente. Consulte
-[OfficialTemplates.md](./OfficialTemplates.md) para implantação e idempotência.
+# Banco de Dados — referência para agentes
+
+## Estado e fontes de verdade
+
+Atualização documental da Fase 2 em 3 de outubro de 2026, HEAD de referência
+`0e7c6e4fcebb3edaf8c5eba3efd23dc357dfb8f9`. PostgreSQL/Neon, Prisma ORM e
+Prisma Migrate. O modelo atual tem **19 models**, **12 enums**, **16 PKs UUID
+simples** e **3 PKs compostas**. O estado físico documentado resulta das seis
+migrations; não foi feita consulta de drift ao banco remoto nesta fase.
+
+Fontes primárias: [schema](../prisma/schema.prisma) e
+[migrations](../prisma/migrations/), incluindo SQL fora do Prisma.
+Em divergência documental, prevalecem implementação e DDL vigente.
+Services/Repositories delimitam somente as regras que não são garantidas físicas.
+
+O [Dicionário de Dados](../Documentation/DicionarioDeDados.md) é a referência
+canônica de todos os campos, tipos, nullability, defaults, FKs, índices e CHECKs.
+Não inferir constraints SQL a partir de frases de regra de negócio.
+
+## Inventário
+
+| Grupo                              | Models                                                                                                                        |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Identidade e cadastro              | `User`, `Company`, `Standard`                                                                                                 |
+| Checklist e compatibilidade        | `Checklist`, `ChecklistItem`, `ChecklistItemStandard`                                                                         |
+| Versionamento                      | `ChecklistVersion`, `ChecklistVersionItem`, `ChecklistVersionItemStandard`                                                    |
+| Inspeção e histórico               | `Inspection`, `InspectionChecklistSnapshot`, `InspectionSnapshotItem`, `InspectionSnapshotItemStandard`, `InspectionResponse` |
+| Tratativa                          | `NonConformity`, `CorrectiveAction`                                                                                           |
+| Evidências e relatório persistível | `Evidence`, `Report`                                                                                                          |
+| Sincronização                      | `OfflineSyncOperation`                                                                                                        |
+
+## Convenções implementadas
+
+- Tabelas PascalCase e campos camelCase sem @map/@@map; SQL entre aspas.
+- String comum vira TEXT; Int INTEGER; Boolean BOOLEAN; BigInt BIGINT.
+- DateTime é TIMESTAMP(3) sem fuso horário, não DATE/TIMESTAMPTZ.
+- IDs nativos usam `String @id @default(uuid()) @db.Uuid`: uuid() é geração
+  Prisma, sem DEFAULT SQL. UUID explícito também é possível nos fluxos internos.
+- OfflineSyncOperation.id usa `String @id @db.Uuid`, sem default; vem do cliente.
+- ChecklistItemStandard, ChecklistVersionItemStandard e
+  InspectionSnapshotItemStandard têm PK formada pelas duas FKs, sem id.
+- @updatedAt é gestão Prisma, não trigger SQL; now() corresponde a
+  CURRENT_TIMESTAMP. Não há timestamps universais: itens legados, Standard e
+  associações não têm createdAt/updatedAt; snapshot usa capturedAt; Report
+  usa generatedAt; operação offline usa clientCreatedAt/completedAt.
+- Soft delete existe apenas em User, Company, Checklist, Inspection,
+  NonConformity, CorrectiveAction e Evidence. Não libera UNIQUE ou FKs.
+
+## Enums
+
+| Enum PostgreSQL/Prisma              | Finalidade                                          | Valores                                            | Utilizado em                                                                                |
+| ----------------------------------- | --------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `UserRole`                          | Perfil declarado do usuário.                        | `ADMIN`, `TECHNICIAN`, `SUPERVISOR`, `AUDITOR`     | `User.role`                                                                                 |
+| `StandardType`                      | Classificação da norma e de suas cópias históricas. | `NR`, `NBR`, `NT`, `OTHER`                         | `Standard.type`, `ChecklistVersionItemStandard.type`, `InspectionSnapshotItemStandard.type` |
+| `InspectionStatus`                  | Situação de execução da inspeção.                   | `PLANNED`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED` | `Inspection.status`                                                                         |
+| `SyncStatus`                        | Situação declarada de sincronização da inspeção.    | `PENDING`, `SYNCING`, `SYNCED`, `ERROR`            | `Inspection.syncStatus`                                                                     |
+| `OfflineOperationType`              | Tipo de mutação offline confirmada.                 | `SAVE_INSPECTION_RESPONSE`, `FINISH_INSPECTION`    | `OfflineSyncOperation.type`                                                                 |
+| `ChecklistVersionStatus`            | Estado editorial da versão.                         | `DRAFT`, `PUBLISHED`, `RETIRED`                    | `ChecklistVersion.status`                                                                   |
+| `InspectionSnapshotOrigin`          | Origem da captura histórica.                        | `INSPECTION_CREATION`, `LEGACY_BACKFILL`           | `InspectionChecklistSnapshot.origin`                                                        |
+| `InspectionSnapshotIntegrityStatus` | Condição de verificabilidade do conteúdo capturado. | `VERIFIED`, `UNVERIFIED_LEGACY`                    | `InspectionChecklistSnapshot.integrityStatus`                                               |
+| `ResponseStatus`                    | Resultado de avaliação do item.                     | `COMPLIANT`, `NON_COMPLIANT`, `NOT_APPLICABLE`     | `InspectionResponse.status`                                                                 |
+| `Severity`                          | Gravidade da não conformidade.                      | `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`                | `NonConformity.severity`                                                                    |
+| `NonConformityStatus`               | Situação de tratamento da não conformidade.         | `OPEN`, `IN_PROGRESS`, `RESOLVED`, `OVERDUE`       | `NonConformity.status`                                                                      |
+| `CorrectiveActionStatus`            | Situação de execução da ação corretiva.             | `PENDING`, `IN_PROGRESS`, `COMPLETED`, `OVERDUE`   | `CorrectiveAction.status`                                                                   |
+
+## Propriedade, versões e conteúdo histórico
+
+Checklist.createdById é nullable, com CHECK Checklist_ownership_check:
+oficial exige isOfficial=true, isTemplate=true, proprietário NULL;
+pessoal exige isOfficial=false e proprietário preenchido. isTemplate sozinho
+não implica autoria institucional. Não criar conta institucional fictícia.
+Autor da versão (createdById), publicador (publishedById) e proprietário do
+checklist são papéis distintos. O bootstrap usa autor/publicador NULL;
+o fluxo pessoal os atribui à sessão. A coerência com o pai não é uma FK composta.
+
+ChecklistVersion tem numeração positiva e UNIQUE(checklistId, versionNumber).
+O índice SQL parcial ChecklistVersion_one_draft_per_checklist_key limita um
+DRAFT. Não há FK para versão anterior; a linhagem vive nos itens.
+Itens legados/de versão/de snapshot têm ordem única por contêiner, nunca global;
+CHECK de ordem positiva existe somente nos itens de versão e snapshot.
+
+O CHECK de publicação vigente exige DRAFT com publicador/data/hash NULL ou
+PUBLISHED/RETIRED com data/hash e (publicador preenchido OU criador NULL).
+Não consulta o checklist pai. Imutabilidade de versão publicada/snapshot,
+monotonicidade da versão e validação do hash são garantias da aplicação,
+sem trigger SQL de bloqueio de conteúdo.
+
+Na criação atual, inspeção/snapshot/itens/normas são gravados na mesma transação
+de versão publicada íntegra. Fisicamente Inspection.checklistVersionId é
+nullable e Inspection admite zero ou um snapshot; não converter essa regra
+de fluxo em NOT NULL ou cardinalidade obrigatória no diagrama físico.
+
+As associações históricas copiam type/code/title/summary/officialUrl e conservam
+FK ao catálogo Standard. Relatórios/execução usam as cópias, preservando o
+histórico mesmo após alteração do catálogo. InspectionResponse aceita
+snapshotItemId e checklistItemId nullable, com CHECK OR inclusivo que exige
+pelo menos um; ambos podem coexistir. Há dois UNIQUE por inspectionId/item.
+O Service resolve item no snapshot da própria inspeção; a FK simples não o garante.
+
+Backfill: LEGACY_BACKFILL, UNVERIFIED_LEGACY e formato 0 indicam melhor estado
+recuperável, sem prova do conteúdo original. ChecklistItem,
+ChecklistItemStandard e referências legadas continuam vigentes. Não apagar
+nem tratá-los como caminho principal de novas inspeções.
+
+## Tratativa, evidências e relatório
+
+Uma resposta admite zero ou uma NonConformity (FK única); cada NC pode ter
+várias ações. CorrectiveAction preserva o 5W2H: description obrigatório;
+why/location/responsible/method/estimatedCost nullable como TEXT; dueDate e
+completedAt nullable como TIMESTAMP(3). responsible não é FK e estimatedCost
+não é Decimal/Float/moeda. Conclusão, atraso e validações pertencem à aplicação.
+
+Evidence tem duas FKs nullable com CHECK XOR: exatamente inspectionId OU
+nonConformityId. FK garante pai existente; Service exige contexto histórico,
+proprietário e arquivo válido. Binários ficam no Cloudinary; banco mantém
+publicId único, URL, nome, MIME, tamanho BIGINT, dimensões e timestamps.
+Backfill de publicId usa `legacy/<id>`, sem declarar arquivos antigos como geridos
+pelo provedor. As duas FKs atuais são RESTRICT, substituindo o SET NULL inicial.
+
+Report é uma tabela persistível, com inspectionId único, generatedById,
+version, generatedAt e observations. Zero ou uma linha por inspeção; não há
+histórico de várias linhas apenas por existir version. O ReportRepository
+atual lê Inspection e monta DTO/HTML sob demanda. Visualização/impressão pelo
+navegador não cria automaticamente Report nem armazena PDF na tabela.
+
+## Sincronização e hashes
+
+OfflineSyncOperation contém id, userId, inspectionId, type, payloadHash,
+clientCreatedAt e completedAt; **não tem status ou payload completo**.
+Linha = confirmação remota, não fila IndexedDB. ID do cliente é obrigatório
+sem default; completedAt tem CURRENT_TIMESTAMP. A PK deduplica UUID;
+hash não é UNIQUE. Igualdade de usuário/inspeção/tipo/hash e atomicidade com a
+mutação são controladas pela aplicação, não por CHECK de comparação de payload.
+
+InspectionResponse.updatedAt é revisão remota; clientUpdatedAt preserva relógio
+do dispositivo. Comparação otimista é da aplicação, sem Last Write Wins ou
+contador numérico físico. O schema não representa suporte offline completo.
+
+Hashes: ChecklistVersion.contentHash (nullable),
+InspectionChecklistSnapshot.contentHash (obrigatório) e
+OfflineSyncOperation.payloadHash (obrigatório), todos CHAR(64), com CHECK de
+hexadecimal minúsculo. SHA-256 de conteúdo e de operação têm finalidades
+distintas; CHECK valida formato, não recalcula o digest.
+
+## Ações referenciais e divergência conhecida
+
+As FKs criadas pelas migrations vigentes usam ON DELETE RESTRICT e ON UPDATE
+CASCADE. Soft delete não dispara ação referencial. Há uma diferença de schema:
+Checklist.createdById nullable sem onDelete explícito gera SET NULL no DDL
+offline do Prisma; a migration inicial criou RESTRICT e a institucional não
+recriou a FK. O estado migrado permanece RESTRICT. Não usar db push como
+equivalente ao histórico de migrations. Detalhes e método no
+[dicionário, seção 8](../Documentation/DicionarioDeDados.md#8-divergência-constatada-entre-schema-e-migrations).
+Alinhar essa ação exige decisão de implementação em tarefa própria; nenhuma
+alteração estrutural foi necessária nesta fase documental.
+
+## Manutenção e referências
+
+Respeitar Repository → Prisma → PostgreSQL; regras de negócio em Services,
+entradas validadas no servidor. Não acessar Prisma nas telas/rotas. Não
+reescrever migrations históricas. Mudanças futuras exigem migration própria
+e atualização dos modelos/dicionário; não modificar produção manualmente.
+Seeds institucionais contextualizam conteúdo, não são DDL e não substituem
+enum/constraint. Catálogo e implantação: [OfficialTemplates.md](./OfficialTemplates.md).
+Detalhes de aplicação: [ChecklistCopy.md](./ChecklistCopy.md) e
+[Offline.md](./Offline.md).
+
+Modelos atuais:
+
+- [Conceitual com Mermaid](../Documentation/ModeloConceitualDoBancoDeDados.md) e
+  [PlantUML](../Documentation/diagrams/database/conceptual.puml).
+- [Lógico com Mermaid](../Documentation/ModeloLogico.md) e
+  [PlantUML](../Documentation/diagrams/database/logical.puml).
+- [Físico com Mermaid](../Documentation/ModeloFisicoDB.md) e
+  [PlantUML](../Documentation/diagrams/database/physical.puml).
+
+Os inventários de todas as migrations, índices/constraints e FKs estão no
+dicionário. Orientações antigas de timestamps universais, IDs não nativos ou
+remoção futura do legado não definem o estado atual; o histórico permanece no Git.
+Esta revisão não altera BusinessRules, Architecture, API, telas ou código.
