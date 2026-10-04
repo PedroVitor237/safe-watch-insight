@@ -46,6 +46,10 @@ A autenticação atual usa:
 - cookie `safe_watch_session`;
 - duração de sessão de 8 horas.
 
+Cadastro público usa `register`, atribui TECHNICIAN no servidor e não cria sessão
+automaticamente. Identidade de negócio vem da sessão; papéis armazenados não
+implementam RBAC. Regras completas em [AI/BusinessRules.md](../AI/BusinessRules.md).
+
 Credenciais de demonstração criadas pelo seed:
 
 ```text
@@ -56,6 +60,9 @@ Senha: Demo@12345
 ---
 
 ## 10.4 Padrão de Respostas
+
+Os exemplos abaixo são envelopes dos handlers. Validação Zod anterior ao handler
+pode produzir erro do framework, sem garantir esse mesmo envelope.
 
 Sucesso:
 
@@ -84,6 +91,7 @@ Erro:
 ### Autenticação
 
 - `login`
+- `register`
 - `getCurrentSession`
 - `logout`
 
@@ -102,6 +110,13 @@ Erro:
 - `deleteChecklist`
 - `getChecklistById`
 - `listChecklists`
+- `copyChecklist`
+- `useOfficialTemplate`
+
+Cópia cria identidade pessoal independente e DRAFT v1. Draft próprio pode ser
+origem; terceiro/oficial exige publicação acessível, formato 1 e hash íntegro.
+Publicação e retirada exigem ownership; retirada tem API/hook, sem ação na UI.
+Contratos e limites em [AI/API.md](../AI/API.md).
 
 ### Itens de Checklist
 
@@ -177,6 +192,15 @@ detalhado, validações e erros estão documentados em
 
 - `getGreeting`
 
+### Relatórios e dashboard
+
+- `listAvailableInspectionReports`
+- `getInspectionReport`
+- `getDashboard`
+
+Consultas limitadas às inspeções do usuário da sessão. Relatório é montado sob
+demanda, sem inserir Report ou armazenar PDF; a UI imprime pelo navegador.
+
 ---
 
 ## 10.6 Funcionalidades Ainda Não Implementadas na API
@@ -185,8 +209,6 @@ Os seguintes módulos estão previstos no projeto ou modelados parcialmente no
 banco, mas ainda não possuem API completa:
 
 - usuários administrativos;
-- relatórios reais;
-- dashboard real;
 - criação integral de inspeção offline;
 - reconciliação assistida de conflitos;
 - sincronização de evidências binárias offline.

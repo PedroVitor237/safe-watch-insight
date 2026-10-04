@@ -1,6 +1,9 @@
 # API da Plataforma
 
-Este documento descreve a API atualmente implementada no **Safe Watch Insight** para a entrega da Atividade 2.
+Este documento descreve a API implementada no **Safe Watch Insight**.
+Autenticação/autorização/checklists conferidos na Fase 3 em 3 de outubro de 2026.
+Não é uma especificação de funcionalidades futuras. Regras de domínio e matriz
+de acesso: [BusinessRules.md](./BusinessRules.md).
 
 A implementação atual usa **TanStack Start Server Functions**, não endpoints REST manuais. Por isso, os exemplos abaixo usam chamada de função no frontend:
 
@@ -58,7 +61,7 @@ Erro:
 }
 ```
 
-Erro de validação:
+Envelope de erro de validação quando tratado pela camada de respostas:
 
 ```json
 {
@@ -71,6 +74,10 @@ Erro de validação:
 ```
 
 Observação: em Server Functions, o transporte HTTP pode não refletir diretamente o `statusCode` lógico do corpo de resposta. Para tratamento no frontend, usar `success`, `message`, `code` e `statusCode`.
+
+Schemas executados em inputValidator/validator podem lançar erro Zod antes do
+handler, sem passar pelo envelope do Service. O cliente precisa tratar também
+exceções de transporte/validação; não se garante o JSON acima para todo input inválido.
 
 ---
 
@@ -95,10 +102,17 @@ A autenticação atual usa sessão do TanStack Start com cookie HTTP-only:
 - Conteúdo da sessão: `userId`.
 - Senhas são armazenadas com hash bcrypt.
 - `SESSION_SECRET` é obrigatório em produção.
+- HttpOnly=true, SameSite=lax, Path=/ e Secure em produção. Fora de produção,
+  há segredo de desenvolvimento quando SESSION_SECRET não foi configurado.
+- Não usa JWT nem tabela própria de sessões. Usuário é reconsultado por
+  deletedAt=null; não existe User.isActive. Conta ausente/excluída limpa sessão.
+- Papéis ADMIN/TECHNICIAN/SUPERVISOR/AUDITOR são armazenados, sem RBAC funcional.
+  Cadastro atribui TECHNICIAN; outro papel não concede administração.
 
 Todas as Server Functions de negócio exigem sessão autenticada. Exceções:
 
 - `login`
+- `register`
 - `logout`
 - `getCurrentSession`
 - `getGreeting` exemplo técnico
@@ -112,16 +126,23 @@ pertencente a outro usuário retorna o mesmo `NOT_FOUND` lógico (`404`).
 
 - Empresas: `createdById` restringe lista, detalhe, atualização e exclusão.
   Apenas empresas próprias podem ser usadas ao criar inspeções.
-- Checklists: o autor pode editar, excluir, publicar, retirar versões e alterar
+- Checklists pessoais: o proprietário pode editar, excluir, publicar, retirar versões e alterar
   itens. Um checklist ativo com versão `PUBLISHED` pode ser lido e reutilizado
   por outro usuário; essa leitura mostra apenas versões publicadas e seus
   metadados publicados. Drafts e versões retiradas permanecem privados.
+- Oficial: isOfficial=true/isTemplate=true/dono NULL, consultável somente com
+  sessão e publicação ativa acessível. Mutação pessoal retorna NOT_FOUND,
+  inclusive para role ADMIN. isTemplate isolado não representa oficialidade.
 - Inspeções: `Inspection.userId` restringe lista, detalhe, exclusão, respostas
   e conclusão. A mesma regra vale para a sincronização offline, preservando
   UUID, revisão esperada e deduplicação das operações.
 - Não conformidades e ações corretivas: a autorização segue a inspeção da
   resposta associada, inclusive nas mutações. Evidências, relatórios e
   dashboard preservam seus filtros de propriedade existentes.
+
+Evidência pode apontar diretamente à inspeção ou à NC/resposta/inspeção, nunca à
+ação corretiva. responsible textual não é dono/permissão. Dono do checklist
+compartilhado não recebe acesso à inspeção de quem o usa.
 
 O `statusCode` é um campo lógico do resultado da Server Function, conforme
 descrito acima.
@@ -212,7 +233,7 @@ await register({
 - **Validação:** `loginSchema`.
 - **Query parameters:** não se aplica.
 - **Path parameters:** não se aplica.
-- **Regras relacionadas:** normaliza e-mail; compara senha com bcrypt; não retorna password.
+- **Regras relacionadas:** normaliza e-mail; busca usuário não excluído; compara bcrypt custo 12; não retorna password. Cadastro não inicia sessão; login cria cookie após autenticação bem-sucedida.
 - **Exemplo de chamada:**
 
 ```ts
@@ -245,7 +266,7 @@ await login({ data: { email: "demo.user@example.test", password: "Demo@12345" } 
 - **Validação:** não possui input.
 - **Query parameters:** não se aplica.
 - **Path parameters:** não se aplica.
-- **Regras relacionadas:** limpa a sessão se o usuário da sessão não existir mais.
+- **Regras relacionadas:** reconsulta usuário não excluído; limpa sessão se ausente/excluído. Retorna erro do Service (404 nesse caso), ou 401 se não houver identidade de sessão.
 - **Exemplo de chamada:**
 
 ```ts
@@ -278,7 +299,7 @@ await getCurrentSession();
 - **Validação:** não possui input.
 - **Query parameters:** não se aplica.
 - **Path parameters:** não se aplica.
-- **Regras relacionadas:** remove sessão HTTP-only.
+- **Regras relacionadas:** remove sessão HTTP-only. UI também limpa IndexedDB/cache privado; falha remota é informada e não significa revogação remota confirmada. Sessão local offline não autoriza Server Functions.
 - **Exemplo de chamada:**
 
 ```ts
@@ -491,7 +512,7 @@ await listCompanies({ data: { page: 1, pageSize: 20 } });
 - **Validação:** `createChecklistClientSchema`.
 - **Query parameters:** não se aplica.
 - **Path parameters:** não se aplica.
-- **Regras relacionadas:** `createdById` vem da sessão; checklist pode ser template ou personalizado; a criação é atômica e também cria a versão `DRAFT` número 1 com o mesmo título e descrição.
+- **Regras relacionadas:** createdById vem da sessão; cria somente pessoal, isOfficial=false. isTemplate pode marcar template pessoal. Criação atômica com DRAFT v1 e autor da sessão, inicialmente privado. Campos desconhecidos de autoria/oficialidade são removidos pelo schema comum; não devem ser descritos como aceitos pelo contrato.
 - **Exemplo de chamada:**
 
 ```ts
@@ -522,7 +543,7 @@ await createChecklist({ data: payload });
 - **Validação:** `updateChecklistInputSchema`.
 - **Query parameters:** não se aplica.
 - **Path parameters:** `id` no body.
-- **Regras relacionadas:** exige ao menos um campo e valida existência. `title` e `description` são gravados no draft; se ele não existir, o Service clona a versão publicada ou retirada mais recente para o próximo número. `isTemplate` e `isActive` atualizam a identidade do checklist. Uma versão publicada nunca é alterada.
+- **Regras relacionadas:** exige ao menos um campo e ownership pessoal não excluído. title/description vão ao draft, derivado da publicação/retirada mais recente se necessário. isTemplate/isActive atualizam identidade; alteração apenas desses indicadores não cria draft. Publicação/oficial não é editada diretamente.
 - **Exemplo de chamada:**
 
 ```ts
@@ -549,7 +570,7 @@ await updateChecklist({ data: { id, data: { title: "Novo título" } } });
 - **Validação:** `checklistIdSchema`.
 - **Query parameters:** não se aplica.
 - **Path parameters:** `id` no body.
-- **Regras relacionadas:** usa soft delete (`deletedAt`).
+- **Regras relacionadas:** exige proprietário pessoal e usa soft delete (deletedAt), preservando versões/snapshots. Oficial ou checklist alheio retorna NOT_FOUND.
 - **Exemplo de chamada:**
 
 ```ts
@@ -561,7 +582,7 @@ await deleteChecklist({ data: { id } });
 
 ### `getChecklistById`
 
-- **Finalidade:** consultar checklist ativo por ID.
+- **Finalidade:** consultar checklist visível não excluído por ID, inclusive próprio inativo.
 - **Método:** `POST`
 - **Arquivo:** `src/lib/api/checklist.functions.ts`
 - **Autenticação:** exige sessão.
@@ -576,7 +597,7 @@ await deleteChecklist({ data: { id } });
 - **Validação:** `checklistIdSchema`.
 - **Query parameters:** não se aplica.
 - **Path parameters:** `id` no body.
-- **Regras relacionadas:** retorna a identidade do checklist, suas versões e os itens/metadados normativos de cada versão. O frontend usa o draft para manutenção e versões publicadas para seleção.
+- **Regras relacionadas:** dono recebe versões/draft/histórico, com canManage=true. Terceiro/oficial exige checklist ativo com PUBLISHED; retorna somente publicações, título/descrição da última e canManage=false. Nunca expõe draft privado alheio. Frontend mantém draft e seleciona publicação para inspeção.
 - **Exemplo de chamada:**
 
 ```ts
@@ -588,7 +609,7 @@ await getChecklistById({ data: { id } });
 
 ### `listChecklists`
 
-- **Finalidade:** listar checklists ativos.
+- **Finalidade:** listar checklists visíveis não excluídos, com filtro opcional de atividade.
 - **Método:** `POST`
 - **Arquivo:** `src/lib/api/checklist.functions.ts`
 - **Autenticação:** exige sessão.
@@ -609,9 +630,9 @@ await getChecklistById({ data: { id } });
 - **Validação:** `checklistClientFiltersSchema`.
 - **Query parameters:** enviados no body.
 - **Path parameters:** não se aplica.
-- **Filtros:** `search`, `isTemplate`, `isActive`, paginação e ordenação.
+- **Filtros:** search, isTemplate, isActive, scope (official/mine/shared), paginação e ordenação.
 - **Ordenação:** `title`, `isTemplate`, `isActive`, `createdAt`, `updatedAt`.
-- **Regras relacionadas:** lista apenas registros não excluídos; inclui resumo das versões, status e contagem de itens sem carregar todo o conteúdo de cada item.
+- **Regras relacionadas:** lista visível à sessão com resumo/contagem de versões. Dono recebe drafts/histórico; terceiro/oficial apenas publicações de checklist ativo. Dados devolvidos de título/descrição são publicados para terceiros, mas busca/ordenação consultam campos atuais da identidade. Ver limite no relatório da Fase 3.
 - **Exemplo de chamada:**
 
 ```ts
@@ -627,14 +648,14 @@ await listChecklists({ data: { isActive: true } });
 
 ### `listChecklistVersions`
 
-- **Finalidade:** listar, em ordem decrescente, todas as versões de um checklist.
+- **Finalidade:** listar versões visíveis em ordem decrescente de número.
 - **Método:** `POST`
 - **Arquivo:** `src/lib/api/checklist-version.functions.ts`
 - **Autenticação:** exige sessão.
 - **Body:** `{ "checklistId": "uuid" }`.
 - **Validação:** `checklistVersionsByChecklistSchema`.
 - **Resposta:** versões com itens, linhagem e metadados normativos copiados.
-- **Regras relacionadas:** o checklist deve existir e não estar excluído.
+- **Regras relacionadas:** checklist precisa ser visível não excluído. Proprietário recebe todas as versões; terceiros/oficiais somente PUBLISHED de checklist ativo, sem drafts/retiradas.
 - **Erros possíveis:** `401`, `404`, `422`, `500`.
 
 ### `publishChecklistVersion`
@@ -645,7 +666,7 @@ await listChecklists({ data: { isActive: true } });
 - **Autenticação:** exige sessão.
 - **Body:** `{ "checklistId": "uuid" }`.
 - **Validação:** `publishChecklistVersionSchema`.
-- **Regras relacionadas:** exige draft; calcula SHA-256 do conteúdo canônico; registra autor e data; usa controle otimista para impedir corrida entre edição e publicação; a versão publicada torna-se imutável.
+- **Regras relacionadas:** ownership pessoal/draft existente; sem mínimo de itens nem exigência de atividade. Calcula SHA-256 formato 1, registra publicador da sessão/data/status. Confere expectedUpdatedAt lido pelo Service, não revisão enviada pelo cliente. Mantém ID/número; nova publicação não retira anteriores automaticamente.
 - **Resposta:** versão publicada com seus itens.
 - **Erros possíveis:** `401`, `404`, `409` draft ausente ou conflito concorrente, `422`, `500`.
 
@@ -657,7 +678,7 @@ await listChecklists({ data: { isActive: true } });
 - **Autenticação:** exige sessão.
 - **Body:** `{ "checklistId": "uuid", "versionId": "uuid" }`.
 - **Validação:** `checklistVersionIdSchema`.
-- **Regras relacionadas:** somente versões `PUBLISHED` podem ser retiradas; a retirada não altera snapshots nem inspeções existentes.
+- **Regras relacionadas:** ownership pessoal e versão PUBLISHED do checklist informado. Muda status para RETIRED, preserva conteúdo/hash/data/publicador/snapshots/inspeções. Existe hook, sem ação nas telas atuais; não é editoria de oficial nem republicação direta de retirada.
 - **Resposta:** versão com status `RETIRED`.
 - **Erros possíveis:** `401`, `404`, `409`, `422`, `500`.
 
@@ -773,7 +794,7 @@ await deleteChecklistItem({ data: { id } });
 - **Validação:** `checklistItemsByChecklistIdSchema`.
 - **Query parameters:** não se aplica.
 - **Path parameters:** `checklistId` no body.
-- **Regras relacionadas:** checklist deve existir; retorna os itens do draft atual ou, se não houver draft, da versão publicada/retirada mais recente, ordenados por `orderIndex` e com metadados normativos copiados.
+- **Regras relacionadas:** checklist visível. Prefere draft somente para dono; depois última publicação; sem ambos, dono pode receber versão mais recente (retirada). Terceiro/oficial recebe só publicação. Ordem/metadados são de versão, sem expor draft alheio.
 - **Exemplo de chamada:**
 
 ```ts
@@ -808,7 +829,7 @@ await listChecklistItems({ data: { checklistId } });
 - **Validação:** `createInspectionSchema`.
 - **Query parameters:** não se aplica.
 - **Path parameters:** não se aplica.
-- **Regras relacionadas:** usuário vem da sessão; empresa e checklist devem existir; o checklist precisa estar ativo; a versão informada deve pertencer ao checklist e estar `PUBLISHED`. Sem `checklistVersionId`, usa a versão publicada mais recente. O hash do formato atual é conferido antes da gravação. Inspeção, snapshot, itens e normas são criados atomicamente. O servidor define `PLANNED`, `SYNCED`, origem `INSPECTION_CREATION` e integridade `VERIFIED`.
+- **Regras relacionadas:** usuário da sessão, empresa própria não excluída, checklist visível ativo; versão do mesmo checklist PUBLISHED. Sem versão explícita, última publicação. Hash presente obrigatório; formato 1 recalculado, outros formatos (inclusive legado 0) aceitos sem recálculo, diferente da cópia. Gravação de inspeção/snapshot/itens/normas é atômica; leitura/preparação precede transação. Define PLANNED/SYNCED/INSPECTION_CREATION/VERIFIED inclusive no caminho legado aceito.
 - **Exemplo de chamada:**
 
 ```ts
@@ -1231,6 +1252,8 @@ await uploadEvidence({ data: formData });
   do snapshot; respostas, não conformidades, ações corretivas e evidências
   ativas são incorporadas ao read model. O endpoint não gera arquivo PDF e não
   cria registro em `Report` durante a leitura.
+  Empresa e usuário são dados atuais, sem congelamento no snapshot. Diferente
+  da listagem de disponíveis, o detalhe backend não exige COMPLETED.
 - **Erros possíveis:** `401`, `404`, `409` histórico indisponível, `422`, `500`.
 
 ---
@@ -1338,8 +1361,8 @@ Fluxo e referência acadêmica: [OfficialTemplates.md](./OfficialTemplates.md).
   somente a última publicação. Versões retiradas não são origem da cópia.
 - **Resultado:** checklist pessoal ativo com draft v1, novos UUIDs, itens e
   associações normativas independentes; título com sufixo “— Cópia”.
-- **Erros:** `401` sem sessão; `404` origem/conteúdo indisponível; `409` hash
-  publicado inválido; validação Zod para UUID inválido ou campos extras.
+- **Erros:** 401 sem sessão; 404 origem/conteúdo indisponível; 409 formato
+  publicado diferente de 1 ou hash inválido; exceção Zod para UUID/extras.
 - **Compatibilidade:** `useOfficialTemplate` delega à mesma operação, exigindo
   origem oficial. Nenhuma autoria/oficialidade é transferida da origem.
 
@@ -1348,3 +1371,15 @@ await copyChecklist({ data: { id: sourceChecklistId } });
 ```
 
 Regras, transação e validação: [ChecklistCopy.md](./ChecklistCopy.md).
+
+Checklist/ChecklistVersion não têm sourceVersionId. Linhagem da cópia é por item:
+sourceVersionItemId aponta a publicado ou conserva ancestral anterior ao copiar
+draft, sem dependência do item mutável. Associação normativa nova reutiliza
+Standard/copia metadados. Não copia inspeções/respostas/NCs/ações/evidências/
+Report/snapshots. Transação RepeatableRead inclui leitura/preparação/inserts;
+nomes com “ — Cópia” não são garantia SQL de unicidade concorrente.
+
+Snapshot congela conteúdo de checklist, sem empresa/usuário/operação inteira.
+Errata Murbach de UI/cópias não atualiza publicação/snapshot/relatório histórico
+automaticamente. Validação documental/limites:
+[RelatorioFase3.md](../Documentation/RelatorioFase3.md).

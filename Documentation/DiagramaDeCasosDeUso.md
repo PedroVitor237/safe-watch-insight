@@ -1,131 +1,79 @@
-# Diagrama de Casos de Uso
+# Casos de uso implementados
 
-O Diagrama de Casos de Uso representa as principais interações entre os usuários da plataforma e as funcionalidades disponibilizadas pelo sistema.
+Conferência documental em 3 de outubro de 2026. Representa funções disponíveis
+nas telas, não atribuições gerenciais desejadas. Técnico/supervisor/auditor são
+personas de análise; persona ≠ role técnico ≠ permissão implementada. ADMIN,
+TECHNICIAN, SUPERVISOR e AUDITOR armazenados não constituem RBAC. Usuário
+autenticado atua sobre recursos próprios; leitura/cópia/reutilização de conteúdo
+publicado segue a [matriz de autorização](../AI/BusinessRules.md#matriz-de-autorização).
 
-Foram identificados três atores principais:
+Não há administração de usuários, normas ou templates oficiais na UI/API.
+Bootstrap institucional é operação de implantação fora dos casos de uso da
+sessão. A versão anterior do diagrama de personas/permissões pode ser consultada
+no histórico Git, sem ser tomada como estado implementado.
 
-* **Técnico de SST**: responsável pela realização de inspeções, preenchimento de checklists, registro de não conformidades e emissão de relatórios.
-* **Supervisor SST**: responsável pelo acompanhamento das inspeções realizadas, análise de indicadores e monitoramento de ações corretivas.
-* **Administrador**: responsável pela manutenção dos dados e configurações gerais da plataforma.
+## Visão de funcionalidades
 
-O diagrama contempla as funcionalidades previstas para o escopo atual da solução.
+Mermaid usa flowchart para representar ator e casos de uso (não dispõe de uma
+notação UML de casos de uso nativa aqui). PlantUML UML correspondente:
+[use-cases.puml](./diagrams/flows/use-cases.puml).
 
-```plantuml
-@startuml
-
-left to right direction
-
-actor "Técnico SST" as Tecnico
-actor "Supervisor SST" as Supervisor
-actor "Administrador" as Admin
-
-rectangle "Plataforma SST" {
-
-  usecase "Realizar Login" as UC01
-
-  usecase "Cadastrar Empresa" as UC02
-  usecase "Consultar Empresas" as UC03
-
-  usecase "Criar Checklist" as UC04
-  usecase "Editar Checklist" as UC05
-  usecase "Consultar Checklists" as UC06
-
-  usecase "Associar Normas ao Checklist" as UC07
-
-  usecase "Executar Inspeção" as UC08
-  usecase "Registrar Não Conformidade" as UC09
-  usecase "Exibir Normas Relacionadas" as UC10
-
-  usecase "Consultar Histórico" as UC11
-
-  usecase "Registrar Ação Corretiva" as UC12
-
-  usecase "Emitir Relatório" as UC13
-
-  usecase "Visualizar Dashboard" as UC14
-
-  usecase "Gerenciar Usuários" as UC15
-  usecase "Gerenciar Templates" as UC16
-  usecase "Gerenciar Base de Normas" as UC17
-  usecase "Gerenciar Empresas" as UC18
-}
-
-Tecnico --> UC01
-Tecnico --> UC02
-Tecnico --> UC03
-Tecnico --> UC04
-Tecnico --> UC05
-Tecnico --> UC06
-Tecnico --> UC08
-Tecnico --> UC11
-Tecnico --> UC12
-Tecnico --> UC13
-
-Supervisor --> UC01
-Supervisor --> UC11
-Supervisor --> UC12
-Supervisor --> UC13
-Supervisor --> UC14
-
-Admin --> UC15
-Admin --> UC16
-Admin --> UC17
-Admin --> UC18
-
-UC04 .> UC07 : <<include>>
-UC05 .> UC07 : <<include>>
-
-UC08 .> UC09 : <<include>>
-UC08 .> UC10 : <<include>>
-
-@enduml
+```mermaid
+flowchart LR
+    V[Visitante] --> REG([Criar conta])
+    V --> LOG([Entrar])
+    U[Usuário autenticado] --> EMP([Gerenciar empresas próprias])
+    U --> CHK([Criar e editar checklist pessoal])
+    U --> PUB([Publicar draft pessoal])
+    U --> CAT([Consultar conteúdo publicado acessível])
+    U --> COPY([Copiar checklist ou usar template oficial])
+    U --> NOR([Consultar e associar normas aos itens próprios])
+    U --> INS([Criar e executar inspeção própria])
+    U --> NC([Consultar e manter NC própria])
+    U --> AC([Manter ações corretivas próprias])
+    U --> EV([Enviar e remover evidência online própria])
+    U --> HIS([Consultar histórico próprio])
+    U --> REP([Consultar e imprimir relatório próprio])
+    U --> DASH([Ver indicadores próprios])
+    U --> OFF([Responder e concluir inspeção disponível offline])
+    U --> OUT([Sair])
 ```
 
-## Descrição dos Casos de Uso
+## Comportamento e limites
 
-### Técnico de SST
+| Caso                        | Fluxo entregue e delimitação                                                                                      |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Criar conta / entrar / sair | Cadastro público sem auto-login; bcrypt e sessão de oito horas; logout também limpa dados locais                  |
+| Empresas                    | Cadastro/listagem/edição/exclusão lógica próprias; empresa excluída não inicia inspeção                           |
+| Checklist pessoal           | Identidade/DRAFT v1, edição de itens/normas e metadados; dono pode publicar; publicação não é editada diretamente |
+| Conteúdo publicado          | Oficial ou de terceiro ativo não excluído com PUBLISHED; não expõe drafts privados                                |
+| Cópia / usar template       | Nova identidade pessoal com DRAFT v1 e itens independentes; fonte própria elegível ou publicação acessível        |
+| Normas                      | Consulta do catálogo e associação aos itens do draft pessoal; não administração do catálogo                       |
+| Inspeção                    | Empresa própria e versão publicada elegível; snapshot criado com inspeção; respostas e conclusão próprias         |
+| Não conformidade            | Resposta NON_COMPLIANT cria/restaura NC automaticamente; nem toda resposta gera NC; detalhe permite manutenção    |
+| Ações corretivas            | Plano 5W2H sobre NC própria; nome de responsável não concede acesso                                               |
+| Evidência                   | JPEG/PNG/WebP online em inspeção ou NC própria histórica; sem upload binário offline                              |
+| Histórico / relatório       | Checklist pelo snapshot; dados cadastrais/operacionais atuais; impressão/PDF via navegador; sem PDF customizado   |
+| Dashboard                   | Agregados da sessão, sem visão de equipe ou acesso gerencial de terceiro                                          |
+| Offline                     | Responder/concluir inspeção já disponibilizada, com fila e reconexão; sem criação integral de inspeção offline    |
 
-O Técnico de SST é o principal usuário da plataforma, sendo responsável pela execução das inspeções e registro das informações coletadas em campo. Entre suas atribuições estão:
+Associação normativa é opcional; NC automática depende da resposta. Por isso,
+essas atividades não são representadas como includes obrigatórios de toda
+criação/execução. Publicar não exige mínimo de itens no Service.
 
-* Realizar login no sistema;
-* Cadastrar empresas;
-* Consultar empresas cadastradas;
-* Criar e editar checklists;
-* Consultar checklists existentes;
-* Executar inspeções;
-* Registrar não conformidades;
-* Registrar ações corretivas;
-* Consultar histórico de inspeções;
-* Emitir relatórios.
+Retirada de publicação existe em Server Function/hook, mas **não tem ação nas
+telas atuais** e não é caso de uso entregue na UI. Interface completa de histórico
+de versões, edição de perfil persistida, recuperação de senha, confirmação de
+e-mail e gestão de usuários são futuras. Equipe/configurações demonstrativas
+não são administração real. RF12/RN07 (solicitante) continuam não entregues.
 
-Durante a criação ou edição de checklists, o sistema permite associar Normas Regulamentadoras (NRs) aos itens cadastrados. Durante a execução da inspeção, essas normas são apresentadas ao usuário como apoio à tomada de decisão.
+## Evidências
 
-### Supervisor SST
-
-O Supervisor SST possui papel gerencial e de acompanhamento, podendo:
-
-* Realizar login;
-* Consultar histórico de inspeções;
-* Acompanhar ações corretivas;
-* Emitir relatórios;
-* Visualizar indicadores por meio do dashboard.
-
-### Administrador
-
-O Administrador é responsável pela gestão e manutenção da plataforma, podendo:
-
-* Gerenciar usuários;
-* Gerenciar templates de checklist;
-* Gerenciar a base de normas cadastradas;
-* Gerenciar empresas cadastradas.
-
-## Relacionamentos de Inclusão
-
-Alguns casos de uso possuem dependência direta de funcionalidades auxiliares:
-
-* **Criar Checklist** inclui **Associar Normas ao Checklist**;
-* **Editar Checklist** inclui **Associar Normas ao Checklist**;
-* **Executar Inspeção** inclui **Registrar Não Conformidade**;
-* **Executar Inspeção** inclui **Exibir Normas Relacionadas**.
-
-Esses relacionamentos representam funcionalidades que são executadas como parte integrante do fluxo principal da atividade realizada pelo usuário.
+- [Auth](../src/lib/api/auth.functions.ts), [login](../src/routes/login.tsx) e
+  [cadastro](../src/routes/register.tsx).
+- [Biblioteca](../src/routes/_app.checklists.index.tsx),
+  [detalhe](../src/routes/_app.checklists.$id.tsx) e
+  [nova inspeção](../src/routes/_app.inspecoes.nova.tsx).
+- [Services](../src/server/services/) e [Server Functions](../src/lib/api/).
+- [Regras](../AI/BusinessRules.md), [cópia](../AI/ChecklistCopy.md),
+  [templates](../AI/OfficialTemplates.md) e [relatório da fase](./RelatorioFase3.md).

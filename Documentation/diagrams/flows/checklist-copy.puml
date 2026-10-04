@@ -1,0 +1,51 @@
+@startuml
+title Cópia independente de checklist — fluxo implementado
+start
+:Validar payload e usuário da sessão;
+:Iniciar transação RepeatableRead;
+if (Origem não excluída e acessível?) then (sim)
+  if (Checklist pessoal próprio?) then (sim)
+    :Selecionar draft atual ou última publicação;
+  else (não)
+    if (Oficial ativo?) then (sim)
+      :Selecionar última publicação institucional;
+    else (terceiro ativo)
+      :Selecionar somente última publicação;
+    endif
+  endif
+else (não)
+  :Abortar transação sem cópia / NOT_FOUND;
+  stop
+endif
+if (Conteúdo elegível?) then (sim)
+  if (Versão selecionada é PUBLISHED?) then (sim)
+    if (Formato 1 e SHA-256 válido?) then (sim)
+      :Preservar linhagem para item publicado;
+    else (não)
+      :Abortar transação / CONFLICT;
+      stop
+    endif
+  else (draft próprio)
+    :Preservar linhagem anterior ou NULL;
+    note right
+      Não referenciar o item mutável do draft.
+    end note
+  endif
+else (não)
+  :Abortar transação / NOT_FOUND;
+  stop
+endif
+:Preparar nome e conteúdo;
+:Criar Checklist pessoal ativo com UUID novo;
+:Criar DRAFT v1 com UUID e autor da sessão;
+:Inserir itens em lote com UUIDs próprios;
+:Inserir associações próprias em lote;
+note right
+  Standard reutilizado; metadados copiados.
+  Erro em qualquer insert: rollback de toda a cópia.
+  Não copiar inspeções, snapshots, respostas,
+  NCs, ações, evidências ou Report.
+end note
+:Commit e retorno da nova identidade;
+stop
+@enduml

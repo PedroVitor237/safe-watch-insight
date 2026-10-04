@@ -22,7 +22,7 @@ permanente do projeto e também serve como artefato do TCC.
 | ------------------------ | ------------------------------ | ------------------------------------------------------------ |
 | `/`                      | Redirecionamento inicial       | —                                                            |
 | `/login`                 | Autenticação                   | Backend e sessão reais                                       |
-| `/dashboard`             | Dashboard                      | Prévia demonstrativa                                         |
+| `/dashboard`             | Dashboard                      | Agregados reais das inspeções do usuário                     |
 | `/inspecoes`             | Lista de inspeções             | Backend real                                                 |
 | `/inspecoes/nova`        | Criação de inspeção            | Backend real                                                 |
 | `/inspecoes/$id`         | Execução e detalhe da inspeção | Backend e persistência offline parcial                       |
@@ -30,7 +30,7 @@ permanente do projeto e também serve como artefato do TCC.
 | `/checklists/$id`        | Itens, normas e publicação     | Backend real                                                 |
 | `/nao-conformidades`     | Kanban e lista de NCs          | Backend real                                                 |
 | `/nao-conformidades/$id` | Tratamento da NC               | Backend real                                                 |
-| `/relatorios`            | Prévia de relatórios           | Dados demonstrativos; saída desabilitada                     |
+| `/relatorios`            | Relatórios históricos          | Dados persistidos; impressão pelo navegador                  |
 | `/empresas`              | Cadastro de empresas           | Backend real                                                 |
 | `/normas`                | Catálogo de NRs                | Backend real                                                 |
 | `/equipe`                | Equipe                         | Prévia demonstrativa                                         |
@@ -48,11 +48,11 @@ flowchart TD
     Guard -->|não| Login
     Guard -->|sim| App["Layout autenticado"]
 
-    App --> Dashboard["/dashboard<br/>Dashboard demonstrativo"]
+    App --> Dashboard["/dashboard<br/>Indicadores próprios"]
     App --> Inspections["/inspecoes"]
     App --> Checklists["/checklists"]
     App --> NCs["/nao-conformidades"]
-    App --> Reports["/relatorios<br/>prévia demonstrativa"]
+    App --> Reports["/relatorios<br/>Relatórios próprios"]
     App --> Companies["/empresas"]
     App --> Standards["/normas"]
     App --> Team["/equipe<br/>prévia demonstrativa"]
@@ -134,8 +134,8 @@ Uma resposta **NC** cria a não conformidade no backend, mas não navega
 automaticamente para o detalhe dela. A consulta e a tratativa ocorrem pelo
 módulo **Não conformidades**.
 
-A conclusão retorna para a lista de inspeções. Não há redirecionamento
-automático para Relatórios, pois esse módulo ainda é demonstrativo.
+A conclusão retorna para a lista de inspeções. Relatórios consulta inspeções
+concluídas próprias e permite impressão pelo navegador.
 
 ### 4.5 Não conformidades
 
@@ -186,6 +186,7 @@ A sincronização não cria uma rota separada:
 
 Autenticação, empresas, checklists, normas, inspeções, respostas, não
 conformidades, ações corretivas e evidências usam a arquitetura real do backend.
-Dashboard, relatórios e equipe continuam no store demonstrativo e são
-identificados na interface. Configurações combina preferências locais e dados
-demonstrativos com indicadores reais do IndexedDB e da fila de sincronização.
+Dashboard e relatórios consultam dados persistidos próprios; o relatório combina
+conteúdo histórico do checklist com dados operacionais atuais. Equipe permanece
+demonstrativa. Configurações combina preferências locais e dados demonstrativos
+com indicadores reais do IndexedDB e da fila de sincronização.

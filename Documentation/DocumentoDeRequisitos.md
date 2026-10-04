@@ -83,6 +83,12 @@ O sistema deverá oferecer os seguintes módulos:
 
 O sistema deve permitir que usuários autenticados acessem a plataforma por meio de login.
 
+Entregue: cadastro público em /register (nome/e-mail/senha/confirmação), sem
+auto-login, bcrypt custo 12 e role TECHNICIAN; login por sessão TanStack Start
+com cookie HttpOnly de oito horas e validação de usuário não excluído.
+ADMIN/TECHNICIAN/SUPERVISOR/AUDITOR são papéis armazenados, sem RBAC funcional.
+Recuperação de senha, confirmação de e-mail e gestão de usuários não entregues.
+
 ---
 
 ## RF02 – Cadastro de Empresas
@@ -104,11 +110,20 @@ Cada empresa poderá possuir:
 
 O sistema deve permitir criar checklists personalizados.
 
+Entregue: identidade pessoal da sessão com DRAFT v1. isTemplate permite modelo
+pessoal, sem oficialidade; isOfficial não é atribuído pelo cliente. Só o
+proprietário gerencia draft/itens e exclui logicamente o checklist.
+
 ---
 
 ## RF04 – Edição de Checklists
 
 O sistema deve permitir adicionar, remover e editar itens dos checklists.
+
+Entregue: edição no draft; editar publicação deriva próximo draft, sem modificar
+conteúdo publicado/snapshots. Publicação calcula SHA-256 e confere revisão lida
+pelo servidor; não exige mínimo de itens. Retirada tem backend/hook, sem ação
+nas telas atuais; interface completa de histórico de versões não entregue.
 
 ---
 
@@ -116,11 +131,24 @@ O sistema deve permitir adicionar, remover e editar itens dos checklists.
 
 O sistema deve disponibilizar modelos de checklist previamente cadastrados.
 
+Entregue: dois templates institucionais Safe Watch Insight, construção (12 itens,
+NR-18) e altura (8 itens, NR-1/NR-6/NR-35), sem dono usuário. Template pessoal e
+publicação de usuário são distintos de oficial. Consulta exige sessão.
+Cópia própria prefere draft; terceiro/oficial usa publicação acessível. Resultado
+é identidade independente pessoal com DRAFT v1, sem copiar inspeções/tratativas.
+Sem administração de templates oficiais pela UI/role.
+
 ---
 
 ## RF06 – Execução de Inspeções
 
 O sistema deve permitir iniciar e executar inspeções utilizando checklists cadastrados.
+
+Entregue: empresa própria, checklist visível ativo não excluído e versão
+PUBLISHED. Captura snapshot de checklist, itens/normas na transação da inspeção;
+não congela empresa/usuário/NCs/ações/relatório inteiro. Novas respostas são
+bloqueadas após conclusão/cancelamento. Inspeção admite publicação legada com
+hash presente sem recálculo do formato 0; cópia exige formato 1 íntegro.
 
 ---
 
@@ -159,6 +187,9 @@ O sistema deve permitir vincular inspeções a empresas cadastradas.
 O sistema deve permitir registrar o solicitante da vistoria ou inspeção.
 
 O preenchimento deverá ser opcional.
+
+**Não entregue / futuro:** não há campo solicitante no schema, contrato ou
+formulário atual; observações não equivalem a implementar esse requisito.
 
 ---
 
@@ -317,6 +348,9 @@ Uma inspeção somente poderá ser finalizada após o preenchimento dos itens ob
 
 O campo solicitante será opcional.
 
+**Regra prevista, não entregue:** depende da futura implementação de RF12.
+Não existe campo persistido ou fluxo específico de solicitante atualmente.
+
 ---
 
 ## RN08
@@ -343,7 +377,7 @@ Os relatórios emitidos pelo sistema deverão seguir, preferencialmente, a segui
 
 As seguintes funcionalidades não fazem parte do MVP, mas poderão ser implementadas em versões futuras:
 
-- Registro fotográfico de evidências;
+- Compressão e upload offline de fotografias (upload online entregue em RF22);
 - Armazenamento de anexos;
 - Consulta automática de CNAE por CNPJ;
 - Sugestão automática de normas aplicáveis;
@@ -377,3 +411,13 @@ para o escopo do TCC como atendimento parcial; o requisito integral continua
 pendente por não incluir criação offline, reconciliação assistida, evidências
 binárias offline, Background Sync nem homologação no domínio HTTPS publicado e
 em outros navegadores/dispositivos.
+
+## Delimitação da revisão documental — 3 de outubro de 2026
+
+RF01/RF03/RF04/RF05/RF06 e RF12/RN07 foram conferidos contra a implementação.
+As demais seções preservam requisitos de análise e não constituem declaração
+de entrega integral. Persona não determina role/permissão: recursos pessoais
+usam ownership da sessão, sem acesso administrativo global. Matriz e regras
+vigentes: [BusinessRules.md](../AI/BusinessRules.md). IDs/fontes/errata:
+[OfficialTemplates.md](../AI/OfficialTemplates.md). Resultados históricos não
+são testes desta revisão: [RelatorioFase3.md](./RelatorioFase3.md).

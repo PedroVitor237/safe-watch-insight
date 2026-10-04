@@ -1,5 +1,17 @@
 # Cópia independente de checklist
 
+## Estado atual e fontes
+
+Conferência documental em 3 de outubro de 2026, após o checkpoint `0a19b44`
+da Fase 2. Regras conferidas em
+[ChecklistService](../src/server/services/checklist.service.ts),
+[ChecklistRepository](../src/server/repositories/checklist.repository.ts),
+[ChecklistVersionService](../src/server/services/checklist-version.service.ts),
+[Server Functions](../src/lib/api/checklist.functions.ts),
+[schema](../prisma/schema.prisma) e [migrations](../prisma/migrations/).
+Resultados de integração ao final são **históricos**, não reexecutados nesta
+fase e não constituem instrução para modificar o banco.
+
 ## Operação e autorização
 
 `ChecklistService.copyChecklist(sourceId, authenticatedUserId)` é a operação
@@ -8,17 +20,26 @@ origem institucional. As Server Functions recebem somente `{ id: UUID }`,
 rejeitam propriedades extras e obtêm o proprietário da sessão autenticada.
 Nenhum ID de usuário, versão, item ou status é escolhido pelo cliente.
 
-| Origem | Conteúdo copiado | Quem pode copiar |
-| --- | --- | --- |
-| Template oficial ativo | Última versão `PUBLISHED` íntegra | Usuário autenticado |
-| Checklist próprio não excluído | Draft atual; na ausência dele, última publicação íntegra | Proprietário, inclusive se estiver inativo |
-| Checklist de outro usuário ativo | Somente última versão `PUBLISHED` íntegra | Usuário autenticado, conforme a visibilidade preexistente |
-| Privado de terceiro, inativo de terceiro ou excluído | Nenhum | Operação retorna `NOT_FOUND` |
-| Somente versões `RETIRED`, sem draft elegível | Nenhum | Operação retorna `NOT_FOUND` |
+| Origem                                               | Conteúdo copiado                                         | Quem pode copiar                                          |
+| ---------------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------------- |
+| Template oficial ativo                               | Última versão `PUBLISHED` íntegra                        | Usuário autenticado                                       |
+| Checklist próprio não excluído                       | Draft atual; na ausência dele, última publicação íntegra | Proprietário, inclusive se estiver inativo                |
+| Checklist de outro usuário ativo                     | Somente última versão `PUBLISHED` íntegra                | Usuário autenticado, conforme a visibilidade preexistente |
+| Privado de terceiro, inativo de terceiro ou excluído | Nenhum                                                   | Operação retorna `NOT_FOUND`                              |
+| Somente versões `RETIRED`, sem draft elegível        | Nenhum                                                   | Operação retorna `NOT_FOUND`                              |
 
 Um draft mais recente de terceiro nunca é usado como origem. O hash de uma
 publicação é verificado antes de criar a cópia; inconsistência retorna
-`CONFLICT`. Nenhuma regra de compartilhamento, RBAC ou marketplace foi criada.
+`CONFLICT`. Publicação exige `contentSchemaVersion=1` e hash igual ao SHA-256
+recalculado; formato 0 e outros formatos são rejeitados para cópia. Draft próprio
+não passa por checagem de hash publicado. Cliente escolhe somente checklist,
+sem selecionar versão: Service resolve draft próprio ou publicação de maior
+número. Nenhuma regra de RBAC/marketplace foi criada.
+
+Isso difere da **criação de inspeção**, que exige hash presente, mas só recalcula
+no formato 1 e aceita outros formatos, inclusive legado 0. Não confundir essa
+compatibilidade com elegibilidade de cópia. Ver
+[BusinessRules.md](./BusinessRules.md#inspeções-e-snapshot-limites-relevantes).
 
 Na Biblioteca, o usuário abre o checklist e usa **Copiar checklist**. Templates
 oficiais conservam **Usar template**. A nova identidade recebe o título
@@ -27,6 +48,14 @@ pessoais não excluídos. O título-base é truncado para preservar o sufixo den
 de 255 caracteres. O usuário pode renomeá-lo pela edição existente da Biblioteca.
 A numeração é calculada para o estado transacional lido; não cria uma restrição
 global de unicidade de títulos nem reserva nomes entre solicitações concorrentes.
+
+Separador exato: espaço + travessão U+2014 + espaço; `Cópia` tem C maiúsculo.
+Algoritmo inicia em 1 (sem número no sufixo) e busca primeiro nome disponível,
+podendo reutilizar lacunas. Compara strings exatas, distinguindo maiúsculas e
+acentos. Considera Checklist.title pessoal do mesmo usuário com deletedAt=null,
+inclusive inativos/templates, sem consultar títulos de todas as versões.
+Não remove sufixo pré-existente: copiar `Título — Cópia` pode resultar em
+`Título — Cópia — Cópia`.
 
 ## Persistência, versões e snapshots
 
@@ -52,6 +81,8 @@ item mutável do draft. Isso evita que uma FK `RESTRICT` da cópia bloqueie a
 exclusão de um item editável na origem. O catálogo `Standard`
 continua reutilizável, enquanto as associações/metadados pertencem à nova versão.
 Não são copiados inspeções, respostas, evidências, relatórios ou snapshots.
+Também não copia NCs ou ações corretivas. Checklist/ChecklistVersion **não têm
+sourceVersionId**: a linhagem disponível é por item.
 Snapshots novos surgem somente na criação de uma inspeção após a publicação
 normal da cópia. Editar/publicar a cópia não escreve na origem, na publicação
 original ou nas cópias de outros usuários.
@@ -60,7 +91,60 @@ Qualquer erro desfaz checklist, versão, itens e associações. O timeout padrã
 Prisma permanece intacto. Não há espera artificial, retry, FK desativada ou
 alteração estrutural do banco.
 
-## Causa comprovada do P2003
+## Fluxo implementado
+
+Autorização de sessão precede a transação. Elegibilidade/seleção/preparação da
+origem acontecem dentro dela. Falha de persistência reverte inserts; sessão,
+UI e publicação posterior não fazem parte do commit da cópia.
+
+```mermaid
+flowchart TD
+    A[Usuário autenticado na Server Function] --> T[Iniciar transação RepeatableRead]
+    T --> B{Origem não excluída e acessível?}
+    B -->|Não| X[Abortar sem cópia]
+    B -->|Sim| C{Origem}
+    C -->|Própria| D[Draft atual ou última publicação]
+    C -->|Terceiro ativo| E[Somente última publicação]
+    C -->|Oficial ativo| F[Somente publicação institucional]
+    D --> G{Conteúdo elegível?}
+    E --> G
+    F --> G
+    G -->|Não| X
+    G -->|Sim| P{Versão é PUBLISHED?}
+    P -->|Sim| H{Formato 1 e hash válido?}
+    H -->|Não| Y[Abortar com CONFLICT]
+    H -->|Sim| I[Preparar nome, conteúdo e linhagem estável]
+    P -->|Não: draft próprio| I
+    I --> J[Novo Checklist pessoal ativo]
+    J --> K[Novo DRAFT v1]
+    K --> L[Itens com UUIDs novos]
+    L --> M[Associações próprias; Standard reutilizado]
+    M --> N[Commit e retorno da cópia]
+    J -.->|Erro de escrita| R[Rollback de toda a cópia]
+    K -.-> R
+    L -.-> R
+    M -.-> R
+```
+
+H é condicional: draft próprio não tem hash de publicação a conferir. Linhagem
+de publicação aponta ao item publicado; de draft conserva ancestral anterior/NULL.
+PlantUML equivalente: [checklist-copy.puml](../Documentation/diagrams/flows/checklist-copy.puml).
+
+## Ciclo posterior e independência
+
+Cópia é editável/privada até publicar. Publicação transforma DRAFT v1 em
+PUBLISHED v1 com hash/autor/data próprios. Editar depois deriva DRAFT v2 na
+**mesma identidade copiada**; copiar de novo cria **outra identidade** com v1.
+Retirar publicação impede novas inspeções dessa versão, sem remover snapshots.
+Retirada/histórico não têm interface completa, embora existam API/hook.
+
+Snapshot surge ao criar inspeção e congela conteúdo de checklist, sem congelar
+empresa/usuário/NCs/ações/evidências. Alterar draft de origem não modifica cópia;
+excluir item mutável não é bloqueado por nova FK de linhagem da cópia.
+Ancestrais publicados/legados continuam sujeitos a RESTRICT; não se promete
+excluir fisicamente qualquer origem estável.
+
+## Histórico — causa comprovada do P2003
 
 No checkpoint `efa1d03ae652154a3b5eddbfe5a84b499fd958f0`, o cliente transacional
 já era propagado corretamente para `createWithDraft`. Não foi encontrado uso do
@@ -98,7 +182,12 @@ futuras da cópia calculam seu próprio hash. Não houve reescrita da publicaç�
 oficial nem criação de outro template. A atribuição permanece à Safe Watch
 Insight, baseada/adaptada de Murbach, sem chancela governamental.
 
-## Validação
+O alcance da errata é catálogo atual, exibição institucional e descrição dos
+novos drafts de cópia. Inspeção direta da publicação histórica captura descrição
+original, sem helper da errata; seu relatório usa esse snapshot. Não há atualização
+automática de snapshot, publicação histórica ou relatório derivado diretamente dela.
+
+## Histórico — validação funcional anterior
 
 Node 22.23.2 e banco TCC/Neon corrente, sem reset. Fixtures usam UUIDs gerados e
 limpeza limitada às identidades temporárias. Não executar contra produção.
@@ -121,4 +210,5 @@ template, edição, duplicação pessoal, independência e invocação direta do
 por terceiro/sem sessão. O teste negativo reutiliza os headers de mesma origem
 para alcançar a autorização do domínio sem desligar a proteção CSRF.
 
-Resultados finais desta execução são registrados em `AI/OfficialTemplates.md`.
+Resultados finais daquela execução: [OfficialTemplates.md](./OfficialTemplates.md).
+Validações documentais desta fase: [RelatorioFase3.md](../Documentation/RelatorioFase3.md).
