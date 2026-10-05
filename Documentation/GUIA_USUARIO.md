@@ -1,224 +1,361 @@
 # Guia do Usuário — Safe Watch Insight
 
-## 1. Sobre a plataforma
+Este guia descreve as tarefas disponíveis na revisão da Fase 8, em **4 de
+outubro de 2026**. A interface também usa o nome **SST Inspeções**. Empresas,
+checklists, inspeções, tratativas, relatórios e dashboard utilizam dados reais;
+**Equipe** continua demonstrativa. O uso offline cobre inspeções já disponíveis
+no dispositivo, com os limites descritos abaixo.
 
-O Safe Watch Insight, identificado na interface como **SST Inspeções**, apoia o
-registro e o acompanhamento de inspeções, auditorias e fiscalizações de
-Segurança e Saúde no Trabalho.
+## 1. Acesso e navegação
 
-O fluxo principal utiliza dados persistidos no backend. Dashboard, relatórios e
-equipe ainda são prévias demonstrativas e aparecem identificados dessa forma na
-interface. O funcionamento offline cobre a continuidade de inspeções já
-disponibilizadas no dispositivo, mas ainda não representa suporte offline
-completo.
+Ao abrir a aplicação, você é encaminhado ao login. Com sessão válida, chega ao
+**Dashboard**. O menu lateral oferece:
 
-## 2. Acesso
+- **Operação:** Dashboard, Inspeções, Checklists, Não conformidades e Relatórios.
+- **Cadastros:** Empresas, Normas (NRs), Equipe e Configurações.
 
-Ao abrir a aplicação, o usuário é direcionado para `/login`.
+O avatar abre **Configurações** e a barra superior mostra a sincronização.
+O sino não oferece um fluxo de notificações nesta entrega. As telas operacionais
+mostram seus recursos; usar um checklist publicado por outra pessoa não
+compartilha inspeções com ela. [Mapa das rotas](./MAPA_DE_NAVEGACAO.md).
 
-1. Informe o e-mail e a senha de um usuário cadastrado.
-2. Clique em **Entrar**.
-3. Após a autenticação, o sistema abre o **Dashboard**.
+## 2. Criar conta
 
-No ambiente preparado pelo seed, as credenciais demonstrativas são:
+1. No login, clique em **Criar conta** para abrir `/register`.
+2. Preencha **Nome**, **E-mail**, **Senha** e **Confirmar senha**.
+3. Use senha com pelo menos oito caracteres e repita exatamente a mesma senha.
+4. Clique em **Criar conta**. Corrija os erros de campo, se houver.
+5. Após **Conta criada. Entre com seu e-mail e senha.**, o sistema abre o login.
+
+O nome precisa estar preenchido e o e-mail deve ser válido. Espaços nas
+extremidades do nome/e-mail são removidos e o e-mail é convertido para minúsculas.
+E-mail já cadastrado é recusado, mesmo se associado a uma conta excluída.
+O botão indica envio em andamento; outras falhas são apresentadas por notificação.
+
+Você recebe o papel de técnico, sem seletor de papel ou permissão administrativa.
+Cadastro exige conexão e não realiza login automático. Confirmação por e-mail e
+recuperação de senha ainda não estão disponíveis.
+
+## 3. Entrar
+
+1. Informe **E-mail** e **Senha** em `/login`.
+2. Clique em **Entrar**; o botão mostra **Entrando...** durante envio.
+3. Após autenticação, você chega ao **Dashboard**.
+
+E-mail inválido, senha vazia ou credenciais incorretas são rejeitados. Confira a
+notificação e tente novamente. A sessão dura oito horas; sua expiração pode
+exigir novo login. Para sincronizar, a sessão precisa ser aceita pelo servidor.
+
+O bloco **Ambiente de demonstração** da tela expõe esta conta técnica:
 
 ```text
+Usuário: Usuário Demonstração
 E-mail: demo.user@example.test
 Senha: Demo@12345
 ```
 
-A autenticação é real e cria uma sessão HTTP-only. Não há seleção de perfil no
-formulário de login.
+Ela funciona quando o ambiente foi preparado com os dados de demonstração.
 
-## 3. Navegação
+## 4. Cadastrar e manter empresas
 
-As telas autenticadas usam um menu lateral dividido em:
+1. Abra **Empresas** e clique em **Nova empresa**.
+2. Preencha razão social e CNAE, grau de risco (inteiro de 1 a 4) e funcionários
+   (inteiro igual ou maior que zero).
+3. Se desejar, informe nome fantasia, CNPJ, endereço e observações.
+4. Clique em **Cadastrar empresa** e confira a notificação.
 
-- **Operação:** Dashboard, Inspeções, Checklists, Não conformidades e
-  Relatórios.
-- **Cadastros:** Empresas, Normas (NRs), Equipe e Configurações.
+O CNPJ é opcional; quando informado, deve conter 14 dígitos, com ou sem máscara.
+O sistema recusa CNPJ já existente no banco, inclusive em empresa excluída
+logicamente. Não há consulta automática de dados por CNPJ.
 
-A barra superior apresenta o estado de sincronização, notificações e o usuário
-autenticado. O avatar abre **Configurações**. A opção **Sair**, no rodapé do menu,
-encerra a sessão e tenta remover os dados offline armazenados no dispositivo.
+Os cartões oferecem **Editar** e **Excluir**. A exclusão pede confirmação e
+retira a empresa da lista e da seleção de novas inspeções, preservando o histórico.
+Você mantém somente empresas próprias. Sem registros, aparece **Nenhuma empresa
+cadastrada**; em falha, a tela apresenta mensagem.
 
-## 4. Empresas
+Para inspecionar uma empresa, use **Inspeções → Nova inspeção** no menu.
+O cartão da empresa não possui atalho nem tela de detalhe.
 
-A tela **Empresas** lista os registros persistidos no PostgreSQL.
+## 5. Criar, editar e publicar checklists
 
-Para cadastrar:
-
-1. Clique em **Nova empresa**.
-2. Preencha razão social, nome fantasia, CNPJ, CNAE, grau de risco, quantidade
-   de funcionários, endereço e observações.
-3. Clique em **Cadastrar empresa**.
-
-Os botões **Editar** e **Excluir** permitem atualizar ou remover uma empresa. A
-validação é executada no backend, inclusive para os campos obrigatórios e a
-unicidade do CNPJ ativo.
-
-## 5. Checklists e versões
-
-A **Biblioteca de checklists** lista os modelos ativos persistidos.
-
-### Criar ou editar um checklist
+A **Biblioteca de checklists** abre em **Templates oficiais** e também oferece
+**Meus checklists** e **Publicados por usuários**. Exibe somente ativos e tem
+**Anterior/Próxima** quando há mais páginas.
 
 1. Clique em **Novo modelo**.
-2. Informe título e descrição.
-3. Defina se o registro é um template e se está ativo.
-4. Salve o formulário.
+2. Informe título; descrição é opcional. **Template pessoal** apenas classifica
+   seu modelo, sem torná-lo oficial.
+3. Mantenha **Ativo** para encontrá-lo na Biblioteca e depois utilizá-lo em novas
+   inspeções. Salve em **Cadastrar checklist**.
+4. Em **Meus checklists**, clique em **Abrir**.
+5. Use **Novo item**, informe descrição, escolha se é obrigatório e selecione
+   NRs aplicáveis, se necessário. Salve em **Cadastrar item**.
+6. Revise os itens e clique em **Publicar vN**, confirmando a publicação.
 
-Cada cartão também oferece **Abrir**, **Editar** e **Excluir**.
+**Editar/Excluir** de metadados ficam na Biblioteca; os controles dos itens ficam
+no detalhe. Somente você mantém seu checklist. Não há controle completo de
+reordenação. Desativar retira o modelo da Biblioteca atual, que não tem filtro
+para inativos. Excluir pede confirmação e preserva o histórico das inspeções.
 
-### Manter itens e normas
+O rascunho é editável e inicialmente privado. A publicação preserva aquela
+versão; editar depois cria ou utiliza o próximo rascunho do mesmo checklist.
+Apenas versões publicadas de checklists ativos acessíveis podem iniciar
+inspeções. Publicações de terceiros são consultáveis/reutilizáveis, sem permitir
+editar seu conteúdo original. Uma nova publicação não retira as antigas
+automaticamente. Não há botão para retirar versões ou interface completa de
+histórico de versões.
 
-Ao abrir um checklist:
+## 6. Usar template oficial
 
-1. Use **Novo item** para cadastrar uma verificação.
-2. Informe a descrição e se o item é obrigatório.
-3. Selecione as Normas Regulamentadoras aplicáveis.
-4. Salve o item.
+1. Em **Templates oficiais**, clique em **Abrir** para consultar itens, NRs,
+   versão, fonte e escopo.
+2. Clique em **Usar template**, no cartão ou no detalhe.
+3. O sistema abre sua nova cópia pessoal em rascunho v1.
+4. Revise/adapte os itens e publique antes de usar a cópia em uma inspeção.
 
-Itens existentes podem ser editados ou excluídos. Quando o conteúdo de uma
-versão já publicada é alterado, o sistema mantém a publicação anterior imutável
-e trabalha no próximo rascunho.
+O selo **Oficial · Safe Watch Insight** indica curadoria institucional da
+plataforma. O original é preservado e não pode ser editado pelo usuário comum.
+Templates não são documentos governamentais nem garantia de conformidade legal
+atual. Construção adapta Murbach (2019); trabalho em altura é curadoria da
+Safe Watch Insight. Fontes e definições: [Templates oficiais](../AI/OfficialTemplates.md).
+Uma publicação oficial também pode ser selecionada diretamente em **Nova inspeção**.
 
-### Publicar
+## 7. Copiar outro checklist
 
-O botão **Publicar vN** transforma o rascunho em uma versão imutável. Somente
-versões publicadas ficam disponíveis para criar novas inspeções. Inspeções
-existentes continuam ligadas ao snapshot que receberam na criação.
+1. Abra um checklist próprio ou uma publicação acessível de outro usuário.
+2. Clique em **Copiar checklist** no detalhe.
+3. Após sucesso, o sistema abre um **novo checklist pessoal**, cujo título recebe
+   **— Cópia** (com numeração quando necessária).
+4. Revise os itens e publique seu rascunho v1. Você pode renomeá-lo pela Biblioteca.
 
-## 6. Criar uma inspeção
+A cópia tem itens independentes, preserva associações e metadados normativos e
+mantém a linhagem disponível dos itens de origem. Editar sua cópia não altera
+o original. Ela não herda oficialidade/marca de template nem copia inspeções,
+respostas, não conformidades, ações, evidências ou histórico de inspeções.
 
-Na lista de **Inspeções**, clique em **Nova inspeção**. O assistente possui três
-passos:
+Para origem própria, o sistema prefere seu rascunho; sem ele, utiliza a última
+publicação elegível. Para terceiro/oficial, utiliza somente a última publicação
+acessível de checklist ativo, nunca seu rascunho privado. Origem excluída,
+somente retirada ou publicação legada/inconsistente pode impedir a operação;
+confira a mensagem apresentada. A cópia exige conexão. Regras detalhadas:
+[Cópia de checklist](../AI/ChecklistCopy.md).
 
-1. **Empresa:** selecione a empresa fiscalizada.
-2. **Checklist e observações:** selecione uma versão publicada e, se necessário,
-   registre observações iniciais.
-3. **Agendamento:** informe data e hora e revise o resumo.
+## 8. Criar e abrir uma inspeção
 
-Clique em **Criar inspeção**. O sistema cria a inspeção e seu snapshot histórico
-na mesma operação e retorna à lista. Abra a linha recém-criada para iniciar a
-execução.
+1. Em **Inspeções**, clique em **Nova inspeção**.
+2. No passo **Empresa**, selecione uma empresa própria.
+3. Em **Checklist e observações**, selecione a versão publicada e, se desejar,
+   informe observações iniciais.
+4. Em **Agendamento**, informe data/hora ou deixe vazio para usar **Agora**.
+5. Revise o resumo e clique em **Criar inspeção**.
+6. O sistema retorna à lista; abra a inspeção criada para executá-la.
 
-O usuário responsável é o usuário autenticado. A interface não solicita uma
-unidade, um título independente ou outro inspetor nesse assistente.
+**Avançar** depende de empresa/versão selecionada. Sem publicação disponível,
+a tela orienta publicar um checklist. A criação exige conexão e usa você como
+inspetor. Não há seleção de outro inspetor, unidade, título independente ou
+solicitante. Se faltar empresa, cadastre-a no menu **Empresas** e volte ao fluxo.
 
-## 7. Executar e concluir uma inspeção
+A inspeção usa o conteúdo da versão de checklist capturada na criação,
+preservando seu histórico mesmo que o checklist seja alterado depois. Registros
+legados podem apresentar aviso de que a versão original não pôde ser certificada.
 
-A tela da inspeção mostra progresso, quantidade de não conformidades, inspetor,
-data, versão histórica e estado de sincronização.
+A lista permite busca por empresa, checklist ou observações e filtro por status.
+O ciclo usual é **Planejada → Em andamento → Concluída**: a primeira resposta
+inicia o andamento. **Cancelada** é estado consultável; não há ação de cancelar,
+reabrir, excluir ou editar dados gerais de inspeção nas telas atuais.
 
-Na aba **Execução do checklist**, escolha uma resposta para cada item:
+## 9. Responder e concluir
 
-- **Conforme**;
-- **NC** (não conforme);
-- **N/A** (não aplicável).
+1. Na aba **Execução do checklist**, escolha por item:
+   **Conforme**, **NC** (não conforme) ou **N/A** (não aplicável).
+2. Após responder, registre observação se necessário; ela é salva ao sair do
+   campo. Respostas/observações podem ser alteradas durante a execução.
+3. Confira progresso e estado de sincronização no cabeçalho.
+4. Na aba **Encerrar**, clique em **Concluir inspeção**.
 
-Após responder, use o campo de observação para registrar contexto adicional. Uma
-resposta **NC** cria ou restaura automaticamente a não conformidade associada;
-alterar a resposta para outro estado arquiva a não conformidade automática
-quando a regra de negócio permitir.
+Todos os obrigatórios precisam de resposta. **N/A** atende essa condição e não
+conta como não conformidade; opcionais podem ficar pendentes. Não é necessário
+resolver NCs, concluir ações ou enviar fotos para encerrar. Não há assinatura digital.
 
-As respostas são gravadas primeiro no dispositivo e enfileiradas para envio. A
-mensagem de sucesso local não deve ser interpretada como confirmação de
-persistência no PostgreSQL; consulte o indicador de sincronização.
+Respostas e conclusão são salvas primeiro no dispositivo, mesmo com conexão.
+A conclusão retorna à lista e bloqueia novas respostas/observações; aguarde a
+confirmação da sincronização antes de consultar os resultados remotos.
+NCs, ações e evidências podem continuar em tratamento após a conclusão.
 
-### Evidências da inspeção
+## 10. Acompanhar não conformidades
 
-Na aba **Evidências** é possível selecionar uma ou mais imagens, conferir a
-prévia, adicionar legenda e enviar. São aceitos JPEG, PNG e WebP de até 4 MB por
-imagem. O upload exige conexão e credenciais Cloudinary configuradas no
-servidor. Evidências já enviadas podem ser abertas ou removidas.
+Responder **NC** cria ou reabre automaticamente a não conformidade associada
+quando o envio é confirmado. A indicação local durante pendência é provisória.
+Uma NC nova recebe severidade **Média**, status **Aberta** e prazo de sete dias.
+Reabrir conserva prazo e dados anteriores; mudar para Conforme/N/A arquiva a NC
+sem apagar fisicamente seu histórico. Alterar apenas observação não reescreve
+os dados de uma NC ativa.
 
-### Conclusão
+1. Abra **Não conformidades** após sincronizar.
+2. Pesquise por descrição, item ou empresa, filtre severidade e escolha **Kanban**
+   ou **Lista**.
+3. Abra um registro para editar descrição, severidade e prazo e salvar alterações.
+4. No seletor **Status**, escolha Aberta, Em tratativa, Resolvida ou Vencida.
 
-Na aba **Encerrar**, clique em **Concluir inspeção**. Itens obrigatórios precisam
-estar respondidos. Após a conclusão, a inspeção não aceita novas respostas e o
-sistema retorna à lista.
+O detalhe inclui item/normas históricos, link para a inspeção de origem,
+histórico derivado das datas registradas, ações e evidências. **Arquivar** pede
+confirmação e retorna à lista. Não há formulário autônomo para criar NC.
+Severidades disponíveis: Baixa, Média, Alta e Crítica. O acesso segue a inspeção
+própria; essas operações exigem conexão.
 
-A assinatura digital ainda não está disponível.
+## 11. Registrar ações corretivas
 
-## 8. Funcionamento offline
+1. No detalhe da NC, em **Plano de ação 5W2H**, clique em **Nova ação**.
+2. Preencha **O quê?** (descrição obrigatória).
+3. Se desejar, informe **Por quê?**, **Onde?**, **Quem?**, **Quando?**, **Como?** e
+   **Quanto?**. São campos opcionais; responsável é texto, sem conceder acesso.
+4. Escolha o status: Pendente, Em andamento, Concluída ou Vencida.
+5. Clique em **Cadastrar ação**. Para concluir depois, use **Editar**, selecione
+   **Concluída** e clique em **Salvar alterações**.
 
-O primeiro incremento Offline/PWA permite continuar o preenchimento de
-inspeções do usuário autenticado que já tenham sido abertas ou listadas enquanto
-havia conexão.
+A data de conclusão é registrada automaticamente. Os cartões mostram
+responsável/prazo/status e conclusão quando disponível. **Excluir** pede
+confirmação e arquiva a ação. Criar uma ação em NC Aberta muda a NC para
+Em tratativa; concluir ações não resolve a NC automaticamente. Se aplicável,
+selecione **Resolvida** no status da NC.
 
-- O pacote da inspeção, seu snapshot, respostas e fila ficam em
-  Dexie/IndexedDB.
-- Respostas e conclusão pendentes são reenviadas após a reconexão.
-- Retry mantém o identificador original da operação para evitar duplicidade.
-- Conflitos de revisão são bloqueados; o sistema não sobrescreve
-  automaticamente o dado remoto.
-- **Configurações** mostra inspeções armazenadas, operações pendentes, falhas e
-  conflitos e oferece **Sincronizar agora** quando aplicável.
+NCs/ações com prazo vencido podem aparecer como Vencidas. Adiar somente o prazo
+não restaura o status. Existe limitação conhecida ao salvar prazo vazio: ele
+pode reaparecer como data antiga e indicar atraso; confira o resultado após
+salvar. Esse comportamento não torna o prazo um campo obrigatório.
 
-Limitações atuais:
+## 12. Enviar evidências online
 
-- não é possível criar uma inspeção completamente offline;
-- conflitos ainda não possuem resolução assistida na interface;
-- arquivos de evidência não entram na fila offline;
-- a homologação está concentrada no Chromium local.
+1. Abra a aba **Evidências** da inspeção ou o painel no detalhe da NC.
+2. Selecione uma ou mais imagens **JPEG, PNG ou WebP**, até **4 MB por arquivo**.
+3. Confira as prévias; remova da seleção imagens indevidas.
+4. Se desejar, informe **Legenda opcional** (até 500 caracteres), aplicada às
+   imagens enviadas nessa seleção.
+5. Clique em **Enviar evidências** e confira a confirmação de cada envio.
 
-## 9. Não conformidades e ações corretivas
+Arquivos vazios, formatos/tamanhos inválidos são recusados. Um lote pode ter
+sucesso parcial: confira a lista e reenvie os arquivos que falharam. A lista
+mostra imagem, nome, tamanho, dimensões quando disponíveis e legenda. Clique
+na imagem/ícone para abrir; o botão de remoção pede confirmação e arquiva o registro.
 
-A tela **Não conformidades** usa dados persistidos e permite:
+O envio associa a evidência à inspeção **ou** à NC do painel utilizado. Não há
+associação direta à ação corretiva. Seleção/upload ficam desabilitados offline;
+selecione e envie após reconectar. Não há fila offline de imagens, compressão ou
+gestão de quota offline.
 
-- busca por descrição, item ou empresa;
-- filtro por severidade;
-- visualização em Kanban ou lista;
-- acesso ao detalhe de cada registro.
+## 13. Consultar e imprimir relatório
 
-No detalhe, o usuário pode editar descrição, severidade e prazo, alterar o
-status, arquivar a não conformidade, consultar o item e as normas históricas,
-abrir a inspeção de origem e acompanhar o histórico.
+1. Aguarde a sincronização da conclusão.
+2. Abra **Relatórios** pelo menu ou **Ver relatório** no detalhe de uma inspeção
+   concluída ou no dashboard.
+3. Selecione uma inspeção concluída própria; sem seleção, a tela usa a primeira
+   disponível. Sem concluídas, exibe mensagem de ausência de relatório.
+4. Confira identificação da inspeção, empresa e inspetor, checklist/versão
+   históricos, resumo, observações, resultados/normas por item, NCs, ações e fotos.
+5. Clique em **Imprimir**. No diálogo do navegador, imprima ou escolha
+   **Salvar como PDF**, quando disponível.
 
-O painel de ações corretivas permite cadastrar, editar, concluir e excluir
-ações. Ele registra descrição, justificativa, local, responsável, prazo, método,
-custo estimado e status conforme os campos aplicáveis do 5W2H. Evidências
-fotográficas também podem ser vinculadas diretamente à não conformidade.
+O relatório é HTML; não há download direto nem arquivo PDF gerado pelo sistema.
+Abri-lo não cria um registro persistido de relatório a cada visualização.
+Fotos incluem nome, legenda, tamanho e data; NCs/ações mostram status/prazo e
+tratativas ativas. Empresa/inspetor e tratativas refletem dados atuais, enquanto
+o conteúdo do checklist permanece histórico.
 
-## 10. Normas Regulamentadoras
+O resumo distingue Conforme, NC, N/A e pendentes. **Preenchimento** inclui N/A;
+opcionais pendentes podem aparecer mesmo após conclusão. Ele é diferente da
+conformidade do dashboard. Erros de consulta oferecem **Tentar novamente**.
+O acesso por identificador direto pode mostrar inspeção própria ainda aberta,
+embora o seletor liste apenas concluídas; isso permanece registrado para QA.
 
-A tela **Normas** consulta o catálogo persistido. É possível pesquisar por
-código, título ou descrição e filtrar normas vigentes, revogadas ou todas. Os
-registros que possuem endereço oficial oferecem o link **Consultar fonte
-oficial**.
+## 14. Acompanhar o dashboard
 
-## 11. Módulos demonstrativos
+O **Dashboard** mostra dados próprios: Total de inspeções, Concluídas,
+Em andamento, NCs abertas, Conformidade, gráfico por status, **Requer atenção**
+e até cinco inspeções recentes, ordenadas pela data da inspeção.
 
-Os módulos abaixo ainda não representam dados reais do fluxo integrado:
+A taxa de conformidade considera respostas de inspeções concluídas:
 
-- **Dashboard:** apresenta KPIs, gráficos e listas demonstrativas.
-- **Relatórios:** exibe uma prévia baseada em dados locais demonstrativos;
-  impressão e PDF estão desabilitados.
-- **Equipe:** apresenta profissionais e métricas demonstrativas.
-- **Perfil ativo em Configurações:** afeta apenas telas mockadas e não altera o
-  usuário autenticado nem permissões do servidor.
+```text
+100 × Conforme / (Conforme + NC)
+```
 
-O botão **Restaurar dados demonstrativos**, em Configurações, limpa somente os
-dados locais usados por esses módulos. Empresas, checklists e inspeções
-persistidos no banco não são alterados.
+O resultado é arredondado; N/A e itens sem resposta ficam fora do denominador.
+Sem respostas aplicáveis, aparece **—**. NCs abertas incluem as em tratativa e
+vencidas. **Requer atenção** soma planejadas, NCs vencidas e ações vencidas;
+mais de uma pendência pode pertencer à mesma inspeção. As contagens de atraso
+não alteram o estado dos registros durante a consulta do dashboard.
 
-## 12. Encerrar a sessão
+Use **Nova inspeção**, **Ver todas**, links das pendências e **Ver relatório**
+nas recentes concluídas. Há carregamento, erro com **Tentar novamente** e estado
+sem inspeções. Não há filtros de BI ou análise temporal avançada.
 
-Use **Sair** no menu lateral. O sistema encerra a sessão remota quando possível,
-remove a sessão local e tenta limpar pacotes e operações offline do dispositivo.
-Se alguma etapa falhar, uma notificação informa a condição ao usuário.
+## 15. Preparar e continuar offline
 
-## Templates oficiais da Safe Watch Insight
+1. Enquanto conectado, entre na sua conta e crie/liste/abra as inspeções desejadas.
+2. Confira em **Configurações → Funcionamento offline** quantas inspeções estão
+   no dispositivo. Abra os detalhes que pretende usar antes de ir a campo.
+3. Sem conexão, continue nas inspeções já disponíveis, respondendo e registrando
+   observações. Também é possível concluir se os obrigatórios estiverem atendidos
+   e não houver bloqueio local de falha/conflito.
+4. Os dados ficam pendentes de envio; use os indicadores para acompanhar.
 
-Na Biblioteca de checklists, “Templates oficiais” mostra os dois modelos
-fornecidos pela plataforma, identificados pelo selo “Oficial · Safe Watch
-Insight”. Abra o detalhe para consultar itens, NRs, versão publicada e fonte.
-“Usar template” cria sua cópia em rascunho v1; revise os itens e publique para
-utilizá-la nas inspeções. Ela aparece em “Meus checklists” e pode ser editada
-pelo proprietário. O original é preservado.
+Somente inspeções disponibilizadas localmente ficam acessíveis; não é todo o
+histórico do banco. Reabrir sem rede depende também da página já carregada e
+armazenada e da validade da sessão local (oito horas). O navegador pode remover
+armazenamento local; ele não é uma garantia permanente de retenção.
 
-“Publicados por usuários” mantém a consulta aos modelos publicados por outras
-pessoas. Modelos oficiais são conteúdo da plataforma, não documentos do governo
-ou garantia de conformidade atual. O modelo NR-18 adapta parte do Apêndice A de
-Murbach (2019); avalie o contexto e consulte as normas vigentes antes do uso.
+## 16. Sincronizar e tentar novamente
+
+Com conexão e sessão aceita, a aplicação tenta enviar respostas e conclusão
+automaticamente. **Online** indica conectividade detectada, sem garantir que o
+servidor esteja acessível. Aguarde pendências, falhas e conflitos desaparecerem.
+
+Em **Configurações**, confira inspeções armazenadas, operações pendentes, falhas
+e conflitos. **Sincronizar agora** reenvia pendências/erros quando habilitado;
+a barra superior também oferece **Sincronizar dados locais** quando aplicável.
+Se a autenticação expirou, conecte-se e entre novamente na mesma conta para
+validar a sessão, preservando as pendências existentes dessa identidade.
+
+Conflito bloqueia a fila; retry não o resolve. Não há sobrescrita automática nem
+resolução assistida na interface. Uma primeira operação bloqueada pode impedir
+as demais, inclusive de outra inspeção. Relatórios/dashboard consultam dados
+remotos e podem estar desatualizados em relação a mudanças locais pendentes.
+
+## 17. Sair ou trocar de conta
+
+**Sincronize as alterações pendentes antes de sair ou trocar de conta.**
+**Sair**, no menu, tenta encerrar a sessão remota e limpar sessão local,
+inspeções armazenadas, fila de alterações e cache de navegação do dispositivo,
+retornando ao login. Troca de identidade também limpa dados anteriores.
+Alterações ainda não enviadas podem ser perdidas nessa limpeza.
+
+Falha de logout remoto ou limpeza local é informada por notificação; confira a
+mensagem. Entrar novamente na mesma conta para renovar autenticação difere de
+sair ou trocar para outra identidade.
+
+## 18. Outros módulos e limites atuais
+
+**Normas (NRs)** permite buscar código/título/descrição, filtrar vigentes,
+revogadas ou todas e abrir a fonte oficial quando cadastrada. Não há manutenção
+do catálogo pela interface.
+
+**Equipe** é prévia demonstrativa. Em **Configurações**, **Perfil ativo** só afeta
+dados demonstrativos e não muda conta/permissões; **Modo escuro** é controle da
+tela, sem preferência persistida. **Restaurar dados demonstrativos** atua nos
+módulos locais; não altera dashboard/relatórios reais, empresas, checklists ou
+inspeções persistidos, apesar da menção antiga a dashboard/relatórios no texto
+do painel.
+
+Continuam fora da entrega: solicitante, administração/RBAC, edição persistida de
+perfil, recuperação de senha, assinatura digital, múltiplos modelos de relatório
+editáveis e PDF customizado. Offline ainda não cobre criar inspeções do zero,
+CRUD de outros módulos, imagens, reconciliação assistida ou pacotes dedicados de
+relatório/dashboard. A homologação funcional histórica concentra-se no Chromium
+local; outros navegadores e o fluxo autenticado completo em produção permanecem
+pendentes. Esta revisão não executou testes funcionais.
+
+Para limites e concerns já registrados, consulte
+[Requisitos](./DocumentoDeRequisitos.md), [Offline](../AI/Offline.md) e
+[Relatório da Fase 6](./RelatorioFase6.md). A navegação e tarefas correspondem aos
+[casos de uso atuais](./DiagramaDeCasosDeUso.md); os
+[wireframes](./WIREFRAMES.md) permanecem históricos.

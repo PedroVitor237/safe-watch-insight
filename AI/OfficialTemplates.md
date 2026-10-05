@@ -1,5 +1,21 @@
 # Templates oficiais da plataforma
 
+## Estado atual — conferência documental da Fase 4
+
+Em 3 de outubro de 2026, sobre a Fase 3 consolidada em `42aeb64` e a referência
+estrutural da Fase 2 (`0a19b44`), foram reconferidos catálogo,
+Services/Repositories, API e telas. Os dois achados do parecer histórico
+**NEEDS FIX BEFORE COMMIT** abaixo foram resolvidos pelo incremento de cópia
+independente. Parecer antigo descreve o momento da auditoria, não a condição
+atual. Evidência funcional posterior permanece na validação final; testes,
+seeds e migrations **não foram reexecutados nesta fase documental**.
+
+Estado vigente: templates publicados consultáveis por usuários autenticados,
+cópia transacional pessoal independente e mutações institucionais bloqueadas
+na API pessoal. Sem RBAC/editoria administrativa na interface. Regras:
+[BusinessRules.md](./BusinessRules.md), [ChecklistCopy.md](./ChecklistCopy.md) e
+[Entities.md](./Entities.md).
+
 ## Decisão e propriedade
 
 `Checklist.isOfficial` distingue conteúdo da Safe Watch Insight de checklists
@@ -17,7 +33,9 @@ A migration `20261003000000_add_official_checklist_templates` adiciona
 Nas versões da plataforma, criador e publicador são NULL; a autoria institucional
 é identificada pelo checklist pai. Versões pessoais mantêm autores da sessão.
 A restrição de publicação continua exigindo hash e data e permite publicador
-NULL quando o criador é institucional. Não há usuário técnico fictício, conta
+NULL quando `ChecklistVersion.createdById` é NULL. Esse CHECK não consulta o
+checklist pai nem prova autoria institucional sozinho; a coerência é validada
+pelo bootstrap/fluxo pessoal. Não há usuário técnico fictício, conta
 demo proprietária, painel administrativo ou nova camada RBAC.
 
 As consultas/mutações pessoais usam `createdById` e `isOfficial=false` nos
@@ -33,13 +51,47 @@ Function chama o bootstrap institucional.
 | Construção — treinamento, escavações e transporte vertical | Capacitação, escavações/tubulões e transporte de pessoas/materiais em canteiros | NR-18             |    12 | v1 `PUBLISHED`     |
 | Trabalho em altura — preparação e proteção da equipe       | Preparação de uma tarefa em altura, riscos, EPIs e emergência                   | NR-1, NR-6, NR-35 |     8 | v1 `PUBLISHED`     |
 
-As definições ficam em `src/server/catalog/official-checklists.ts`; o limite desta
+Identidades fixas, não alteradas nesta revisão:
+
+| Conteúdo   | Checklist.id                           | Autoria/fonte                                                      |
+| ---------- | -------------------------------------- | ------------------------------------------------------------------ |
+| Construção | `a0180000-0000-4000-8000-000000000001` | Safe Watch Insight, baseada/adaptada de Murbach (2019), Apêndice A |
+| Altura     | `a0350000-0000-4000-8000-000000000002` | Curadoria Safe Watch Insight (2026), temas de NR-1/NR-6/NR-35      |
+
+Ambos são isOfficial=true/isTemplate=true/createdById=NULL. Bootstrap publica
+formato 1 com criador/publicador NULL, data e SHA-256. Hashes registrados na
+auditoria histórica do TCC:
+
+- Construção: `08553a27db11f0792f53c979a9ec7c10d284d658a720c4eb89572ff41c578458`.
+- Altura: `8c4366ebc0e76b746c0c29c6b3d288668c45377ef7eb2d88bfe88ff084c7072a`.
+
+Não foram consultados novamente no banco. Hash depende da descrição/metadados
+publicados: instalação com referência corrigida pode ter hash distinto da v1
+histórica de construção. IDs de versões/itens são gerados pelo bootstrap,
+não são as identidades fixas de checklist acima.
+
+Template pessoal: isOfficial=false, dono usuário, isTemplate=true. Publicação
+de usuário pode ser template pessoal ou personalizado; publicar não torna
+autoria institucional. Cliente pode escolher isTemplate, sem atribuir oficialidade/
+proprietário. Oficial não possui dono usuário fictício nem leitura anônima.
+
+As definições ficam em [official-checklists.ts](../src/server/catalog/official-checklists.ts); o limite desta
 entrega é de dois templates. Os itens usam `ChecklistVersionItemStandard`,
 preservando IDs e metadados do catálogo `Standard`. Não se cria um catálogo legal
 paralelo. No primeiro bootstrap, somente as quatro normas necessárias ausentes
 são inseridas pelos códigos já documentados no catálogo da aplicação; registros
 existentes nunca são sobrescritos. Norma inativa ou com tipo incompatível faz a
 carga falhar explicitamente.
+
+Dois é o número de definições do catálogo atual, **sem constraint SQL limitando
+a quantidade de oficiais**. O bootstrap atribui `orderIndex` de 1 em diante e
+`isRequired=true` a todos os 20 itens; associação normativa copia metadados.
+Ao encontrar a identidade fixa já existente, valida atividade, propriedade
+institucional e publicações formato 1/hash íntegro, sem sobrescrever conteúdo,
+autores, hashes ou datas. Não compara a publicação antiga com toda a definição
+atual para forçar atualização; isso preserva a referência histórica original.
+Fonte do comportamento: [OfficialChecklistService](../src/server/services/official-checklist.service.ts)
+e [Repository institucional](../src/server/repositories/official-checklist.repository.ts).
 
 ## Fonte acadêmica e limites
 
@@ -101,6 +153,12 @@ modelo oficial. Relatórios, dashboard e execução offline continuam usando as
 inspeções e seus snapshots. Descoberta e criação de cópias exigem conexão;
 não se adicionou criação offline de checklists/inspeções.
 
+Inspeção direta da v1 histórica de construção usa descrição original, sem helper
+da errata; relatório lê essa descrição no snapshot. Errata na UI/catalogação/
+cópias novas não modifica snapshots existentes, publicação histórica ou relatório
+derivado diretamente dela. Retirada tem API/hook para checklists pessoais,
+sem ação nas telas; não existe gestão de versões institucionais pela sessão.
+
 ## Bootstrap, Demo Seed e produção
 
 Depois de configurar `DATABASE_URL`, com Node 22 conforme `.nvmrc`:
@@ -147,7 +205,7 @@ uma etapa de implantação específica; esta entrega não inclui gestão editori
 
 Não apontar validações de fixtures para produção.
 
-## Resultado da validação — 3 de outubro de 2026
+## Histórico — resultado da validação inicial (3 de outubro de 2026)
 
 Validação com Node 22.23.2 e PostgreSQL 18.4 local descartável:
 
@@ -172,8 +230,10 @@ bancos locais descartáveis. A auditoria posterior do banco TCC configurado est�
 registrada abaixo; nela a migration e o bootstrap foram aplicados nesse banco.
 Não houve commit nem push.
 
+## Histórico — auditoria pós-implementação no TCC (3 de outubro de 2026)
 
-## Auditoria pós-implementação — banco TCC configurado (3 de outubro de 2026)
+Diagnóstico anterior à correção. Seus achados/parecer foram superados pela
+validação final abaixo; métodos, contagens e evidências permanecem históricos.
 
 ### Método e preservação
 
@@ -226,7 +286,7 @@ mutações oficiais rejeitadas, inclusive uma tentativa direta de trocar autoria
 pelo Repository protegido. Draft institucional e proteções adicionais de
 persistência foram testados somente no banco local descartável.
 
-### Achados que impedem o commit
+### Achados que impediam o commit naquele diagnóstico
 
 1. **Derivação instável no banco configurado.** Duas execuções do teste de
    integração adaptado para fixtures isoladas no TCC falharam em
@@ -268,15 +328,15 @@ A auditoria não constituiu revisão jurídica das normas atuais.
 
 Foram revisados os 33 arquivos modificados e nove arquivos novos:
 
-| Grupo | Arquivos | Classificação |
-| --- | ---: | --- |
-| Prisma schema e migration | 2 | Esperado |
-| Catálogo, Service e Repository institucionais | 3 | Esperado |
-| Hooks, API, query keys, schemas, Services e Repositories de checklist | 9 | Esperado |
-| Telas de biblioteca, detalhe e nova inspeção | 3 | Esperado |
-| Scripts npm e seeds de plataforma/demo | 3 | Esperado |
-| Testes e ajustes de fixtures | 7 | Esperado |
-| Documentação e diagramas, incluindo este relatório | 15 | Esperado |
+| Grupo                                                                 | Arquivos | Classificação |
+| --------------------------------------------------------------------- | -------: | ------------- |
+| Prisma schema e migration                                             |        2 | Esperado      |
+| Catálogo, Service e Repository institucionais                         |        3 | Esperado      |
+| Hooks, API, query keys, schemas, Services e Repositories de checklist |        9 | Esperado      |
+| Telas de biblioteca, detalhe e nova inspeção                          |        3 | Esperado      |
+| Scripts npm e seeds de plataforma/demo                                |        3 | Esperado      |
+| Testes e ajustes de fixtures                                          |        7 | Esperado      |
+| Documentação e diagramas, incluindo este relatório                    |       15 | Esperado      |
 
 Não foi identificado arquivo funcional fora do escopo. O ajuste em
 `src/offline/inspection-store.test.ts` apenas preenche `isOfficial=false` no
@@ -296,21 +356,21 @@ comparação por chave e hash sem nenhuma linha alterada ou ausente. O estado
 final das tabelas da aplicação foi exatamente igual ao estado após a primeira
 carga institucional, inclusive itens, versões, timestamps e hashes oficiais.
 
-| Entidade | Antes | Depois |
-| --- | ---: | ---: |
-| User | 2 | 2 |
-| Company | 9 | 9 |
-| Checklist | 9 | 11 |
-| ChecklistVersion | 10 | 12 |
-| ChecklistVersionItem | 45 | 65 |
-| ChecklistVersionItemStandard | 26 | 50 |
-| Inspection | 17 | 17 |
-| InspectionResponse | 55 | 55 |
-| NonConformity | 11 | 11 |
-| CorrectiveAction | 6 | 6 |
-| Standard | 38 | 38 |
-| Evidence | 3 | 3 |
-| OfflineSyncOperation | 45 | 45 |
+| Entidade                     | Antes | Depois |
+| ---------------------------- | ----: | -----: |
+| User                         |     2 |      2 |
+| Company                      |     9 |      9 |
+| Checklist                    |     9 |     11 |
+| ChecklistVersion             |    10 |     12 |
+| ChecklistVersionItem         |    45 |     65 |
+| ChecklistVersionItemStandard |    26 |     50 |
+| Inspection                   |    17 |     17 |
+| InspectionResponse           |    55 |     55 |
+| NonConformity                |    11 |     11 |
+| CorrectiveAction             |     6 |      6 |
+| Standard                     |    38 |     38 |
+| Evidence                     |     3 |      3 |
+| OfflineSyncOperation         |    45 |     45 |
 
 As demais tabelas também permaneceram intactas: 20 ChecklistItem, cinco
 ChecklistItemStandard, 17 InspectionChecklistSnapshot, 74 InspectionSnapshotItem,
@@ -323,23 +383,23 @@ O dataset TCC manteve quatro empresas, quatro checklists pessoais/quatro versõe
 publicadas, oito inspeções (quatro concluídas), 23 respostas, sete NCs e cinco
 ações. A conta legada e seus registros foram cobertos pela comparação integral.
 
-| Verificação nesta auditoria | Resultado |
-| --- | --- |
-| `npm test`, Node 22.23.2 | 79/79; zero falhas |
-| TypeScript padrão e configuração ampliada com seed/script/E2E | Ambos aprovados |
-| Prisma validate | Schema válido |
-| Prisma generate e `npm run build` | Aprovados; build inclui geração do cliente e artefato Vercel |
-| Lint | Zero erros, seis avisos preexistentes de Fast Refresh |
-| `git diff --check` | Sem erros |
-| `validate:workflow-authorization` no TCC | Aprovado: dois usuários, leitura/mutação privada bloqueada, reutilização publicada e fluxo do proprietário |
-| `validate:official-templates` no PostgreSQL local descartável | 8/8, incluindo teste pai; zero falhas |
-| Fixtures de templates no TCC, configuração normal | Duas execuções falharam com P2003 na derivação; cada uma aprovou três subtestes antes da falha do teste pai |
-| Diagnóstico temporário no TCC com timeout 15 s | 8/8; não é aprovação do código/configuração normal |
-| `test:e2e:templates`, Chromium usando TCC | 1/1 aprovado; não elimina as falhas diretas acima |
-| Regressão independente no TCC, cliente normal | 1/1: CRUD pessoal, isolamento, publicação/retirada/exclusão, inspeção oficial, snapshot, conclusão, Reports e Dashboard |
-| Demo Seed completo, somente PostgreSQL local | Duas execuções; fingerprint idêntico |
-| Plataforma no TCC | Duas execuções CLI e repetições concorrentes; estado idêntico |
-| Comparação final do TCC | Nenhum registro anterior alterado/removido; somente as 48 novas linhas institucionais |
+| Verificação nesta auditoria                                   | Resultado                                                                                                               |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `npm test`, Node 22.23.2                                      | 79/79; zero falhas                                                                                                      |
+| TypeScript padrão e configuração ampliada com seed/script/E2E | Ambos aprovados                                                                                                         |
+| Prisma validate                                               | Schema válido                                                                                                           |
+| Prisma generate e `npm run build`                             | Aprovados; build inclui geração do cliente e artefato Vercel                                                            |
+| Lint                                                          | Zero erros, seis avisos preexistentes de Fast Refresh                                                                   |
+| `git diff --check`                                            | Sem erros                                                                                                               |
+| `validate:workflow-authorization` no TCC                      | Aprovado: dois usuários, leitura/mutação privada bloqueada, reutilização publicada e fluxo do proprietário              |
+| `validate:official-templates` no PostgreSQL local descartável | 8/8, incluindo teste pai; zero falhas                                                                                   |
+| Fixtures de templates no TCC, configuração normal             | Duas execuções falharam com P2003 na derivação; cada uma aprovou três subtestes antes da falha do teste pai             |
+| Diagnóstico temporário no TCC com timeout 15 s                | 8/8; não é aprovação do código/configuração normal                                                                      |
+| `test:e2e:templates`, Chromium usando TCC                     | 1/1 aprovado; não elimina as falhas diretas acima                                                                       |
+| Regressão independente no TCC, cliente normal                 | 1/1: CRUD pessoal, isolamento, publicação/retirada/exclusão, inspeção oficial, snapshot, conclusão, Reports e Dashboard |
+| Demo Seed completo, somente PostgreSQL local                  | Duas execuções; fingerprint idêntico                                                                                    |
+| Plataforma no TCC                                             | Duas execuções CLI e repetições concorrentes; estado idêntico                                                           |
+| Comparação final do TCC                                       | Nenhum registro anterior alterado/removido; somente as 48 novas linhas institucionais                                   |
 
 No teste independente com cliente normal, duas inspeções concluídas (oficial e
 pessoal) produziram 13 respostas conformes, 100% de conformidade, zero NCs e dois
@@ -357,7 +417,7 @@ Naquela auditoria, o script permanente de integração continuava restrito a
 PostgreSQL local; sua proteção não havia sido removida. Nenhuma versão oficial foi sobrescrita e nenhum
 terceiro template foi criado. O código funcional permanece sujeito aos achados.
 
-**Parecer: NEEDS FIX BEFORE COMMIT.** Resolver os dois achados acima e repetir a
+**Parecer histórico: NEEDS FIX BEFORE COMMIT (superado pela validação final).** Naquele momento era necessário resolver os dois achados acima e repetir a
 validação da derivação com a configuração final antes de autorizar o commit.
 Repositório: 33 arquivos modificados, nove novos, nada staged, sem commit/push.
 
@@ -380,28 +440,28 @@ uma errata explícita. Não foi criado terceiro template nem sobrescrita publica
 
 Node 22.23.2, Chromium 151.0.7922.34 e `DATABASE_URL` do TCC/Neon configurado:
 
-| Verificação | Resultado |
-| --- | --- |
-| `npm test` final | **85/85**, zero falhas |
-| `npx tsc --noEmit` | Aprovado |
-| TypeScript ampliado para src + scripts alterados + seed + E2E de templates | Aprovado |
-| `npm run prisma:validate` | Schema válido |
-| Prisma generate | Executado com sucesso no build final, cliente 7.9.1 |
-| `npm run build` final | Artefato Vercel gerado |
-| `npm run lint` final | Zero erros; seis avisos preexistentes de Fast Refresh |
-| `git diff --check` | Sem erros |
-| `validate:official-templates`, confirmação `configured-tcc` | **8/8**, incluindo teste pai; derivação normal, autorização, CRUD, publicação, snapshots, conclusão e Reports |
-| `validate:checklist-copy`, confirmação `configured-tcc`, final | **10/10**, incluindo teste pai; propriedade, isolamento A/B, cópia publicada acessível, draft privado não exposto, nomes, exclusão de item na origem draft e rollback |
-| Quatro cópias institucionais repetidas, cliente normal | **941, 933, 946 e 937 ms**; sem P2003 em conteúdo válido |
-| Falha deliberada na última gravação de associação | FK `ChecklistVersionItemStandard_standardId_fkey` rejeitou norma inexistente; todos os registros da tentativa foram revertidos |
-| `validate:workflow-authorization` | Aprovado; dois usuários, leitura/mutação privada bloqueada, reutilização publicada e fluxo do proprietário |
-| `validate:checklist-versioning` | Aprovado; backfill legado, v1/v2, isolamento de itens/normas, NC histórica, inspeção concluída estável e rollback |
-| `validate:dashboard` | Aprovado; Reports, escopo por usuário, cinco recentes e leitura sem mutar status |
-| `test:e2e:templates` final | **1/1**; login, uso de template, edição, cópia pessoal, independência e chamada direta ao servidor por terceiro/sem sessão |
-| `test:e2e:offline` | **3/3**; instalação/cache, reabertura/retry/sincronização, edições/conclusão e conflito otimista |
-| Demo Seed completo no TCC | Duas execuções aprovadas; fingerprint idêntico à conferência anterior somente de leitura |
-| Platform Seed CLI no TCC | Duas execuções aprovadas; fontes institucionais preservadas |
-| Fluxo com a conta demo atual | Cópia oficial e de checklist próprio, edição de ambas, fontes intactas e limpeza das duas cópias |
+| Verificação                                                                | Resultado                                                                                                                                                             |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm test` final                                                           | **85/85**, zero falhas                                                                                                                                                |
+| `npx tsc --noEmit`                                                         | Aprovado                                                                                                                                                              |
+| TypeScript ampliado para src + scripts alterados + seed + E2E de templates | Aprovado                                                                                                                                                              |
+| `npm run prisma:validate`                                                  | Schema válido                                                                                                                                                         |
+| Prisma generate                                                            | Executado com sucesso no build final, cliente 7.9.1                                                                                                                   |
+| `npm run build` final                                                      | Artefato Vercel gerado                                                                                                                                                |
+| `npm run lint` final                                                       | Zero erros; seis avisos preexistentes de Fast Refresh                                                                                                                 |
+| `git diff --check`                                                         | Sem erros                                                                                                                                                             |
+| `validate:official-templates`, confirmação `configured-tcc`                | **8/8**, incluindo teste pai; derivação normal, autorização, CRUD, publicação, snapshots, conclusão e Reports                                                         |
+| `validate:checklist-copy`, confirmação `configured-tcc`, final             | **10/10**, incluindo teste pai; propriedade, isolamento A/B, cópia publicada acessível, draft privado não exposto, nomes, exclusão de item na origem draft e rollback |
+| Quatro cópias institucionais repetidas, cliente normal                     | **941, 933, 946 e 937 ms**; sem P2003 em conteúdo válido                                                                                                              |
+| Falha deliberada na última gravação de associação                          | FK `ChecklistVersionItemStandard_standardId_fkey` rejeitou norma inexistente; todos os registros da tentativa foram revertidos                                        |
+| `validate:workflow-authorization`                                          | Aprovado; dois usuários, leitura/mutação privada bloqueada, reutilização publicada e fluxo do proprietário                                                            |
+| `validate:checklist-versioning`                                            | Aprovado; backfill legado, v1/v2, isolamento de itens/normas, NC histórica, inspeção concluída estável e rollback                                                     |
+| `validate:dashboard`                                                       | Aprovado; Reports, escopo por usuário, cinco recentes e leitura sem mutar status                                                                                      |
+| `test:e2e:templates` final                                                 | **1/1**; login, uso de template, edição, cópia pessoal, independência e chamada direta ao servidor por terceiro/sem sessão                                            |
+| `test:e2e:offline`                                                         | **3/3**; instalação/cache, reabertura/retry/sincronização, edições/conclusão e conflito otimista                                                                      |
+| Demo Seed completo no TCC                                                  | Duas execuções aprovadas; fingerprint idêntico à conferência anterior somente de leitura                                                                              |
+| Platform Seed CLI no TCC                                                   | Duas execuções aprovadas; fontes institucionais preservadas                                                                                                           |
+| Fluxo com a conta demo atual                                               | Cópia oficial e de checklist próprio, edição de ambas, fontes intactas e limpeza das duas cópias                                                                      |
 
 Uma checagem exploratória que incluiu **todos** os scripts/E2E além do `tsconfig`
 oficial encontrou 30 diagnósticos de nulabilidade em dois arquivos preexistentes
@@ -440,4 +500,9 @@ ou URL de conexão integra a documentação. O HEAD continua
 `efa1d03ae652154a3b5eddbfe5a84b499fd958f0`, com 15 arquivos modificados e quatro
 novos, nada staged. Nenhum commit ou push foi executado nesta tarefa.
 
-**Parecer desta entrega: READY FOR COMMIT.**
+**Parecer histórico da entrega funcional: READY FOR COMMIT.**
+
+O incremento funcional acima antecede as Fases 3 e 4. Nenhuma dessas revisões
+documentais repete suas operações de banco. Verificações atuais/limites:
+[RelatorioFase4.md](../Documentation/RelatorioFase4.md); revisão anterior:
+[RelatorioFase3.md](../Documentation/RelatorioFase3.md).

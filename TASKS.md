@@ -124,7 +124,7 @@ Legenda
 
 - [x] Criar checklist
 - [x] Atualizar checklist
-- [ ] Duplicar checklist
+- [x] Duplicar checklist por cópia pessoal independente com DRAFT v1
 - [x] Ativar checklist
 - [x] Desativar checklist
 - [x] Excluir checklist
@@ -396,7 +396,7 @@ conflitos.
 
 # FASE 19 — Documentação
 
-- [ ] Atualizar Documento de Requisitos
+- [x] Atualizar Documento de Requisitos, com entregas e lacunas delimitadas nas Fases documentais 3–8
 - [x] Atualizar Diagrama de Classes
 - [x] Atualizar Modelo Físico
 - [x] Atualizar Schema Prisma
@@ -414,11 +414,14 @@ conflitos.
 - [x] Prisma funcionando
 - [x] CRUD de empresas
 - [x] CRUD de checklists
-- [x] CRUD de inspeções
+- [x] Criação, listagem, consulta, respostas e conclusão de inspeções
 - [x] Registro de não conformidades
 - [x] Upload de evidências
 - [x] Relatórios
 - [x] Dashboard funcional
+
+Edição geral, cancelamento e reabertura de inspeção não possuem operação pública.
+Exclusão lógica existe na API/hook, sem botão nas telas; não se declara CRUD completo.
 
 ---
 
@@ -428,7 +431,7 @@ conflitos.
 - [ ] Controle de permissões
 - [ ] Multiempresa
 - [ ] IndexedDB completo
-- [/] Sincronização offline do fluxo principal
+- [ ] Ampliar a sincronização offline além de respostas/conclusão de inspeções já disponíveis
 - [ ] Background Sync
 - [ ] Notificações
 - [ ] BI

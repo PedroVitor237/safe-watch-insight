@@ -24,17 +24,19 @@ O fluxo principal já usa autenticação real, Server Functions, Services,
 Repositories, Prisma e PostgreSQL. Estão integrados ao backend:
 
 - empresas;
-- checklists, itens, normas e publicação de versões;
+- checklists, itens, normas, publicação de versões, templates oficiais e cópia pessoal independente;
 - criação, listagem e execução de inspeções;
 - respostas e conclusão de inspeções;
 - não conformidades e ações corretivas;
 - evidências fotográficas armazenadas no Cloudinary;
+- relatórios históricos sob demanda, com impressão/Salvar como PDF nativo;
+- dashboard com agregações reais do usuário autenticado;
 - primeiro incremento Offline/PWA para inspeções já disponibilizadas no
   dispositivo.
 
-Dashboard, relatórios e equipe ainda são prévias identificadas na interface com
-dados demonstrativos. O suporte offline também é parcial: respostas e conclusão
-do fluxo principal usam IndexedDB e uma fila durável, mas criação integral de
+Equipe ainda usa dados demonstrativos. Cadastro público, login/logout e sessão
+HTTP-only são reais; papéis armazenados não implementam RBAC. O suporte offline
+é parcial: respostas e conclusão do fluxo principal usam IndexedDB e uma fila durável, mas criação integral de
 inspeções offline, reconciliação assistida de conflitos e fila de evidências
 binárias ainda não foram implementadas.
 
@@ -51,11 +53,27 @@ Autenticação
 -> Registro das respostas e não conformidades
 -> Tratamento por ações corretivas
 -> Upload de evidências fotográficas
--> Conclusão da inspeção
+-> Conclusão da inspeção e confirmação de sincronização
+-> Consulta do relatório / impressão pelo navegador
+-> Acompanhamento no dashboard
 ```
 
 Uma edição posterior do checklist cria ou utiliza um novo rascunho e não altera
-o conteúdo histórico capturado por inspeções existentes.
+o conteúdo histórico capturado por inspeções existentes. Tratativas e evidências
+não são obrigatórias para concluir; podem continuar após a conclusão.
+**Copiar checklist/Usar template** cria novo checklist pessoal com itens
+independentes e rascunho v1; não transfere inspeções ou seu histórico.
+
+O cadastro em `/register` pede nome, e-mail, senha (mínimo oito caracteres) e
+confirmação, atribui papel técnico no servidor e encaminha para `/login`.
+Após login, abre `/dashboard`. O roteiro de tarefas e as rotas atuais estão no
+[Guia do usuário](./Documentation/GUIA_USUARIO.md) e no
+[Mapa de navegação](./Documentation/MAPA_DE_NAVEGACAO.md).
+
+**Sincronize pendências antes de sair ou trocar de conta:** esses caminhos limpam
+os dados offline locais. Relatórios/dashboard consultam remoto; confira a
+sincronização antes de imprimir. **Imprimir → Salvar como PDF** usa o navegador,
+sem geração/download direto de PDF pela aplicação.
 
 ## Arquitetura
 
@@ -63,18 +81,23 @@ O projeto usa uma arquitetura em camadas:
 
 ```text
 -> Tela React
--> TanStack React Query
+-> Hook / React Query ou chamada direta
 -> TanStack Start Server Function
+-> Validação Zod / sessão
 -> Service
 -> Repository
 -> Prisma ORM
 -> PostgreSQL
 ```
 
-As telas não acessam o Prisma diretamente. Regras de negócio ficam em
-`src/server/services`, persistência em `src/server/repositories`, validações Zod
+Login chama Server Function diretamente; respostas/conclusão usam fila local
+mesmo online. O guard de rota não substitui sessão/ownership no servidor.
+Não há backend REST separado. As telas não acessam o Prisma diretamente.
+Regras de negócio ficam em `src/server/services`, persistência em `src/server/repositories`, validações Zod
 em `src/server/schemas` e as Server Functions consumidas pelo frontend em
-`src/lib/api`.
+`src/lib/api`. Repositories também executam filtros de propriedade, transações,
+controle de revisão e deduplicação. Detalhes em [Arquitetura](./AI/Architecture.md)
+e [API implementada](./AI/API.md).
 
 ### Decisões técnicas relevantes
 
@@ -206,7 +229,10 @@ fictícia, quatro empresas fictícias, quatro checklists publicados e oito
 inspeções com snapshots (quatro concluídas, duas em andamento e duas planejadas),
 respostas, não conformidades e ações corretivas. Os dados alimentam os
 relatórios e o dashboard reais. Evidências fotográficas devem ser enviadas na
-demonstração ao vivo. O seed não altera dados já criados em uma nova execução.
+demonstração ao vivo. Reexecuções preservam respostas existentes e atividade do
+avaliador; podem completar um fixture de inspeção destinado a ser concluído
+quando sua carga foi interrompida e os registros ainda correspondem ao dataset.
+Esse caso não equivale a restaurar inspeções alteradas pelo usuário.
 
 O banco configurado para o TCC é de teste. Após o TCC, caso a plataforma seja
 usada com dados operacionais reais, execute o Demo Seed somente em um banco ou
@@ -233,28 +259,33 @@ npm run test:e2e:offline
 
 O cenário Offline/PWA foi validado localmente em Chromium, incluindo
 fechamento, reabertura, retry, reconexão e conferência final no Neon. O domínio
-HTTPS publicado e outros navegadores/dispositivos ainda precisam de homologação.
+HTTPS publicado teve assets/registro/fallback conferidos no Chromium; o fluxo
+autenticado completo em produção e outros navegadores/dispositivos ainda precisam
+de homologação. Esses resultados são históricos, sem nova execução nesta revisão.
 
 ## Funcionalidades e limitações
 
 ### Implementado
 
-- login, logout, sessão HTTP-only e proteção das rotas autenticadas;
+- cadastro público sem sessão automática, login, logout, sessão HTTP-only e
+  proteção das rotas autenticadas;
 - CRUD de empresas, checklists e itens;
 - catálogo de NRs com busca, filtro de vigência e fonte oficial;
-- associação normativa aos itens e publicação imutável de versões;
+- associação normativa aos itens, publicação imutável, consulta de templates oficiais e cópia de checklist;
 - criação e execução de inspeções baseadas em snapshot histórico;
 - respostas, observações, geração automática de não conformidades e conclusão;
 - gestão de não conformidades, ações corretivas e status;
 - seleção, pré-visualização, upload, listagem e remoção lógica de evidências;
 - persistência local do fluxo principal, fila durável e indicadores de
   sincronização;
-- manifest e service worker incluídos no build Vercel.
+- manifest e service worker incluídos no build Vercel;
+- relatórios com snapshot histórico e impressão/Salvar como PDF pelo navegador;
+- dashboard com métricas reais e cinco inspeções recentes próprias.
 
-### Em desenvolvimento
+### Evoluções futuras e pendências
 
-- relatórios reais, impressão e exportação PDF;
-- dashboard com consultas agregadas reais;
+- geração customizada e download direto de PDF pelo backend;
+- filtros e análises avançadas do dashboard;
 - gestão de equipe integrada ao backend;
 - criação integral de inspeções offline;
 - reconciliação assistida de conflitos;
@@ -275,6 +306,7 @@ artefatos acadêmicos do TCC:
 - [Modelo conceitual](./Documentation/ModeloConceitualDoBancoDeDados.md)
 - [Modelo lógico](./Documentation/ModeloLogico.md)
 - [Modelo físico](./Documentation/ModeloFisicoDB.md)
+- [Dicionário de dados](./Documentation/DicionarioDeDados.md)
 - [Especificação da API](./Documentation/EspecificacaoAPIREST.md)
 - [Especificação de telas](./Documentation/ESPECIFICACAO_DE_TELAS.md)
 - [Mapa de navegação](./Documentation/MAPA_DE_NAVEGACAO.md)

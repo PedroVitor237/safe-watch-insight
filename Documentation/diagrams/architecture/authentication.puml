@@ -1,0 +1,32 @@
+@startuml
+' Modelo equivalente ao sequenceDiagram de AI/Architecture.md.
+title Safe Watch Insight — cadastro, login e revalidação
+actor "Usuário" as U
+participant "Frontend" as F
+participant "Auth Server Functions" as SF
+participant "UserService" as US
+participant "UserRepository / Prisma / PostgreSQL" as DB
+participant "Session helpers / TanStack Start" as S
+U -> F: Cadastro ou login
+F -> SF: register ou login: validação Zod
+SF -> US: register ou authenticate
+US -> DB: Consulta conta / persiste cadastro com bcrypt
+DB --> US: Usuário
+US --> SF: RegisteredUser ou SafeUser / erro
+alt Cadastro com sucesso
+  SF --> F: RegisteredUser; sem sessão
+  F --> U: Navegar para login
+else Login com sucesso
+  SF -> S: createAuthSession: updateSession com userId
+  S --> F: Cookie HttpOnly safe_watch_session
+  SF --> F: SafeUser
+end
+F -> SF: getCurrentSession ou chamada protegida com cookie
+SF -> S: getAuthenticatedUser: getSession
+S -> US: getUserById a partir da sessão
+US -> DB: findActiveById: deletedAt=null
+DB --> US: Conta atual ou ausente
+US --> S: SafeUser / NOT_FOUND
+S --> SF: Identidade revalidada; sem identidade: UNAUTHORIZED
+SF --> F: Resultado / acesso ao fluxo protegido
+@enduml

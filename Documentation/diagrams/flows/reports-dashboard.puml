@@ -1,0 +1,31 @@
+@startuml
+title Relatório sob demanda e dashboard por usuário
+top to bottom direction
+rectangle "Sessão autenticada / Inspection.userId / não excluída" as S
+rectangle "Lista de relatórios: COMPLETED com snapshot" as L
+rectangle "Detalhe: inspeção própria com snapshot / sem exigir COMPLETED" as R
+rectangle "Snapshot: título / versão / itens / normas" as H
+rectangle "Inspection / Company / User atuais" as C
+rectangle "Respostas / NCs / ações / evidências ativas atuais" as N
+rectangle "ReportService: DTO / resumo / atraso sem escrita" as T
+rectangle "HTML InspectionReport / sem inserir Report" as U
+rectangle "window.print() / CSS A4" as P
+rectangle "Diálogo: impressão ou salvar PDF no navegador" as F
+rectangle "DashboardRepository: agregações próprias sem escrita" as D
+rectangle "DashboardService: contagens / conformidade / cinco recentes" as M
+rectangle "UI: cards / barras por status / atenção / recentes" as V
+S --> L
+L --> R : Seleção
+S --> R : inspectionId direto
+R --> T
+H --> T
+C --> T
+N --> T
+T --> U
+U --> P : Imprimir
+P --> F
+S --> D
+D --> M
+M --> V
+V --> R : Ver relatório de concluída
+@enduml

@@ -1,0 +1,58 @@
+@startuml
+' Oficial; equivalente ao Mermaid de DiagramaDeCasosDeUso.md.
+title Safe Watch Insight — casos de uso disponíveis na UI
+left to right direction
+actor "Visitante" as V
+actor "Usuário autenticado" as U
+rectangle "Safe Watch Insight" {
+  usecase "Criar conta" as REG
+  usecase "Entrar" as LOG
+  usecase "Gerenciar empresas próprias" as EMP
+  usecase "Criar e manter checklist pessoal" as CHK
+  usecase "Manter itens e normas do draft próprio" as ITEM
+  usecase "Publicar draft pessoal" as PUB
+  usecase "Consultar conteúdo publicado acessível" as CAT
+  usecase "Copiar checklist / usar template oficial" as COPY
+  usecase "Consultar catálogo de normas" as NOR
+  usecase "Criar inspeção própria" as CREATE
+  usecase "Responder / editar respostas da inspeção própria" as ANSWER
+  usecase "Concluir inspeção própria" as FINISH
+  usecase "Consultar e manter NC própria" as NC
+  usecase "Manter ações corretivas próprias" as AC
+  usecase "Selecionar / visualizar / enviar / remover evidência online" as EV
+  usecase "Consultar inspeções e histórico próprios" as HIS
+  usecase "Listar / visualizar relatório próprio" as REP
+  usecase "Imprimir relatório / salvar PDF no navegador" as PRINT
+  usecase "Ver dashboard com indicadores próprios" as DASH
+  usecase "Responder / concluir pacote disponível offline" as OFF
+  usecase "Acompanhar sincronização / tentar novamente" as SYNC
+  usecase "Sair" as OUT
+}
+V --> REG
+V --> LOG
+U --> EMP
+U --> CHK
+U --> ITEM
+U --> PUB
+U --> CAT
+U --> COPY
+U --> NOR
+U --> CREATE
+U --> ANSWER
+U --> FINISH
+U --> NC
+U --> AC
+U --> EV
+U --> HIS
+U --> REP
+U --> PRINT
+U --> DASH
+U --> OFF
+U --> SYNC
+U --> OUT
+note bottom of U
+  Personas e roles armazenados não implementam RBAC.
+  Ownership deriva da sessão; draft de terceiro é privado.
+  Offline limitado a pacotes previamente disponíveis.
+end note
+@enduml

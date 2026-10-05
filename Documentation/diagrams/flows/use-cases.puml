@@ -1,0 +1,5 @@
+@startuml
+' Caminho anterior preservado; não contém modelo independente.
+title Referência substituída — Safe Watch Insight
+note "Diagrama oficial atual:\n../domain/use-cases.puml\nMermaid e regras: ../../DiagramaDeCasosDeUso.md" as OfficialReference
+@enduml

@@ -83,6 +83,15 @@ O sistema deverá oferecer os seguintes módulos:
 
 O sistema deve permitir que usuários autenticados acessem a plataforma por meio de login.
 
+Entregue: cadastro público em `/register` com nome/e-mail/senha/confirmação,
+e-mail válido normalizado, senha de pelo menos oito caracteres e confirmação
+idêntica. Duplicidade de e-mail é recusada, inclusive em conta excluída. O servidor
+atribui TECHNICIAN; sucesso leva a `/login`, sem auto-login. Login com e-mail/senha
+leva a `/dashboard`; erros são notificados e sessão válida evita reapresentar
+login. A sessão dura oito horas.
+ADMIN/TECHNICIAN/SUPERVISOR/AUDITOR são papéis armazenados, sem RBAC funcional.
+Recuperação de senha, confirmação de e-mail e gestão de usuários não entregues.
+
 ---
 
 ## RF02 – Cadastro de Empresas
@@ -98,11 +107,23 @@ Cada empresa poderá possuir:
 - Quantidade de funcionários;
 - Observações.
 
+Entregue em `/empresas`, com criação/edição em diálogo e exclusão lógica
+confirmada. Razão social/CNAE, grau de risco inteiro de 1 a 4 e funcionários
+inteiro não negativo são obrigatórios; nome fantasia/CNPJ/endereço/observações
+são opcionais. CNPJ informado contém 14 dígitos e é único no banco, inclusive
+entre registros excluídos logicamente; não é unicidade limitada a ativos.
+Recursos são próprios; não há tela de detalhe, consulta automática de CNPJ ou
+acesso administrativo global às empresas.
+
 ---
 
 ## RF03 – Cadastro de Checklists
 
 O sistema deve permitir criar checklists personalizados.
+
+Entregue: identidade pessoal da sessão com DRAFT v1. isTemplate permite modelo
+pessoal, sem oficialidade; isOfficial não é atribuído pelo cliente. Só o
+proprietário gerencia draft/itens e exclui logicamente o checklist.
 
 ---
 
@@ -110,11 +131,23 @@ O sistema deve permitir criar checklists personalizados.
 
 O sistema deve permitir adicionar, remover e editar itens dos checklists.
 
+Entregue: edição no draft; editar publicação deriva próximo draft, sem modificar
+conteúdo publicado/snapshots. Publicação calcula SHA-256 e confere revisão lida
+pelo servidor; não exige mínimo de itens. Retirada tem backend/hook, sem ação
+nas telas atuais; interface completa de histórico de versões não entregue.
+
 ---
 
 ## RF05 – Templates de Checklist
 
 O sistema deve disponibilizar modelos de checklist previamente cadastrados.
+
+Entregue: dois templates institucionais Safe Watch Insight, construção (12 itens,
+NR-18) e altura (8 itens, NR-1/NR-6/NR-35), sem dono usuário. Template pessoal e
+publicação de usuário são distintos de oficial. Consulta exige sessão.
+Cópia própria prefere draft; terceiro/oficial usa publicação acessível. Resultado
+é identidade independente pessoal com DRAFT v1, sem copiar inspeções/tratativas.
+Sem administração de templates oficiais pela UI/role.
 
 ---
 
@@ -122,11 +155,23 @@ O sistema deve disponibilizar modelos de checklist previamente cadastrados.
 
 O sistema deve permitir iniciar e executar inspeções utilizando checklists cadastrados.
 
+Entregue: empresa própria, checklist visível ativo não excluído e versão
+PUBLISHED. Captura snapshot de checklist, itens/normas na transação da inspeção;
+não congela empresa/usuário/NCs/ações/relatório inteiro. Novas respostas são
+bloqueadas após conclusão/cancelamento. Inspeção admite publicação legada com
+hash presente sem recálculo do formato 0; cópia exige formato 1 íntegro.
+
 ---
 
 ## RF07 – Registro de Não Conformidades
 
 O sistema deve permitir registrar não conformidades identificadas durante a inspeção.
+
+Entregue: NON_COMPLIANT cria/restaura NC por resposta do snapshot. Nova NC
+usa MEDIUM/OPEN e prazo servidor + sete dias; NC ativa conserva dados e arquivada
+volta a OPEN sem renovar prazo. Conforme/N/A arquiva, sem marcar RESOLVED.
+Criação explícita requer severidade/descrição e não aplica prazo automático,
+mas é operação de backend: não há formulário autônomo de criação na UI.
 
 ---
 
@@ -160,11 +205,20 @@ O sistema deve permitir registrar o solicitante da vistoria ou inspeção.
 
 O preenchimento deverá ser opcional.
 
+**Não entregue / futuro:** não há campo solicitante no schema, contrato ou
+formulário atual; observações não equivalem a implementar esse requisito.
+
 ---
 
 ## RF13 – Emissão de Relatórios
 
 O sistema deve gerar relatórios estruturados com base nas informações registradas.
+
+Entregue: relatório por inspeção própria, DTO/HTML sob demanda de snapshot/
+respostas/NCs/ações/evidências ativas e empresa/inspetor atuais. Lista exige
+COMPLETED; consulta por ID não exige esse estado, mas exige dono/snapshot.
+Não insere Report a cada visualização. Impressão/Salvar como PDF via window.print()
+e diálogo do navegador, sem arquivo PDF gerado no backend.
 
 ---
 
@@ -172,11 +226,19 @@ O sistema deve gerar relatórios estruturados com base nas informações registr
 
 O sistema deve disponibilizar modelos padronizados de relatório.
 
+Entregue parcialmente: um componente padronizado InspectionReport, sem catálogo
+de modelos editáveis. Geração customizada/armazenamento/download direto PDF futuros.
+
 ---
 
 ## RF15 – Registro de Ações Corretivas
 
 O sistema deve permitir registrar ações corretivas associadas às não conformidades.
+
+Entregue: vínculo obrigatório com NC própria ativa. description é obrigatório;
+why/location/responsible/dueDate/method/estimatedCost são opcionais/nullable.
+Status PENDING/IN_PROGRESS/COMPLETED/OVERDUE; completedAt calculado no servidor.
+Criar ação em NC OPEN muda NC para IN_PROGRESS; concluir ações não resolve NC.
 
 ---
 
@@ -184,11 +246,19 @@ O sistema deve permitir registrar ações corretivas associadas às não conform
 
 O sistema deve permitir definir prazo para correção de não conformidades.
 
+Entregue: prazo opcional editável. Consultar lista/detalhe de NC ou lista de
+ações persiste OVERDUE para estados ativos vencidos; relatório/dashboard
+calculam atraso sem escrita. Adiar prazo sozinho não reverte OVERDUE. Coerção
+JSON null → epoch é concern conhecido, não correção desta fase.
+
 ---
 
 ## RF17 – Controle de Pendências
 
 O sistema deve permitir identificar ações corretivas pendentes, concluídas ou vencidas.
+
+Entregue: status/lista de ações e pendências no dashboard. Ações vencidas do
+dashboard exigem NC OPEN/IN_PROGRESS/OVERDUE; não há notificações/job de atraso.
 
 ---
 
@@ -196,11 +266,21 @@ O sistema deve permitir identificar ações corretivas pendentes, concluídas ou
 
 O sistema deve permitir consultar inspeções realizadas anteriormente.
 
+Entregue: lista/detalhe próprios com conteúdo de checklist capturado. Snapshot
+não congela cadastro/tratativas. Sem edição geral/cancelamento/reabertura públicos;
+soft delete de inspeção existe na API, sem ação nas telas. Não há audit log completo.
+
 ---
 
 ## RF19 – Dashboard
 
 O sistema deve apresentar indicadores resumidos sobre inspeções, não conformidades e ações corretivas.
+
+Entregue: totais de inspeções por quatro estados, NCs totais/abertas/resolvidas,
+NCs e ações vencidas, gráfico por status e até cinco recentes (inspectionDate
+DESC/createdAt DESC/id DESC). Conformidade = round(100 × COMPLIANT/(COMPLIANT +
+NON_COMPLIANT)), com snapshotItemId em COMPLETED; N/A/pendentes excluídos.
+Sem aplicáveis: NULL/UI “—”. Sem BI/filtros analíticos/comparação temporal/exportação.
 
 ---
 
@@ -208,11 +288,21 @@ O sistema deve apresentar indicadores resumidos sobre inspeções, não conformi
 
 O sistema deve permitir o registro de inspeções mesmo sem conexão com a internet.
 
+Parcial: execução/respostas/conclusão local-first de inspeções criadas online
+e previamente cacheadas em Dexie/IndexedDB por usuário, com snapshot. Não cria
+inspeção integralmente offline; NC local é projeção da resposta. Evidências
+binárias/CRUD de ações/relatórios/dashboard não possuem fluxo offline próprio.
+
 ---
 
 ## RF21 – Sincronização Automática
 
 O sistema deve sincronizar automaticamente os dados armazenados localmente quando houver conexão disponível.
+
+Entregue no incremento de RF20: fila FIFO por usuário, UUID/dependências/revisão
+esperada, retry e deduplicação remota atômica com mutação. Sessão reautenticada no
+servidor; conflito bloqueia fila sem resolução automática/assistida. Logout limpa
+dados locais. Sem garantia global de concorrência entre abas/dispositivos.
 
 ---
 
@@ -222,6 +312,12 @@ O sistema deve permitir selecionar, visualizar, enviar, consultar e remover
 fotografias relacionadas à inspeção ou a uma não conformidade. O arquivo deve
 permanecer em armazenamento externo e o banco deve guardar somente URL e
 metadados. O MVP aceita JPEG, PNG e WebP com até 4 MB.
+
+Entregue online: XOR inspeção ou NC; autorização pela inspeção da sessão e
+contexto de snapshot; MIME/assinatura/tamanho/nome/legenda validados. Limite exato
+4.194.304 bytes. Cloudinary guarda imagem, PostgreSQL metadados; soft delete/
+destroy com compensações tentadas, sem transação distribuída. Sem upload/fila
+binária/compressão/quota de evidências offline.
 
 ---
 
@@ -305,6 +401,12 @@ O histórico de inspeções não deverá ser excluído fisicamente do sistema.
 
 Os registros realizados offline deverão manter sua data e horário originais após sincronização.
 
+Incremento atual: clientCreatedAt da operação preservado; respostas guardam-no
+em clientUpdatedAt. updatedAt permanece revisão do servidor. Conclusão preserva
+horário do dispositivo na confirmação OfflineSyncOperation, sem campo dedicado
+de data original de conclusão em Inspection. Datas provisórias/IDs locais de
+NC/resposta não equivalem aos defaults/IDs gerados no servidor.
+
 ---
 
 ## RN06
@@ -316,6 +418,9 @@ Uma inspeção somente poderá ser finalizada após o preenchimento dos itens ob
 ## RN07
 
 O campo solicitante será opcional.
+
+**Regra prevista, não entregue:** depende da futura implementação de RF12.
+Não existe campo persistido ou fluxo específico de solicitante atualmente.
 
 ---
 
@@ -343,7 +448,7 @@ Os relatórios emitidos pelo sistema deverão seguir, preferencialmente, a segui
 
 As seguintes funcionalidades não fazem parte do MVP, mas poderão ser implementadas em versões futuras:
 
-- Registro fotográfico de evidências;
+- Compressão e upload offline de fotografias (upload online entregue em RF22);
 - Armazenamento de anexos;
 - Consulta automática de CNAE por CNPJ;
 - Sugestão automática de normas aplicáveis;
@@ -377,3 +482,63 @@ para o escopo do TCC como atendimento parcial; o requisito integral continua
 pendente por não incluir criação offline, reconciliação assistida, evidências
 binárias offline, Background Sync nem homologação no domínio HTTPS publicado e
 em outros navegadores/dispositivos.
+
+## Delimitação da revisão documental — 3 de outubro de 2026
+
+RF01/RF03/RF04/RF05/RF06 e RF12/RN07 foram conferidos contra a implementação.
+As demais seções preservam requisitos de análise e não constituem declaração
+de entrega integral. Persona não determina role/permissão: recursos pessoais
+usam ownership da sessão, sem acesso administrativo global. Matriz e regras
+vigentes: [BusinessRules.md](../AI/BusinessRules.md). IDs/fontes/errata:
+[OfficialTemplates.md](../AI/OfficialTemplates.md). Resultados históricos não
+são testes desta revisão: [RelatorioFase3.md](./RelatorioFase3.md).
+
+## Delimitação da Fase 6 — 4 de outubro de 2026
+
+RF07/RF13–RF22 e RN05 foram reconciliados com código sobre `5080142`, mantendo
+requisitos desejados separados da entrega atual. RN06 aceita N/A e opcionais
+pendentes; não exige fotos, ações concluídas ou NCs resolvidas. RN08 usa normas
+copiadas do snapshot, sem reconstrução pelo catálogo atual. Isolamento remoto
+usa sessão/Inspection.userId; papel não concede visão global.
+
+O checkpoint Offline/PWA de agosto acima é histórico: homologação de setembro
+validou assets/registro/fallback em HTTPS publicado, sem fluxo autenticado completo
+em produção nem outros navegadores. Não há nova homologação ou Final QA aprovado
+nesta revisão. Regras/fórmulas/autorizações: [BusinessRules.md](../AI/BusinessRules.md).
+Achados: [RelatorioFase6.md](./RelatorioFase6.md).
+
+## Rastreabilidade de classes e casos de uso — Fase 7
+
+Revisão em 4 de outubro de 2026 sobre `da43f71`, sem mudar o escopo dos requisitos.
+O [modelo de classes](./DiagramaDeClasses_VersaoTecnica.md) distingue persistência,
+legado, projeção de relatório e confirmação de sincronização; existência de
+model/enum não declara uma função entregue. Os
+[casos de uso oficiais](./DiagramaDeCasosDeUso.md) e o
+[mapa de navegação](./MAPA_DE_NAVEGACAO.md) representam telas/operações reais.
+
+Continuam **não entregues** RF12/RN07 (solicitante) e administração/RBAC/gestão
+de usuários; persona não autoriza acesso gerencial global. RF14 possui um
+componente de relatório, sem múltiplos modelos editáveis; RF20/RNF03 permanecem
+parciais, restritos a pacotes de inspeções já criadas online. Não há criação
+integral offline, empresas/checklists offline, binários de evidências offline
+nem reconciliação automática/assistida. RF18 não implica CRUD completo de inspeção:
+CANCELLED é estado modelado, não ação de cancelar, e não há edição geral/reabertura
+públicas. Report persistível não implica gravação por visualização ou PDF backend.
+Resultados históricos/concerns não foram reexecutados ou corrigidos nesta fase.
+
+## Superfície de uso reconciliada — Fase 8
+
+Conferência estática em 4 de outubro de 2026 sobre
+`5d323ae8d1e26d87198592564876616b04936f14`. [Telas](./ESPECIFICACAO_DE_TELAS.md),
+[navegação](./MAPA_DE_NAVEGACAO.md) e [guia](./GUIA_USUARIO.md) descrevem o estado
+atual sem converter as lacunas em entrega integral. RF05 possui consulta de
+oficiais e cópia pessoal; copiar cria novos itens/draft v1 com metadados e
+linhagem disponíveis, sem copiar inspeções. Retirada de versões não tem botão.
+RF13 usa relatório HTML e **Imprimir → Salvar como PDF** no navegador;
+RF14 continua parcial, com um modelo. RF19 é dashboard real próprio, sem BI.
+RF20/RNF03 continuam parciais; RF21 cobre respostas/conclusão de pacotes existentes,
+com retry de erros e bloqueio de conflitos. Logout/troca de identidade limpa
+dados offline; o guia orienta sincronizar antes dessas ações. RF22 é online.
+RF12/RN07 (solicitante) continuam não entregues; administração/RBAC permanecem
+futuros. Módulo Equipe/perfil demonstrativo não implementa essas permissões.
+Nenhuma validação runtime, mudança de código ou conclusão de Final QA nesta fase.

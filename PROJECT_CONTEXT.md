@@ -143,7 +143,7 @@ PostgreSQL. Upload offline permanece futuro.
 
 ## Relatórios
 
-O sistema deverá gerar relatórios contendo:
+O módulo atual monta relatórios sob demanda com dados reais, contendo:
 
 - dados da inspeção;
 - empresa;
@@ -173,7 +173,7 @@ Os checklists poderão ser associados às normas aplicáveis.
 
 O funcionamento offline é um requisito essencial.
 
-Arquitetura prevista:
+Arquitetura do incremento implementado:
 
 Usuário
 
@@ -251,13 +251,17 @@ assistida de conflito e evidências binárias offline continuam pendentes.
 
 A aplicação utiliza arquitetura em camadas.
 
-Fluxo esperado:
+Fluxo principal implementado:
 
-Frontend
+Tela / Hook / React Query ou chamada direta
 
 ↓
 
-Server Functions / API
+TanStack Start Server Functions
+
+↓
+
+Validação Zod / sessão
 
 ↓
 
@@ -275,7 +279,13 @@ Prisma
 
 PostgreSQL
 
-Nenhuma tela deve acessar diretamente o banco.
+Nenhuma tela acessa Prisma diretamente. Frontend/SSR/Server Functions pertencem
+ao mesmo projeto TanStack Start; Nitro usa preset Vercel, sem backend REST
+separado. Login é chamada direta e guard beforeLoad/getAppSession antecede
+renderização. Respostas/conclusão são locais primeiro, mesmo online, e retornam
+à fronteira Server Function na sincronização. Repositories também aplicam
+ownership, transações, revisão/deduplicação; schemas/helpers têm responsabilidades
+próprias além dos Services. Detalhes: [AI/Architecture.md](./AI/Architecture.md).
 
 ---
 
@@ -294,7 +304,9 @@ Concluído:
 - Modelo Físico
 - Dicionário de Dados
 - Especificação da API
-- Schema Prisma inicial
+- Schema Prisma vigente com versões, snapshots, sincronização e oficialidade
+- Dicionário e modelos conceitual/lógico/físico reconciliados com schema/migrations
+- Arquitetura e contratos de Server Functions, com diagramas Mermaid/PlantUML
 
 ---
 
@@ -308,6 +320,19 @@ O fluxo principal já utiliza dados reais integrados ao backend: login, empresas
 checklists, itens de checklist, criação de inspeção, execução, respostas e
 conclusão.
 
+O cadastro público em `/register` recebe nome/e-mail/senha/confirmação, normaliza
+e-mail, valida senha de no mínimo oito caracteres, gera bcrypt com custo 12 e
+atribui `TECHNICIAN` no servidor. Não inicia sessão: encaminha para `/login`.
+Autenticação usa cookie `safe_watch_session` por oito horas, HttpOnly,
+SameSite=lax, Secure em produção e `SESSION_SECRET` obrigatório em produção.
+O servidor reconsulta o usuário não excluído; papéis armazenados não implementam
+RBAC, gestão de equipe ou administração de usuários.
+
+Empresas e checklists pessoais têm proprietário; inspeções são isoladas por
+`Inspection.userId`. NCs, ações e evidências seguem o contexto da inspeção.
+Consultar/reutilizar checklist publicado não dá acesso à inspeção de outro
+usuário. Regras atuais: [AI/BusinessRules.md](./AI/BusinessRules.md).
+
 Alguns módulos secundários ainda utilizam dados mockados, como equipe. O antigo
 controle de simulação offline foi substituído por
 estado real de conectividade, IndexedDB e fila de sincronização.
@@ -320,6 +345,13 @@ inspeção captura atomicamente um snapshot relacional da versão publicada; ite
 normas, respostas e não conformidades históricas não dependem do checklist
 mutável. Inspeções anteriores à migration foram estabilizadas como backfill
 legado não verificável.
+
+Conclusão exige respostas nos itens obrigatórios do snapshot; `NOT_APPLICABLE`
+conta como resposta e itens opcionais podem ficar pendentes. Novas respostas
+ficam bloqueadas em `COMPLETED`/`CANCELLED`; NCs, ações e evidências continuam
+podendo ser mantidas após conclusão. Responsável, prazo, motivo, local, método
+e custo de ação corretiva são opcionais. Concluir ações não resolve NC
+automaticamente. Detalhes e concern da coerção de prazos estão em BusinessRules.
 
 As telas de inspeção e não conformidade permitem selecionar, pré-visualizar,
 enviar, listar e remover evidências fotográficas reais.
@@ -340,8 +372,10 @@ não conformidade, conclusão pendente, retry e indicadores de sincronização. 
 manifest e o service worker são incluídos no build Vercel. O cenário completo
 com fechamento/reabertura e conferência final no Neon foi validado no Chromium
 contra o servidor local; o artefato Vercel também foi validado por build. O
-domínio HTTPS publicado e outros navegadores ainda exigem homologação, e as
-funcionalidades offline futuras impedem declarar suporte offline completo.
+domínio HTTPS publicado teve assets/registro/fallback conferidos no Chromium;
+o fluxo autenticado completo em produção e outros navegadores ainda exigem
+homologação. Funcionalidades futuras impedem declarar suporte offline completo.
+Resultados históricos em [AI/Offline.md](./AI/Offline.md), sem nova execução aqui.
 
 ---
 
@@ -361,9 +395,24 @@ Módulos integrados nesta etapa:
 - normas e associação aos itens;
 - não conformidades;
 - ações corretivas;
-- evidências fotográficas em Cloudinary, vinculadas ao contexto histórico da inspeção.
+- evidências fotográficas em Cloudinary, vinculadas ao contexto histórico da inspeção;
+- relatórios históricos sob demanda, sem inserir Report a cada visualização;
+- dashboard agregado com dados reais por usuário;
+- sincronização idempotente de respostas/conclusão por Server Functions.
 
-O objetivo continua sendo substituir gradualmente os mocks remanescentes por persistência real utilizando Prisma e PostgreSQL. Evidências agora possuem upload seguro no servidor, listagem, prévia e remoção lógica; arquivos ficam no Cloudinary e somente metadados são persistidos.
+Mocks remanescentes devem ser substituídos gradualmente. Evidências possuem
+upload autorizado no servidor, listagem, prévia e remoção lógica; Cloudinary
+guarda arquivos, PostgreSQL guarda metadados. Falhas usam compensações, sem
+transação conjunta. URL do provedor não exige sessão da aplicação por download.
+
+Erros usam Result com success/message/code/statusCode/errors, mas validação
+pré-handler e exceções inesperadas podem lançar fora desse envelope. statusCode
+é lógico. Não existe CRUD web universal para toda entidade Prisma.
+
+O PWA cacheia navegações/assets, sem cache de Server Functions. HTML autenticado
+pode ser armazenado; cache de navegação não tem chave por usuário/expiração de
+sessão. Limpeza ocorre nos caminhos de logout/troca de usuário/401 remoto.
+Limites e concerns: [AI/Architecture.md](./AI/Architecture.md).
 
 ---
 
@@ -386,12 +435,21 @@ Pasta AI/
 - AI/Database.md
 - AI/Entities.md
 - AI/Offline.md
+- AI/OfficialTemplates.md
+- AI/ChecklistCopy.md
+
+Referências locais do backend e rotas:
+
+- src/server/README.md
+- src/routes/README.md
 
 Pasta Documentation/
 
 - Documento de Requisitos
 - Diagramas UML
-- Modelagem do Banco
+- Modelagem do Banco e Documentation/DicionarioDeDados.md
+- Documentation/diagrams/architecture/application.puml
+- Documentation/diagrams/architecture/authentication.puml
 - Personas
 - Especificação da API
 - Especificação de telas
@@ -466,9 +524,24 @@ publicadas e permitem criar cópias pessoais com draft v1. A carga de produção
 é `npm run db:seed:platform`, após as migrations, sem executar o Demo Seed.
 Fonte NR-18, regras e limites: [AI/OfficialTemplates.md](./AI/OfficialTemplates.md).
 
+`isTemplate` e `isOfficial` são independentes: modelo pessoal mantém dono usuário;
+oficial exige `isOfficial=true`, `isTemplate=true` e dono NULL. Os dois oficiais
+codificados são construção (12 itens, NR-18) e altura (8 itens, NR-1/NR-6/NR-35).
+Esse número não é limite imposto pelo banco. Retirada existe no backend/hook,
+sem ação nas telas; a interface de histórico de versões permanece incompleta.
+
 A ação **Copiar checklist** reutiliza a operação de derivação institucional para
 checklists próprios e publicações já acessíveis. Toda cópia pertence à sessão,
 começa em draft v1, tem itens independentes e pode ser publicada normalmente.
 A persistência usa inserts em lote na mesma transação, corrigindo o P2003
 reproduzido no Neon sem aumentar timeouts. Consultar
 [AI/ChecklistCopy.md](./AI/ChecklistCopy.md).
+
+Origem própria prefere draft, mesmo inativa; terceiro/oficial usa a publicação
+acessível de maior número. Publicação para cópia exige formato 1 e hash íntegro;
+criar inspeção pode aceitar formato legado 0 com hash presente sem recálculo.
+Cópia não transfere oficialidade/template, inspeções, respostas, snapshots ou
+tratativas. A linhagem dos itens conserva ancestral publicado anterior ao copiar
+draft, sem referenciar seu item mutável. Errata bibliográfica afeta exibição e
+novas cópias, sem reescrever publicações/snapshots históricos. Conferência estática
+da Fase 4: [RelatorioFase4.md](./Documentation/RelatorioFase4.md).

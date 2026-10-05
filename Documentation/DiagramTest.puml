@@ -1,4 +1,13 @@
 @startuml
+' HISTÓRICO / NÃO VIGENTE. Origem: commit a037ac5.
+' Modelo oficial: diagrams/domain/use-cases.puml.
+' Regras e Mermaid: DiagramaDeCasosDeUso.md.
+title HISTÓRICO — proposta de personas/permissões, não implementada
+legend top
+  Artefato de análise preservado após revisão do histórico Git.
+  ADMIN/Supervisor não são perfis de autorização implementados.
+  Diagrama oficial atual: diagrams/domain/use-cases.puml
+endlegend
 
 left to right direction
 

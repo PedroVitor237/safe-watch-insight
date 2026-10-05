@@ -1,0 +1,61 @@
+@startuml
+' Equivalente ao Mermaid de MAPA_DE_NAVEGACAO.md.
+title Safe Watch Insight — navegação implementada
+top to bottom direction
+rectangle "/" as Root
+rectangle "/login\nAutenticação" as Login
+rectangle "/register\nCadastro público" as Register
+rectangle "Acesso a rota interna" as Internal
+rectangle "Sessão válida?" as Guard
+rectangle "Layout autenticado" as App
+rectangle "/dashboard\nIndicadores próprios" as Dashboard
+rectangle "/inspecoes" as Inspections
+rectangle "/checklists" as Checklists
+rectangle "/nao-conformidades" as NCs
+rectangle "/relatorios\nRelatórios próprios" as Reports
+rectangle "/empresas" as Companies
+rectangle "/normas" as Standards
+rectangle "/equipe\nprévia demonstrativa" as Team
+rectangle "/configuracoes" as Settings
+rectangle "/inspecoes/nova" as NewInspection
+rectangle "/inspecoes/$id" as Inspection
+rectangle "/checklists/$id" as Checklist
+rectangle "/nao-conformidades/$id" as NC
+Root --> Login
+Login --> Register : Criar conta
+Register --> Login : Sucesso sem sessão / voltar
+Login --> Guard : credenciais válidas
+Internal --> Guard
+Guard --> Login : não
+Guard --> App : sim
+App --> Dashboard
+App --> Inspections
+App --> Checklists
+App --> NCs
+App --> Reports
+App --> Companies
+App --> Standards
+App --> Team
+App --> Settings
+Inspections --> NewInspection : Nova inspeção
+NewInspection --> Inspections : Criar
+Inspections --> Inspection : Abrir registro
+Inspection --> Inspections : Concluir ou voltar
+Checklists --> Checklist : Abrir
+Checklist --> Checklists : Voltar
+Checklists --> Checklist : Usar template: novo id
+Checklist --> Checklist : Copiar / Usar template: novo id
+NCs --> NC : Abrir
+NC --> Inspection : Abrir inspeção de origem
+NC --> NCs : Voltar ou arquivar
+Login --> Dashboard : Sessão já válida / login concluído
+Dashboard --> NewInspection : Nova inspeção
+Dashboard --> Inspections : Ver todas / planejadas
+Dashboard --> Inspection : Ver inspeção recente não concluída
+Dashboard --> Reports : Ver relatório de concluída: inspectionId
+Dashboard --> NCs : NCs / ações vencidas
+Inspection --> Reports : Ver relatório em Concluída: inspectionId
+Reports --> Reports : Selecionar: inspectionId na busca
+App --> Settings : Avatar da barra superior
+App --> Login : Sair pelo menu lateral
+@enduml

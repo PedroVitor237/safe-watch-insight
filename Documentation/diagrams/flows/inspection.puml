@@ -1,0 +1,29 @@
+@startuml
+title Criação, respostas e conclusão de inspeção
+top to bottom direction
+rectangle "Sessão autenticada" as S
+rectangle "Empresa própria não excluída" as C
+rectangle "Checklist visível ativo" as K
+rectangle "Versão PUBLISHED do checklist / hash elegível" as V
+rectangle "Transação: Inspection + snapshot + itens + normas" as T
+rectangle "PLANNED / SYNCED" as P
+rectangle "Salvar resposta no item do snapshot / estado elegível" as R
+rectangle "Transação: resposta + NC + IN_PROGRESS / confirmação se offline" as N
+rectangle "IN_PROGRESS" as I
+rectangle "Concluir: obrigatórios respondidos / estado elegível" as F
+rectangle "COMPLETED / respostas bloqueadas" as D
+rectangle "NCs, ações e evidências continuam tratáveis" as A
+S --> C
+C --> K
+K --> V
+V --> T
+T --> P
+P --> R
+R --> N
+N --> I
+I --> R : Editar resposta
+I --> F
+P --> F : Sem obrigatórios pendentes
+F --> D
+D --> A
+@enduml

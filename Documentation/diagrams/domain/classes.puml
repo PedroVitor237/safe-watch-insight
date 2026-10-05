@@ -1,0 +1,301 @@
+@startuml
+' Equivalente ao Mermaid de DiagramaDeClasses_VersaoTecnica.md.
+title Safe Watch Insight — domínio persistido e compatibilidade
+hide empty methods
+
+class User <<persisted>> {
+  +UUID id
+  +String name
+  +String email
+  +String password
+  +UserRole role
+}
+
+class Company <<persisted>> {
+  +UUID id
+  +String corporateName
+  +String? tradeName
+  +String? cnpj
+  +String cnae
+  +Int riskLevel
+  +Int employeeCount
+  +String? address
+  +String? notes
+  +UUID createdById
+}
+
+class Checklist <<persisted>> {
+  +UUID id
+  +String title
+  +String? description
+  +Boolean isTemplate
+  +Boolean isOfficial
+  +Boolean isActive
+  +UUID? createdById
+}
+
+class ChecklistItem <<legacy>> {
+  +UUID id
+  +UUID checklistId
+  +String description
+  +Int orderIndex
+  +Boolean isRequired
+}
+
+class Standard <<persisted>> {
+  +UUID id
+  +StandardType type
+  +String code
+  +String title
+  +String? summary
+  +String? officialUrl
+  +Boolean isActive
+}
+
+class ChecklistItemStandard <<legacy>> {
+  +UUID checklistItemId
+  +UUID standardId
+}
+
+class ChecklistVersion <<persisted>> {
+  +UUID id
+  +UUID checklistId
+  +Int versionNumber
+  +ChecklistVersionStatus status
+  +String title
+  +String? description
+  +Int contentSchemaVersion
+  +String? contentHash
+  +UUID? createdById
+  +UUID? publishedById
+  +DateTime? publishedAt
+}
+
+class ChecklistVersionItem <<persisted>> {
+  +UUID id
+  +UUID checklistVersionId
+  +UUID? sourceVersionItemId
+  +UUID? sourceChecklistItemId
+  +String description
+  +Int orderIndex
+  +Boolean isRequired
+}
+
+class ChecklistVersionItemStandard <<persisted>> {
+  +UUID checklistVersionItemId
+  +UUID standardId
+  +StandardType type
+  +String code
+  +String title
+  +String? summary
+  +String? officialUrl
+}
+
+class Inspection <<persisted>> {
+  +UUID id
+  +UUID userId
+  +UUID companyId
+  +UUID checklistId
+  +UUID? checklistVersionId
+  +DateTime inspectionDate
+  +InspectionStatus status
+  +SyncStatus syncStatus
+  +String? notes
+}
+
+class OfflineSyncOperation <<operational>> {
+  +UUID id
+  +UUID userId
+  +UUID inspectionId
+  +OfflineOperationType type
+  +String payloadHash
+  +DateTime clientCreatedAt
+  +DateTime completedAt
+}
+
+class InspectionResponse <<persisted>> {
+  +UUID id
+  +UUID inspectionId
+  +UUID? checklistItemId
+  +UUID? snapshotItemId
+  +ResponseStatus status
+  +String? observation
+  +DateTime? clientUpdatedAt
+  +DateTime updatedAt
+}
+
+class InspectionChecklistSnapshot <<persisted>> {
+  +UUID id
+  +UUID inspectionId
+  +UUID sourceChecklistId
+  +UUID sourceChecklistVersionId
+  +Int sourceVersionNumber
+  +String title
+  +String? description
+  +Boolean isTemplate
+  +Int snapshotSchemaVersion
+  +String contentHash
+  +InspectionSnapshotOrigin origin
+  +InspectionSnapshotIntegrityStatus integrityStatus
+  +DateTime capturedAt
+}
+
+class InspectionSnapshotItem <<persisted>> {
+  +UUID id
+  +UUID snapshotId
+  +UUID sourceVersionItemId
+  +UUID? sourceChecklistItemId
+  +String description
+  +Int orderIndex
+  +Boolean isRequired
+}
+
+class InspectionSnapshotItemStandard <<persisted>> {
+  +UUID snapshotItemId
+  +UUID standardId
+  +StandardType type
+  +String code
+  +String title
+  +String? summary
+  +String? officialUrl
+}
+
+class NonConformity <<persisted>> {
+  +UUID id
+  +UUID inspectionResponseId
+  +String description
+  +Severity severity
+  +DateTime? dueDate
+  +NonConformityStatus status
+}
+
+class CorrectiveAction <<persisted>> {
+  +UUID id
+  +UUID nonConformityId
+  +String description
+  +String? why
+  +String? location
+  +String? responsible
+  +DateTime? dueDate
+  +String? method
+  +String? estimatedCost
+  +CorrectiveActionStatus status
+  +DateTime? completedAt
+}
+
+class Evidence <<persisted>> {
+  +UUID id
+  +UUID? inspectionId
+  +UUID? nonConformityId
+  +String publicId
+  +String storageUrl
+  +String fileName
+  +String mimeType
+  +BigInt fileSize
+  +Int? width
+  +Int? height
+  +String? caption
+}
+
+class Report <<persisted>> {
+  +UUID id
+  +UUID inspectionId
+  +UUID generatedById
+  +Int version
+  +DateTime generatedAt
+  +String? observations
+}
+
+class ChecklistVersionStatus <<enumeration>> {
+  DRAFT
+  PUBLISHED
+  RETIRED
+}
+
+class InspectionStatus <<enumeration>> {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+class SyncStatus <<enumeration>> {
+  PENDING
+  SYNCING
+  SYNCED
+  ERROR
+}
+
+class OfflineOperationType <<enumeration>> {
+  SAVE_INSPECTION_RESPONSE
+  FINISH_INSPECTION
+}
+
+class InspectionSnapshotOrigin <<enumeration>> {
+  INSPECTION_CREATION
+  LEGACY_BACKFILL
+}
+
+class InspectionSnapshotIntegrityStatus <<enumeration>> {
+  VERIFIED
+  UNVERIFIED_LEGACY
+}
+
+User "1" --> "0..*" Company : createdById
+User "0..1" --> "0..*" Checklist : createdById
+Checklist "1" --> "0..*" ChecklistItem : checklistId
+ChecklistItem "1" --> "0..*" ChecklistItemStandard : checklistItemId
+Standard "1" --> "0..*" ChecklistItemStandard : standardId
+Checklist "1" --> "0..*" ChecklistVersion : checklistId
+User "0..1" --> "0..*" ChecklistVersion : createdById
+User "0..1" --> "0..*" ChecklistVersion : publishedById
+ChecklistVersion "1" --> "0..*" ChecklistVersionItem : checklistVersionId
+ChecklistVersionItem "0..1" --> "0..*" ChecklistVersionItem : sourceVersionItemId
+ChecklistItem "0..1" --> "0..*" ChecklistVersionItem : sourceChecklistItemId
+ChecklistVersionItem "1" --> "0..*" ChecklistVersionItemStandard : checklistVersionItemId
+Standard "1" --> "0..*" ChecklistVersionItemStandard : standardId
+User "1" --> "0..*" Inspection : userId
+Company "1" --> "0..*" Inspection : companyId
+Checklist "1" --> "0..*" Inspection : checklistId
+ChecklistVersion "0..1" --> "0..*" Inspection : checklistVersionId
+User "1" --> "0..*" OfflineSyncOperation : userId
+Inspection "1" --> "0..*" OfflineSyncOperation : inspectionId
+Inspection "1" --> "0..*" InspectionResponse : inspectionId
+ChecklistItem "0..1" --> "0..*" InspectionResponse : checklistItemId
+InspectionSnapshotItem "0..1" --> "0..*" InspectionResponse : snapshotItemId
+Inspection "1" --> "0..1" InspectionChecklistSnapshot : inspectionId
+Checklist "1" --> "0..*" InspectionChecklistSnapshot : sourceChecklistId
+ChecklistVersion "1" --> "0..*" InspectionChecklistSnapshot : sourceChecklistVersionId
+InspectionChecklistSnapshot "1" --> "0..*" InspectionSnapshotItem : snapshotId
+ChecklistVersionItem "1" --> "0..*" InspectionSnapshotItem : sourceVersionItemId
+ChecklistItem "0..1" --> "0..*" InspectionSnapshotItem : sourceChecklistItemId
+InspectionSnapshotItem "1" --> "0..*" InspectionSnapshotItemStandard : snapshotItemId
+Standard "1" --> "0..*" InspectionSnapshotItemStandard : standardId
+InspectionResponse "1" --> "0..1" NonConformity : inspectionResponseId
+NonConformity "1" --> "0..*" CorrectiveAction : nonConformityId
+Inspection "0..1" --> "0..*" Evidence : inspectionId
+NonConformity "0..1" --> "0..*" Evidence : nonConformityId
+Inspection "1" --> "0..1" Report : inspectionId
+User "1" --> "0..*" Report : generatedById
+ChecklistVersion ..> ChecklistVersionStatus : status
+Inspection ..> InspectionStatus : status
+Inspection ..> SyncStatus : syncStatus
+OfflineSyncOperation ..> OfflineOperationType : type
+InspectionChecklistSnapshot ..> InspectionSnapshotOrigin : origin
+InspectionChecklistSnapshot ..> InspectionSnapshotIntegrityStatus : integrityStatus
+
+note bottom of Evidence
+  inspectionId XOR nonConformityId (CHECK SQL).
+  Sem vínculo direto a resposta ou ação corretiva.
+end note
+
+note bottom of OfflineSyncOperation
+  Confirmação remota, sem status de fila.
+  PENDING/SYNCING/ERROR/CONFLICT são estados locais.
+end note
+
+note bottom of Inspection
+  Cardinalidades físicas: versão 0..1; snapshot 0..1.
+  Fluxo novo cria ambos; CANCELLED não é ação pública.
+end note
+@enduml
