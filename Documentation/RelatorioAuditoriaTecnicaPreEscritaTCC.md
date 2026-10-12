@@ -120,6 +120,16 @@ Na criação, [CorrectiveActionService](../src/server/services/corrective-action
 
 Não foram gravados prazos no banco, nem procurados registros afetados. Recomenda-se correção/teste posterior antes de afirmar no TCC que criar/limpar prazos opcionais funciona corretamente em todos os caminhos.
 
+#### Atualização posterior — remediação direcionada de IC-P9-01
+
+Em 11 de outubro de 2026, na branch `fix/ic-p9-01-null-deadline`, a partir de `581e87dc060867f455bc4baeeee167b9b9dfaa7a`, o defeito foi reproduzido nos schemas reais de criação e atualização de NC/ação. A correção usa `.nullable()` fora da união, interceptando JSON `null` antes da coerção de data; `.optional()` conserva `undefined`, e string vazia continua resultando em NULL. Services e Repositories não precisaram de alterações: criação conserva ausência como NULL e atualização distingue omissão de limpeza explícita.
+
+**Estado posterior: RESOLVED no código e nos testes locais para IC-P9-01.** Foram adicionados 23 testes aos arquivos existentes `sprint.schemas.test.ts` e `corrective-action.service.test.ts`: omissão/undefined, JSON null, vazio, datas válidas (string/ISO/Date), entradas inválidas, atualização somente de prazo, preservação de prazo omitido e limpeza de prazo existente. O fluxo schema → Service → Repository simulado → `fmtData` confirma ausência como “—”. Os testes direcionados falharam sete vezes com o código original (23/30 aprovados) e passaram 30/30 após a correção.
+
+Validações executadas com Node 22.23.2 e npm, sem instalação de dependências: `npm exec -- tsx --test src/server/schemas/sprint.schemas.test.ts src/server/services/corrective-action.service.test.ts` (30/30), `npm test` (108/108), `npm exec -- tsc --noEmit` (aprovado), `npm run lint` (zero erros, seis avisos em componentes de UI fora do escopo), `npm run build` (aprovado, com avisos de depreciação/bundling) e `git diff --check` (aprovado). O tsx exigiu execução autorizada fora da sandbox para seu socket IPC. Arquivos gerados pelo build não integram a correção.
+
+Não houve verificação em navegador, consulta/reparo de registros existentes, migration, seed ou implantação. A resolução refere-se ao contrato de entrada e ao fluxo local testado, sem certificar dados já persistidos. O inventário e as contagens anteriores deste relatório, assim como a retrospectiva, continuam sendo registros da baseline auditada; os outros 13 achados não foram remediados por esta atualização.
+
 ### 3.3. Sessão, caches e diferença entre retenção local e autorização remota
 
 Logout remoto limpa o cookie; handleLogout tenta também limpar Dexie e Cache Storage e navega na SPA. Login grava o usuário seguro local e também navega na SPA. Não há funcionalidade especial de troca de conta: sair e entrar como B é o caminho relevante. QueryClient permanece associado ao router; chaves de dashboard/listas não carregam identidade e não foi localizada chamada explícita a clear/removeQueries/resetQueries na transição. Invalidações de mutações não resolvem essa mudança de identidade.

@@ -4,7 +4,8 @@ import { z } from "zod";
 import { listQuerySchema } from "./pagination.schema";
 
 const optionalNullableDateSchema = z
-  .union([z.coerce.date(), z.literal("").transform(() => null), z.null()])
+  .union([z.coerce.date(), z.literal("").transform(() => null)])
+  .nullable()
   .optional();
 
 export const nonConformityIdSchema = z.object({
