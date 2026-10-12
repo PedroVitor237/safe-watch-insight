@@ -538,6 +538,36 @@ Retry do mesmo UUID com mesmo hash retorna sucesso idempotente. O mesmo UUID com
 outro hash retorna conflito. Uma revisão inesperada também retorna conflito e a
 fila é bloqueada para impedir que operações dependentes avancem.
 
+## Concorrência remota de respostas e conclusão — IC-P6-03
+
+O servidor usa `SELECT ... FOR UPDATE` sobre a inspeção própria não excluída,
+antes de consultar o UUID confirmado ou a revisão da resposta. Gravação e
+conclusão usam esse mesmo bloqueio, mantido até commit/rollback, com isolamento
+`ReadCommitted` explícito. Após esperar, a requisição lê o estado confirmado
+pela anterior. A revisão `updatedAt` da resposta avança pelo menos um milissegundo
+por escrita, inclusive com relógio parado/retrocedendo; `clientUpdatedAt` continua
+representando o horário do dispositivo.
+
+- UUID/hash iguais: sucesso idempotente sem segunda mutação, inclusive após
+  conclusão e em tentativas simultâneas na mesma inspeção.
+- UUIDs distintos com a mesma revisão/ausência esperada: uma gravação pode
+  persistir; a seguinte retorna `409` sem confirmação nem sobrescrita.
+- Gravação obtém bloqueio primeiro: conclusão valida respostas/snapshot atuais
+  na transação e pode concluir se todos os obrigatórios estiverem respondidos.
+- Conclusão obtém bloqueio primeiro: nova resposta é rejeitada; duas conclusões
+  distintas permitem uma transição e a outra retorna `409`.
+- Falha da confirmação remota: mutação, NC, estado e confirmação sofrem rollback;
+  o UUID pode ser reenviado depois que a falha for resolvida.
+
+A fila cliente mantém a coordenação por instância e os conflitos continuam
+exigindo intervenção; esta correção não implementa coordenação de abas,
+reconciliação assistida ou suporte offline completo. Testes exercitam Services
+e Repositories reais sobre persistência simulada com barreiras explícitas,
+sem nova corrida contra PostgreSQL/Neon. O E2E Chromium intercepta todos os RPCs:
+verifica confirmação/conflito da conclusão na fila, sem validar o bloqueio SQL.
+Resultados e limites em
+[auditoria IC-P6-03](../Documentation/RelatorioAuditoriaTecnicaPreEscritaTCC.md#atualização-posterior--investigação-e-remediação-direcionada-de-ic-p6-03).
+
 Erros transitórios recebem backoff exponencial limitado a cinco minutos e até
 cinco tentativas automáticas. Erro de autenticação/validação exige intervenção;
 conflito nunca é reenviado automaticamente.

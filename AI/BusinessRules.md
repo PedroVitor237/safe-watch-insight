@@ -302,6 +302,18 @@ resposta por `snapshotItemId`, sem exigir observação, evidência, resolução 
 ou conclusão das ações. Uma inspeção sem itens obrigatórios pendentes também
 pode ser concluída; não há regra de mínimo de respostas no Service.
 
+IC-P6-03: respostas e conclusão bloqueiam a linha da inspeção própria ativa
+antes das leituras de deduplicação/revisão, em transações `ReadCommitted`.
+A conclusão carrega respostas/snapshot e executa as regras do Service dentro
+da mesma transação. Uma gravação anterior ao bloqueio da conclusão é observada;
+uma nova gravação posterior à conclusão é rejeitada. UUID/hash repetidos podem
+ser confirmados sem nova mutação; UUID divergente, revisão antiga e segunda
+conclusão distinta recebem `CONFLICT`. `updatedAt` da resposta avança estritamente,
+inclusive quando o relógio compartilha ou retrocede um milissegundo. Chamadas
+diretas sem revisão esperada conservam essa ausência de controle otimista.
+Testes determinísticos usam persistência simulada; a concorrência real no
+PostgreSQL/Neon e entre navegadores permanece sem nova homologação nesta tarefa.
+
 Errata Murbach inclui **72–74** em catálogo atual, exibição institucional e
 novos drafts de cópia, sem reescrever v1/hash/datas/snapshots. Inspeção direta da
 publicação histórica copia descrição original; relatório desse snapshot não

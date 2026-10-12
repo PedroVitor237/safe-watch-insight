@@ -1050,6 +1050,11 @@ await listInspectionResponses({ data: { inspectionId } });
 - **Status aceitos:** `COMPLIANT`, `NON_COMPLIANT`, `NOT_APPLICABLE`.
 - **Regras relacionadas:** deve ser enviado exatamente um entre `snapshotItemId` e o `checklistItemId` legado. O item precisa pertencer ao snapshot da inspeção; o identificador legado é resolvido para esse snapshot antes da persistência. A resposta é única por inspeção + item do snapshot; inspeção `PLANNED` passa para `IN_PROGRESS`; validação de estado, resposta e criação/restauração/arquivamento da não conformidade são atômicos. A descrição e as normas históricas vêm do snapshot. Inspeções concluídas ou canceladas não aceitam alterações.
 - **Sincronização offline:** `operationId`, `clientCreatedAt` e `expectedResponseUpdatedAt` são opcionais para chamadas online normais, mas formam um conjunto obrigatório quando qualquer um é enviado. O usuário sempre vem da sessão. O servidor calcula hash canônico, confere a revisão esperada e grava `OfflineSyncOperation` atomicamente. Mesmo ID/hash é retry idempotente; mesmo ID com conteúdo diferente ou revisão divergente retorna `409`.
+- **Concorrência (IC-P6-03):** a inspeção é bloqueada antes de consultar UUID e
+  revisão. Duas gravações offline com a mesma revisão permitem uma mutação;
+  a outra recebe `409`. Mesmo UUID/hash concorrente retorna sucesso sem repetir
+  a escrita. `updatedAt` avança pelo menos um milissegundo por mutação da resposta.
+  Chamadas diretas sem metadados continuam sem comparação de revisão.
 - **NC automática:** nova NC usa `MEDIUM`/`OPEN`, descrição da observação aparada
   ou do item histórico e prazo atual + sete dias UTC. NC ativa conserva dados e
   status; arquivada volta a `OPEN` sem renovar prazo/descrição/severidade. Resposta
@@ -1091,6 +1096,12 @@ await saveInspectionResponse({
 - **Filtros na chamada:** não se aplica.
 - **Identificador no payload:** `inspectionId` no body.
 - **Regras relacionadas:** inspeção e snapshot devem existir; todos os itens obrigatórios do snapshot devem possuir resposta por `snapshotItemId`; status passa para `COMPLETED`; inspeções concluídas ou canceladas não podem ser concluídas novamente. Com metadados offline, a conclusão e o registro idempotente são atômicos; retry do mesmo ID/hash retorna a inspeção já concluída.
+- **Concorrência (IC-P6-03):** consulta, validação e conclusão usam a mesma
+  transação e o mesmo bloqueio da gravação de respostas. Se a resposta adquirir
+  o bloqueio primeiro, a conclusão valida seu estado confirmado. Se a conclusão
+  vencer, uma nova gravação recebe `409`. Duas conclusões com IDs distintos
+  permitem uma transição; a outra recebe `409`. Mesmo UUID/hash de conclusão
+  retorna sucesso idempotente, inclusive em requisições simultâneas.
 - **Completude:** `NOT_APPLICABLE` conta como resposta; opcionais podem ficar sem
   resposta. Não exige observações, fotos, NCs resolvidas ou ações concluídas.
   Conclusão bloqueia novas respostas, preservando manutenção de NCs/ações/evidências.

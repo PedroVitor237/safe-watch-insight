@@ -233,12 +233,8 @@ test("inspection detail, list, deletion, responses and completion require Inspec
       calls.push(`delete:${userId}`);
       return inspection;
     },
-    updateStatusIfCurrent: async (
-      _id: string,
-      _statuses: unknown,
-      _status: unknown,
-      userId: string,
-    ) => {
+    completeWithValidation: async (_id: string, userId: string) => {
+      if (userId !== owner) return null;
       calls.push(`finish:${userId}`);
       return inspection;
     },

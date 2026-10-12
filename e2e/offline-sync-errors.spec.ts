@@ -1,7 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
 import { toJSONAsync } from "seroval";
 
-import type { SaveResponseOperation } from "../src/offline/types";
+import type {
+  FinishInspectionOperation,
+  OfflineOperation,
+  SaveResponseOperation,
+} from "../src/offline/types";
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
 const INSPECTION_ID = "22222222-2222-4222-8222-222222222222";
@@ -170,12 +174,76 @@ async function synchronize(page: Page): Promise<boolean> {
   }, OPERATION_ID);
 }
 
-async function readOperation(page: Page): Promise<SaveResponseOperation | undefined> {
+test("an idempotent conclusion acknowledgement removes the durable UUID", async ({ page }) => {
+  await seedFinishOperation(page);
+  await page.route(RPC_ROUTE, (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        result: {
+          success: true,
+          data: {
+            id: INSPECTION_ID,
+            userId: USER_ID,
+            status: "COMPLETED",
+            syncStatus: "SYNCED",
+            snapshot: {},
+            responses: [],
+          },
+        },
+      }),
+    }),
+  );
+  expect(await synchronize(page)).toBe(true);
+  expect(await readOperation(page)).toBeUndefined();
+});
+
+test("a conflicting conclusion keeps its UUID and blocks synchronization", async ({ page }) => {
+  await seedFinishOperation(page);
+  await page.route(RPC_ROUTE, (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        result: {
+          success: false,
+          code: "CONFLICT",
+          statusCode: 409,
+          message: "Completed or cancelled inspections cannot be edited.",
+        },
+      }),
+    }),
+  );
+  expect(await synchronize(page)).toBe(false);
+  expect(await readOperation(page)).toMatchObject({
+    id: OPERATION_ID,
+    type: "FINISH_INSPECTION",
+    status: "CONFLICT",
+    lastErrorCode: "CONFLICT",
+    attemptCount: 1,
+  });
+});
+
+async function seedFinishOperation(page: Page): Promise<void> {
+  await page.evaluate(async (id) => {
+    const path = "/src/offline/database.ts";
+    const { getOfflineDatabase } = (await import(path)) as typeof import("../src/offline/database");
+    const db = getOfflineDatabase();
+    const response = await db.operations.get(id);
+    if (!response) throw new Error("Missing browser operation");
+    const operation: FinishInspectionOperation = {
+      ...response,
+      type: "FINISH_INSPECTION",
+      entityKey: "inspection:finish",
+      payload: { clientCreatedAt: response.createdAt },
+    };
+    await db.operations.put(operation);
+  }, OPERATION_ID);
+}
+
+async function readOperation(page: Page): Promise<OfflineOperation | undefined> {
   return page.evaluate(async (id) => {
     const path = "/src/offline/database.ts";
     const { getOfflineDatabase } = (await import(path)) as typeof import("../src/offline/database");
-    const operation = await getOfflineDatabase().operations.get(id);
-    if (operation?.type !== "SAVE_INSPECTION_RESPONSE") return undefined;
-    return operation;
+    return getOfflineDatabase().operations.get(id);
   }, OPERATION_ID);
 }

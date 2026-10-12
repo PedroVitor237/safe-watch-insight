@@ -9,6 +9,7 @@ import type {
 import { prisma } from "@/server/prisma/client";
 
 import { BaseRepository } from "./base.repository";
+import { lockOwnedInspection } from "./inspection-mutation-lock";
 import { InspectionResponseRevisionConflictError } from "./offline-sync.errors";
 import { assertMatchingOfflineOperation } from "./offline-sync-operation";
 
@@ -104,6 +105,10 @@ export class InspectionResponseRepository extends BaseRepository<
   ): Promise<InspectionResponseWithRelations> {
     return prisma.$transaction(
       async (transaction) => {
+        if (!(await lockOwnedInspection(transaction, inspectionId, userId))) {
+          throw new InspectionStatePersistenceConflictError();
+        }
+
         if (offlineOperation) {
           const completedOperation = await transaction.offlineSyncOperation.findUnique({
             where: { id: offlineOperation.id },
@@ -125,16 +130,19 @@ export class InspectionResponseRepository extends BaseRepository<
               include: inspectionResponseRelations,
             });
           }
+        }
 
-          const currentResponse = await transaction.inspectionResponse.findUnique({
-            where: {
-              inspectionId_snapshotItemId: {
-                inspectionId,
-                snapshotItemId,
-              },
+        const currentResponse = await transaction.inspectionResponse.findUnique({
+          where: {
+            inspectionId_snapshotItemId: {
+              inspectionId,
+              snapshotItemId,
             },
-            select: { updatedAt: true },
-          });
+          },
+          select: { updatedAt: true },
+        });
+
+        if (offlineOperation) {
           const currentRevision = currentResponse?.updatedAt.getTime() ?? null;
           const expectedRevision = offlineOperation.expectedResponseUpdatedAt?.getTime() ?? null;
 
@@ -161,6 +169,11 @@ export class InspectionResponseRepository extends BaseRepository<
           throw new InspectionStatePersistenceConflictError();
         }
 
+        // updatedAt is the revision token. It must advance even when two writes
+        // share a millisecond or the server clock moves backwards.
+        const updatedAt = new Date(
+          Math.max(Date.now(), (currentResponse?.updatedAt.getTime() ?? 0) + 1),
+        );
         const response = await transaction.inspectionResponse.upsert({
           where: {
             inspectionId_snapshotItemId: {
@@ -181,11 +194,13 @@ export class InspectionResponseRepository extends BaseRepository<
             },
             status: data.status,
             observation: data.observation,
+            updatedAt,
             ...(data.clientUpdatedAt ? { clientUpdatedAt: data.clientUpdatedAt } : {}),
           },
           update: {
             status: data.status,
             observation: data.observation,
+            updatedAt,
             ...(data.clientUpdatedAt ? { clientUpdatedAt: data.clientUpdatedAt } : {}),
           },
         });
@@ -245,6 +260,7 @@ export class InspectionResponseRepository extends BaseRepository<
         });
       },
       {
+        isolationLevel: "ReadCommitted",
         maxWait: 10_000,
         timeout: 15_000,
       },
