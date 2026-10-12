@@ -11,6 +11,7 @@ import {
   ResponseStatus,
   Severity,
 } from "@/generated/prisma/client";
+import { fmtData } from "@/lib/format";
 import {
   CorrectiveActionRepository,
   NonConformityStatePersistenceConflictError,
@@ -20,8 +21,18 @@ import {
   NonConformityRepository,
   type NonConformityWithRelations,
 } from "@/server/repositories/non-conformity.repository";
+import { InspectionResponseRepository } from "@/server/repositories/inspection-response.repository";
+import {
+  createCorrectiveActionSchema,
+  updateCorrectiveActionInputSchema,
+} from "@/server/schemas/corrective-action.schema";
+import {
+  createNonConformitySchema,
+  updateNonConformityInputSchema,
+} from "@/server/schemas/non-conformity.schema";
 
 import { CorrectiveActionService } from "./corrective-action.service";
+import { NonConformityService } from "./non-conformity.service";
 
 const USER_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const NON_CONFORMITY_ID = "11111111-1111-4111-8111-111111111111";
@@ -29,9 +40,11 @@ const NON_CONFORMITY_ID = "11111111-1111-4111-8111-111111111111";
 class FakeCorrectiveActionRepository extends CorrectiveActionRepository {
   transition: NonConformityStatusTransition | undefined;
   failWithStateConflict = false;
+  dueDate: Date | null = null;
+  updateData: Parameters<CorrectiveActionRepository["updateOwned"]>[2] | undefined;
 
   override createWithNonConformityTransition(
-    _data: Parameters<CorrectiveActionRepository["createWithNonConformityTransition"]>[0],
+    data: Parameters<CorrectiveActionRepository["createWithNonConformityTransition"]>[0],
     transition?: NonConformityStatusTransition,
   ) {
     this.transition = transition;
@@ -40,6 +53,13 @@ class FakeCorrectiveActionRepository extends CorrectiveActionRepository {
       return Promise.reject(new NonConformityStatePersistenceConflictError());
     }
 
+    assert.ok(data.dueDate === null || data.dueDate instanceof Date);
+    this.dueDate = data.dueDate;
+
+    return this.findActiveOwnedById();
+  }
+
+  override findActiveOwnedById() {
     const now = new Date("2026-07-30T12:00:00.000Z");
 
     return Promise.resolve({
@@ -49,7 +69,7 @@ class FakeCorrectiveActionRepository extends CorrectiveActionRepository {
       why: null,
       location: null,
       responsible: null,
-      dueDate: null,
+      dueDate: this.dueDate,
       method: null,
       estimatedCost: null,
       status: CorrectiveActionStatus.PENDING,
@@ -59,15 +79,63 @@ class FakeCorrectiveActionRepository extends CorrectiveActionRepository {
       deletedAt: null,
     });
   }
+
+  override async updateOwned(
+    _id: string,
+    _userId: string,
+    data: Parameters<CorrectiveActionRepository["updateOwned"]>[2],
+  ) {
+    this.updateData = data;
+    if (data.dueDate !== undefined) {
+      assert.ok(data.dueDate === null || data.dueDate instanceof Date);
+      this.dueDate = data.dueDate;
+    }
+    return this.findActiveOwnedById();
+  }
 }
 
 class FakeNonConformityRepository extends NonConformityRepository {
+  updateData: Parameters<NonConformityRepository["updateWithRelations"]>[1] | undefined;
+
   constructor(private readonly nonConformity: NonConformityWithRelations) {
     super();
   }
 
   override findActiveOwnedById(): Promise<NonConformityWithRelations | null> {
     return Promise.resolve(this.nonConformity);
+  }
+
+  override async findByInspectionResponseId() {
+    return null;
+  }
+
+  override async createWithRelations(
+    data: Parameters<NonConformityRepository["createWithRelations"]>[0],
+  ) {
+    assert.ok(data.dueDate === null || data.dueDate instanceof Date);
+    this.nonConformity.dueDate = data.dueDate;
+    return this.nonConformity;
+  }
+
+  override async updateWithRelations(
+    _id: string,
+    data: Parameters<NonConformityRepository["updateWithRelations"]>[1],
+  ) {
+    this.updateData = data;
+    if (data.dueDate !== undefined) {
+      assert.ok(data.dueDate === null || data.dueDate instanceof Date);
+      this.nonConformity.dueDate = data.dueDate;
+    }
+    return this.nonConformity;
+  }
+}
+
+class FakeInspectionResponseRepository extends InspectionResponseRepository {
+  override async findOwnedById() {
+    return {
+      ...createNonConformity(NonConformityStatus.OPEN).inspectionResponse,
+      nonConformity: null,
+    };
   }
 }
 
@@ -137,6 +205,81 @@ test("a concurrent NC state change returns a conflict instead of a partial actio
 
   assert.equal(result.code, "CONFLICT");
 });
+
+for (const dueDate of [undefined, null, ""] as const) {
+  test(`validated ${String(dueDate)} deadlines reach creation repositories as null`, async () => {
+    const nonConformityRepository = new FakeNonConformityRepository(
+      createNonConformity(NonConformityStatus.OPEN),
+    );
+    const actionRepository = new FakeCorrectiveActionRepository();
+    const ncService = new NonConformityService(
+      nonConformityRepository,
+      new FakeInspectionResponseRepository(),
+    );
+    const actionService = new CorrectiveActionService(actionRepository, nonConformityRepository);
+    const ncResult = await ncService.createNonConformity(
+      createNonConformitySchema.parse({
+        inspectionResponseId: NON_CONFORMITY_ID,
+        description: "Proteção ausente.",
+        severity: Severity.MEDIUM,
+        dueDate,
+      }),
+      USER_ID,
+    );
+    const actionResult = await actionService.createCorrectiveAction(
+      createCorrectiveActionSchema.parse({
+        nonConformityId: NON_CONFORMITY_ID,
+        description: "Instalar proteção fixa.",
+        dueDate,
+      }),
+      USER_ID,
+    );
+
+    for (const result of [ncResult, actionResult]) {
+      assert.ok(result.success);
+      assert.equal(result.data.dueDate, null);
+      assert.equal(fmtData(result.data.dueDate), "—");
+    }
+  });
+}
+
+for (const dueDate of [undefined, null, ""] as const) {
+  test(`validated ${String(dueDate)} deadline updates preserve omission or clear existing dates`, async () => {
+    const previousDate = new Date("2026-10-20T12:00:00.000Z");
+    const nonConformity = createNonConformity(NonConformityStatus.OPEN);
+    nonConformity.dueDate = previousDate;
+    const nonConformityRepository = new FakeNonConformityRepository(nonConformity);
+    const actionRepository = new FakeCorrectiveActionRepository();
+    actionRepository.dueDate = previousDate;
+    const ncService = new NonConformityService(nonConformityRepository);
+    const actionService = new CorrectiveActionService(actionRepository, nonConformityRepository);
+    const fields = dueDate === undefined ? { description: "Descrição atualizada." } : { dueDate };
+    const ncInput = updateNonConformityInputSchema.parse({ id: NON_CONFORMITY_ID, data: fields });
+    const actionInput = updateCorrectiveActionInputSchema.parse({
+      id: NON_CONFORMITY_ID,
+      data: fields,
+    });
+    const ncResult = await ncService.updateNonConformity(ncInput.id, ncInput.data, USER_ID);
+    const actionResult = await actionService.updateCorrectiveAction(
+      actionInput.id,
+      actionInput.data,
+      USER_ID,
+    );
+
+    for (const result of [ncResult, actionResult]) {
+      assert.ok(result.success);
+      assert.deepEqual(result.data.dueDate, dueDate === undefined ? previousDate : null);
+      if (dueDate !== undefined) {
+        assert.equal(fmtData(result.data.dueDate), "—");
+      }
+    }
+    for (const data of [nonConformityRepository.updateData, actionRepository.updateData]) {
+      assert.ok(data);
+      assert.equal(Object.hasOwn(data, "dueDate"), dueDate !== undefined);
+      assert.equal(data.dueDate, dueDate === undefined ? undefined : null);
+    }
+  });
+}
 
 function createNonConformity(status: NonConformityStatus): NonConformityWithRelations {
   const now = new Date("2026-07-30T12:00:00.000Z");

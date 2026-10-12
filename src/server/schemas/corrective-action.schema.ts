@@ -18,7 +18,8 @@ const optionalNullableLongTextSchema = z
   .optional();
 
 const optionalNullableDateSchema = z
-  .union([z.coerce.date(), z.literal("").transform(() => null), z.null()])
+  .union([z.coerce.date(), z.literal("").transform(() => null)])
+  .nullable()
   .optional();
 
 export const correctiveActionIdSchema = z.object({
