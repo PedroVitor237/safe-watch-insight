@@ -242,6 +242,107 @@ O detalhe por ID admite PLANNED, IN_PROGRESS, COMPLETED ou CANCELLED se a inspe�
 
 Validators e exceções inesperadas podem escapar de Result; isso é reconhecido em [API](../AI/API.md), 122–130. O defeito operacional concreto é o catch de sincronização classificar igualmente rede, erro lançado pelo servidor e falha local na confirmação como NETWORK_ERROR. Envelope 409 bloqueia CONFLICT, 401/422 bloqueiam ERROR, demais falhas entram em retry limitado. Não há evidência de repetição automática de upload/criação não idempotente por esse manager: suas operações são respostas/conclusão com UUID. Generalizar retries inseguros para toda a aplicação seria extrapolação.
 
+### Atualização posterior — remediação direcionada de IC-P9-03
+
+Investigação em 12 de outubro de 2026, a partir de `main`/`origin/main`
+`a53defbcf8014893ec3c64987609c67b68942d53`. Após `git fetch origin`, também
+`development`/`origin/development` apontavam para esse SHA; árvore limpa, sem
+divergência. A branch dedicada é `fix/ic-p9-03-sync-error-classification`.
+O inventário original e os relatos anteriores preservam a baseline histórica.
+
+**Defeito reproduzido:** `synchronizeOperation` envolvia chamada remota e
+confirmação Dexie no mesmo catch, convertendo qualquer exceção em
+`NETWORK_ERROR`/retry. O caso incluía `Error` inesperado, `TypeError` lançado pela
+função remota, erro de serialização, rejeição não-Error, `SyntaxError` de
+decodificação e rollback da confirmação local. Rejeições Result `403` e `404`
+também entravam no retry genérico. Antes de alterar código de produção, a suíte
+focada passou em 20/28 testes: **oito falharam**, pois receberam `PENDING` quando
+o contrato exigia bloqueio `ERROR`. A baseline completa passou em 121/121 testes,
+com zero erros/seis avisos de lint e build aprovado.
+
+A investigação leu `createServerFn.ts`, `client-rpc/serverFnFetcher.ts` e
+`server-functions-handler.ts` do TanStack instalado. A serialização ocorre antes
+do fetch; depois dele, o runtime decodifica e pode relançar erros do servidor.
+O `fetch` por chamada é suportado pelos tipos e pelo runtime instalado. Não é
+seguro distinguir a origem somente pelo tipo/nome/mensagem de uma exceção
+capturada ao redor de toda a chamada. A documentação de
+[fetch](https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch#exceptions)
+também registra `TypeError` para causas além de indisponibilidade de rede.
+
+**Estado posterior: RESOLVED para a classificação e política demonstradas.**
+O manager fornece um fetch específico às duas operações e separa a confirmação
+local da chamada/validação do resultado. Não houve alteração de servidor,
+schema, idempotência ou dependências instaladas.
+
+| Evidência da falha                                                                        | Classificação / política                                  |
+| ----------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Rejeição do fetch com TypeError e mensagem de transporte reconhecida                      | NETWORK_ERROR; PENDING/backoff, ERROR na quinta tentativa |
+| HTTP não exitoso                                                                          | HTTP_ERROR com status real; corpo não persistido          |
+| HTTP/Result 409                                                                           | CONFLICT, sem retry automático ou liberação manual        |
+| HTTP/Result 408, 429 e 5xx                                                                | Retry limitado, separado de NETWORK_ERROR                 |
+| Outras rejeições Result/HTTP, incluindo 401/403/404/422                                   | ERROR, exige intervenção                                  |
+| Exceção remota/wrapper, serialização, validação ou decodificação sem envelope reconhecido | SYNC_EXCEPTION / ERROR                                    |
+| Envelope ou campos essenciais da confirmação inválidos                                    | INVALID_SYNC_RESPONSE / ERROR                             |
+| Falha na confirmação Dexie                                                                | LOCAL_PERSISTENCE_ERROR / ERROR, com rollback             |
+
+Uma tentativa incrementa o contador uma vez; payload, UUID, sequência e
+dependências são preservados na falha. Erros bloqueados não avançam FIFO.
+Retry manual continua repondo ERROR em PENDING e zerando tentativas; sucesso
+idempotente remove a operação apenas após confirmação local. Falha ao persistir
+o próprio diagnóstico propaga e conserva o trabalho interrompido para recuperação
+após restaurar o armazenamento. Mensagens de exceções/corpos HTTP não são
+persistidos; Result conserva a mensagem do contrato existente.
+
+Validação final com Node 22.23.2, sem instalar dependências:
+
+- `npm exec -- tsx --test src/offline/inspection-store.test.ts`: **55/55**.
+- `npm test`: **154/154**, incluindo os 33 novos testes de classificação,
+  backoff/exaustão, confirmação inválida, conclusão, rollback, fila e recuperação.
+- `npm exec -- playwright test e2e/offline-sync-errors.spec.ts --project=chromium`:
+  **11/11**, usando fetch/IndexedDB reais, módulos cliente compilados e decoder
+  TanStack instalado; todos os RPCs de teste são interceptados.
+- `npm exec -- tsc --noEmit`: aprovado.
+- Typecheck adicional incluindo o novo E2E em configuração temporária que
+  estende o tsconfig oficial: aprovado; nenhuma mudança no tsconfig do projeto.
+- `npm run lint`: zero erros e os mesmos seis avisos da baseline, sem novos avisos.
+- `npm run build`: aprovado; comparação com a baseline não encontrou novas
+  categorias de avisos (inputValidator depreciado, chunks e bundling).
+- `git diff --check`: aprovado; rotas geradas pelo build restauradas à base,
+  sem integrar a correção.
+
+No Chromium, a primeira chamada abortada permanece PENDING/NETWORK_ERROR,
+sobrevive ao reload e é confirmada com o mesmo UUID. HTTP 401/403/404/409/422/
+500/503 segue a política acima. Um TypeError `Failed to fetch` serializado pelo
+runtime fica em ERROR/SYNC_EXCEPTION; JSON truncado e sucesso sem data não removem
+o registro. O harness usa página estática e fornece a base RPC normalmente
+substituída pelo bundler; a primeira execução falhou no carregamento desse
+harness antes dos cenários, e passou após corrigir seu bootstrap. O primeiro
+lint paralelo ao Playwright encontrou ENOENT na pasta transitória test-results;
+a execução sequencial final passou. A sandbox exigiu autorização para IPC tsx,
+servidor local e Chromium. Não houve operação de banco remoto, migration, seed,
+reparo de dados ou deployment manual. O E2E histórico que cria dados no Neon não
+foi executado nesta tarefa.
+
+**Limites:** os testes de browser validam o caminho cliente/decoder e uma fila
+sintética no IndexedDB, sem autenticação ou mutações reais no servidor. As
+falhas Dexie foram injetadas em fake-indexeddb; homologação de quota real,
+produção, Firefox/Safari, múltiplas abas/dispositivos e concorrência PostgreSQL
+permanece pendente. Mensagens de transporte variam e podem indicar bloqueio por
+política; não comprovam indisponibilidade da internet. Falhas não reconhecidas,
+incluindo interrupção durante decodificação, exigem retry manual. A checagem de
+campos essenciais não é validação integral de todos os DTOs históricos. Esta
+remediação **não elimina todas as possíveis falhas/corridas offline**. IC-P6-03,
+IC-P9-01 e IC-P6-04 não recebem nova remediação nem alteração de status.
+
+Arquivos diretamente envolvidos: `src/offline/sync-manager.ts`,
+`src/offline/sync-transport.ts`, `src/offline/sync-result.ts`,
+`src/offline/inspection-store.test.ts`, `e2e/offline-sync-errors.spec.ts`,
+`AI/Offline.md`, `AI/Architecture.md`,
+`Documentation/diagrams/flows/offline-inspection.puml` e este relatório.
+Contrato detalhado em
+[Offline.md](../AI/Offline.md#classificação-de-falhas-e-retry--ic-p9-03).
+A correção deve ser integrada somente por PR para main após revisão humana.
+
 ### 3.6. Registros históricos adicionais, fora dos 14
 
 | Registro         | Estado e evidência                                                                                                                                                                                                                                        | Limite da conclusão                                                                                                   |

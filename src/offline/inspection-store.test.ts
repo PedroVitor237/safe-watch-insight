@@ -1,7 +1,9 @@
 import "fake-indexeddb/auto";
 
 import assert from "node:assert/strict";
-import { beforeEach, mock, test } from "node:test";
+import { afterEach, beforeEach, mock, test } from "node:test";
+
+import type { saveInspectionResponse } from "@/lib/api/inspection-response.functions";
 
 import {
   ChecklistVersionStatus,
@@ -15,6 +17,7 @@ import {
 import { getOfflineDatabase } from "./database";
 import { cacheOfflineSession } from "./session";
 import { synchronizeOperation } from "./sync-manager";
+import { fetchForOfflineSynchronization } from "./sync-transport";
 import {
   cacheInspectionPackage,
   getCachedInspection,
@@ -55,6 +58,8 @@ beforeEach(async () => {
     expiresAt: new Date("2099-08-06T20:00:00.000Z"),
   });
 });
+
+afterEach(() => mock.restoreAll());
 
 test("persists the complete immutable snapshot for an offline inspection", async () => {
   await cacheInspectionPackage(createInspection());
@@ -482,7 +487,7 @@ test("ignores a duplicate old confirmation arriving after the dependent edit was
   assert.equal(await getOfflineDatabase().operations.count(), 0);
 });
 
-for (const statusCode of [409, 401, 422, 500]) {
+for (const statusCode of [409, 401, 403, 404, 422, 408, 429, 500, 502, 503]) {
   test(`keeps local edits and dependencies when the server rejects synchronization with ${statusCode}`, async () => {
     const first = await queueResponse("COMPLIANT", "Enviada");
     await queueInspectionResponse({
@@ -514,10 +519,52 @@ for (const statusCode of [409, 401, 422, 500]) {
     assert.ok(persisted);
     assert.equal(
       persisted.status,
-      statusCode === 409 ? "CONFLICT" : statusCode === 500 ? "PENDING" : "ERROR",
+      statusCode === 409
+        ? "CONFLICT"
+        : statusCode === 408 || statusCode === 429 || statusCode >= 500
+          ? "PENDING"
+          : "ERROR",
     );
+    assert.equal(persisted.lastErrorCode, "TEST_REJECTION");
+    assert.equal(persisted.lastErrorMessage, "Confirmação rejeitada");
+    assert.equal(persisted.attemptCount, 1);
     assert.equal((await readLocalPackage()).localSyncStatus, persisted.status);
     assert.equal(await getOfflineDatabase().operations.count(), 2);
+    assert.equal(await getNextPendingOperation(USER_ID), null);
+    if (statusCode === 409) {
+      await retryFailedOperations();
+      assert.equal((await getOfflineDatabase().operations.get(first.id))?.status, "CONFLICT");
+      assert.equal(await getNextPendingOperation(USER_ID), null);
+    }
+  });
+}
+
+for (const error of [
+  new Error("Unexpected server failure with private diagnostic details"),
+  new TypeError("Failed to fetch"),
+  new RangeError("Serialization failed"),
+  { reason: "Unknown rejection with private diagnostic details" },
+]) {
+  test(`blocks an unclassified server-function rejection (${error instanceof Error ? error.name : "object"}) without losing queued work`, async () => {
+    const operation = await queueResponse("NON_COMPLIANT", "Resposta local preservada");
+    const projection = await readLocalInspection();
+
+    assert.equal(
+      await synchronizeResponse(operation, async () => {
+        throw error;
+      }),
+      false,
+    );
+
+    const persisted = await getOfflineDatabase().operations.get(operation.id);
+    assert.ok(persisted);
+    assert.equal(persisted.status, "ERROR");
+    assert.equal(persisted.lastErrorCode, "SYNC_EXCEPTION");
+    assert.equal(persisted.attemptCount, 1);
+    assert.doesNotMatch(persisted.lastErrorMessage ?? "", /private diagnostic details/);
+    assert.deepEqual(persisted.payload, operation.payload);
+    assert.deepEqual((await readLocalInspection()).responses, projection.responses);
+    assert.equal((await readLocalPackage()).localSyncStatus, "ERROR");
     assert.equal(await getNextPendingOperation(USER_ID), null);
   });
 }
@@ -532,7 +579,11 @@ test("retries an uncertain outcome with the same payload and preserves an edit m
       status: "COMPLIANT",
       observation: "Edição feita enquanto a confirmação se perdeu",
     });
-    throw new Error("Connection lost after the server accepted the operation");
+    mock.method(globalThis, "fetch", async () => {
+      throw new TypeError("Failed to fetch");
+    });
+    await fetchForOfflineSynchronization("/sync-test");
+    throw new Error("Unexpected transport success");
   });
   assert.equal(continued, false);
   const projection = await readLocalInspection();
@@ -570,10 +621,10 @@ test("does not acknowledge an incomplete confirmation when response decoding fai
   assert.deepEqual((await readLocalInspection()).responses, projection.responses);
   const persisted = await getOfflineDatabase().operations.get(operation.id);
   assert.ok(persisted);
-  assert.equal(persisted.status, "PENDING");
-  assert.equal(persisted.lastErrorCode, "NETWORK_ERROR");
+  assert.equal(persisted.status, "ERROR");
+  assert.equal(persisted.lastErrorCode, "SYNC_EXCEPTION");
   assert.deepEqual(persisted.payload, operation.payload);
-  assert.equal((await readLocalPackage()).localSyncStatus, "PENDING");
+  assert.equal((await readLocalPackage()).localSyncStatus, "ERROR");
 });
 
 test("rolls back acknowledgement and dependency changes when the local package commit fails", async () => {
@@ -606,11 +657,283 @@ test("rolls back acknowledgement and dependency changes when the local package c
   assert.deepEqual(await db.operations.get(dependent.id), dependent);
   const retried = await db.operations.get(first.id);
   assert.ok(retried);
-  assert.equal(retried.status, "PENDING");
-  assert.equal(retried.lastErrorCode, "NETWORK_ERROR");
+  assert.equal(retried.status, "ERROR");
+  assert.equal(retried.lastErrorCode, "LOCAL_PERSISTENCE_ERROR");
   assert.deepEqual(retried.payload, first.payload);
   assert.equal(await db.operations.count(), 2);
+
+  await retryFailedOperations();
+  const manualRetry = await getNextPendingOperation(USER_ID);
+  assert.ok(manualRetry?.type === "SAVE_INSPECTION_RESPONSE");
+  assert.equal(manualRetry.id, first.id);
+  assert.equal(manualRetry.attemptCount, 0);
+  assert.deepEqual(manualRetry.payload, first.payload);
+  assert.equal(await synchronizeResponse(manualRetry, async () => response), true);
+  const next = await getNextPendingOperation(USER_ID);
+  assert.ok(next?.type === "SAVE_INSPECTION_RESPONSE");
+  assert.equal(next.id, dependent.id);
+  assert.deepEqual(next.payload.expectedResponseUpdatedAt, response.updatedAt);
+  assert.deepEqual((await readLocalInspection()).responses, projection.responses);
 });
+
+for (const statusCode of [401, 403, 404, 409, 422, 429, 500, 503]) {
+  test(`classifies HTTP ${statusCode} at the fetch boundary without retaining the response body`, async () => {
+    const operation = await queueResponse("COMPLIANT", "Resposta local");
+    mock.method(
+      globalThis,
+      "fetch",
+      async () => new Response("private server diagnostics", { status: statusCode }),
+    );
+
+    assert.equal(await synchronizeThroughFetch(operation), false);
+
+    const persisted = await getOfflineDatabase().operations.get(operation.id);
+    assert.ok(persisted);
+    assert.equal(
+      persisted.status,
+      statusCode === 409
+        ? "CONFLICT"
+        : statusCode === 429 || statusCode >= 500
+          ? "PENDING"
+          : "ERROR",
+    );
+    assert.equal(persisted.lastErrorCode, "HTTP_ERROR");
+    assert.match(persisted.lastErrorMessage ?? "", new RegExp(`HTTP ${statusCode}`));
+    assert.doesNotMatch(persisted.lastErrorMessage ?? "", /private server diagnostics/);
+    assert.deepEqual(persisted.payload, operation.payload);
+    assert.equal(await getNextPendingOperation(USER_ID), null);
+  });
+}
+
+for (const error of [
+  new TypeError("Invalid URL"),
+  new DOMException("The request was aborted", "AbortError"),
+  new Error("Unexpected fetch wrapper error"),
+]) {
+  test(`does not retry a fetch rejection without recognized transport evidence (${error.name})`, async () => {
+    const operation = await queueResponse("COMPLIANT", "Resposta local");
+    mock.method(globalThis, "fetch", async () => {
+      throw error;
+    });
+    assert.equal(await synchronizeThroughFetch(operation), false);
+    const persisted = await getOfflineDatabase().operations.get(operation.id);
+    assert.equal(persisted?.status, "ERROR");
+    assert.equal(persisted?.lastErrorCode, "SYNC_EXCEPTION");
+    assert.deepEqual(persisted?.payload, operation.payload);
+  });
+}
+
+test("limits connectivity retries to five attempts and recovers manually with the original UUID", async () => {
+  const original = await queueResponse("COMPLIANT", "Resposta local");
+  const response = await createRemoteResponse();
+  mock.method(globalThis, "fetch", async () => {
+    throw new TypeError("Failed to fetch");
+  });
+  const db = getOfflineDatabase();
+
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    const operation = await db.operations.get(original.id);
+    assert.ok(operation?.type === "SAVE_INSPECTION_RESPONSE");
+    const before = Date.now();
+    assert.equal(await synchronizeThroughFetch(operation), false);
+    const persisted = await db.operations.get(original.id);
+    assert.ok(persisted);
+    assert.equal(persisted.attemptCount, attempt);
+    assert.equal(persisted.status, attempt === 5 ? "ERROR" : "PENDING");
+    assert.equal(persisted.lastErrorCode, "NETWORK_ERROR");
+    assert.ok(persisted.nextAttemptAt.getTime() >= before + 2 ** attempt * 1_000);
+    assert.deepEqual(persisted.payload, original.payload);
+    assert.equal(await getNextPendingOperation(USER_ID), null);
+    await db.operations.update(original.id, { nextAttemptAt: new Date(0) });
+  }
+  assert.equal(await getNextPendingOperation(USER_ID), null);
+  await retryFailedOperations();
+  const manualRetry = await getNextPendingOperation(USER_ID);
+  assert.ok(manualRetry?.type === "SAVE_INSPECTION_RESPONSE");
+  assert.equal(manualRetry.id, original.id);
+  assert.equal(manualRetry.attemptCount, 0);
+  assert.equal(await synchronizeResponse(manualRetry, async () => response), true);
+  assert.equal(await db.operations.count(), 0);
+  assert.equal((await readLocalPackage()).localSyncStatus, "SYNCED");
+});
+
+for (const result of [
+  undefined,
+  {},
+  { success: true },
+  { success: true, data: {} },
+  { success: false, statusCode: 500 },
+]) {
+  test(`rejects a malformed synchronization envelope (${JSON.stringify(result)})`, async () => {
+    const operation = await queueResponse("NON_COMPLIANT", "Resposta local");
+    const projection = await readLocalInspection();
+    assert.equal(
+      await synchronizeOperation(operation, {
+        saveInspectionResponse: async () =>
+          result as Awaited<ReturnType<typeof saveInspectionResponse>>,
+        finishInspection: async () => {
+          throw new Error("Unexpected completion");
+        },
+      }),
+      false,
+    );
+    const persisted = await getOfflineDatabase().operations.get(operation.id);
+    assert.equal(persisted?.status, "ERROR");
+    assert.equal(persisted?.lastErrorCode, "INVALID_SYNC_RESPONSE");
+    assert.deepEqual(persisted?.payload, operation.payload);
+    assert.deepEqual((await readLocalInspection()).responses, projection.responses);
+  });
+}
+
+test("rejects a confirmation for the wrong item and retains the operation across reopen", async () => {
+  const operation = await queueResponse("COMPLIANT", "Resposta local");
+  const response = await createRemoteResponse();
+  const projection = await readLocalInspection();
+  assert.equal(
+    await synchronizeResponse(operation, async () => ({
+      ...response,
+      snapshotItemId: SNAPSHOT_ID,
+    })),
+    false,
+  );
+  getOfflineDatabase().close();
+  await getOfflineDatabase().open();
+  const persisted = await getOfflineDatabase().operations.get(operation.id);
+  assert.equal(persisted?.status, "ERROR");
+  assert.equal(persisted?.lastErrorCode, "INVALID_SYNC_RESPONSE");
+  assert.deepEqual(persisted?.payload, operation.payload);
+  assert.deepEqual((await readLocalInspection()).responses, projection.responses);
+});
+
+test("propagates unavailable error persistence without discarding interrupted work", async () => {
+  const operation = await queueResponse("COMPLIANT", "Resposta local");
+  const response = await createRemoteResponse();
+  const db = getOfflineDatabase();
+  const put = mock.method(
+    db.inspectionPackages,
+    "put",
+    db.inspectionPackages.put.bind(db.inspectionPackages),
+  );
+  const update = mock.method(db.operations, "update", db.operations.update.bind(db.operations));
+  const projection = await readLocalInspection();
+
+  await assert.rejects(
+    synchronizeResponse(operation, async () => {
+      put.mock.mockImplementationOnce(() => {
+        throw new Error("Acknowledgement write failed");
+      });
+      update.mock.mockImplementationOnce(() => {
+        throw new Error("Error state write failed");
+      });
+      return response;
+    }),
+    /Error state write failed/,
+  );
+  mock.restoreAll();
+  const interrupted = await db.operations.get(operation.id);
+  assert.equal(interrupted?.status, "SYNCING");
+  assert.deepEqual(interrupted?.payload, operation.payload);
+  assert.deepEqual((await readLocalInspection()).responses, projection.responses);
+  await resetInterruptedOperations();
+  const retry = await getNextPendingOperation(USER_ID);
+  assert.ok(retry?.type === "SAVE_INSPECTION_RESPONSE");
+  assert.equal(retry.id, operation.id);
+  assert.equal(await synchronizeResponse(retry, async () => response), true);
+});
+
+for (const failure of ["network", "exception", "malformed", "local"] as const) {
+  test(`preserves offline completion after a ${failure} failure`, async () => {
+    const responseOperation = await queueResponse("COMPLIANT", "Resposta final");
+    const response = await createRemoteResponse();
+    await synchronizeResponse(responseOperation, async () => response);
+    assert.ok((await queueInspectionFinish(INSPECTION_ID)).success);
+    const operation = await getNextPendingOperation(USER_ID);
+    assert.ok(operation?.type === "FINISH_INSPECTION");
+    const local = await readLocalInspection();
+    const db = getOfflineDatabase();
+    const put = mock.method(
+      db.inspectionPackages,
+      "put",
+      db.inspectionPackages.put.bind(db.inspectionPackages),
+    );
+    mock.method(globalThis, "fetch", async () => {
+      throw new TypeError("Failed to fetch");
+    });
+
+    assert.equal(
+      await synchronizeOperation(operation, {
+        saveInspectionResponse: async () => {
+          throw new Error("Unexpected response");
+        },
+        finishInspection: async ({ fetch: syncFetch }) => {
+          if (failure === "network") {
+            assert.ok(syncFetch);
+            await syncFetch("/sync-test");
+          }
+          if (failure === "exception") throw new TypeError("Failed to fetch");
+          if (failure === "local") {
+            put.mock.mockImplementationOnce(() => {
+              throw new Error("Finish acknowledgement failed");
+            });
+          }
+          return {
+            success: true,
+            data:
+              failure === "malformed"
+                ? { ...local, id: SNAPSHOT_ID }
+                : { ...local, syncStatus: "SYNCED" },
+          };
+        },
+      }),
+      false,
+    );
+    mock.restoreAll();
+    const persisted = await db.operations.get(operation.id);
+    assert.equal(persisted?.status, failure === "network" ? "PENDING" : "ERROR");
+    assert.equal(
+      persisted?.lastErrorCode,
+      failure === "network"
+        ? "NETWORK_ERROR"
+        : failure === "exception"
+          ? "SYNC_EXCEPTION"
+          : failure === "local"
+            ? "LOCAL_PERSISTENCE_ERROR"
+            : "INVALID_SYNC_RESPONSE",
+    );
+    assert.deepEqual(persisted?.payload, operation.payload);
+    assert.equal((await readLocalInspection()).status, "COMPLETED");
+    assert.deepEqual((await readLocalInspection()).responses, local.responses);
+    await retryFailedOperations();
+    await db.operations.update(operation.id, { nextAttemptAt: new Date(0) });
+    const retry = await getNextPendingOperation(USER_ID);
+    assert.ok(retry?.type === "FINISH_INSPECTION");
+    assert.equal(retry.id, operation.id);
+    assert.equal(
+      await synchronizeOperation(retry, {
+        saveInspectionResponse: async () => {
+          throw new Error("Unexpected response");
+        },
+        finishInspection: async () => ({ success: true, data: { ...local, syncStatus: "SYNCED" } }),
+      }),
+      true,
+    );
+    assert.equal(await db.operations.count(), 0);
+    assert.equal((await readLocalPackage()).localSyncStatus, "SYNCED");
+  });
+}
+
+function synchronizeThroughFetch(operation: SaveResponseOperation): Promise<boolean> {
+  return synchronizeOperation(operation, {
+    saveInspectionResponse: async ({ fetch: syncFetch }) => {
+      assert.ok(syncFetch);
+      await syncFetch("/sync-test");
+      throw new Error("Unexpected transport success");
+    },
+    finishInspection: async () => {
+      throw new Error("Unexpected completion");
+    },
+  });
+}
 
 async function queueResponse(
   status: SaveResponseOperation["payload"]["status"],
