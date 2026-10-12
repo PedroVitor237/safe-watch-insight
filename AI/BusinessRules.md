@@ -311,8 +311,13 @@ ser confirmados sem nova mutação; UUID divergente, revisão antiga e segunda
 conclusão distinta recebem `CONFLICT`. `updatedAt` da resposta avança estritamente,
 inclusive quando o relógio compartilha ou retrocede um milissegundo. Chamadas
 diretas sem revisão esperada conservam essa ausência de controle otimista.
-Testes determinísticos usam persistência simulada; a concorrência real no
-PostgreSQL/Neon e entre navegadores permanece sem nova homologação nesta tarefa.
+Além dos testes simulados da correção inicial, a homologação posterior validou
+PostgreSQL 18.4 real, conexões independentes, HTTP e fila IndexedDB em abas do
+Chromium. Colisão global de UUID entre inspeções distintas recebe `CONFLICT`
+após rollback da tentativa perdedora. HTTP 200 transporta o status lógico 409
+no envelope das Functions atuais. Neon e dispositivos físicos não foram
+homologados nesta execução. Evidências e limites:
+[homologação IC-P6-03](../Documentation/HomologacaoConcorrenciaPostgreSQLIC-P6-03.md).
 
 Errata Murbach inclui **72–74** em catálogo atual, exibição institucional e
 novos drafts de cópia, sem reescrever v1/hash/datas/snapshots. Inspeção direta da

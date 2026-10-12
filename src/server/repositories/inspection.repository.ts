@@ -13,7 +13,7 @@ import { getPaginationOffset, normalizePagination } from "@/server/utils/paginat
 
 import { BaseRepository } from "./base.repository";
 import { lockOwnedInspection } from "./inspection-mutation-lock";
-import { assertMatchingOfflineOperation } from "./offline-sync-operation";
+import { assertMatchingOfflineOperation, persistOfflineOperation } from "./offline-sync-operation";
 
 const INSPECTION_SORT_FIELDS = {
   inspectionDate: "inspectionDate",
@@ -382,15 +382,13 @@ export class InspectionRepository extends BaseRepository<
         }
 
         if (operation) {
-          await transaction.offlineSyncOperation.create({
-            data: {
-              id: operation.id,
-              userId,
-              inspectionId,
-              type: operation.type,
-              payloadHash: operation.payloadHash,
-              clientCreatedAt: operation.clientCreatedAt,
-            },
+          await persistOfflineOperation(transaction, {
+            id: operation.id,
+            userId,
+            inspectionId,
+            type: operation.type,
+            payloadHash: operation.payloadHash,
+            clientCreatedAt: operation.clientCreatedAt,
           });
         }
 

@@ -11,7 +11,7 @@ import { prisma } from "@/server/prisma/client";
 import { BaseRepository } from "./base.repository";
 import { lockOwnedInspection } from "./inspection-mutation-lock";
 import { InspectionResponseRevisionConflictError } from "./offline-sync.errors";
-import { assertMatchingOfflineOperation } from "./offline-sync-operation";
+import { assertMatchingOfflineOperation, persistOfflineOperation } from "./offline-sync-operation";
 
 const inspectionResponseRelations = {
   snapshotItem: {
@@ -242,15 +242,13 @@ export class InspectionResponseRepository extends BaseRepository<
         }
 
         if (offlineOperation) {
-          await transaction.offlineSyncOperation.create({
-            data: {
-              id: offlineOperation.id,
-              userId: offlineOperation.userId,
-              inspectionId,
-              type: offlineOperation.type,
-              payloadHash: offlineOperation.payloadHash,
-              clientCreatedAt: offlineOperation.clientCreatedAt,
-            },
+          await persistOfflineOperation(transaction, {
+            id: offlineOperation.id,
+            userId: offlineOperation.userId,
+            inspectionId,
+            type: offlineOperation.type,
+            payloadHash: offlineOperation.payloadHash,
+            clientCreatedAt: offlineOperation.clientCreatedAt,
           });
         }
 

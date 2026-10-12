@@ -260,6 +260,14 @@ escrita. Regras de completude/estado continuam no Service. Sem alterações de
 schema, rotas, contratos clientes ou layout. Evidências e limites em
 [auditoria IC-P6-03](../Documentation/RelatorioAuditoriaTecnicaPreEscritaTCC.md#atualização-posterior--investigação-e-remediação-direcionada-de-ic-p6-03).
 
+Homologação posterior em PostgreSQL 18.4 descartável validou conexões e
+transações independentes, lock waits, rollback, HTTP real e fila IndexedDB em
+abas do Chromium. A PK global de `OfflineSyncOperation.id` ainda pode colidir
+entre inspeções bloqueadas separadamente: `persistOfflineOperation` converte
+P2002 desse INSERT no conflito já tratado pelo Service, preservando rollback.
+Nenhuma garantia adicional sobre Neon, dispositivos físicos ou carga é inferida.
+Relatório: [homologação IC-P6-03](../Documentation/HomologacaoConcorrenciaPostgreSQLIC-P6-03.md).
+
 ## Evidências e integração externa
 
 uploadEvidence → EvidenceService → StorageService → CloudinaryStorageService →
