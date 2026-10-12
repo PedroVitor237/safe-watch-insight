@@ -343,6 +343,154 @@ Contrato detalhado em
 [Offline.md](../AI/Offline.md#classificação-de-falhas-e-retry--ic-p9-03).
 A correção deve ser integrada somente por PR para main após revisão humana.
 
+### Atualização posterior — investigação e remediação direcionada de IC-P6-03
+
+**Data:** 12 de outubro de 2026 (America/Fortaleza).
+
+**Baseline verificada:** `2321b06a9dce39ec9705f4b618abf3a00b18ab7a`.
+Diretório inicial: `/home/pedrovitor237/Documents/GitHub/safe-watch-insight`;
+branch inicial `development`, árvore/índice limpos e nenhum arquivo não rastreado.
+Após `git fetch origin`, `main`, `origin/main`, `development` e
+`origin/development` tinham esse SHA; diferenças de ancestralidade `0/0`.
+A branch `fix/ic-p6-03-inspection-conclusion-atomicity` não existia localmente
+nem em origin e foi criada de `origin/main`. Nenhuma alteração em main ou
+development foi necessária. Integração somente por PR para main, sem merge
+ou auto-merge nesta tarefa.
+
+O registro original é **“Concorrência de revisão/sync entre abas/dispositivos;
+Fase 6 §16 / Fase 9 linha 265”**, classificado como `POTENTIAL_RISK`. Sua evidência
+textual exata na tabela histórica é:
+
+> saveWithNonConformity, 129–164, compara revisão antes de update/upsert; 164–191,
+> upsert sem condição de revisão. [sync-manager](../src/offline/sync-manager.ts),
+> 19–40: mutex local/reset. Transação e registro idempotente existem, mas não CAS
+> da resposta. Teste de conflito do E2E é sequencial; corrida mesma revisão/UUID
+> não executada.
+
+**Resultado da investigação:** defeitos confirmados nos Services/Repositories
+reais com persistência simulada determinística. A conclusão com obrigatórios
+ausentes **não foi estabelecida** no fluxo público original: snapshot é imutável,
+não há exclusão pública de resposta nem status remoto de resposta pendente,
+e `NOT_APPLICABLE` é válido. O UPDATE condicional da inspeção já precedia o
+upsert, bloqueando gravação nova após conclusão. Uma leitura anterior à gravação
+do último obrigatório podia rejeitar conservadoramente a conclusão.
+
+A falha concreta era a ordem das leituras: A e B consultavam UUID/revisão antes
+de bloquear a inspeção. Ambas liam revisão R (ou ausência), A obtinha o bloqueio,
+gravava resposta/NC/confirmação e fazia commit; B obtinha o bloqueio depois,
+mas não reconsultava R, sobrescrevendo a resposta. UUID igual podia causar
+`P2002` após a segunda tentativa de inserção, com rollback da segunda transação.
+Na conclusão offline, dois pedidos com mesmo UUID podiam ler ausência de
+confirmação; o primeiro concluía e o segundo retornava `CONFLICT` pelo estado,
+em vez de recuperar a confirmação idempotente.
+
+**Invariante e estratégia:** inspeção própria ativa só conclui em estado
+elegível, com snapshot e todos os obrigatórios respondidos. Uma nova resposta
+nunca altera inspeção concluída/cancelada; retry confirmado não é nova mutação.
+Gravação e conclusão adquirem `SELECT ... FOR UPDATE` na mesma linha de Inspection
+com ID/usuário/deletedAt, **antes** de ler confirmação ou revisão. Transações
+fixam `ReadCommitted`; quem espera consulta o estado confirmado pelo commit
+anterior. O bloqueio é mantido até commit/rollback. Completude e estado são
+validados pelo callback do Service dentro da transação de conclusão, preservando
+as camadas e o contrato público. `updatedAt` da resposta é explicitamente
+`max(Date.now(), revisão anterior + 1 ms)`, evitando revisão repetida quando
+escritas compartilham um milissegundo ou o relógio retrocede. `clientUpdatedAt`
+continua horário do dispositivo. Sem alterações de schema/migrations.
+
+Essa conclusão depende do bloqueio compartilhado e de leituras posteriores à
+espera, não apenas de agrupar operações em uma transação. Referências primárias:
+[PostgreSQL — Read Committed](https://www.postgresql.org/docs/current/transaction-iso.html#XACT-READ-COMMITTED),
+[PostgreSQL — bloqueios de linha](https://www.postgresql.org/docs/current/explicit-locking.html#LOCKING-ROWS)
+e [Prisma — transações e isolamento](https://www.prisma.io/docs/orm/fundamentals/transactions).
+O isolamento remoto preexistente não foi consultado; os caminhos corrigidos
+definem explicitamente o nível necessário.
+
+| Cenário                                    | Antes, no código original                                                               | Depois                                                        |
+| ------------------------------------------ | --------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Dois UUIDs, mesma revisão                  | Ambos persistiam; segunda escrita substituía a primeira                                 | Uma escrita; segunda retorna CONFLICT sem mutação/confirmação |
+| Dois UUIDs, ausência esperada              | Ambos persistiam pelo upsert                                                            | Uma criação; segunda retorna CONFLICT                         |
+| Mesmo UUID/hash de resposta simultâneo     | Segunda tentativa lançava P2002                                                         | Ambos retornam sucesso; uma mutação/confirmação               |
+| Mesmo UUID/hash de conclusão simultâneo    | Segunda tentativa retornava CONFLICT                                                    | Ambos retornam sucesso; uma confirmação                       |
+| Relógio na mesma revisão                   | Token podia permanecer igual                                                            | Revisão aumenta pelo menos 1 ms                               |
+| Gravação detém bloqueio antes da conclusão | Completude era lida antes da transação; podia rejeitar o último obrigatório em gravação | Conclusão aguarda e valida resposta confirmada                |
+| Conclusão detém bloqueio antes da gravação | UPDATE condicional já rejeitava gravação                                                | Continua rejeitando com CONFLICT; nenhuma resposta é alterada |
+
+Os quatro primeiros testes falharam antes de qualquer alteração de implementação.
+Os cinco testes finais de regressão (incluindo revisão/relógio) foram também
+executados contra cópia temporária do commit original: **0/5 aprovados, 5/5
+falhas esperadas**, sem testes cancelados. Na correção, os **19 testes** do novo
+arquivo passam. Barreiras de Promise controlam leitura, disputa do bloqueio e
+commit; não há sleeps. O modelo reproduz visibilidade Read Committed, bloqueio
+do UPDATE/FOR UPDATE e descarte de escrita em rollback. Não é uma instância
+PostgreSQL real nem uma homologação entre dispositivos.
+
+Cobertura adicional: gravação do último obrigatório e edição de resposta antes
+da conclusão; rejeição de gravação online/offline depois que conclusão obtém
+bloqueio; conclusões distintas online/offline; UUID usado para outro tipo;
+retry de resposta após conclusão e hash divergente; outro usuário nos dois
+caminhos; snapshot/obrigatórios ausentes; N/A com opcional pendente;
+COMPLETED/CANCELLED; rollback de resposta, NC, estado e conclusão quando falha
+a confirmação, seguido de retry. Contratos de validação/sessão/ownership das
+Server Functions permanecem os existentes.
+
+**Validação obtida com Node 22.23.2:**
+
+| Verificação                                                                                | Resultado                                                                                      |
+| ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| Baseline `npm test`                                                                        | 154/154 aprovados                                                                              |
+| Cinco regressões finais contra 2321b06                                                     | 5 falhas esperadas, comprovando o comportamento anterior                                       |
+| Focados: concorrência, inspeção/respostas, autorização, store offline, hash e schemas      | 116/116 aprovados                                                                              |
+| `npm test`                                                                                 | 173/173 aprovados, incluindo 19 testes novos                                                   |
+| `npm exec -- tsc --noEmit`                                                                 | Aprovado                                                                                       |
+| Typecheck ampliado somente para incluir offline-sync-errors.spec.ts                        | Aprovado; configuração temporária, sem mudança no tsconfig do projeto                          |
+| `npm run lint`                                                                             | Aprovado, zero erros; os mesmos seis warnings react-refresh em arquivos UI não alterados       |
+| `npm run build`                                                                            | Aprovado; artefato Vercel local, sem comando de deploy                                         |
+| Chromium: `npm exec -- playwright test e2e/offline-sync-errors.spec.ts --project=chromium` | 13/13 aprovados: 11 anteriores e 2 de conclusão                                                |
+| `git diff --check`                                                                         | Aprovado                                                                                       |
+| Prettier dos arquivos alterados                                                            | Aprovado                                                                                       |
+| Prettier global antes/depois                                                               | Apenas .lovable/plan.md e CHECKLIST_VERSIONING_ARCHITECTURE.md, sem alterações nesses arquivos |
+
+O build conserva avisos de inputValidator depreciado, diretivas use client
+ignoradas, chunks acima de 500 kB, imports externos não usados, opção platform
+desconhecida e chunk circular pg/pg-pool. As 133 linhas de padrões de warning
+normalizadas coincidem com o log da baseline sincronizada `/tmp/swi-pr4-build.log`;
+nenhum padrão novo foi observado. O gerador do router reordenou routeTree.gen.ts
+durante build/dev; essa alteração gerada foi restaurada ao conteúdo original
+e não integra o diff. Logs de execução nesta sessão: `/tmp/ic-p6-03-*.log`.
+
+Arquivos diretamente relacionados, e somente eles:
+
+- `src/server/repositories/inspection-mutation-lock.ts`: bloqueio compartilhado.
+- `src/server/repositories/inspection-response.repository.ts`: ordem de bloqueio/leitura e revisão estritamente crescente.
+- `src/server/repositories/inspection.repository.ts`: conclusão transacional com validação do Service.
+- `src/server/services/inspection-response.service.ts`: regras de conclusão no callback transacional.
+- `src/server/repositories/inspection-concurrency.test.ts`: reprodução/regressões determinísticas e rollback.
+- `src/server/services/inspection-response.service.test.ts`: adapter de teste para a conclusão transacional.
+- `src/server/services/authorization.service.test.ts`: adapter de teste com ownership da nova operação.
+- `e2e/offline-sync-errors.spec.ts`: confirmação de conclusão e retenção de conflito na fila.
+- `package.json`: inclui regressões no comando npm test, sem dependências novas.
+- `AI/Architecture.md`, `AI/BusinessRules.md`, `AI/API.md`, `AI/Offline.md`: contrato e estratégia atualizados.
+- `Documentation/RelatorioAuditoriaTecnicaPreEscritaTCC.md`: esta evidência posterior, conservando a auditoria histórica.
+
+**Limites para revisão:** não foram executados migrations, seeds, operações
+remotas de banco, deploys ou os E2E que escrevem fixtures no Neon. O Chromium
+usa RPCs interceptados e URL de banco local inutilizável; verifica protocolo
+cliente, sem exercitar o SQL. Permanecem sem homologação concorrência real
+PostgreSQL/Neon, duas abas/dispositivos, carga/latência/timeout/deadlocks e
+colisão deliberada de UUID entre inspeções distintas. Escritas diretas sem
+metadados continuam sem comparação otimista de revisão. Escritas externas
+ao protocolo dos Repositories, inclusive exclusão manual de resposta, não são
+protegidas por este bloqueio na aplicação. Qualquer caminho futuro que altere
+respostas/snapshot/estado deve participar do mesmo protocolo. NCs/ações/evidências
+continuam tratáveis após conclusão, como antes. Não se declara suporte offline
+completo nem ausência de todas as corridas de produção.
+
+Somente IC-P6-03 recebe correção nesta branch; IC-P9-04 e demais achados
+permanecem fora do escopo. O estado da tabela original é histórico; os casos
+confirmados acima têm correção testada aguardando integração/revisão humana.
+SHA final, branch remota, PR e CI são registrados na submissão e no relatório
+de entrega; abertura de PR não autoriza merge.
+
 ### 3.6. Registros históricos adicionais, fora dos 14
 
 | Registro         | Estado e evidência                                                                                                                                                                                                                                        | Limite da conclusão                                                                                                   |

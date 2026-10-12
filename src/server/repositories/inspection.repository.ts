@@ -2,7 +2,6 @@ import type {
   Inspection,
   InspectionSnapshotIntegrityStatus,
   InspectionSnapshotOrigin,
-  InspectionStatus,
   OfflineOperationType,
   Prisma,
   StandardType,
@@ -13,6 +12,7 @@ import type { PaginatedResult, SortOrder } from "@/server/types";
 import { getPaginationOffset, normalizePagination } from "@/server/utils/pagination.utils";
 
 import { BaseRepository } from "./base.repository";
+import { lockOwnedInspection } from "./inspection-mutation-lock";
 import { assertMatchingOfflineOperation } from "./offline-sync-operation";
 
 const INSPECTION_SORT_FIELDS = {
@@ -326,94 +326,81 @@ export class InspectionRepository extends BaseRepository<
     });
   }
 
-  updateStatusIfCurrent(
-    id: string,
-    allowedStatuses: InspectionStatus[],
-    status: InspectionStatus,
-    userId?: string,
-  ): Promise<InspectionWithRelations | null> {
-    return prisma.$transaction(async (transaction) => {
-      const update = await transaction.inspection.updateMany({
-        where: {
-          id,
-          ...(userId ? { userId } : {}),
-          deletedAt: null,
-          status: {
-            in: allowedStatuses,
-          },
-        },
-        data: { status },
-      });
-
-      if (update.count !== 1) {
-        return null;
-      }
-
-      return transaction.inspection.findFirst({
-        where: {
-          id,
-          ...(userId ? { userId } : {}),
-          deletedAt: null,
-        },
-        include: inspectionRelations,
-      });
-    });
-  }
-
-  completeWithOfflineOperation(
+  completeWithValidation(
     inspectionId: string,
-    operation: OfflineFinishOperationPersistenceInput,
+    userId: string,
+    validate: (inspection: InspectionWithRelations) => void,
+    operation?: OfflineFinishOperationPersistenceInput,
   ): Promise<InspectionWithRelations | null> {
-    return prisma.$transaction(async (transaction) => {
-      const completedOperation = await transaction.offlineSyncOperation.findUnique({
-        where: { id: operation.id },
-      });
+    return prisma.$transaction(
+      async (transaction) => {
+        if (!(await lockOwnedInspection(transaction, inspectionId, userId))) {
+          return null;
+        }
 
-      if (completedOperation) {
-        assertMatchingOfflineOperation(completedOperation, {
-          ...operation,
-          inspectionId,
-        });
+        if (operation) {
+          const completedOperation = await transaction.offlineSyncOperation.findUnique({
+            where: { id: operation.id },
+          });
 
-        return transaction.inspection.findFirst({
-          where: { id: inspectionId, userId: operation.userId, deletedAt: null },
+          if (completedOperation) {
+            assertMatchingOfflineOperation(completedOperation, { ...operation, inspectionId });
+
+            return transaction.inspection.findFirst({
+              where: { id: inspectionId, userId, deletedAt: null },
+              include: inspectionRelations,
+            });
+          }
+        }
+
+        const currentInspection = await transaction.inspection.findFirst({
+          where: { id: inspectionId, userId, deletedAt: null },
           include: inspectionRelations,
         });
-      }
 
-      const update = await transaction.inspection.updateMany({
-        where: {
-          id: inspectionId,
-          userId: operation.userId,
-          deletedAt: null,
-          status: { in: ["PLANNED", "IN_PROGRESS"] },
-        },
-        data: {
-          status: "COMPLETED",
-          syncStatus: "SYNCED",
-        },
-      });
+        if (!currentInspection) return null;
 
-      if (update.count !== 1) {
-        return null;
-      }
+        // The Service supplies business rules; reads, validation and persistence
+        // share the lock used by response writes, including offline synchronization.
+        validate(currentInspection);
 
-      await transaction.offlineSyncOperation.create({
-        data: {
-          id: operation.id,
-          userId: operation.userId,
-          inspectionId,
-          type: operation.type,
-          payloadHash: operation.payloadHash,
-          clientCreatedAt: operation.clientCreatedAt,
-        },
-      });
+        const update = await transaction.inspection.updateMany({
+          where: {
+            id: inspectionId,
+            userId,
+            deletedAt: null,
+            status: { in: ["PLANNED", "IN_PROGRESS"] },
+          },
+          data: {
+            status: "COMPLETED",
+            ...(operation ? { syncStatus: "SYNCED" } : {}),
+          },
+        });
 
-      return transaction.inspection.findFirst({
-        where: { id: inspectionId, userId: operation.userId, deletedAt: null },
-        include: inspectionRelations,
-      });
-    });
+        if (update.count !== 1) {
+          return null;
+        }
+
+        if (operation) {
+          await transaction.offlineSyncOperation.create({
+            data: {
+              id: operation.id,
+              userId,
+              inspectionId,
+              type: operation.type,
+              payloadHash: operation.payloadHash,
+              clientCreatedAt: operation.clientCreatedAt,
+            },
+          });
+        }
+
+        return transaction.inspection.findFirst({
+          where: { id: inspectionId, userId, deletedAt: null },
+          include: inspectionRelations,
+        });
+      },
+      { isolationLevel: "ReadCommitted", maxWait: 10_000, timeout: 15_000 },
+    );
   }
 
   private buildWhere(filters: InspectionFindManyFilters): Prisma.InspectionWhereInput {

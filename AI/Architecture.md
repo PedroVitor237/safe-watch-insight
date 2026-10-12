@@ -241,8 +241,8 @@ presente, recalculado só no formato 1; cópia exige formato 1 íntegro.
 | Draft               | ChecklistVersionRepository/ChecklistVersionItemRepository: metadados/itens/associações e revisão                                           |
 | Publicação/retirada | UPDATE condicional/leitura; publicação confere expectedUpdatedAt preparado no Service                                                      |
 | Inspeção/snapshot   | InspectionRepository.createWithSnapshot: escrita conjunta; leitura/preparação do Service precede transação                                 |
-| Resposta/NC         | InspectionResponseRepository.saveWithNonConformity: estado/resposta/NC; revisão/confirmação offline quando presentes                       |
-| Conclusão           | updateStatusIfCurrent ou completeWithOfflineOperation: estado condicional e confirmação no segundo; completude verificada antes no Service |
+| Resposta/NC         | saveWithNonConformity: bloqueio da inspeção antes de deduplicação/revisão; estado/resposta/NC/confirmação na mesma transação ReadCommitted |
+| Conclusão           | completeWithValidation: mesmo bloqueio, leitura e validação pelo callback do Service, estado condicional e confirmação offline atômicos    |
 | Ação                | CorrectiveActionRepository.createWithNonConformityTransition: ação/diretiva condicional à NC na transação quando há transição              |
 | Evidência           | EvidenceRepository: transações locais para contexto/metadados; Cloudinary fora delas                                                       |
 | Bootstrap           | OfficialChecklistRepository.createPublished: identidade/draft/publicação por template, sem atomicidade global da carga                     |
@@ -250,6 +250,15 @@ presente, recalculado só no formato 1; cópia exige formato 1 íntegro.
 Não há transação por toda Server Function nem snapshot global das consultas do
 dashboard. Leituras de lista/detalhe de NC e lista de ações chamam markOverdue e
 persistem atrasos; dashboard somente deriva, sem atualizar estados.
+
+Na correção IC-P6-03, `lockOwnedInspection` usa `SELECT ... FOR UPDATE` com
+ID, usuário e `deletedAt IS NULL`. Ambas as transações fixam `ReadCommitted`:
+quem aguarda o bloqueio lê as revisões/confirmações já confirmadas pela
+operação anterior. O bloqueio permanece até commit/rollback; apenas acrescentar
+uma transação sem antecipar o bloqueio não resolveria as leituras anteriores à
+escrita. Regras de completude/estado continuam no Service. Sem alterações de
+schema, rotas, contratos clientes ou layout. Evidências e limites em
+[auditoria IC-P6-03](../Documentation/RelatorioAuditoriaTecnicaPreEscritaTCC.md#atualização-posterior--investigação-e-remediação-direcionada-de-ic-p6-03).
 
 ## Evidências e integração externa
 

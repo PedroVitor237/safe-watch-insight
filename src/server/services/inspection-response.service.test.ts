@@ -90,11 +90,13 @@ class FakeInspectionRepository extends InspectionRepository {
     return Promise.resolve(this.currentInspection);
   }
 
-  override updateStatusIfCurrent(
+  override completeWithValidation(
     _id: string,
-    _allowedStatuses: InspectionStatus[],
-    status: InspectionStatus,
+    _userId: string,
+    validate: (inspection: InspectionWithRelations) => void,
   ): Promise<InspectionWithRelations | null> {
+    validate(this.currentInspection);
+    const status = InspectionStatus.COMPLETED;
     this.updatedStatus = status;
     this.currentInspection = {
       ...this.currentInspection,

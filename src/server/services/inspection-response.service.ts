@@ -161,55 +161,43 @@ export class InspectionResponseService extends BaseService<InspectionResponseRep
     offlineOperation?: FinishInspectionOfflineOperationInput,
   ): Promise<Result<InspectionWithRelations>> {
     return this.execute(async () => {
-      const currentInspection = await this.ensureInspectionExists(inspectionId, userId);
-      this.ensureRequiredItemsWereAnswered(currentInspection);
-
-      if (offlineOperation) {
-        try {
-          const inspection = await this.inspectionRepository.completeWithOfflineOperation(
-            inspectionId,
-            {
-              id: offlineOperation.id,
-              userId: offlineOperation.userId,
+      const operation = offlineOperation
+        ? {
+            id: offlineOperation.id,
+            userId,
+            type: OfflineOperationType.FINISH_INSPECTION,
+            payloadHash: createOfflineOperationPayloadHash({
               type: OfflineOperationType.FINISH_INSPECTION,
-              payloadHash: createOfflineOperationPayloadHash({
-                type: OfflineOperationType.FINISH_INSPECTION,
-                inspectionId,
-                clientCreatedAt: offlineOperation.clientCreatedAt,
-              }),
+              inspectionId,
               clientCreatedAt: offlineOperation.clientCreatedAt,
-            },
+            }),
+            clientCreatedAt: offlineOperation.clientCreatedAt,
+          }
+        : undefined;
+
+      let inspection: InspectionWithRelations | null;
+      try {
+        inspection = await this.inspectionRepository.completeWithValidation(
+          inspectionId,
+          userId,
+          (currentInspection) => {
+            this.ensureRequiredItemsWereAnswered(currentInspection);
+            this.ensureInspectionCanBeEdited(currentInspection);
+          },
+          operation,
+        );
+      } catch (error) {
+        if (error instanceof OfflineOperationPayloadConflictError) {
+          throw new ConflictError(
+            "This offline operation ID was already used with different data.",
           );
-
-          if (!inspection) {
-            throw new ConflictError(
-              "The inspection changed on the server and could not be completed automatically.",
-            );
-          }
-
-          return this.success(inspection);
-        } catch (error) {
-          if (error instanceof OfflineOperationPayloadConflictError) {
-            throw new ConflictError(
-              "This offline operation ID was already used with different data.",
-            );
-          }
-
-          throw error;
         }
+
+        throw error;
       }
 
-      this.ensureInspectionCanBeEdited(currentInspection);
-
-      const inspection = await this.inspectionRepository.updateStatusIfCurrent(
-        inspectionId,
-        [InspectionStatus.PLANNED, InspectionStatus.IN_PROGRESS],
-        InspectionStatus.COMPLETED,
-        userId,
-      );
-
       if (!inspection) {
-        throw new ConflictError("Completed or cancelled inspections cannot be completed again.");
+        throw new NotFoundError("Inspection not found.");
       }
 
       return this.success(inspection);
