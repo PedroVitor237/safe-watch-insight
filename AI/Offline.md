@@ -542,6 +542,48 @@ Erros transitórios recebem backoff exponencial limitado a cinco minutos e até
 cinco tentativas automáticas. Erro de autenticação/validação exige intervenção;
 conflito nunca é reenviado automaticamente.
 
+## Classificação de falhas e retry — IC-P9-03
+
+Contrato da correção direcionada:
+
+- `NETWORK_ERROR` exige rejeição do `fetch` da chamada com `TypeError` e mensagem
+  de transporte reconhecida na lista de
+  [sync-transport.ts](../src/offline/sync-transport.ts).
+  A mesma exceção lançada pela Server Function,
+  fora desse ponto, não comprova falha de rede. `navigator.onLine` é apenas um
+  indicador; não classifica a origem de uma exceção.
+- HTTP não exitoso tem código `HTTP_ERROR` e status real, sem persistir seu corpo.
+  Envelope `Result` conserva código/mensagem/status lógico. `409` bloqueia em
+  `CONFLICT`; `408`, `429` e `5xx` permitem retry limitado; outras rejeições
+  bloqueiam em `ERROR`, incluindo `401`, `403`, `404` e `422`.
+- Exceções de validação, serialização, programação ou decodificação sem envelope
+  reconhecido ficam em `ERROR`/`SYNC_EXCEPTION`. Resposta sem envelope válido ou
+  sem os campos essenciais da confirmação fica em `ERROR`/`INVALID_SYNC_RESPONSE`.
+  Não se infere status lógico a partir de texto livre ou de campos arbitrários
+  de uma exceção deserializada.
+- Falha na transação de confirmação Dexie fica em
+  `ERROR`/`LOCAL_PERSISTENCE_ERROR`, com rollback da remoção/dependências/pacote.
+  Falha ao gravar o próprio estado de erro propaga ao chamador; o registro durável
+  restante pode ser recuperado como `SYNCING` interrompido após restabelecer o
+  armazenamento. Não se promete persistir diagnóstico em IndexedDB indisponível.
+- Cada envio incrementa `attemptCount` uma vez. Retry automático conserva o UUID
+  e payload, grava `nextAttemptAt` com o backoff vigente e fica em `PENDING` até
+  atingir cinco tentativas, quando passa a `ERROR`. Falha bloqueada não agenda
+  novo retry e mantém dados/dependências e o diagnóstico de sua categoria.
+- `Sincronizar dados locais` continua repondo `ERROR` em `PENDING`, zerando as
+  tentativas após intervenção. Usa o mesmo UUID/payload; confirmação remota já
+  aceita pode ser recuperada pela idempotência existente. `CONFLICT` continua
+  exigindo reconciliação e não é liberado pelo retry manual.
+
+Mensagens de exceções e corpos HTTP não são copiados para o diagnóstico durável:
+o código, UUID, tentativas e categoria mantêm contexto sem persistir stacks,
+segredos ou payloads de erro. Falhas `Result` seguem o contrato existente.
+Os campos essenciais não constituem validação integral de todo DTO histórico.
+Mensagens de rede variam por navegador e podem também representar bloqueio de
+transporte por política; o cliente não comprova indisponibilidade da internet.
+Rejeições não reconhecidas, inclusive interrupção durante decodificação, exigem
+retry manual. Não se declara ausência de todas as falhas/corridas de sincronização.
+
 ## Confirmação local de respostas — IC-P6-04
 
 A confirmação de `SAVE_INSPECTION_RESPONSE` reconcilia fila e pacote na mesma
@@ -716,7 +758,7 @@ flowchart TD
     P["Transação remota: mutação + OfflineSyncOperation"]
     K["Confirmação: atualizar pacote e dependências / remover operação local"]
     T["Retry: mesmo UUID / backoff / até cinco tentativas"]
-    E["ERROR: 401 / 422 / tentativas esgotadas"]
+    E["ERROR: rejeição permanente / exceção desconhecida / falha local / tentativas esgotadas"]
     C["CONFLICT: 409 / bloqueio da fila sem reconciliação assistida"]
     O --> D
     D --> L
@@ -727,10 +769,11 @@ flowchart TD
     R -->|Nova operação válida| P
     P -->|Sucesso| K
     R -->|Retry já confirmado| K
-    A -.->|Falha transitória / exceção| T
+    A -.->|Transporte reconhecido / 408 / 429 / 5xx| T
     T -.->|PENDING elegível| S
     T -.->|Tentativas esgotadas| E
-    A -.->|401 / 422| E
+    A -.->|Outras rejeições / confirmação inválida / exceção desconhecida| E
+    K -.->|Falha de persistência local| E
     R -.->|Revisão ou identidade/hash divergente| C
     E -.->|Retry manual de ERROR| S
 ```
@@ -758,9 +801,10 @@ Fluxo implementado; setas não representam cardinalidades físicas nem garantias
   activeSynchronization vale somente na instância JS, sem coordenação entre abas.
 - getAppSession tenta validar remoto, podendo cair em sessão local em exceção;
   **cada Server Function reautentica no servidor** antes de persistir. 401 em
-  envelope vira ERROR; 409 vira CONFLICT; 422 vira ERROR; demais falhas e exceções
-  lançadas usam retry (exceção classificada NETWORK_ERROR). Não há garantia de
-  classificar corretamente toda origem de exceção.
+  envelope vira ERROR; 409 vira CONFLICT. O contrato IC-P9-03 acima separa
+  transporte reconhecido, status HTTP/Result, exceção desconhecida e falha de
+  confirmação local. Somente transporte reconhecido, 408/429 e 5xx permitem
+  retry automático; demais falhas bloqueiam sem remover os dados.
 - Até cinco tentativas automáticas; atraso min(2^tentativa × 1000 ms, 5 minutos).
   Recupera SYNCING interrompido como PENDING mantendo UUID/payload. Sincronizar
   agora zera tentativas de ERROR; não resolve CONFLICT. Fila só remove operação

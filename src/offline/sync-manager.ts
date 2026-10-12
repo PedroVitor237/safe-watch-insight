@@ -11,6 +11,8 @@ import {
   retryFailedOperations,
 } from "./inspection-store";
 import { getAppSession, getCachedOfflineSession } from "./session";
+import { isValidSynchronizationResult } from "./sync-result";
+import { fetchForOfflineSynchronization, SyncTransportError } from "./sync-transport";
 import type { OfflineOperation, SaveResponseOperation } from "./types";
 
 const MAX_AUTOMATIC_ATTEMPTS = 5;
@@ -108,6 +110,7 @@ export async function synchronizeOperation(
   await updatePackageStatus(operation, "SYNCING");
   notifyOfflineStateChanged();
 
+  let acknowledge: () => Promise<void>;
   try {
     if (operation.type === "SAVE_INSPECTION_RESPONSE") {
       const result = await functions.saveInspectionResponse({
@@ -120,40 +123,74 @@ export async function synchronizeOperation(
           clientCreatedAt: operation.payload.clientCreatedAt,
           expectedResponseUpdatedAt: operation.payload.expectedResponseUpdatedAt,
         },
+        fetch: fetchForOfflineSynchronization,
       });
 
+      if (!isValidSynchronizationResult(result, operation)) {
+        return markInvalidResponse(operation);
+      }
       if (!result.success) {
         return handleServerFailure(operation, result);
       }
 
-      await acknowledgeResponseOperation(operation, result.data);
-      return true;
+      acknowledge = () => acknowledgeResponseOperation(operation, result.data);
+    } else {
+      const result = await functions.finishInspection({
+        data: {
+          inspectionId: operation.inspectionId,
+          operationId: operation.id,
+          clientCreatedAt: operation.payload.clientCreatedAt,
+        },
+        fetch: fetchForOfflineSynchronization,
+      });
+
+      if (!isValidSynchronizationResult(result, operation)) {
+        return markInvalidResponse(operation);
+      }
+      if (!result.success) {
+        return handleServerFailure(operation, result);
+      }
+      acknowledge = () => acknowledgeFinishOperation(operation, result.data);
     }
-
-    const result = await functions.finishInspection({
-      data: {
-        inspectionId: operation.inspectionId,
-        operationId: operation.id,
-        clientCreatedAt: operation.payload.clientCreatedAt,
-      },
-    });
-
-    if (!result.success) {
-      return handleServerFailure(operation, result);
-    }
-
-    await acknowledgeFinishOperation(operation, result.data);
-    return true;
   } catch (error) {
-    await scheduleRetry(
+    if (error instanceof SyncTransportError) {
+      if (error.code === "NETWORK_ERROR") {
+        await scheduleRetry(operation, error.code, error.message);
+        return false;
+      }
+      return handleServerFailure(operation, error);
+    }
+    await markOperationFailure(
       operation,
-      "NETWORK_ERROR",
-      error instanceof Error
-        ? error.message
-        : "A conexão foi interrompida durante a sincronização.",
+      "ERROR",
+      "SYNC_EXCEPTION",
+      "A chamada de sincronização falhou sem confirmação. Verifique o problema antes de tentar novamente.",
     );
     return false;
   }
+
+  try {
+    await acknowledge();
+  } catch {
+    await markOperationFailure(
+      operation,
+      "ERROR",
+      "LOCAL_PERSISTENCE_ERROR",
+      "Não foi possível confirmar a sincronização no armazenamento deste dispositivo.",
+    );
+    return false;
+  }
+  return true;
+}
+
+async function markInvalidResponse(operation: OfflineOperation): Promise<boolean> {
+  await markOperationFailure(
+    operation,
+    "ERROR",
+    "INVALID_SYNC_RESPONSE",
+    "O servidor retornou uma confirmação de sincronização inválida.",
+  );
+  return false;
 }
 
 async function acknowledgeResponseOperation(
@@ -290,12 +327,16 @@ async function handleServerFailure(
     return false;
   }
 
-  if (error.statusCode === 401 || error.statusCode === 422) {
-    await markOperationFailure(operation, "ERROR", error.code, error.message);
+  if (
+    error.statusCode === 408 ||
+    error.statusCode === 429 ||
+    (error.statusCode >= 500 && error.statusCode <= 599)
+  ) {
+    await scheduleRetry(operation, error.code, error.message);
     return false;
   }
 
-  await scheduleRetry(operation, error.code, error.message);
+  await markOperationFailure(operation, "ERROR", error.code, error.message);
   return false;
 }
 

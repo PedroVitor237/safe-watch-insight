@@ -298,8 +298,10 @@ Resposta/conclusão e operações são gravadas em transação Dexie, com UUID e
 sequência por usuário e dependências. sync-manager recupera SYNCING interrompido,
 envia FIFO, remove só após confirmação. Até cinco tentativas automáticas/backoff
 limitado a cinco minutos. 409 bloqueia avanço; 401/422 vira ERROR e exige
-intervenção. Exceções lançadas recebem NETWORK_ERROR no cliente, sem distinção
-de origem.
+intervenção. Falhas reconhecidas no fetch recebem NETWORK_ERROR; HTTP/Result
+conservam status, exceções desconhecidas bloqueiam com SYNC_EXCEPTION e falhas de
+confirmação Dexie com LOCAL_PERSISTENCE_ERROR. Contrato IC-P9-03 e limites em
+[Offline.md](./Offline.md#classificação-de-falhas-e-retry--ic-p9-03).
 
 Servidor deriva identidade da sessão, valida inspeção/item, calcula hash e
 compara updatedAt da resposta, sem Last Write Wins. Mesmo UUID exige mesmo

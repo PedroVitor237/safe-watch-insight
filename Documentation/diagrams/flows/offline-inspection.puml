@@ -11,7 +11,7 @@ rectangle "Repository: deduplicação e revisão esperada" as R
 rectangle "Transação remota: mutação + OfflineSyncOperation" as P
 rectangle "Confirmação: atualizar pacote e dependências / remover operação local" as K
 rectangle "Retry: mesmo UUID / backoff / até cinco tentativas" as T
-rectangle "ERROR: 401 / 422 / tentativas esgotadas" as E
+rectangle "ERROR: rejeição permanente / exceção desconhecida / falha local / tentativas esgotadas" as E
 rectangle "CONFLICT: 409 / bloqueio da fila sem reconciliação assistida" as C
 O --> D
 D --> L
@@ -22,10 +22,11 @@ A --> R
 R --> P : Nova operação válida
 P --> K : Sucesso
 R --> K : Retry já confirmado
-A ..> T : Falha transitória / exceção
+A ..> T : Transporte reconhecido / 408 / 429 / 5xx
 T ..> S : PENDING elegível
 T ..> E : Tentativas esgotadas
-A ..> E : 401 / 422
+A ..> E : Outras rejeições / confirmação inválida / exceção desconhecida
+K ..> E : Falha de persistência local
 R ..> C : Revisão ou identidade/hash divergente
 E ..> S : Retry manual de ERROR
 @enduml
