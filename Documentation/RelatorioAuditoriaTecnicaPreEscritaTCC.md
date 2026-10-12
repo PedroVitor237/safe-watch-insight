@@ -150,6 +150,92 @@ A conclusão usa update condicional de status em [InspectionRepository](../src/s
 
 Na confirmação cliente, uma operação antiga pode substituir a resposta projetada por uma edição mais nova. O payload dependente continua na fila e recebe a nova revisão remota. O defeito confirmado é a regressão da projeção, não eliminação comprovada do payload. Os testes existentes cobrem dependências/reload e conflito após alteração remota, sem pausa específica entre confirmações ou concorrência simultânea entre abas. Escrever “sincronização idempotente no cenário validado” é sustentado; escrever “consistência garantida entre dispositivos” não é.
 
+#### Atualização posterior — remediação direcionada de IC-P6-04
+
+Em 12 de outubro de 2026, `main`, `origin/main` e `FETCH_HEAD` foram conferidos em
+`0da149ccf675da942cadc022da84f2003482bf8f`, após fetch remoto. A árvore inicial
+estava limpa; a branch local/remota dedicada não existia. A implementação usa
+`fix/ic-p6-04-sync-local-projection`, criada dessa base, sem usar `development`.
+
+**Defeito reproduzido:** em `src/offline/sync-manager.ts`,
+`synchronizeOperation` envia a operação A e `acknowledgeResponseOperation`
+substituía a resposta inteira do pacote pelo retorno remoto, mesmo com B/C já
+persistidas por `queueInspectionResponse` em `src/offline/inspection-store.ts`.
+No teste, a confirmação de A reinstalou `NON_COMPLIANT`, observação antiga e NC
+ativa sobre a edição local `COMPLIANT`, observação nova e NC ausente. Fechar e
+reabrir a conexão IndexedDB confirmou a regressão persistida. A fila dependente
+continuava existindo; não se demonstrou perda definitiva do payload.
+
+O caminho remoto permanece `inspection-response.functions.ts` →
+`InspectionResponseService.saveInspectionResponse` →
+`InspectionResponseRepository.saveWithNonConformity` → transação Prisma.
+UUID/usuário/inspeção/tipo/hash deduplicam o efeito remoto; `updatedAt` é a
+revisão remota e `clientUpdatedAt` conserva o horário do dispositivo. Um retry
+confirmado retorna a resposta **atual** do servidor, não um snapshot imutável
+da primeira confirmação. Idempotência remota não protegia a projeção local.
+Após confirmação, o evento em `database.ts` invalida queries em
+`src/routes/__root.tsx`; `inspection-client.ts` lê o pacote enquanto há pendências.
+
+**Invariante e correção:** pacote com alterações pendentes é a projeção local
+autoritativa, como já estabelecido pela fachada de leitura, gravação transacional
+local e encadeamento descritos em `AI/Offline.md` e `AI/Entities.md`. A confirmação
+remove somente seu UUID e atualiza a revisão da próxima dependente. Se há edição
+posterior do mesmo usuário/inspeção/item, a resposta/NC local inteira é preservada,
+inclusive IDs e timestamps provisórios. A última confirmação desse item adota
+resposta/NC, IDs e timestamps remotos. Estado local de conclusão e snapshot ficam
+preservados; a presença de outras operações conserva `PENDING`. Confirmação cujo
+UUID já foi removido é ignorada dentro da transação, antes de qualquer escrita.
+A decisão usa a sequência da fila, sem comparar relógios local e remoto.
+
+`synchronizeOperation` passou a admitir funções de transporte tipadas para os
+testes; os chamadores existentes continuam usando as Server Functions originais.
+Isso permite exercitar envio, confirmação, falha/retry e persistência reais sem
+acessar banco remoto ou acrescentar dependências. O restante do protocolo, schema,
+servidor, autenticação e classificação de erros não foi alterado.
+
+**Estado posterior: RESOLVED no caminho local testado de IC-P6-04.** Foram
+adicionados 13 testes ao arquivo existente `src/offline/inspection-store.test.ts`:
+confirmação normal e revisão para a próxima edição; edição durante envio e
+reabertura IndexedDB; três edições com preservação de NC e confirmação final;
+resposta seguida de conclusão; outro item pendente; confirmação antiga duplicada
+após confirmação da dependente; rejeições 409/401/422/500; retry de resultado
+incerto com UUID/payload estáveis; falha de decodificação de resposta incompleta;
+rollback de fila/dependências quando falha a gravação do pacote. Promises
+controladas determinam a ordem, sem sleeps. Antes da correção, quatro cenários
+falharam (17/21 aprovados); depois, os 22 testes de persistência offline passaram.
+
+Validação com Node 22.23.2 e npm, sem instalar dependências:
+
+- `npm exec -- tsx --test src/offline/inspection-store.test.ts`: 22/22 aprovados.
+- `npm test`: 121/121 aprovados.
+- `npm exec -- tsc --noEmit`: aprovado após ajustar a assinatura do mock de
+  falha Dexie; a primeira execução apontou somente esse erro novo no teste.
+- `npm run lint`: zero erros, seis avisos nos mesmos componentes de UI fora do escopo.
+- `npm run build`: aprovado, com avisos de depreciação, bundling e tamanho de chunks.
+- `git diff --check`: aprovado; o arquivo de rotas regenerado pelo build foi
+  restaurado à base e não integra a correção.
+
+O tsx exigiu execução autorizada fora da sandbox para seu IPC. Dexie foi exercitado
+sobre `fake-indexeddb`, sem browser/E2E, Neon ou Cloudinary nesta tarefa. O teste
+de resposta incompleta simula falha de decodificação lançada pelo transporte;
+não valida todas as formas possíveis de um envelope de sucesso malformado.
+Não houve migration, seed, reparo de dados, instalação ou deploy.
+
+O manager envia novas operações dependentes em FIFO na mesma instância JS;
+confirmação de B antes de A nesse caminho não é suportada. A chegada atrasada
+testada é de uma segunda tentativa de A, iniciada antes de sua remoção, após B
+já confirmada. Isso não homologa duas abas reais, múltiplos dispositivos ou
+concorrência de transações PostgreSQL. A concorrência global, a conclusão
+concorrente e IC-P6-03 permanecem fora desta remediação. O catch ainda classifica
+falha local de confirmação como `NETWORK_ERROR` (IC-P9-03), conservando rollback
+e retry; esse achado não foi remediado.
+
+Recomenda-se considerar IC-P6-04 resolvido para a projeção/acknowledgement
+demonstrados e manter homologação real entre abas/dispositivos como trabalho
+separado. O inventário e as contagens anteriores, assim como a retrospectiva,
+preservam a baseline histórica; nenhum outro achado tem seu status alterado por
+esta atualização. Não se afirma ausência de todas as corridas offline.
+
 ### 3.5. Relatório e classificação de erros
 
 O detalhe por ID admite PLANNED, IN_PROGRESS, COMPLETED ou CANCELLED se a inspeção própria tiver snapshot. A lista selecionável restringe COMPLETED. O DTO e o HTML mantêm status, pendentes e preenchimento; não renomeiam toda inspeção para concluída. [BusinessRules](../AI/BusinessRules.md), 621–630, explicita esse comportamento. É leitura parcial deliberadamente documentada, com política visual ainda aperfeiçoável, não autorização por ID sem ownership. Os testes atuais não exercitam todos os estados. O TCC deve distinguir relatório de leitura de documento final e não alegar gate de conclusão no detalhe.

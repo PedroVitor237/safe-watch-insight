@@ -542,6 +542,30 @@ Erros transitórios recebem backoff exponencial limitado a cinco minutos e até
 cinco tentativas automáticas. Erro de autenticação/validação exige intervenção;
 conflito nunca é reenviado automaticamente.
 
+## Confirmação local de respostas — IC-P6-04
+
+A confirmação de `SAVE_INSPECTION_RESPONSE` reconcilia fila e pacote na mesma
+transação Dexie. Se o UUID já saiu da fila, uma confirmação duplicada não altera
+o pacote nem as dependências. A confirmação de uma operação existente remove
+somente esse UUID e fornece a revisão remota à próxima resposta dependente.
+
+Enquanto existir uma edição posterior do mesmo usuário/inspeção/item, identificada
+pela sequência da fila, a resposta projetada permanece integralmente local:
+status, observação, timestamps provisórios, IDs e NC. A revisão remota fica no
+payload da próxima operação, sem substituir essa projeção. Sem edição posterior
+do mesmo item, a confirmação fornece a resposta/NC, IDs e timestamps do servidor.
+Operações de outros itens ou a conclusão pendente conservam o pacote `PENDING`;
+o estado local `COMPLETED` e o snapshot não são revertidos pela resposta.
+
+Em 12 de outubro de 2026, testes com Dexie e `fake-indexeddb` reproduziram quatro
+regressões antes da correção e verificaram sua resolução, incluindo confirmação
+antiga duplicada após uma edição dependente já sincronizada. O manager de uma
+instância envia FIFO; confirmações fora de ordem de operações novas dependentes
+não são um caminho permitido nessa instância. O teste de confirmação atrasada
+controla duas tentativas do mesmo UUID, sem homologar concorrência real entre
+abas/dispositivos ou no PostgreSQL. Evidências, comandos e limites:
+[auditoria, atualização IC-P6-04](../Documentation/RelatorioAuditoriaTecnicaPreEscritaTCC.md#atualização-posterior--remediação-direcionada-de-ic-p6-04).
+
 # Estratégia PWA Implementada
 
 O manifest usa modo `standalone`, `start_url=/inspecoes`, tema e ícone próprios.

@@ -18,6 +18,15 @@ const MAX_RETRY_DELAY_MS = 5 * 60 * 1_000;
 
 let activeSynchronization: Promise<void> | null = null;
 
+interface SynchronizationFunctions {
+  saveInspectionResponse: (
+    options: Parameters<typeof saveInspectionResponse>[0],
+  ) => ReturnType<typeof saveInspectionResponse>;
+  finishInspection: (
+    options: Parameters<typeof finishInspection>[0],
+  ) => ReturnType<typeof finishInspection>;
+}
+
 export function synchronizeOfflineQueue(): Promise<void> {
   activeSynchronization ??= runSynchronization().finally(() => {
     activeSynchronization = null;
@@ -86,7 +95,10 @@ async function markAuthenticationFailure(
   }
 }
 
-async function synchronizeOperation(operation: OfflineOperation): Promise<boolean> {
+export async function synchronizeOperation(
+  operation: OfflineOperation,
+  functions: SynchronizationFunctions = { saveInspectionResponse, finishInspection },
+): Promise<boolean> {
   const db = getOfflineDatabase();
   await db.operations.update(operation.id, {
     status: "SYNCING",
@@ -98,7 +110,7 @@ async function synchronizeOperation(operation: OfflineOperation): Promise<boolea
 
   try {
     if (operation.type === "SAVE_INSPECTION_RESPONSE") {
-      const result = await saveInspectionResponse({
+      const result = await functions.saveInspectionResponse({
         data: {
           inspectionId: operation.inspectionId,
           snapshotItemId: operation.payload.snapshotItemId,
@@ -118,7 +130,7 @@ async function synchronizeOperation(operation: OfflineOperation): Promise<boolea
       return true;
     }
 
-    const result = await finishInspection({
+    const result = await functions.finishInspection({
       data: {
         inspectionId: operation.inspectionId,
         operationId: operation.id,
@@ -154,7 +166,12 @@ async function acknowledgeResponseOperation(
 ): Promise<void> {
   const db = getOfflineDatabase();
 
-  await db.transaction("rw", db.operations, db.inspectionPackages, async () => {
+  const applied = await db.transaction("rw", db.operations, db.inspectionPackages, async () => {
+    // Another in-flight attempt may already have acknowledged this UUID.
+    if (!(await db.operations.get(operation.id))) {
+      return false;
+    }
+
     const record = await db.inspectionPackages
       .where("[userId+inspectionId]")
       .equals([operation.userId, operation.inspectionId])
@@ -187,14 +204,28 @@ async function acknowledgeResponseOperation(
 
     if (record) {
       const inspection = structuredClone(record.inspection);
-      const responseIndex = inspection.responses.findIndex(
-        (candidate) => candidate.snapshotItemId === response.snapshotItemId,
-      );
+      const newerEdit = await db.operations
+        .where("[inspectionId+entityKey]")
+        .equals([operation.inspectionId, operation.entityKey])
+        .filter(
+          (candidate) =>
+            candidate.userId === operation.userId &&
+            candidate.type === "SAVE_INSPECTION_RESPONSE" &&
+            candidate.sequence > operation.sequence,
+        )
+        .first();
 
-      if (responseIndex >= 0) {
-        inspection.responses[responseIndex] = response;
-      } else {
-        inspection.responses.push(response);
+      // The queue carries the remote revision; the package carries the latest local edit.
+      if (!newerEdit) {
+        const responseIndex = inspection.responses.findIndex(
+          (candidate) => candidate.snapshotItemId === response.snapshotItemId,
+        );
+
+        if (responseIndex >= 0) {
+          inspection.responses[responseIndex] = response;
+        } else {
+          inspection.responses.push(response);
+        }
       }
 
       const remaining = await db.operations
@@ -209,10 +240,14 @@ async function acknowledgeResponseOperation(
         localSyncStatus: remaining === 0 ? "SYNCED" : "PENDING",
       });
     }
+
+    return true;
   });
 
-  notifyOfflineStateChanged();
-  notifyOfflineSynchronizationCompleted(operation.inspectionId);
+  if (applied) {
+    notifyOfflineStateChanged();
+    notifyOfflineSynchronizationCompleted(operation.inspectionId);
+  }
 }
 
 async function acknowledgeFinishOperation(
