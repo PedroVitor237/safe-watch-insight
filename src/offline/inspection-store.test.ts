@@ -1,7 +1,7 @@
 import "fake-indexeddb/auto";
 
 import assert from "node:assert/strict";
-import { beforeEach, test } from "node:test";
+import { beforeEach, mock, test } from "node:test";
 
 import {
   ChecklistVersionStatus,
@@ -14,6 +14,7 @@ import {
 
 import { getOfflineDatabase } from "./database";
 import { cacheOfflineSession } from "./session";
+import { synchronizeOperation } from "./sync-manager";
 import {
   cacheInspectionPackage,
   getCachedInspection,
@@ -23,7 +24,12 @@ import {
   resetInterruptedOperations,
   retryFailedOperations,
 } from "./inspection-store";
-import type { OfflineInspection } from "./types";
+import type {
+  OfflineInspection,
+  OfflineInspectionPackage,
+  OfflineInspectionResponse,
+  SaveResponseOperation,
+} from "./types";
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
 const INSPECTION_ID = "22222222-2222-4222-8222-222222222222";
@@ -268,6 +274,432 @@ test("does not retain inspection packages assigned to another user", async () =>
   assert.equal(packages[0]?.userId, USER_ID);
   assert.equal(packages[0]?.inspectionId, INSPECTION_ID);
 });
+
+test("acknowledges a response and adopts remote identity and revision when no newer edit exists", async () => {
+  const operation = await queueResponse("COMPLIANT", "Resposta enviada");
+  const response = await createRemoteResponse();
+  const snapshot = (await readLocalInspection()).snapshot;
+
+  assert.equal(await synchronizeResponse(operation, async () => response), true);
+
+  const inspection = await readLocalInspection();
+  assert.deepEqual(inspection.responses[0], response);
+  assert.deepEqual(inspection.snapshot, snapshot);
+  assert.equal(inspection.status, "IN_PROGRESS");
+  assert.equal(inspection.syncStatus, "SYNCED");
+  assert.equal(await getOfflineDatabase().operations.count(), 0);
+  assert.equal((await readLocalPackage()).localSyncStatus, "SYNCED");
+
+  await queueInspectionResponse({
+    inspectionId: INSPECTION_ID,
+    snapshotItemId: SNAPSHOT_ITEM_ID,
+    status: "NOT_APPLICABLE",
+  });
+  const next = await getNextPendingOperation(USER_ID);
+  assert.ok(next?.type === "SAVE_INSPECTION_RESPONSE");
+  assert.deepEqual(next.payload.expectedResponseUpdatedAt, response.updatedAt);
+});
+
+test("preserves a newer response and local completion when an older request is acknowledged", async () => {
+  const operation = await queueResponse("NON_COMPLIANT", "Observação antiga");
+  const response = await createRemoteResponse();
+  const submitted = deferred<void>();
+  const confirmation = deferred<OfflineInspectionResponse>();
+  const synchronization = synchronizeResponse(operation, async () => {
+    submitted.resolve();
+    return confirmation.promise;
+  });
+  await submitted.promise;
+
+  const edit = await queueInspectionResponse({
+    inspectionId: INSPECTION_ID,
+    snapshotItemId: SNAPSHOT_ITEM_ID,
+    status: "COMPLIANT",
+    observation: "Observação nova",
+  });
+  assert.ok(edit.success);
+  assert.ok((await queueInspectionFinish(INSPECTION_ID)).success);
+  const projection = await readLocalInspection();
+  confirmation.resolve(response);
+  assert.equal(await synchronization, true);
+
+  // Read the persisted package again after closing the IndexedDB connection.
+  getOfflineDatabase().close();
+  await getOfflineDatabase().open();
+  const inspection = await readLocalInspection();
+  assert.deepEqual(inspection.responses[0], edit.data);
+  assert.equal(inspection.responses[0]?.nonConformity, null);
+  assert.deepEqual(inspection.snapshot, projection.snapshot);
+  assert.equal(inspection.status, "COMPLETED");
+  assert.deepEqual(inspection.updatedAt, projection.updatedAt);
+  assert.equal(inspection.syncStatus, "PENDING");
+  assert.equal((await readLocalPackage()).localSyncStatus, "PENDING");
+  assert.equal(await getOfflineDatabase().operations.get(operation.id), undefined);
+  const next = await getNextPendingOperation(USER_ID);
+  assert.ok(next?.type === "SAVE_INSPECTION_RESPONSE");
+  assert.equal(next.dependsOnOperationId, null);
+  assert.equal(next.payload.status, "COMPLIANT");
+  assert.equal(next.payload.observation, "Observação nova");
+  assert.deepEqual(next.payload.expectedResponseUpdatedAt, response.updatedAt);
+  assert.equal(await getOfflineDatabase().operations.count(), 2);
+});
+
+test("preserves the latest local NC through three dependent edits and adopts the final confirmation", async () => {
+  const first = await queueResponse("COMPLIANT", "Primeira resposta");
+  const firstResponse = await createRemoteResponse();
+  await queueInspectionResponse({
+    inspectionId: INSPECTION_ID,
+    snapshotItemId: SNAPSHOT_ITEM_ID,
+    status: "NOT_APPLICABLE",
+    observation: "Segunda resposta",
+  });
+  const secondResponse = {
+    ...firstResponse,
+    status: "NOT_APPLICABLE" as const,
+    observation: "Segunda resposta",
+    updatedAt: new Date("2026-10-12T12:01:00.000Z"),
+  };
+  const last = await queueInspectionResponse({
+    inspectionId: INSPECTION_ID,
+    snapshotItemId: SNAPSHOT_ITEM_ID,
+    status: "NON_COMPLIANT",
+    observation: "Proteção ausente na última edição",
+  });
+  assert.ok(last.success);
+  const finalResponse = await createRemoteResponse(new Date("2026-10-12T12:02:00.000Z"));
+
+  await synchronizeResponse(first, async () => firstResponse);
+  assert.deepEqual((await readLocalInspection()).responses[0], last.data);
+  const second = await getNextPendingOperation(USER_ID);
+  assert.ok(second?.type === "SAVE_INSPECTION_RESPONSE");
+  assert.deepEqual(second.payload.expectedResponseUpdatedAt, firstResponse.updatedAt);
+  await synchronizeResponse(second, async () => secondResponse);
+  assert.deepEqual((await readLocalInspection()).responses[0], last.data);
+  const third = await getNextPendingOperation(USER_ID);
+  assert.ok(third?.type === "SAVE_INSPECTION_RESPONSE");
+  assert.deepEqual(third.payload.expectedResponseUpdatedAt, secondResponse.updatedAt);
+  await synchronizeResponse(third, async () => finalResponse);
+  assert.deepEqual((await readLocalInspection()).responses[0], finalResponse);
+  assert.equal((await readLocalPackage()).localSyncStatus, "SYNCED");
+  assert.equal(await getOfflineDatabase().operations.count(), 0);
+});
+
+test("synchronizes a locally completed inspection after its response acknowledgement", async () => {
+  const responseOperation = await queueResponse("COMPLIANT", "Resposta final");
+  const response = await createRemoteResponse();
+  assert.ok((await queueInspectionFinish(INSPECTION_ID)).success);
+  await synchronizeResponse(responseOperation, async () => response);
+  const local = await readLocalInspection();
+  assert.equal(local.status, "COMPLETED");
+  assert.equal(local.syncStatus, "PENDING");
+  assert.deepEqual(local.responses[0], response);
+  const finish = await getNextPendingOperation(USER_ID);
+  assert.ok(finish?.type === "FINISH_INSPECTION");
+  const remote = { ...local, syncStatus: "SYNCED" as const };
+
+  assert.equal(
+    await synchronizeOperation(finish, {
+      saveInspectionResponse: async () => {
+        throw new Error("Unexpected response request");
+      },
+      finishInspection: async ({ data }) => {
+        assert.equal(data?.operationId, finish.id);
+        return { success: true, data: remote };
+      },
+    }),
+    true,
+  );
+
+  assert.deepEqual(await readLocalInspection(), remote);
+  assert.equal((await readLocalPackage()).localSyncStatus, "SYNCED");
+  assert.equal(await getOfflineDatabase().operations.count(), 0);
+});
+
+test("applies the remote response while preserving pending work on a different snapshot item", async () => {
+  const inspection = createInspection();
+  assert.ok(inspection.snapshot);
+  const otherItemId = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+  inspection.snapshot.items.push({
+    ...inspection.snapshot.items[0],
+    id: otherItemId,
+    orderIndex: 2,
+  });
+  await cacheInspectionPackage(inspection);
+  await queueInspectionResponse({
+    inspectionId: INSPECTION_ID,
+    snapshotItemId: SNAPSHOT_ITEM_ID,
+    status: "COMPLIANT",
+  });
+  const first = await getNextPendingOperation(USER_ID);
+  assert.ok(first?.type === "SAVE_INSPECTION_RESPONSE");
+  const remote = await createRemoteResponse();
+  const other = await queueInspectionResponse({
+    inspectionId: INSPECTION_ID,
+    snapshotItemId: otherItemId,
+    status: "NON_COMPLIANT",
+    observation: "Outro item pendente",
+  });
+  assert.ok(other.success);
+
+  await synchronizeResponse(first, async () => remote);
+
+  const persisted = await readLocalInspection();
+  assert.deepEqual(persisted.responses[0], remote);
+  assert.deepEqual(persisted.responses[1], other.data);
+  assert.equal(persisted.syncStatus, "PENDING");
+  assert.equal((await readLocalPackage()).localSyncStatus, "PENDING");
+  assert.equal(await getOfflineDatabase().operations.count(), 1);
+  assert.equal((await getNextPendingOperation(USER_ID))?.entityKey, `response:${otherItemId}`);
+});
+
+test("ignores a duplicate old confirmation arriving after the dependent edit was synchronized", async () => {
+  const first = await queueResponse("NON_COMPLIANT", "Resposta antiga");
+  const oldResponse = await createRemoteResponse();
+  const duplicateSubmitted = deferred<void>();
+  const duplicateConfirmation = deferred<OfflineInspectionResponse>();
+  const delayedDuplicate = synchronizeResponse(first, async () => {
+    duplicateSubmitted.resolve();
+    return duplicateConfirmation.promise;
+  });
+  await duplicateSubmitted.promise;
+  await queueInspectionResponse({
+    inspectionId: INSPECTION_ID,
+    snapshotItemId: SNAPSHOT_ITEM_ID,
+    status: "COMPLIANT",
+    observation: "Resposta nova",
+  });
+  const newResponse = await createRemoteResponse(new Date("2026-10-12T12:01:00.000Z"));
+  await synchronizeResponse(first, async () => oldResponse);
+  const second = await getNextPendingOperation(USER_ID);
+  assert.ok(second?.type === "SAVE_INSPECTION_RESPONSE");
+  await synchronizeResponse(second, async () => newResponse);
+  const synchronizedPackage = await readLocalPackage();
+
+  duplicateConfirmation.resolve(oldResponse);
+  assert.equal(await delayedDuplicate, true);
+
+  assert.deepEqual(await readLocalPackage(), synchronizedPackage);
+  assert.equal(await getOfflineDatabase().operations.count(), 0);
+});
+
+for (const statusCode of [409, 401, 422, 500]) {
+  test(`keeps local edits and dependencies when the server rejects synchronization with ${statusCode}`, async () => {
+    const first = await queueResponse("COMPLIANT", "Enviada");
+    await queueInspectionResponse({
+      inspectionId: INSPECTION_ID,
+      snapshotItemId: SNAPSHOT_ITEM_ID,
+      status: "NON_COMPLIANT",
+      observation: "Edição ainda local",
+    });
+    const projection = await readLocalInspection();
+    const operations = await getOfflineDatabase().operations.toArray();
+    const dependent = operations.find((operation) => operation.dependsOnOperationId === first.id);
+    assert.ok(dependent);
+    const continued = await synchronizeOperation(first, {
+      saveInspectionResponse: async () => ({
+        success: false,
+        statusCode,
+        code: "TEST_REJECTION",
+        message: "Confirmação rejeitada",
+      }),
+      finishInspection: async () => {
+        throw new Error("Unexpected inspection completion request");
+      },
+    });
+
+    assert.equal(continued, false);
+    assert.deepEqual((await readLocalInspection()).responses, projection.responses);
+    assert.deepEqual(await getOfflineDatabase().operations.get(dependent.id), dependent);
+    const persisted = await getOfflineDatabase().operations.get(first.id);
+    assert.ok(persisted);
+    assert.equal(
+      persisted.status,
+      statusCode === 409 ? "CONFLICT" : statusCode === 500 ? "PENDING" : "ERROR",
+    );
+    assert.equal((await readLocalPackage()).localSyncStatus, persisted.status);
+    assert.equal(await getOfflineDatabase().operations.count(), 2);
+    assert.equal(await getNextPendingOperation(USER_ID), null);
+  });
+}
+
+test("retries an uncertain outcome with the same payload and preserves an edit made after submission", async () => {
+  const first = await queueResponse("NON_COMPLIANT", "Resposta aceita remotamente");
+  const accepted = await createRemoteResponse();
+  const continued = await synchronizeResponse(first, async () => {
+    await queueInspectionResponse({
+      inspectionId: INSPECTION_ID,
+      snapshotItemId: SNAPSHOT_ITEM_ID,
+      status: "COMPLIANT",
+      observation: "Edição feita enquanto a confirmação se perdeu",
+    });
+    throw new Error("Connection lost after the server accepted the operation");
+  });
+  assert.equal(continued, false);
+  const projection = await readLocalInspection();
+  const db = getOfflineDatabase();
+  const pending = await db.operations.get(first.id);
+  assert.ok(pending);
+  assert.equal(pending.status, "PENDING");
+  assert.equal(pending.lastErrorCode, "NETWORK_ERROR");
+  assert.deepEqual(pending.payload, first.payload);
+  assert.equal(await getNextPendingOperation(USER_ID), null);
+  // Advance eligibility explicitly instead of waiting for the backoff timer.
+  await db.operations.update(first.id, { nextAttemptAt: new Date(0) });
+  const retry = await getNextPendingOperation(USER_ID);
+  assert.ok(retry?.type === "SAVE_INSPECTION_RESPONSE");
+  assert.equal(retry.id, first.id);
+  assert.deepEqual(retry.payload, first.payload);
+  await synchronizeResponse(retry, async () => accepted);
+
+  assert.deepEqual((await readLocalInspection()).responses, projection.responses);
+  const dependent = await getNextPendingOperation(USER_ID);
+  assert.ok(dependent?.type === "SAVE_INSPECTION_RESPONSE");
+  assert.deepEqual(dependent.payload.expectedResponseUpdatedAt, accepted.updatedAt);
+  assert.equal(await db.operations.count(), 1);
+});
+
+test("does not acknowledge an incomplete confirmation when response decoding fails", async () => {
+  const operation = await queueResponse("NON_COMPLIANT", "Resposta local");
+  const projection = await readLocalInspection();
+
+  const continued = await synchronizeResponse(operation, async () => {
+    throw new SyntaxError("Unexpected end of synchronization response");
+  });
+
+  assert.equal(continued, false);
+  assert.deepEqual((await readLocalInspection()).responses, projection.responses);
+  const persisted = await getOfflineDatabase().operations.get(operation.id);
+  assert.ok(persisted);
+  assert.equal(persisted.status, "PENDING");
+  assert.equal(persisted.lastErrorCode, "NETWORK_ERROR");
+  assert.deepEqual(persisted.payload, operation.payload);
+  assert.equal((await readLocalPackage()).localSyncStatus, "PENDING");
+});
+
+test("rolls back acknowledgement and dependency changes when the local package commit fails", async () => {
+  const first = await queueResponse("COMPLIANT", "Resposta enviada");
+  const response = await createRemoteResponse();
+  await queueInspectionResponse({
+    inspectionId: INSPECTION_ID,
+    snapshotItemId: SNAPSHOT_ITEM_ID,
+    status: "NON_COMPLIANT",
+    observation: "Resposta local mais recente",
+  });
+  const db = getOfflineDatabase();
+  const operations = await db.operations.toArray();
+  const dependent = operations.find((operation) => operation.dependsOnOperationId === first.id);
+  assert.ok(dependent);
+  const projection = await readLocalInspection();
+  // Fail only the acknowledgement write; status/retry writes use the real table.
+  const packagePut = db.inspectionPackages.put.bind(db.inspectionPackages);
+  const put = mock.method(db.inspectionPackages, "put", packagePut);
+  const continued = await synchronizeResponse(first, async () => {
+    put.mock.mockImplementationOnce(() => {
+      throw new Error("IndexedDB package write failed");
+    });
+    return response;
+  });
+  put.mock.restore();
+
+  assert.equal(continued, false);
+  assert.deepEqual((await readLocalInspection()).responses, projection.responses);
+  assert.deepEqual(await db.operations.get(dependent.id), dependent);
+  const retried = await db.operations.get(first.id);
+  assert.ok(retried);
+  assert.equal(retried.status, "PENDING");
+  assert.equal(retried.lastErrorCode, "NETWORK_ERROR");
+  assert.deepEqual(retried.payload, first.payload);
+  assert.equal(await db.operations.count(), 2);
+});
+
+async function queueResponse(
+  status: SaveResponseOperation["payload"]["status"],
+  observation: string,
+): Promise<SaveResponseOperation> {
+  await cacheInspectionPackage(createInspection());
+  const result = await queueInspectionResponse({
+    inspectionId: INSPECTION_ID,
+    snapshotItemId: SNAPSHOT_ITEM_ID,
+    status,
+    observation,
+  });
+  assert.ok(result.success);
+  const operation = await getNextPendingOperation(USER_ID);
+  assert.ok(operation?.type === "SAVE_INSPECTION_RESPONSE");
+  return operation;
+}
+
+async function createRemoteResponse(
+  revision = new Date("2026-10-12T12:00:00.000Z"),
+): Promise<OfflineInspectionResponse> {
+  const response = (await readLocalInspection()).responses[0];
+  assert.ok(response);
+  const id = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+  const createdAt = new Date("2026-10-12T12:00:00.000Z");
+  return {
+    ...response,
+    id,
+    createdAt,
+    updatedAt: revision,
+    nonConformity: response.nonConformity
+      ? {
+          ...response.nonConformity,
+          id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+          inspectionResponseId: id,
+          createdAt,
+          updatedAt: revision,
+        }
+      : null,
+  };
+}
+
+async function readLocalInspection(): Promise<OfflineInspection> {
+  const result = await getCachedInspection(INSPECTION_ID);
+  assert.ok(result.success);
+  return result.data;
+}
+
+async function readLocalPackage(): Promise<OfflineInspectionPackage> {
+  const record = await getOfflineDatabase()
+    .inspectionPackages.where("[userId+inspectionId]")
+    .equals([USER_ID, INSPECTION_ID])
+    .first();
+  assert.ok(record);
+  return record;
+}
+
+function synchronizeResponse(
+  operation: SaveResponseOperation,
+  send: () => Promise<OfflineInspectionResponse>,
+): Promise<boolean> {
+  return synchronizeOperation(operation, {
+    saveInspectionResponse: async ({ data }) => {
+      assert.equal(data?.operationId, operation.id);
+      assert.deepEqual(
+        data?.expectedResponseUpdatedAt,
+        operation.payload.expectedResponseUpdatedAt,
+      );
+      assert.deepEqual(data?.clientCreatedAt, operation.payload.clientCreatedAt);
+      return { success: true, data: await send() };
+    },
+    finishInspection: async () => {
+      throw new Error("Unexpected inspection completion request");
+    },
+  });
+}
+
+interface Deferred<TValue> {
+  promise: Promise<TValue>;
+  resolve: (value: TValue | PromiseLike<TValue>) => void;
+}
+
+function deferred<TValue>(): Deferred<TValue> {
+  let resolve!: (value: TValue | PromiseLike<TValue>) => void;
+  const promise = new Promise<TValue>((resolvePromise) => {
+    resolve = resolvePromise;
+  });
+  return { promise, resolve };
+}
 
 function createInspection(): OfflineInspection {
   const now = new Date("2026-08-06T12:00:00.000Z");
