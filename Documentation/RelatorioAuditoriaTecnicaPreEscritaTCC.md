@@ -776,3 +776,55 @@ Pode-se começar a escrever agora com esse enquadramento. Remediação antes da 
 Este relatório é o único arquivo novo permitido. A ausência do destino foi reconferida antes da criação. git status mostrou somente Documentation/RelatorioAuditoriaTecnicaPreEscritaTCC.md como untracked; nenhum arquivo rastreado modificado e índice vazio. Foram conferidos 130 links locais (zero ausentes), dez seções numeradas, 13 tabelas, formatação Prettier e whitespace deste artefato. git diff --check e a conferência adicional --no-index --check contra /dev/null incluem, respectivamente, o estado rastreado e o relatório novo.
 
 Não houve alteração de código, dependências, lockfiles, banco, variáveis/configuração do projeto ou documentação preexistente; não houve instalação, migration, seed, commit, push, criação/modificação de PR ou alteração de branch remota. As consultas de metadados não editaram o estado remoto do projeto. A exceção à leitura é exclusivamente a criação deste relatório.
+
+## Atualização posterior — homologação PostgreSQL real de IC-P6-03
+
+**Data:** 12 de outubro de 2026 (America/Fortaleza). Esta atualização descreve
+uma tarefa posterior à auditoria histórica e à PR #5, sem retroagir seus resultados
+ou modificar a classificação dos demais achados.
+
+Baseline após fetch/consulta remota: `9514971991986de5417549c6d25f7f068d875da8`.
+Branch dedicada: `test/ic-p6-03-postgres-concurrency`, criada de `origin/main`
+após conferir ausência local/remota. Ambiente efetivo: **PostgreSQL 18.4 local
+descartável**, Node 22.23.2, Prisma/adapter-pg 7.9.1, pg 8.22.0 e Chromium
+151.0.7922.34. Seis migrations existentes aplicadas somente ao banco vazio;
+nenhum seed, banco Neon/demo/produção ou deploy foi usado.
+
+Na baseline real, **16/18 testes de PostgreSQL** e **7/9 cenários HTTP** passaram.
+O bloqueio compartilhado da PR #5 preservou revisão, idempotência da mesma
+inspeção e atomicidade da conclusão. As duas falhas de cada suíte reproduziram
+colisão deliberada do UUID global entre inspeções bloqueadas separadamente:
+o perdedor esperava no índice único, sofria rollback, mas propagava P2002 em vez
+de retornar o envelope `CONFLICT`. Não foi observada perda de resposta nem
+segunda mutação confirmada. HTTP retornava 200 com exceção serializada.
+
+A correção mínima usa `persistOfflineOperation` no helper existente para
+converter P2002 do INSERT de `OfflineSyncOperation` na exceção interna de conflito
+já tratada pelo Service. A PK do UUID é a única constraint UNIQUE dessa tabela.
+Os dois Repositories continuam encerrando a transação por rollback antes do
+retorno de domínio. Não há mudança de schema/migrations, layout, rotas,
+hashes, revisões ou regras de negócio de conclusão.
+
+Validação final: **18/18 PostgreSQL**, **10/10 HTTP/IndexedDB**, **173/173** na
+suíte principal; TypeScript principal e configuração estrita dos testes,
+lint (zero erros/seis warnings existentes), build local Vercel, Prettier dos
+arquivos alterados e `git diff --check` aprovados. PIDs e transações independentes,
+esperas reais, estado/filhos persistidos e contagem de mutações foram conferidos.
+40001/40P01 foram produzidos por controles SQL separados, não pela aplicação.
+Também foram testados ownership, duas abas com UUID idêntico de resposta e
+conclusão da fila, caches isolados em conflito e perda de confirmação HTTP
+após commit com retry sem nova mutação. Nas Functions atuais, o 409 é lógico
+no envelope transportado por HTTP 200, não um status HTTP 409.
+
+**Status sustentado pela evidência:** IC-P6-03 homologado nos cenários locais
+descritos, com remediação adicional da classificação da colisão global de UUID;
+integração da branch depende de revisão humana. Não há aprovação de garantia
+global, Neon, dispositivos físicos, múltiplos servidores ou carga ampliada.
+Não se declara suporte offline completo nem nova homologação PWA ampla.
+
+Ambiente exato, cada cenário/estado persistido, comandos reproduzíveis,
+correção, arquivos e limites estão no
+[relatório de homologação](./HomologacaoConcorrenciaPostgreSQLIC-P6-03.md).
+O SHA final e a lista Git de arquivos são registrados na descrição da PR e na
+entrega após o commit. Push somente da branch dedicada e PR para main, sem
+merge nem auto-merge nesta tarefa.

@@ -1055,6 +1055,10 @@ await listInspectionResponses({ data: { inspectionId } });
   a outra recebe `409`. Mesmo UUID/hash concorrente retorna sucesso sem repetir
   a escrita. `updatedAt` avança pelo menos um milissegundo por mutação da resposta.
   Chamadas diretas sem metadados continuam sem comparação de revisão.
+  A colisão concorrente de UUID entre inspeções distintas também produz
+  `CONFLICT`, após rollback, em vez de propagar P2002. Status 409 é lógico:
+  HTTP 200 com esse envelope foi conferido na
+  [homologação PostgreSQL/HTTP](../Documentation/HomologacaoConcorrenciaPostgreSQLIC-P6-03.md).
 - **NC automática:** nova NC usa `MEDIUM`/`OPEN`, descrição da observação aparada
   ou do item histórico e prazo atual + sete dias UTC. NC ativa conserva dados e
   status; arquivada volta a `OPEN` sem renovar prazo/descrição/severidade. Resposta
@@ -1102,6 +1106,10 @@ await saveInspectionResponse({
   vencer, uma nova gravação recebe `409`. Duas conclusões com IDs distintos
   permitem uma transição; a outra recebe `409`. Mesmo UUID/hash de conclusão
   retorna sucesso idempotente, inclusive em requisições simultâneas.
+  Colisão global do UUID entre inspeções distintas recebe `CONFLICT` após
+  rollback. Esta Function não recebe revisão da inspeção; seu status 409 é
+  lógico no envelope HTTP 200, conforme a
+  [homologação PostgreSQL/HTTP](../Documentation/HomologacaoConcorrenciaPostgreSQLIC-P6-03.md).
 - **Completude:** `NOT_APPLICABLE` conta como resposta; opcionais podem ficar sem
   resposta. Não exige observações, fotos, NCs resolvidas ou ações concluídas.
   Conclusão bloqueia novas respostas, preservando manutenção de NCs/ações/evidências.

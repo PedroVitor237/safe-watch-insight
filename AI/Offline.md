@@ -561,12 +561,17 @@ representando o horário do dispositivo.
 
 A fila cliente mantém a coordenação por instância e os conflitos continuam
 exigindo intervenção; esta correção não implementa coordenação de abas,
-reconciliação assistida ou suporte offline completo. Testes exercitam Services
-e Repositories reais sobre persistência simulada com barreiras explícitas,
-sem nova corrida contra PostgreSQL/Neon. O E2E Chromium intercepta todos os RPCs:
-verifica confirmação/conflito da conclusão na fila, sem validar o bloqueio SQL.
-Resultados e limites em
-[auditoria IC-P6-03](../Documentation/RelatorioAuditoriaTecnicaPreEscritaTCC.md#atualização-posterior--investigação-e-remediação-direcionada-de-ic-p6-03).
+reconciliação assistida ou suporte offline completo. A correção inicial foi
+verificada com persistência simulada/RPCs interceptados. A homologação posterior
+exercitou PostgreSQL 18.4 real, transações/conexões independentes e HTTP sem
+substituir resultados de RPC: duas abas sincronizaram o mesmo UUID de resposta
+e conclusão da fila IndexedDB; caches separados preservaram o conflito, e uma
+confirmação HTTP perdida após commit permitiu retry sem nova mutação. Colisão
+global de UUID entre inspeções distintas recebe o conflito existente após
+rollback, inclusive quando ocorre a disputa da PK. Status 409 é lógico no
+envelope, transportado por HTTP 200. Neon e dispositivos físicos não foram
+testados nesta execução. Resultados e limites em
+[homologação IC-P6-03](../Documentation/HomologacaoConcorrenciaPostgreSQLIC-P6-03.md).
 
 Erros transitórios recebem backoff exponencial limitado a cinco minutos e até
 cinco tentativas automáticas. Erro de autenticação/validação exige intervenção;
