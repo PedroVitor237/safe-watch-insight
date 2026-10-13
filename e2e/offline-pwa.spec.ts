@@ -247,13 +247,17 @@ test("online → offline → reopen → retry → synchronize → Neon", async (
     const cacheNames = await page.evaluate(() => caches.keys());
     evidence.staleCacheRemoved = !cacheNames.includes("safe-watch-v0-static");
     expect(evidence.staleCacheRemoved).toBe(true);
-    expect(cacheNames).toContain("safe-watch-v1-static");
-    expect(cacheNames).toContain("safe-watch-v1-navigation");
+    expect(cacheNames).toContain("safe-watch-v2-static");
+    expect(cacheNames.some((name) => /^safe-watch-.*-navigation$/.test(name))).toBe(false);
 
     const cachedUrls = Object.values((await readBrowserStorage(page)).cacheEntries).flat();
     evidence.serverResponsesExcludedFromCache = cachedUrls.every((cachedUrl) => {
       const cachedPath = new URL(cachedUrl).pathname;
-      return cachedPath !== "/login" && !cachedPath.includes("_server");
+      return (
+        cachedPath !== "/login" &&
+        !cachedPath.startsWith("/inspecoes") &&
+        !cachedPath.includes("_server")
+      );
     });
     expect(evidence.serverResponsesExcludedFromCache).toBe(true);
 

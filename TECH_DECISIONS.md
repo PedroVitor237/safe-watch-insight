@@ -464,3 +464,15 @@ escolha elimina o plano N+1 que ultrapassava a transação interativa no Neon e
 continuava enviando inserts após o rollback, causando P2003. Mantém-se o timeout
 padrão, sem retries ou alterações de schema. A errata Murbach inclui página 72
 sem recalcular hashes de publicações históricas. Ver [AI/ChecklistCopy.md](./AI/ChecklistCopy.md).
+
+## 13 de outubro de 2026 — shell público e cache privado (IC-P9-02)
+
+O worker v2 deixa de persistir documentos de navegação. `/offline-shell` usa
+SSR seletivo desativado para fornecer documento público, sem identidade ou
+conteúdo de rotas privadas. O fallback reabre a URL solicitada pelo router
+cliente e os guards/IndexedDB existentes. Runtime cache limita-se a assets
+públicos e ignora redirecionamentos/headers privados; ativação elimina caches v1.
+Middleware Start acrescenta `private, no-store` aos documentos/API; shell e
+assets públicos preservam cache próprio. Logout limpa dados privados e conserva
+shell/assets públicos. Autorização remota, oito horas locais e escopo offline
+parcial continuam vigentes. Evidências e limites no relatório de auditoria.

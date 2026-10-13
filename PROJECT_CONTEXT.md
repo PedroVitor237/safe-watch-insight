@@ -409,10 +409,11 @@ Erros usam Result com success/message/code/statusCode/errors, mas validação
 pré-handler e exceções inesperadas podem lançar fora desse envelope. statusCode
 é lógico. Não existe CRUD web universal para toda entidade Prisma.
 
-O PWA cacheia navegações/assets, sem cache de Server Functions. HTML autenticado
-pode ser armazenado; cache de navegação não tem chave por usuário/expiração de
-sessão. Limpeza ocorre nos caminhos de logout/troca de usuário/401 remoto.
-Limites e concerns: [AI/Architecture.md](./AI/Architecture.md).
+O PWA v2 cacheia somente shell público e assets permitidos. HTML autenticado e
+Server Functions não são persistidos no Cache Storage; documentos/API usam
+`private, no-store`. Reabertura offline verifica a sessão e lê pacotes IndexedDB
+do próprio usuário; logout preserva somente shell/assets públicos e remove os
+dados privados locais. Limites: [AI/Architecture.md](./AI/Architecture.md).
 
 ---
 

@@ -16,7 +16,7 @@ component "Sync manager: respostas e conclusão" as SYNC
 component "StorageService / CloudinaryStorageService" as STORAGE
 cloud "Cloudinary: binários de evidência" as CLOUD
 component "Service worker: navegação e assets" as SW
-database "Cache Storage: HTML e assets" as CACHE
+database "Cache Storage: shell público e assets" as CACHE
 UI --> CLIENT
 CLIENT --> SF
 SF --> ZOD

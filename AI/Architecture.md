@@ -40,7 +40,7 @@ flowchart TD
     SVC --> STORAGE[StorageService / CloudinaryStorageService]
     STORAGE --> CLOUD[Cloudinary: binários de evidência]
     UI --> SW[Service worker: navegação e assets]
-    SW --> CACHE[(Cache Storage: HTML e assets)]
+    SW --> CACHE[(Cache Storage: shell público e assets)]
 ```
 
 PlantUML equivalente: [application.puml](../Documentation/diagrams/architecture/application.puml).
@@ -341,26 +341,36 @@ e homologações históricas.
 ## PWA e limites do cache
 
 __root.tsx registra /sw.js (escopo /) e pede update. Manifest: standalone,
-start_url=/inspecoes, scope=/, tema/ícone próprios. Worker safe-watch-v1 tem
-static/navigation. install pré-carrega somente offline.html/manifest/ícone e
-usa skipWaiting; activate limpa versões antigas safe-watch e faz clients.claim.
+start_url=/inspecoes, scope=/, tema/ícone próprios. Worker `safe-watch-v2` possui
+somente cache estático. install pré-carrega `/offline-shell`, offline.html,
+manifest e ícone sem credenciais; activate remove caches antigos `safe-watch-`,
+inclusive HTML de navegação e assets v1, e faz clients.claim.
 
-- Navegações GET mesma origem: network-first; guarda resposta OK exceto pathname
-  /login; falha de rede usa página já cacheada ou offline.html.
-- Script/style/font/image/manifest mesma origem: cache-first; módulos Vite
-  /src/, /node_modules/, /@ são network-first com fallback.
-- POST/outra origem/GET sem destino estático ou navegação não são cacheados;
-  Server Functions não são API cacheada.
-- Nitro/Vercel define MIME do manifest; worker JavaScript/no-cache e
-  Service-Worker-Allowed=/; não existe vercel.json neste checkout.
+- Navegações GET mesma origem consultam a rede e nunca são persistidas. Falha
+  de transporte usa somente o shell público da versão atual ou offline.html.
+- `/offline-shell` é rota pública com `ssr: false`: o documento contém o root
+  público, sem executar guards/loaders/renderização privados. Na reabertura,
+  TanStack remapeia a URL atual e executa `getAppSession` no cliente antes do
+  AppShell. Sessão local válida e pacote IndexedDB do usuário permitem execução
+  offline; expiração/logout encaminham a `/login`.
+- Scripts/styles/fonts/images/manifest só são cacheados em `/assets/`, `/icons/`,
+  `/manifest.json` e caminhos de módulos Vite `/src/`, `/node_modules/`, `/@`.
+  Módulos Vite são network-first; demais assets são cache-first. Respostas
+  redirecionadas ou com `Cache-Control: private`/`no-store` não são persistidas.
+- POST, outra origem e caminhos de API/Server Functions ficam fora do cache,
+  inclusive quando solicitados como imagem. Não se usa cache global de versões
+  anteriores como fallback.
+- Middleware Start aplica `Cache-Control: private, no-store` a documentos e
+  Server Functions. O shell público usa `public, max-age=0, must-revalidate`.
+  Nitro/Vercel mantém MIME do manifest, worker/no-cache e
+  Service-Worker-Allowed=/; assets públicos conservam seus headers.
 
-**HTML autenticado pode entrar no cache de navegação.** Não é segregado por
-usuário nem expira como sessão. Guard cliente/IndexedDB e autorização remota não
-tornam cache HTML um controle de acesso. Logout, troca de usuário cacheado e
-resposta remota 401 limpam navegação nos caminhos implementados; exclusão isolada
-de sessão local vencida não limpa esse cache. Reabertura requer página previamente
-interceptada/armazenada; fallback estático não carrega dados de qualquer tela.
-Concern no [relatório](../Documentation/RelatorioFase5.md), sem nova homologação.
+HTML autenticado deixa de ser recurso offline. Pacotes e fila continuam no
+IndexedDB com sessão local válida, segregação por usuário e limpeza no logout/
+troca de identidade. A limpeza de caches legados no cliente permanece por
+compatibilidade; o shell público sobrevive ao logout. Autorização no servidor
+continua obrigatória. Evidências e limites da remediação IC-P9-02 no
+[relatório de auditoria](../Documentation/RelatorioAuditoriaTecnicaPreEscritaTCC.md).
 
 ## Seeds e utilitários
 
