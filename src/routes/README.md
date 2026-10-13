@@ -1,8 +1,10 @@
 # Rotas e fronteira frontend/backend
 
 TanStack Router usa roteamento por arquivos. `__root.tsx` é o root layout com
-Outlet, QueryClientProvider, metadados PWA e registro do worker. `/_app` é layout
-sem segmento de URL: protege telas e renderiza AppShell. routeTree.gen.ts é
+Outlet, QueryClientProvider público, metadados PWA e registro do worker. `/_app` é layout
+sem segmento de URL: protege telas e renderiza AppShell dentro de um
+AuthenticatedQueryProvider próprio, montado com chave pelo usuário da sessão.
+routeTree.gen.ts é
 gerado; não editar manualmente nem criar src/pages ou layouts de outro framework.
 
 ## Rotas atuais
@@ -49,7 +51,11 @@ na rota nem tratar filtros de usuário como identidade confiável.
 React Query gerencia loading/cache/invalidação; telas verificam Result.success
 para exibir mensagem/toast. Falha retornada pode acionar onSuccess da mutation;
 falha de validação/transporte pode lançar e entrar em onError/estado de erro.
-Root possui ErrorComponent/NotFoundComponent e ação de recarregamento. Contrato
+O cliente autenticado permanece durante navegação da mesma identidade e é
+descartado ao sair do layout ou mudar seu usuário. Limpeza cancela retryers de
+queries; callbacks de mutações pendentes conservam o cliente antigo. O cliente
+público do root não é limpo por essas transições. Root possui
+ErrorComponent/NotFoundComponent e ação de recarregamento. Contrato
 real: [AI/API.md](../../AI/API.md).
 
 ## Inspeção e funcionamento local
@@ -58,7 +64,7 @@ useInspections usa inspection-client: pacote local quando offline ou com
 alterações pendentes; consulta remota/cache quando possível. useSaveInspectionResponse
 /useFinishInspection gravam pacote e fila Dexie primeiro, inclusive online,
 com networkMode=always, e pedem sincronização. Confirmação do servidor remove
-operação e invalida consultas via eventos observados no root.
+operação e invalida consultas via eventos observados no provider autenticado.
 
 Servidor revalida sessão/contexto/revisão/hash. Conflito bloqueia fila; offline
 não cria inspeção nova, não sincroniza binários e não é CRUD de todos os módulos.
