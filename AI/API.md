@@ -182,6 +182,15 @@ Todas as Server Functions de negócio exigem sessão autenticada. Exceções:
 - `getCurrentSession`
 - `getGreeting` exemplo técnico
 
+## Política HTTP de cache — IC-P9-02
+
+O middleware de requisições Start aplica `Cache-Control: private, no-store` aos
+retornos de Server Functions (GET/POST) e aos documentos de aplicação. A única
+exceção é o shell público `/offline-shell`, com `public, max-age=0, must-revalidate`.
+Assets estáticos são tratados pelo servidor de arquivos/Nitro. O worker não
+persiste chamadas de API, mesmo com destino de imagem, nem HTML autenticado.
+Essa política não substitui a autenticação/autorização de cada operação.
+
 ## Autorização por propriedade no fluxo principal
 
 As Server Functions obtêm o ID do usuário da sessão; IDs enviados no body não

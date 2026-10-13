@@ -21,6 +21,27 @@ const csrfMiddleware = createCsrfMiddleware({
   filter: (context) => context.handlerType === "serverFn",
 });
 
+const responseCacheMiddleware = createMiddleware().server(
+  async ({ pathname, handlerType, next }) => {
+    const result = await next();
+    const headers = new Headers(result.response.headers);
+    headers.set(
+      "Cache-Control",
+      handlerType === "router" && pathname === "/offline-shell"
+        ? "public, max-age=0, must-revalidate"
+        : "private, no-store",
+    );
+    return {
+      ...result,
+      response: new Response(result.response.body, {
+        status: result.response.status,
+        statusText: result.response.statusText,
+        headers,
+      }),
+    };
+  },
+);
+
 export const startInstance = createStart(() => ({
-  requestMiddleware: [csrfMiddleware, errorMiddleware],
+  requestMiddleware: [responseCacheMiddleware, csrfMiddleware, errorMiddleware],
 }));

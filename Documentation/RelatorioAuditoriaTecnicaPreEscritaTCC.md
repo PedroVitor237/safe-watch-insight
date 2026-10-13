@@ -224,6 +224,110 @@ offline adiadas continuam como documentados em `AI/Offline.md`. A resolução
 local não significa merge, deploy ou remediação dos demais achados; o inventário
 original preserva a classificação histórica da auditoria.
 
+#### Atualização posterior — reprodução e correção de IC-P9-02
+
+Em 13 de outubro de 2026, o PR #7 foi confirmado como merged pelo GitHub, com
+merge `33e8c832ab8972cdb91faf7709a52f104bb6106b`, contendo
+`35ad10d9ffbf9722b33cde3331958e7b31f3bcfe`. Após fetch, `main` e `development`
+avançaram por fast-forward; `development` foi enviado normalmente. As quatro
+referências (`main`, `origin/main`, `development`, `origin/development`) ficaram
+no merge acima, com árvore limpa em `development`. Sem reescrita de histórico,
+descarte de trabalho ou testes de aplicação somente para sincronizar branches.
+A branch `fix/ic-p9-02-authenticated-sw-cache` foi criada diretamente de
+`origin/main`, após verificar que não existia local/remotamente.
+
+**Conclusão:** mecanismo de retenção/exposição pelo worker **confirmado em
+Chromium com HTTP e identidades sintéticas**, corrigido nesta branch. O inventário
+original preserva sua classificação histórica `POTENTIAL_RISK`. Não se infere
+incidente com dados reais nem bypass da autorização no servidor/CDN.
+
+**Reprodução antes da alteração:** o worker original `safe-watch-v1` foi servido
+sem modificações por um servidor HTTP loopback. Com cookie sintético de A,
+`/dashboard` retornou HTML contendo `PRIVATE_HTML_USER_A`; Cache Storage reteve
+esses bytes em `safe-watch-v1-navigation`. O cookie foi removido para representar
+expiração, sem executar cleanup de logout. Com rede bloqueada pelo Chromium,
+reload voltou a apresentar A. A regressão falhou tanto na inspeção dos bytes
+persistidos quanto na ausência de A após reload. Não dependia de React Query.
+
+Um GET normal `/_serverFn/private` não foi cacheado. Porém, requisitar
+`/_serverFn/private-image` com `new Image()` fez o worker gravar a resposta JSON
+privada em `safe-watch-v1-static`: a regra aceitava qualquer caminho de mesma
+origem pelo destino `image`. O teste falhou ao encontrar essa resposta no cache.
+Essas URLs são fixtures HTTP, não novos endpoints de negócio. A retenção de HTML
+e o desvio por destino foram reproduzidos com o worker real; login/cookie SSR
+com PostgreSQL e conteúdo privado de produção não foram executados.
+
+**Causa:** navegação network-first armazenava qualquer resposta OK, salvo
+pathname `/login`, sem identidade/validade. Expiração local excluía somente a
+sessão, permitindo retorno do HTML antigo antes de qualquer guard cliente.
+Cleanup de logout/troca/401 existia, mas não era condição de uso do fallback.
+A regra de assets usava somente destino/origem e não distinguia uma API privada.
+
+**Correção:**
+
+- Worker `safe-watch-v2` nunca grava respostas de navegação; falhas de rede usam
+  apenas `/offline-shell` público ou `/offline.html` do cache da versão atual.
+- A nova rota pública usa `ssr: false`, sem guards/loaders/conteúdo privados.
+  O root é independente da identidade. Ao reabrir outra URL, o router cliente
+  executa os guards existentes, validando sessão antes do AppShell e lendo
+  somente pacotes IndexedDB do próprio usuário. Nenhuma rota aprovada mudou.
+- A instalação obtém shell/manifest/ícone/fallback sem credenciais. Ativação v2
+  remove todos os caches `safe-watch-` anteriores, inclusive static/navigation v1.
+- Runtime cache aceita somente assets públicos em `/assets/`, `/icons/`,
+  `/manifest.json` e módulos Vite `/src/`, `/node_modules/`, `/@`. Ignora respostas
+  redirecionadas, `private` e `no-store`; APIs não são cacheadas mesmo como imagem.
+- Middleware Start aplica `Cache-Control: private, no-store` a documentos/API,
+  inclusive rejeições CSRF. O shell público usa `public, max-age=0, must-revalidate`.
+  Isso complementa o worker, preservando autenticação/autorização no servidor.
+
+**Validação executada com Node 22.23.2:**
+
+| Comando / verificação                                                                                 | Resultado e alcance                                                                                                                                                                                                                                                              |
+| ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Playwright, regressões antes da correção                                                              | HTML privado persistido e reapresentado após remoção de cookie/reload offline; API com destino imagem persistida. Falhas esperadas documentadas acima                                                                                                                            |
+| `npm run test:e2e:sw-cache`                                                                           | **8/8 passaram**, Chromium: expiração sem cleanup, GET/API como imagem, migração de caches, assets públicos/headers/redirects, reabertura de inspeção, resposta e conclusão duráveis, fechamento de aba/reabertura, expiração local, logout, A/B e headers HTTP reais sem sessão |
+| `playwright test e2e/session-query-cache.spec.ts e2e/offline-sync-errors.spec.ts --project=chromium`  | **18/18 passaram**: guards/cache autenticado, callbacks tardios e protocolo offline existente                                                                                                                                                                                    |
+| Playwright adicional: teste HTTP/no-store/CSRF                                                        | **1/1 passou** após acrescentar a conferência explícita de rejeição CSRF 403 com no-store                                                                                                                                                                                        |
+| `npm test`                                                                                            | **173/173 passaram**, zero falhas/skips                                                                                                                                                                                                                                          |
+| `tsc --noEmit`                                                                                        | Exit 0, configuração oficial                                                                                                                                                                                                                                                     |
+| TypeScript estrito dos dois novos E2Es, configuração temporária em `/tmp` estendendo tsconfig oficial | Exit 0                                                                                                                                                                                                                                                                           |
+| `npm run lint`                                                                                        | Exit 0: zero erros, seis avisos preexistentes `react-refresh/only-export-components` nos componentes UI                                                                                                                                                                          |
+| Prettier dos arquivos alterados (exceto routeTree gerado) e `git diff --check`                        | Aprovados; árvore de rotas produzida pelo gerador TanStack                                                                                                                                                                                                                       |
+| `prisma validate`                                                                                     | Schema válido; nenhuma migration/alteração estrutural                                                                                                                                                                                                                            |
+| `npm run build`                                                                                       | Exit 0: artefato Vercel gerado; worker v2, manifest/fallback/ícone, assets e rota shell incluídos. Headers Nitro de assets/manifest/SW/fallback preservados                                                                                                                      |
+
+A suíte unitária tentou inicialmente abrir IPC do tsx dentro do sandbox e recebeu
+`EPERM`; foi repetida com permissão de execução e passou. Houve falhas transitórias
+na preparação dos novos E2Es (assets anteriores ao controle do worker, RPCs
+sintéticos que ignoravam desconexão/logout e requisição API sem Origin para CSRF).
+Os fixtures foram ajustados para aquecer assets sob controle, respeitar rede/
+revogação e exercitar HTTP same-origin. O middleware foi colocado antes do CSRF
+para acrescentar no-store também às rejeições. A execução final de oito testes
+passou integralmente. Build manteve avisos existentes de `inputValidator`
+obsoleto, diretivas `use client` ignoradas e chunk circular `pg-pool`/`pg`;
+Playwright informou conflito de `NO_COLOR`/`FORCE_COLOR` e logs Vite de HMR/CSS
+sem rede, sem impedir os cenários funcionais comprovados.
+
+**Preservado:** manifest/instalação, cache público, escopo/registro/update do SW,
+sessão offline com oito horas, segregação e limpeza de pacotes/fila,
+snapshot histórico, respostas/conclusão locais, UUID/retry/idempotência e
+limites das funcionalidades offline. O E2E histórico `offline-pwa.spec.ts` teve
+as expectativas de cache atualizadas, mas **não foi executado contra Neon**.
+O veredito **APPROVED WITH KNOWN LIMITATIONS** permanece vigente.
+
+**Limites:** a SPA/guards/hooks/IndexedDB/worker são reais, mas dados e RPCs dos
+novos fluxos autenticados são sintéticos. Headers sem sessão foram obtidos do
+servidor real. Não se testou SSR com login/cookie reais, PostgreSQL/Neon,
+Cloudinary, Vercel publicado, outros navegadores/dispositivos, reinício do processo
+inteiro do browser ou revogação coordenada entre abas. Assets de uma tela precisam
+estar disponíveis no cache para reabrir offline; não há pré-carga universal de
+rotas. Guard/sessão local não revogam instantaneamente uma identidade remota
+quando sem rede. Pacotes continuam acessíveis a quem controlar o perfil/sistema
+operacional, e expiração não descarta a fila privada pendente. Criação integral
+offline, evidências binárias, Background Sync, reconciliação assistida e políticas
+administrativas continuam futuras. Nenhum merge, auto-merge ou deploy integra
+esta correção; o PR é destinado à revisão humana.
+
 ### 3.4. Offline, idempotência, concorrência e projeção
 
 O incremento persiste snapshots/pacotes de inspeções existentes, respostas/observações, projeção de NC e conclusão local. Não cria integralmente inspeção offline, não sincroniza ações/NCs como CRUD separado e não inclui binários de evidências. Operações têm UUID, sequência FIFO, dependências e revisão esperada; recuperar SYNCING mantém a identidade. O servidor calcula hash e grava mutação/OfflineSyncOperation na mesma transação; retry sequencial igual é deduplicado e identidade/hash divergentes geram conflito.

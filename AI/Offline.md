@@ -345,19 +345,26 @@ inteiramente offline a partir de uma versão publicada pré-carregada.
 
 # Cache
 
-O PWA deverá manter em cache:
+O worker `safe-watch-v2` mantém somente o shell público `/offline-shell`,
+fallback estático, manifest, ícones e assets públicos da aplicação. O shell é
+renderizado sem rotas privadas (`ssr: false`) e obtido sem credenciais. HTML de
+navegação e respostas de Server Functions não são persistidos no Cache Storage.
+Assets são limitados aos caminhos públicos descritos em
+[Architecture.md](./Architecture.md#pwa-e-limites-do-cache); respostas privadas,
+`no-store` ou redirecionadas não são adicionadas ao cache de runtime.
 
-- HTML
-- CSS
-- JavaScript
-- Ícones
-- Fontes
-- Manifest
-- Recursos estáticos
+Ao falhar a rede, a navegação recebe o shell público no endereço solicitado.
+O router cliente verifica a sessão local antes de renderizar o AppShell. Uma
+inspeção já disponibilizada e seus assets carregados sob controle do worker
+podem reabrir offline; a execução lê apenas o pacote IndexedDB desse usuário.
+Logout/expiração encaminham ao login sem reutilizar HTML da identidade anterior.
+O shell público permanece após logout; caches antigos `safe-watch-`, inclusive
+`safe-watch-v1-navigation` e `safe-watch-v1-static`, são removidos na ativação v2.
 
-Objetivo:
-
-permitir abertura da aplicação mesmo sem internet.
+O middleware Start acrescenta `private, no-store` aos documentos de aplicação e
+Server Functions. Isso complementa a política do worker, sem substituir sessão
+ou autorização remota. Os pacotes/fila IndexedDB e a validade local de oito
+horas permanecem como implementados; não há revogação remota instantânea offline.
 
 ---
 
@@ -646,27 +653,17 @@ abas/dispositivos ou no PostgreSQL. Evidências, comandos e limites:
 # Estratégia PWA Implementada
 
 O manifest usa modo `standalone`, `start_url=/inspecoes`, tema e ícone próprios.
-O service worker possui cache versionado:
+O worker v2 usa cache versionado somente para shell público e assets permitidos,
+sem persistência de HTML de navegação ou respostas de API. Política atual,
+pré-carga, guards e migração de caches: [Cache](#cache).
 
-- navegação: network-first e fallback apenas para rota já armazenada ou página
-  offline estática;
-- ativos versionados de produção, fontes, imagens e manifest da mesma origem:
-  cache-first;
-- módulos de desenvolvimento do Vite: network-first com fallback em cache;
-- Server Functions (`POST` e requisições sem destino estático) não são cacheadas;
-- `/login` não é gravado no cache de navegação;
-- caches de versões antigas são removidos no `activate`.
-
-O preset Nitro/Vercel envia `application/manifest+json` para o manifest, além de
-`no-cache` e escopo `/` para o service worker. Assim, o navegador não depende de
-um MIME genérico e verifica atualizações do worker a cada navegação.
-
-Como TanStack Start usa SSR, a rota precisa ter sido interceptada pelo service
-worker antes de poder ser reaberta offline. A reabertura autenticada foi
-comprovada no Chromium usado pelo Playwright contra
-o servidor local. No domínio HTTPS da Vercel, a homologação final abaixo
-confirmou assets/registro/fallback, sem repetir o fluxo autenticado completo;
-Chrome/Edge/Android adicionais permanecem pendentes.
+O preset Nitro/Vercel preserva MIME do manifest e `no-cache`/escopo `/` do worker.
+A reabertura exige assets disponíveis sob controle do worker e pacote IndexedDB
+já disponibilizado para o usuário com sessão local válida. Na remediação
+IC-P9-02, reabertura/expiração/logout/troca de identidade foram exercitados em
+Chromium local com RPCs sintéticos. A homologação histórica HTTPS abaixo não
+reexecuta essa implementação v2; produção e outros navegadores permanecem
+pendentes.
 
 ## Delimitação arquitetural do cache — Fase 5
 
@@ -682,6 +679,11 @@ não significam ausência de HTML privado no dispositivo. Assets/cache de HTML n
 são uma API offline cacheada de Server Functions. Concern e Final QA:
 [RelatorioFase5.md](../Documentation/RelatorioFase5.md). Diagrama atual:
 [Architecture.md](./Architecture.md).
+
+Esta seção preserva o diagnóstico histórico da Fase 5. A remediação IC-P9-02
+substitui essa política pelo shell público v2 descrito acima; resultados e
+limitações atuais constam do
+[relatório de auditoria](../Documentation/RelatorioAuditoriaTecnicaPreEscritaTCC.md).
 
 # Evidência Browser/E2E — execução original em 7 de agosto de 2026
 
@@ -757,7 +759,8 @@ escopo.
 - nenhum password, segredo Cloudinary ou conteúdo do cookie HTTP-only é copiado;
 - a sessão local guarda usuário seguro e expira após oito horas;
 - pacotes são indexados por usuário;
-- logout limpa sessão, pacotes e fila do IndexedDB e o cache privado de navegação;
+- logout limpa sessão, pacotes e fila do IndexedDB e caches legados de navegação;
+  o shell público e os assets v2 permanecem disponíveis;
 - a troca de identidade autenticada elimina dados pertencentes ao usuário anterior antes de gravar a nova sessão local;
 - respostas do backend e conflitos continuam sendo validados no servidor;
 - dados locais continuam acessíveis a quem controlar o perfil do navegador ou o
@@ -849,7 +852,7 @@ Fluxo implementado; setas não representam cardinalidades físicas nem garantias
   global de concorrência entre dispositivos/abas. Riscos estáticos de leitura
   de revisão e confirmação local constam de
   [RelatorioFase6.md](../Documentation/RelatorioFase6.md).
-- Logout limpa sessão/pacotes/fila IndexedDB e navegação; troca de identidade
+- Logout limpa sessão/pacotes/fila IndexedDB e navegação legada; troca de identidade
   cacheada limpa dados anteriores. Sessão local segura expira em oito horas e
   não estende cookie remoto. Sem criptografia local/quota/retention avançada.
 

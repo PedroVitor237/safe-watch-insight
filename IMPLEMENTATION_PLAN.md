@@ -344,8 +344,8 @@ Implementar:
 - deduplicação persistida no servidor com hash de payload;
 - conflito otimista por revisão da resposta, sem `Last Write Wins`;
 - detecção de conectividade, sincronização automática e indicadores reais;
-- manifest, service worker e cache de navegação/ativos, com os limites de retenção
-  de HTML autenticado descritos em [AI/Architecture.md](./AI/Architecture.md#pwa-e-limites-do-cache).
+- manifest, service worker e cache de shell público/ativos, com a política de
+  exclusão de HTML autenticado descrita em [AI/Architecture.md](./AI/Architecture.md#pwa-e-limites-do-cache).
 
 Validado neste incremento:
 

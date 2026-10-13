@@ -14,6 +14,7 @@
     "lint": "eslint .",
     "test": "tsx --test src/server/repositories/inspection-concurrency.test.ts src/server/services/authorization.service.test.ts src/server/services/user.service.test.ts src/offline/inspection-store.test.ts src/server/repositories/evidence.repository.test.ts src/server/schemas/evidence.schema.test.ts src/server/schemas/sprint.schemas.test.ts src/server/services/checklist-version.service.test.ts src/server/services/corrective-action.service.test.ts src/server/services/dashboard.service.test.ts src/server/services/evidence.service.test.ts src/server/services/inspection-response.service.test.ts src/server/services/inspection.service.test.ts src/server/services/report.service.test.ts src/server/storage/cloudinary-storage.service.test.ts src/server/utils/offline-operation-hash.test.ts src/server/services/official-checklist.service.test.ts src/server/services/checklist-copy.service.test.ts",
     "test:e2e:offline": "playwright test e2e/offline-pwa.spec.ts --project=chromium",
+    "test:e2e:sw-cache": "playwright test e2e/authenticated-sw-cache.spec.ts e2e/offline-shell.spec.ts --project=chromium",
     "test:e2e:session-cache": "playwright test e2e/session-query-cache.spec.ts --project=chromium",
     "test:integration:concurrency": "tsx scripts/test-postgres-concurrency.ts",
     "test:e2e:evidence": "playwright test e2e/evidence-owner.spec.ts --project=chromium",
