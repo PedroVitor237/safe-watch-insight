@@ -105,6 +105,16 @@ rejeitar entrada antes do handler.
 - **Proteção de rota:** `/_app.beforeLoad` chama `getAppSession`, redirecionando
   falhas para /login antes do AppShell. Guard é separado da autenticação de
   cada Server Function protegida.
+- **Cache autenticado (IC-P6-02):** o guard devolve o ID da sessão para montar
+  `AuthenticatedQueryProvider` com essa identidade como chave React. Cada
+  montagem do layout protegido possui seu próprio QueryClient; sair do layout
+  ou mudar a identidade descarta queries/mutações e cancela os retryers de
+  queries. Callbacks tardios conservam o cliente antigo, sem acessar o próximo.
+  Navegação entre telas da mesma identidade conserva esse cliente; o cliente
+  do router/root continua atendendo as páginas públicas. O evento de inspeção
+  sincronizada invalida as queries no provider autenticado. React Query não é
+  persistido em IndexedDB. Evidências e limites na
+  [remediação IC-P6-02](../Documentation/RelatorioAuditoriaTecnicaPreEscritaTCC.md#atualização-posterior--remediação-direcionada-de-ic-p6-02).
 - **Sessão:** logout limpa cookie e retorna sucesso sem persistência de domínio;
   getCurrentSession usa helper de sessão/UserService, sem CRUD de sessões.
 - **Inspeção:** hooks de resposta/conclusão gravam localmente primeiro, inclusive
@@ -404,5 +414,7 @@ Atrasos de relatório também são derivados sem escrita, enquanto consultas de 
 e ações podem persistir OVERDUE. Snapshot de checklist não congela cadastro de
 empresa/inspetor nem andamento de tratativas. Autorização remota por sessão é
 separada da retenção local em React Query/IndexedDB/Cache Storage. Concorrência
-entre abas/dispositivos e cache de queries após troca de conta exigem Final QA:
-[RelatorioFase6.md](../Documentation/RelatorioFase6.md). Sem alteração de código.
+entre abas/dispositivos exigem Final QA:
+[RelatorioFase6.md](../Documentation/RelatorioFase6.md). A remediação posterior
+IC-P6-02 validou isolamento de queries na SPA Chromium com RPCs sintéticos;
+não substitui homologação de sessão real, outros navegadores ou Service Worker.

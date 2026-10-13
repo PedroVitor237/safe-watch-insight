@@ -140,6 +140,90 @@ O worker é outro mecanismo: cache local de navegação network-first, sem parti
 
 A conta é reconsultada no servidor, e conta excluída pode retornar NOT_FOUND após limpeza de cookie, conforme [session.ts](../src/server/auth/session.ts), 63–75. O cliente trata especificamente 401 para parte da limpeza. O guard e a sessão local de oito horas não equivalem a revogação confirmada quando o logout remoto falha.
 
+#### Atualização posterior — remediação direcionada de IC-P6-02
+
+Em 13 de outubro de 2026, após `git fetch origin`, `origin/main` e a branch
+inicial `development` apontavam para `9059a8ede7c06ddefacb35bfab209997de6f55ef`.
+A árvore estava limpa. A branch `fix/ic-p6-02-user-cache-isolation` foi criada
+diretamente de `origin/main`, mantendo um único ramo para investigação/correção.
+
+**Conclusão: CONFIRMED; corrigido e validado localmente no cache cliente.**
+No Chromium, com duas identidades sintéticas e empresas exclusivas distintas,
+A abriu o dashboard, saiu, e B entrou pela SPA sem refresh. Com a consulta de B
+retida por uma barreira determinística, a empresa privada de A permaneceu
+visível por toda a janela de asserção de 15 segundos. O mesmo vazamento ocorreu
+após 401 remoto e novo login. Uma consulta iniciada por A ainda pendente também
+impediu o dashboard de B de consultar/exibir seus próprios dados, reutilizando
+o retryer anterior. Os três testes de regressão falharam na baseline pelos
+resultados descritos (1/1 no cenário A→B; 0/2 nos cenários pendência/expiração).
+Falhas iniciais na preparação do harness (hidratação do formulário e seletor
+de texto) foram corrigidas antes dessas reproduções e não são evidência do
+defeito. Nenhuma falha de ownership/autorização do servidor foi demonstrada.
+
+**Causa:** QueryClient único do router/root durava por toda a SPA; os hooks
+autenticados, inclusive `auth/session`, dashboard e listas, reutilizavam chaves
+sem identidade. Logout/login limpavam dados offline e cookie, mas não mudavam
+esse cache em memória. Não existe persistência do cache React Query; Dexie
+persiste pacotes de domínio separadamente. Invalidação/refetch não remove o
+resultado anterior enquanto a nova consulta demora ou falha. As mutações atuais
+invalidam queries e podem continuar seus callbacks depois de sair da tela.
+
+**Correção:** o guard `/_app.beforeLoad` retorna o ID da sessão validada;
+`AuthenticatedQueryProvider`, com chave React nesse ID, possui um QueryClient
+por montagem do layout protegido. Logout/redirect para login desmonta o layout;
+nova sessão, mesmo do mesmo usuário, recebe outro cliente. Identidade diferente
+detectada pelo guard remonta o provider. O cleanup usa `QueryClient.clear()`,
+removendo caches de queries/mutações e cancelando retryers, inclusive se a função
+de transporte não usa AbortSignal. Mutações em execução não são abortadas: seus
+callbacks mantêm referência ao cliente descartado, sem poder preencher o novo.
+O cache público do root permanece independente; navegação da mesma identidade
+conserva o cliente autenticado. O listener de sincronização foi deslocado do
+root para esse provider para continuar invalidando as quatro famílias previstas.
+Não houve alteração em layout visual, URLs, Services, Repositories, banco ou SW.
+
+**Validação executada**, Node 22.23.2, sem dependências novas no projeto:
+
+- `npm run test:e2e:session-cache`: **5/5**, Chromium: A→logout→B com consulta
+  atrasada, dados próprios de B, B→logout→A com erro e recuperação manual;
+  consulta pendente de A com B recebendo dados próprios antes da liberação;
+  identidade mudada pelo guard sem logout; 401 remoto e expiração local offline
+  seguidos de novo login; harness com inspeção direta dos caches. Um marcador
+  no documento confirmou ausência de refresh no cenário principal.
+- O harness confirmou cliente antigo limpo, novo cache vazio, cancelamento de
+  query que ignora AbortSignal, callback tardio de mutation incapaz de preencher
+  o cache de B, cliente estável em navegação, novo cliente em troca direta e em
+  novo login do mesmo usuário, cache público preservado e as quatro invalidações
+  do evento `safe-watch-offline-synchronized` preservadas.
+- `e2e/offline-sync-errors.spec.ts`: **13/13** na execução conjunta com as três
+  primeiras regressões. O quarto teste de cache falhou inicialmente por falta
+  do preâmbulo React no HTML estático do harness; passou após usar a entrada
+  hidratada da aplicação. A execução final das cinco regressões passou **5/5**.
+- `npm test`: **173/173**, zero falhas/skips. A primeira tentativa na sandbox
+  foi impedida pelo socket IPC do tsx (EPERM); a execução autorizada passou.
+- `tsc --noEmit`: aprovado. Verificação adicional com configuração temporária
+  incluindo os dois arquivos novos de E2E: aprovada.
+- `npm run lint`: zero erros; os mesmos **seis avisos preexistentes** de Fast
+  Refresh em componentes UI. Um aviso do primeiro formato do harness foi
+  eliminado ao usar arquivo `.ts`/`createElement`.
+- `npm run build`: aprovado, artefato Vercel gerado; avisos de depreciação de
+  `inputValidator`, diretivas `use client` ignoradas e tamanho de chunk.
+- `git diff --check`: aprovado; alterações geradas em `routeTree.gen.ts` e
+  artefatos de build não integram a correção.
+
+**Limites:** as Server Functions foram interceptadas com resultados sintéticos
+no navegador; o servidor local usou URL de banco loopback inacessível. Nenhum
+dado real/produção foi lido ou gravado. Portanto, isso valida a SPA, os guards,
+hooks, IndexedDB e React Query, sem homologar login/cookie reais, servidor Neon,
+produção ou outros navegadores. Expiração/troca são aplicadas quando detectadas
+pelos guards/consulta de sessão existentes; não se adicionou timer de revogação
+ou coordenação entre abas. Não se cancelam efeitos remotos de mutações já
+iniciadas nem se certificam side effects externos ao React Query. O SW foi
+bloqueado nos novos testes para isolar o IC-P6-02: **IC-P9-02 permanece pendente**.
+O veredito offline `APPROVED WITH KNOWN LIMITATIONS` e as funcionalidades
+offline adiadas continuam como documentados em `AI/Offline.md`. A resolução
+local não significa merge, deploy ou remediação dos demais achados; o inventário
+original preserva a classificação histórica da auditoria.
+
 ### 3.4. Offline, idempotência, concorrência e projeção
 
 O incremento persiste snapshots/pacotes de inspeções existentes, respostas/observações, projeção de NC e conclusão local. Não cria integralmente inspeção offline, não sincroniza ações/NCs como CRUD separado e não inclui binários de evidências. Operações têm UUID, sequência FIFO, dependências e revisão esperada; recuperar SYNCING mantém a identidade. O servidor calcula hash e grava mutação/OfflineSyncOperation na mesma transação; retry sequencial igual é deduplicado e identidade/hash divergentes geram conflito.

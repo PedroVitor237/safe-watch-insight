@@ -14,9 +14,6 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { registerSafeWatchServiceWorker } from "@/offline/register-service-worker";
-import { inspectionQueryKeys } from "@/lib/api/inspection.query-keys";
-import { inspectionResponseQueryKeys } from "@/lib/api/inspection-response.query-keys";
-import { nonConformityQueryKeys } from "@/lib/api/non-conformity.query-keys";
 
 function NotFoundComponent() {
   return (
@@ -149,24 +146,6 @@ function RootComponent() {
   useEffect(() => {
     void registerSafeWatchServiceWorker();
   }, []);
-
-  useEffect(() => {
-    const refreshSynchronizedInspection = (event: Event) => {
-      const inspectionId = (event as CustomEvent<{ inspectionId: string }>).detail.inspectionId;
-      void Promise.all([
-        queryClient.invalidateQueries({ queryKey: inspectionQueryKeys.detail(inspectionId) }),
-        queryClient.invalidateQueries({
-          queryKey: inspectionResponseQueryKeys.list(inspectionId),
-        }),
-        queryClient.invalidateQueries({ queryKey: inspectionQueryKeys.lists() }),
-        queryClient.invalidateQueries({ queryKey: nonConformityQueryKeys.lists() }),
-      ]);
-    };
-
-    window.addEventListener("safe-watch-offline-synchronized", refreshSynchronizedInspection);
-    return () =>
-      window.removeEventListener("safe-watch-offline-synchronized", refreshSynchronizedInspection);
-  }, [queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>
