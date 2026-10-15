@@ -7,7 +7,7 @@ está em andamento e os marcos abaixo não formam um calendário completo do
 projeto. Os identificadores de marco permitem relacionar novas evidências sem
 mudar a origem dos registros.
 
-Em CHAT-001 e CHAT-002, as datas dos acontecimentos e das mensagens são
+Em CHAT-001, CHAT-002 e CHAT-003, as datas dos acontecimentos e das mensagens são
 desconhecidas. A numeração de marcos reproduz a sequência narrativa de cada
 relatório; não demonstra duração, intervalo ou data de execução. A ordem de
 recebimento dos chats não estabelece sua ordem histórica.
@@ -58,12 +58,35 @@ CHAT-002-M04 ajuda a interpretar a proposta de Next.js de CHAT-001-M07 e a
 documentação técnica de TanStack, mas não permite datar a transição ou declarar
 que os chats representam etapas consecutivas de uma migração.
 
+## Marcos sem data comprovada — CHAT-003
+
+Fonte: [Prompts TCC ADS](./fontes/chats/ads-tcc-prompts/chat-003-prompts-tcc-ads.md).
+Ordem narrativa da seção 3 do relatório, sem equiparar organização do contexto
+a alterações executadas no software ou na monografia.
+
+| Marco | Data do acontecimento | Acontecimento segundo o relatório | Fonte / seção | Natureza e limite |
+| --- | --- | --- | --- | --- |
+| CHAT-003-M01 | Não comprovada | Apresentação de um vídeo de interface para descrição. | CHAT-003, §§ 3 e 5.3 | O relator deriva 13/04/2026 do nome do arquivo; essa informação não comprova quando o vídeo foi gravado ou apresentado. |
+| CHAT-003-M02 | Não identificada; após M01 na narrativa | Produção de descrição textual do vídeo para reutilização. | CHAT-003, §§ 3 e 5.3 | Artefato textual relatado; precisão visual e finalidade das interações não verificadas independentemente. |
+| CHAT-003-M03 | Não identificada; após M02 na narrativa | Apresentação de seis espaços de trabalho com responsabilidades distintas. | CHAT-003, §§ 2.2, 3 e 4.1 | Organização declarada; não prova uso efetivo, existência ou completude de todos os espaços. |
+| CHAT-003-M04 | Não identificada; após M03 na narrativa | Esclarecimento do foco em inspeções e fiscalizações com checklists e histórico. | CHAT-003, §§ 3 e 4.2 | Refinamento de escopo atribuído ao usuário; atualização simultânea de documentos oficiais não comprovada. |
+| CHAT-003-M05 | Não identificada; após M04 na narrativa | Incorporação de responsividade, persistência local e sincronização ao contexto. | CHAT-003, §§ 3 e 4.3 | Requisitos declarados; sem especificação ou teste de uma estratégia técnica nesta conversa. |
+| CHAT-003-M06 | Não identificada; após M05 na narrativa | Sugestão de seção própria para premissas do projeto. | CHAT-003, §§ 3 e 4.4 | Proposta do assistente; aceitação não presumida apenas pela sugestão. |
+| CHAT-003-M07 | Não identificada; após M06 na narrativa | Apresentação pelo usuário de versão ampliada do prompt com premissas e requisitos. | CHAT-003, §§ 3, 4.4 e 5.1 | Inclusão no texto é relatada; distribuição e aplicação em outros chats não comprovadas. |
+| CHAT-003-M08 | Não identificada; após M07 na narrativa | Confirmação de entendimento pelo assistente e de sua finalidade de refinar prompts. | CHAT-003, §§ 3 e 9.3 | Alinhamento textual; não comprova execução em ferramentas externas. |
+
+As referências a **13/04/2026** (nome de arquivo) e **14/10/2026** (contexto de
+sessão) são registradas com seus limites e não datam os marcos desta coleta.
+O alias `VIDEO-001.mp4` relaciona referências textuais em CHAT-001 e CHAT-003;
+os arquivos binários não foram comparados. Ver TCC-P016.
+
 ## Registro da coleta
 
 | Data | Registro | Evidência | Precisão e limite |
 | --- | --- | --- | --- |
 | 15/10/2026 | Recebimento de CHAT-001, identificado pelo responsável pela coleta como project ADS_TCC - Dúvidas Técnicas / chat Estrutura do TCC ADS. | Anexo Pasted text(1).txt e identificação fornecidos nesta coleta; integridade da cópia anonimizada no índice. | Data de recebimento, referência America/Fortaleza; não é data dos marcos acima. |
 | 15/10/2026 | Recebimento de CHAT-002, identificado como project ADS_TCC - Dúvidas Técnicas / chat Lovable para FrontEnd TCC. | Anexo Pasted text(2).txt e identificação fornecidos nesta coleta; integridade da cópia anonimizada no índice. | Data de recebimento, referência America/Fortaleza; não substitui a referência contextual não confirmada de 14/10/2026. |
+| 15/10/2026 | Recebimento de CHAT-003, identificado como project ADS_TCC - Prompts / chat Prompts TCC ADS. | Anexo Pasted text(3).txt e identificação fornecidos nesta coleta; integridade da cópia anonimizada no índice. | Data de recebimento, referência America/Fortaleza; não data a organização dos espaços nem os prompts relatados. |
 
 As datas presentes nos documentos técnicos do repositório, relacionadas no
 [índice](./INDICE_FONTES.md), permanecem separadas dos marcos sem data deste

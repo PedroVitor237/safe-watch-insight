@@ -6,6 +6,7 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | CHAT-001 | Relatório retrospectivo de chat | ADS_TCC - Dúvidas Técnicas | Estrutura do TCC ADS | 15/10/2026 | Datas não identificadas; sequência narrativa disponível | Cópia anonimizada e indexada; afirmações históricas aguardam conciliação |
 | CHAT-002 | Relatório retrospectivo de chat | ADS_TCC - Dúvidas Técnicas | Lovable para FrontEnd TCC | 15/10/2026 | Datas dos acontecimentos não identificadas; referência contextual a 14/10/2026 sem confirmação das datas das mensagens | Cópia anonimizada e indexada; prompts e resultados de execução diferenciados |
+| CHAT-003 | Relatório retrospectivo de chat | ADS_TCC - Prompts | Prompts TCC ADS | 15/10/2026 | Contexto de 2026; datas dos acontecimentos não identificadas; datas de nome de arquivo e contexto de sessão não adotadas como datas dos fatos | Cópia anonimizada e indexada; organização descrita sem inferir adoção em todos os espaços |
 
 ## CHAT-001 — Estrutura do TCC ADS
 
@@ -86,6 +87,41 @@ condições do plano gratuito do Lovable não foram verificadas nesta coleta.
 Ver [marcos CHAT-002-M01 a CHAT-002-M09](./LINHA_DO_TEMPO.md) e
 [pendências TCC-P011 a TCC-P014](./PENDENCIAS.md), além das atualizações de
 TCC-P004, TCC-P008 e TCC-P009.
+
+## CHAT-003 — Prompts TCC ADS
+
+- **Arquivo:** [chat-003-prompts-tcc-ads.md](./fontes/chats/ads-tcc-prompts/chat-003-prompts-tcc-ads.md).
+- **Arquivo recebido:** `Pasted text(3).txt`.
+- **Origem informada na coleta:** project **ADS_TCC - Prompts**, chat **Prompts TCC ADS**. O relator usa o nome do project como nome do chat; o índice segue a identificação direta fornecida nesta coleta, sem reescrever essa identificação no corpo.
+- **Data do recebimento:** 15/10/2026, referência America/Fortaleza; não é data das discussões nem da produção do prompt.
+- **Integridade da cópia publicada:** 26.369 bytes; SHA-256 `582046bc2b3e263a4ab4270f5bd77e279b6b02b42b8626514e384853647b7945`.
+- **Tratamento:** três ocorrências de nomes pessoais substituídas por papéis; três referências ao nome ou caminho original de vídeo substituídas pelo alias `VIDEO-001.mp4`; aviso de anonimização acrescentado. Demais partes preservadas sem alteração. Original fornecido mantido fora do repositório público.
+- **Natureza:** relato retrospectivo organizacional e de definição de contexto; não inclui evidências de implementação, testes ou execução por Codex.
+
+### Conteúdo e contribuição
+
+Descreve a divisão do trabalho em seis espaços: documentos acadêmicos,
+documentação da plataforma, dúvidas técnicas, desenvolvimento, pesquisa e
+prompts. Registra o refinamento de um prompt orquestrador, a mudança de foco de
+cartilha para inspeções e a incorporação de responsividade, uso em campo,
+offline e sincronização. Também relata a produção de uma descrição textual de
+vídeo para reutilização, sem confirmação independente de sua precisão visual.
+
+O prompt orquestrador é descrito como presente na conversa original, mas não foi
+recebido como artefato independente nesta entrada. Não há confirmação de sua
+distribuição, reutilização ou aplicação nos seis espaços mencionados.
+
+### Relação com outras fontes e limites
+
+- **CHAT-001 / TCC-P001 e TCC-P002:** acrescenta outra narrativa de refinamento do foco e dos requisitos, sem datar a mudança nem comprovar exclusão do conteúdo educativo.
+- **CHAT-002 / TCC-P009:** amplia a descrição do apoio de IA para incluir organização das interações e instruções reutilizáveis; não demonstra geração de código, execução de sprints ou produtividade medida.
+- **Vídeo:** a referência textual tem o mesmo nome de arquivo citado em CHAT-001 e recebe o mesmo alias. Isso não comprova identidade dos arquivos binários, conteúdo visual, autoria ou versão da aplicação retratada.
+- **13/04/2026:** o relator extrai essa data do nome do vídeo. A menção foi mantida no relato, mas não incorporada à cronologia como data comprovada de gravação, apresentação ou início do projeto.
+- **14/10/2026:** referência contextual da sessão descrita pelo relator; não data as mensagens anteriores. Não houve confirmação independente desses metadados nesta coleta.
+- **Escopo temporal:** os oito marcos abaixo reproduzem a ordem narrativa local; não estabelecem precedência cronológica em relação a CHAT-001 ou CHAT-002.
+
+Ver [marcos CHAT-003-M01 a CHAT-003-M08](./LINHA_DO_TEMPO.md) e
+[pendências TCC-P015 e TCC-P016](./PENDENCIAS.md).
 
 ## Referências consultadas para a organização
 
