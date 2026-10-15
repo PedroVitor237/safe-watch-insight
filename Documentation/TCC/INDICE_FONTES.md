@@ -8,6 +8,7 @@
 | CHAT-002 | Relatório retrospectivo de chat | ADS_TCC - Dúvidas Técnicas | Lovable para FrontEnd TCC | 15/10/2026 | Datas dos acontecimentos não identificadas; referência contextual a 14/10/2026 sem confirmação das datas das mensagens | Cópia anonimizada e indexada; prompts e resultados de execução diferenciados |
 | CHAT-003 | Relatório retrospectivo de chat | ADS_TCC - Prompts | Prompts TCC ADS | 15/10/2026 | Contexto de 2026; datas dos acontecimentos não identificadas; datas de nome de arquivo e contexto de sessão não adotadas como datas dos fatos | Cópia anonimizada e indexada; organização descrita sem inferir adoção em todos os espaços |
 | CHAT-004 | Relatório retrospectivo de chat | ADS_TCC - Pesquisa | Estrutura TCC ADS | 15/10/2026 | Datas dos acontecimentos não identificadas; elaboração do relatório declarada em 14/10/2026, sem confirmação independente | Cópia anonimizada e indexada; preparação de contato diferenciada de pesquisa efetivamente realizada |
+| CHAT-005 | Relatório retrospectivo de chat | ADS_TCC - Documentos | Estrutura e Orientações TCC | 15/10/2026 | Datas do documento e da revisão não identificadas; referência contextual a 14/10/2026 e cronograma ilustrativo de outubro a dezembro | Cópia anonimizada e indexada; planejamento acadêmico diferenciado da execução |
 
 ## CHAT-001 — Estrutura do TCC ADS
 
@@ -159,6 +160,52 @@ da plataforma continua distinta de validação empírica do produto.
 Ver [marcos CHAT-004-M01 a CHAT-004-M08](./LINHA_DO_TEMPO.md) e
 [pendências TCC-P017 e TCC-P018](./PENDENCIAS.md), além dos elementos novos em
 TCC-P003, TCC-P007 e TCC-P010.
+
+## CHAT-005 — Estrutura e Orientações TCC
+
+- **Arquivo:** [chat-005-estrutura-e-orientacoes-tcc.md](./fontes/chats/ads-tcc-documentos/chat-005-estrutura-e-orientacoes-tcc.md).
+- **Arquivo recebido:** `Pasted text(5).txt`.
+- **Origem informada na coleta:** project **ADS_TCC - Documentos**, chat **Estrutura e Orientações TCC**. O relator usa o nome do project como identificação de chat; o corpo foi mantido e o índice segue a identificação direta da coleta.
+- **Recebimento:** 15/10/2026, referência America/Fortaleza. A referência contextual de 14/10/2026 não comprova a data do documento ou da revisão. Outubro a dezembro é um cronograma proposto, sem ano confirmado no relato.
+- **Integridade da cópia publicada:** 36.023 bytes; SHA-256 `0efa936ee53d70837aed55bc23dfba0e1f7e41f552e8a4c8d7bc91c03c492dd0`.
+- **Tratamento:** doze ocorrências de nomes dos autores do TCC e da orientadora substituídas por papéis; aviso de anonimização acrescentado. Nomes de autores bibliográficos preservados. Demais partes não foram alteradas. Original fornecido mantido fora do repositório público.
+- **Natureza:** relato de leitura de projeto acadêmico e revisão preliminar; sem Word revisado, aprovação ou execução da metodologia comprovados.
+
+### Documento de origem e contribuição
+
+O relator identifica o Word **Plataforma Digital para Segurança do Trabalho
+Desenvolvimento de uma Cartilha Interativa sobre EPIs, EPCs e Normas
+Regulamentadoras-2.docx**, com extração textual de quatro páginas, como fonte
+consultada naquele chat. O Word não foi recebido nesta entrada. O identificador
+`turn0file0` pertence à conversa de origem e não foi reutilizado como referência
+de arquivo desta coleta.
+
+O documento descrito é o **Modelo de Projeto de TCC**, com justificativa,
+fundamentação, objetivos, metodologia, cronograma e referências. Não foi
+confundido com a monografia atual ou com uma versão aprovada.
+
+O planejamento relatado inclui cartilha educativa, Next.js/PostgreSQL, Figma e
+UML; pesquisa aplicada, exploratória e quanti-qualitativa; Scrum em sprints de
+duas semanas; avaliação SUS com 30 participantes em três perfis e escore
+superior a 68 como referência. Nada disso comprova execução, participantes
+recrutados, aplicação do SUS ou resultado observado. O critério SUS citado não
+foi validado metodologicamente nesta coleta.
+
+O resultado conhecido do chat é uma revisão preliminar com sugestões de
+redação, problema de pesquisa, hipótese opcional, referências e cronograma.
+Não há confirmação de adoção dessas sugestões ou entrega institucional. A
+apreciação favorável do assistente não equivale a parecer acadêmico.
+
+### Relação com outras fontes e limites
+
+- **TCC-P001/P002/P019:** oferece outra descrição do documento educativo inicial, sem resolver sua data, sua versão aprovada ou a transição para inspeções.
+- **TCC-P004/P009:** Next.js e Scrum são planejamento; não comprovam framework implementado ou método executado.
+- **CHAT-004 / TCC-P007/P017/P020:** a conversa informal pretendida e o SUS planejado são registros distintos; não se presumiu identidade de participantes, instrumentos ou avaliações.
+- **TCC-P018:** o § 8.2 fornece referências relatadas de SST, software, usabilidade e andragogia; sua existência, edição e forma bibliográfica não foram verificadas. A revisão menciona ISO 45001:2024, enquanto a lista registra 45001:2018 com publicação em 2024; a diferença exige consulta às fontes primárias.
+- **TCC-P021:** o cronograma mensal é exemplo de planejamento, não histórico de execução.
+
+Ver [marcos CHAT-005-M01 a CHAT-005-M06](./LINHA_DO_TEMPO.md) e
+[pendências TCC-P019 a TCC-P021](./PENDENCIAS.md).
 
 ## Referências consultadas para a organização
 

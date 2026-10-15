@@ -7,7 +7,7 @@ está em andamento e os marcos abaixo não formam um calendário completo do
 projeto. Os identificadores de marco permitem relacionar novas evidências sem
 mudar a origem dos registros.
 
-Nas quatro fontes recebidas, as datas dos acontecimentos e das mensagens são
+Nas cinco fontes recebidas, as datas dos acontecimentos e das mensagens são
 desconhecidas. A numeração de marcos reproduz a sequência narrativa de cada
 relatório; não demonstra duração, intervalo ou data de execução. A ordem de
 recebimento dos chats não estabelece sua ordem histórica.
@@ -98,6 +98,29 @@ precedência histórica em relação aos demais chats.
 | CHAT-004-M07 | Não identificada; durante o diálogo | Recomendação de pedir descrição de uma inspeção recente do profissional. | CHAT-004, §§ 3 e 5.3 | Sugestão de investigação; aplicação e relato do participante desconhecidos. |
 | CHAT-004-M08 | Não identificada; último estado descrito | Preparação encerrada sem respostas do profissional ou resultados de pesquisa disponíveis. | CHAT-004, §§ 3 e 9.6 | Limite do histórico consultado, não prova de que o contato nunca tenha ocorrido em outro contexto. |
 
+## Marcos sem data identificada — CHAT-005
+
+Fonte: [Estrutura e Orientações TCC](./fontes/chats/ads-tcc-documentos/chat-005-estrutura-e-orientacoes-tcc.md).
+Sequência da seção 4 do relato; sugestões na mesma revisão não equivalem a
+alterações incorporadas ao documento ou a aprovação acadêmica.
+
+| Marco | Data do acontecimento | Acontecimento segundo o relatório | Fonte / seção | Natureza e limite |
+| --- | --- | --- | --- | --- |
+| CHAT-005-M01 | Não identificada | Elaboração ou consolidação do projeto acadêmico inicial centrado em cartilha de SST. | CHAT-005, §§ 3 e 4 | Documento descrito pelo relator; criação, versão e entrega não verificadas nesta coleta. |
+| CHAT-005-M02 | Não identificada | Definição do espaço acadêmico e apresentação do projeto como objeto de trabalho. | CHAT-005, §§ 2.1 e 4 | Organização e disponibilização do texto relatadas, sem data própria comprovada. |
+| CHAT-005-M03 | Não identificada; após apresentação do documento na narrativa | Produção de revisão preliminar formal e textual. | CHAT-005, §§ 4, 5 e 6 | Revisão relatada; incorporação ao Word e aprovação não comprovadas. |
+| CHAT-005-M04 | Não identificada; na mesma revisão | Sugestão de problema de pesquisa explícito. | CHAT-005, §§ 4 e 5.2 | Proposta do assistente, sem adoção confirmada. |
+| CHAT-005-M05 | Não identificada; na mesma revisão | Sugestão de preenchimento do cronograma de outubro a dezembro. | CHAT-005, §§ 4 e 5.6 | Exemplo de planejamento, sem comprovar datas de execução. |
+| CHAT-005-M06 | Não identificada; na mesma revisão | Recomendações de redação, identificação acadêmica e revisão bibliográfica. | CHAT-005, §§ 4, 5.1, 5.4 e 5.5 | Recomendações sem Word revisado ou auditoria bibliográfica comprovada. |
+
+## Referências contextuais e períodos planejados — CHAT-005
+
+| Referência | Como aparece no relato | Tratamento nesta coleta |
+| --- | --- | --- |
+| 14/10/2026 | Contexto atual e recuperação do histórico, segundo o relator (§§ 2 e 4). | Data contextual não confirmada; não data o Word ou a revisão inicial. |
+| Outubro a dezembro | Cronograma incompleto e exemplo mensal sugerido (§§ 5.6 e 10.2). | Período planejado, sem ano confirmado ou execução comprovada. |
+| Sprints de duas semanas | Duração prevista na metodologia (§ 3.5). | Plano sem início/fim ou ciclos executados comprovados. |
+
 ## Datas de elaboração declaradas pelas fontes
 
 | Fonte | Data declarada | Evidência | Precisão e limite |
@@ -116,6 +139,7 @@ datas desconhecidas dos acontecimentos narrados.
 | 15/10/2026 | Recebimento de CHAT-002, identificado como project ADS_TCC - Dúvidas Técnicas / chat Lovable para FrontEnd TCC. | Anexo Pasted text(2).txt e identificação fornecidos nesta coleta; integridade da cópia anonimizada no índice. | Data de recebimento, referência America/Fortaleza; não substitui a referência contextual não confirmada de 14/10/2026. |
 | 15/10/2026 | Recebimento de CHAT-003, identificado como project ADS_TCC - Prompts / chat Prompts TCC ADS. | Anexo Pasted text(3).txt e identificação fornecidos nesta coleta; integridade da cópia anonimizada no índice. | Data de recebimento, referência America/Fortaleza; não data a organização dos espaços nem os prompts relatados. |
 | 15/10/2026 | Recebimento de CHAT-004, identificado como project ADS_TCC - Pesquisa / chat Estrutura TCC ADS. | Anexo Pasted text(4).txt e identificação fornecidos nesta coleta; integridade da cópia anonimizada no índice. | Data de recebimento, referência America/Fortaleza; distinta da elaboração declarada em 14/10/2026 e das datas desconhecidas dos fatos. |
+| 15/10/2026 | Recebimento de CHAT-005, identificado como project ADS_TCC - Documentos / chat Estrutura e Orientações TCC. | Anexo Pasted text(5).txt e identificação fornecidos nesta coleta; integridade da cópia anonimizada no índice. | Data de recebimento, referência America/Fortaleza; não data criação, revisão ou entrega do projeto acadêmico. |
 
 As datas presentes nos documentos técnicos do repositório, relacionadas no
 [índice](./INDICE_FONTES.md), permanecem separadas dos marcos sem data deste
