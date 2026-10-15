@@ -9,6 +9,7 @@
 | CHAT-003 | Relatório retrospectivo de chat | ADS_TCC - Prompts | Prompts TCC ADS | 15/10/2026 | Contexto de 2026; datas dos acontecimentos não identificadas; datas de nome de arquivo e contexto de sessão não adotadas como datas dos fatos | Cópia anonimizada e indexada; organização descrita sem inferir adoção em todos os espaços |
 | CHAT-004 | Relatório retrospectivo de chat | ADS_TCC - Pesquisa | Estrutura TCC ADS | 15/10/2026 | Datas dos acontecimentos não identificadas; elaboração do relatório declarada em 14/10/2026, sem confirmação independente | Cópia anonimizada e indexada; preparação de contato diferenciada de pesquisa efetivamente realizada |
 | CHAT-005 | Relatório retrospectivo de chat | ADS_TCC - Documentos | Estrutura e Orientações TCC | 15/10/2026 | Datas do documento e da revisão não identificadas; referência contextual a 14/10/2026 e cronograma ilustrativo de outubro a dezembro | Cópia anonimizada e indexada; planejamento acadêmico diferenciado da execução |
+| CHAT-006 | Relatório retrospectivo de chat | ADS_TCC - Documentação Plataforma | Documentação Plataforma TCC | 15/10/2026 | Julho a setembro de 2026 é período relatado sem confirmação independente; datas individuais desconhecidas e referência contextual a 14/10/2026 | Cópia anonimizada e indexada; correções e verificações atribuídas ao usuário/Codex, sem nova auditoria |
 
 ## CHAT-001 — Estrutura do TCC ADS
 
@@ -206,6 +207,64 @@ apreciação favorável do assistente não equivale a parecer acadêmico.
 
 Ver [marcos CHAT-005-M01 a CHAT-005-M06](./LINHA_DO_TEMPO.md) e
 [pendências TCC-P019 a TCC-P021](./PENDENCIAS.md).
+
+## CHAT-006 — Documentação Plataforma TCC
+
+- **Arquivo:** [chat-006-documentacao-plataforma-tcc.md](./fontes/chats/ads-tcc-documentacao-plataforma/chat-006-documentacao-plataforma-tcc.md).
+- **Arquivo recebido:** `Pasted text(6).txt`.
+- **Origem informada na coleta:** project **ADS_TCC - Documentação Plataforma**, chat **Documentação Plataforma TCC**. O corpo propõe um título de diagnóstico técnico e informa não confirmar o título original; o índice segue a identificação fornecida na coleta.
+- **Recebimento:** 15/10/2026, referência America/Fortaleza.
+- **Limite temporal:** o relator menciona julho a setembro de 2026 e uma etapa em setembro, sem metadados suficientes para datar as intervenções. A referência a 14/10/2026 para recuperação do histórico permanece contextual e não foi confirmada independentemente.
+- **Integridade da cópia publicada:** 40.100 bytes; SHA-256 `23f1940b3827af700d1a158f251ffbae59a4ffd84b09a95c77c57512b1e56f45`.
+- **Tratamento:** três ocorrências de nomes pessoais substituídas por papéis; exemplo de valor de segredo omitido; aviso de anonimização acrescentado. Demais partes mantidas sem alteração. Original fornecido mantido fora do repositório público.
+- **Natureza:** histórico técnico baseado em código, logs e retornos do Codex reproduzidos naquela conversa; sem acesso independente ao repositório ou reexecução de testes pelo relator ou por esta coleta.
+
+### Resultados técnicos relatados
+
+Descreve falha de renderização de inspeções com `RangeError: Invalid time
+value`, associada a `Date.toString()` seguido de `parseISO()`. O usuário teria
+confirmado a recuperação da página após correção localizada. Retornos do Codex
+relatam posterior centralização de `fmtData()`/`fmtDataHora()` em
+`src/lib/format.ts`, remoção de conversões redundantes e de um `useMemo`.
+
+TypeScript, lint direcionado e testes dos formatadores foram relatados como
+aprovados; lint global continuava com problemas descritos como preexistentes.
+Build completo, regressão em todas as telas e validação final em produção não
+foram confirmados. Nenhum desses resultados foi reexecutado nesta coleta.
+
+O relato distingue configuração de sessão, formatação de dados, avisos locais
+da Vercel, depreciações, CSRF e SSL. Esses são registros históricos com estados
+posteriores desconhecidos, não novas constatações de falhas atuais. Valores
+reais de e-mail e senha dos logs não constam do relatório recebido; a ocorrência
+de registro de credenciais é descrita como preocupação a conferir.
+
+### Documentação e Atividade 2
+
+O relator descreve discussão do enunciado da Atividade 2 (modelagem, DDL,
+CRUD, autenticação, validação, contratos, integração e documentação) e proposta
+de gerar `AI_PROJECT_CONTEXT` pelo Codex. Nem conclusão integral da atividade
+nem geração desse relatório foram comprovadas naquele histórico. O enunciado
+original completo não foi recebido como material independente nesta entrada.
+
+A árvore consultada do repositório já contém `AI_PROJECT_CONTEXT.md`, mas isso
+não comprova que derive do prompt relatado. Seu conteúdo e sua relação com os
+demais relatórios serão examinados na etapa de auditoria, sem duplicá-lo agora.
+
+As preferências históricas por prompts em inglês, leitura prévia das instruções,
+investigação de causa, correção de warnings pertinentes e PRs são registradas
+como processo relatado. A recomendação histórica de usar um relatório de
+contexto como referência principal não altera a política de fontes desta coleta.
+
+### Relação com outras fontes e limites
+
+- **TCC-P008/P009:** acrescenta exemplos relatados de manutenção assistida por Codex e verificações técnicas, além dos apoios consultivos das fontes anteriores; não comprova qualidade global ou método Scrum executado.
+- **TCC-P022:** os caminhos de formatação e rotas do § 10.1 são pistas para recuperar diffs e testes, não prova do conteúdo atual dos arquivos.
+- **TCC-P023:** correção de `SESSION_SECRET` foi declarada pelo usuário; login final em produção, tratamento de logs e avisos precisam de evidências próprias, sem confundir a causa de sessão com a falha de datas.
+- **TCC-P024/P025:** comparar o enunciado original e os artefatos técnicos será necessário para avaliar a Atividade 2 e relacionar o relatório de contexto ao histórico.
+- **Campos incompletos:** o § 10.4 anuncia um endereço sem reproduzi-lo naquela seção. O domínio aparece em § 6.3; não foi acessado nem tratado como validação atual do site.
+
+Ver [marcos CHAT-006-M01 a CHAT-006-M10](./LINHA_DO_TEMPO.md) e
+[pendências TCC-P022 a TCC-P025](./PENDENCIAS.md).
 
 ## Referências consultadas para a organização
 

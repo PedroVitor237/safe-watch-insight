@@ -7,7 +7,7 @@ está em andamento e os marcos abaixo não formam um calendário completo do
 projeto. Os identificadores de marco permitem relacionar novas evidências sem
 mudar a origem dos registros.
 
-Nas cinco fontes recebidas, as datas dos acontecimentos e das mensagens são
+Nas seis fontes recebidas, as datas exatas dos acontecimentos e das mensagens são
 desconhecidas. A numeração de marcos reproduz a sequência narrativa de cada
 relatório; não demonstra duração, intervalo ou data de execução. A ordem de
 recebimento dos chats não estabelece sua ordem histórica.
@@ -121,6 +121,33 @@ alterações incorporadas ao documento ou a aprovação acadêmica.
 | Outubro a dezembro | Cronograma incompleto e exemplo mensal sugerido (§§ 5.6 e 10.2). | Período planejado, sem ano confirmado ou execução comprovada. |
 | Sprints de duas semanas | Duração prevista na metodologia (§ 3.5). | Plano sem início/fim ou ciclos executados comprovados. |
 
+## Marcos técnicos relatados — CHAT-006
+
+Fonte: [Documentação Plataforma TCC](./fontes/chats/ads-tcc-documentacao-plataforma/chat-006-documentacao-plataforma-tcc.md).
+Ordem local da seção 3 do relato. Resultados e diagnósticos são atribuídos ao
+usuário ou aos retornos do Codex reproduzidos, sem nova execução nesta coleta.
+
+| Marco | Data do acontecimento | Acontecimento segundo o relatório | Fonte / seção | Natureza e limite |
+| --- | --- | --- | --- | --- |
+| CHAT-006-M01 | Não identificada; anterior às correções na narrativa | Uso de documentos como AGENTS.md, IMPLEMENTATION_PLAN.md e TASKS.md para orientar IA. | CHAT-006, §§ 3 e 7.1 | Documentação relatada; o relator não consultou seu conteúdo integral. |
+| CHAT-006-M02 | Não identificada | Login local funcionava, mas a página de inspeções falhava ao carregar. | CHAT-006, §§ 3 e 4.1 | Observação atribuída ao usuário, sem nova reprodução. |
+| CHAT-006-M03 | Não identificada; mesmo período relatado | Login na Vercel apresentava session is not configured. | CHAT-006, §§ 3 e 6.1 | Falha histórica de sessão, distinta da formatação; correção de configuração declarada posteriormente, sem validação final comprovada. |
+| CHAT-006-M04 | Não identificada; antes da correção de datas | Stack trace em produção registra RangeError: Invalid time value. | CHAT-006, §§ 3 e 4.1 | Erro apresentado no histórico; versão publicada e commit não identificados. |
+| CHAT-006-M05 | Não identificada; durante investigação | Compartilhamento de format.ts e buscas de chamadas de datas nas rotas. | CHAT-006, §§ 3, 4.1 e 10.3 | Trechos e comandos reproduzidos pelo usuário, não nova inspeção desta coleta. |
+| CHAT-006-M06 | Não identificada; durante investigação | Codex atribui a falha ao encadeamento Date.toString → parseISO. | CHAT-006, §§ 3 e 4.1 | Diagnóstico relatado; não comprova ausência de outros defeitos. |
+| CHAT-006-M07 | Não identificada; após primeira correção | Usuário informa que a página voltou a funcionar com helper local. | CHAT-006, §§ 3 e 4.1 | Resultado observado pelo usuário segundo o relato; regressão completa não comprovada. |
+| CHAT-006-M08 | Não identificada; etapa seguinte | Centralização da validação e formatação de datas e remoção de conversões redundantes. | CHAT-006, §§ 3, 4.1–4.2 e 5 | Implementação e verificações direcionadas relatadas pelo Codex; lint global não aprovado. |
+| CHAT-006-M09 | Não identificada; etapa posterior | Remoção de useMemo e import para tratar dependência instável de array. | CHAT-006, §§ 3, 4.3 e 5 | Limpeza e verificações relatadas; build final não confirmado. |
+| CHAT-006-M10 | Setembro de 2026 mencionado, sem confirmação independente | Discussão da Atividade 2 e proposta de relatório técnico transferível ao próximo chat. | CHAT-006, §§ 3, 7.2 e 8 | Mês não comprovado por metadados completos; geração e auditoria não concluídas no registro. |
+
+### Limites temporais da sexta fonte
+
+Julho a setembro de 2026 aparece como período aproximado no § 2; as intervenções
+não foram distribuídas por datas dentro desse intervalo. A referência contextual
+a 14/10/2026 para solicitação do relatório (§ 3) não comprova a data das mensagens
+ou das correções. A posição histórica desses marcos em relação aos outros
+chats continua sujeita à conciliação com Git e relatórios técnicos.
+
 ## Datas de elaboração declaradas pelas fontes
 
 | Fonte | Data declarada | Evidência | Precisão e limite |
@@ -140,6 +167,7 @@ datas desconhecidas dos acontecimentos narrados.
 | 15/10/2026 | Recebimento de CHAT-003, identificado como project ADS_TCC - Prompts / chat Prompts TCC ADS. | Anexo Pasted text(3).txt e identificação fornecidos nesta coleta; integridade da cópia anonimizada no índice. | Data de recebimento, referência America/Fortaleza; não data a organização dos espaços nem os prompts relatados. |
 | 15/10/2026 | Recebimento de CHAT-004, identificado como project ADS_TCC - Pesquisa / chat Estrutura TCC ADS. | Anexo Pasted text(4).txt e identificação fornecidos nesta coleta; integridade da cópia anonimizada no índice. | Data de recebimento, referência America/Fortaleza; distinta da elaboração declarada em 14/10/2026 e das datas desconhecidas dos fatos. |
 | 15/10/2026 | Recebimento de CHAT-005, identificado como project ADS_TCC - Documentos / chat Estrutura e Orientações TCC. | Anexo Pasted text(5).txt e identificação fornecidos nesta coleta; integridade da cópia anonimizada no índice. | Data de recebimento, referência America/Fortaleza; não data criação, revisão ou entrega do projeto acadêmico. |
+| 15/10/2026 | Recebimento de CHAT-006, identificado como project ADS_TCC - Documentação Plataforma / chat Documentação Plataforma TCC. | Anexo Pasted text(6).txt e identificação fornecidos nesta coleta; integridade da cópia anonimizada no índice. | Data de recebimento, referência America/Fortaleza; não data correções, verificações ou cumprimento da Atividade 2. |
 
 As datas presentes nos documentos técnicos do repositório, relacionadas no
 [índice](./INDICE_FONTES.md), permanecem separadas dos marcos sem data deste
