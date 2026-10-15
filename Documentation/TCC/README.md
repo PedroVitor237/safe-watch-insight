@@ -18,6 +18,8 @@ Receber e indexar uma fonte não significa aprovar suas afirmações para o TCC.
 - [CHAT-007 — Regra de Prompt Codex](./fontes/chats/ads-tcc-desenvolvimento/chat-007-regra-de-prompt-codex.md): padrão de prompts, revisão documental relatada, divisão de responsabilidades e análise preliminar de licenciamento.
 - [CHAT-008 — Desenvolvimento TCC Segurança do Trabalho](./fontes/chats/ads-tcc-desenvolvimento/chat-008-desenvolvimento-tcc-seguranca-do-trabalho.md): autorização de evidências, homologação PWA/offline com limitações e prompt de cadastro; inclui divergência temporal a conferir.
 
+- [CHAT-009 — Gerar Prompt de Auditoria](./fontes/chats/ads-tcc-desenvolvimento/chat-009-gerar-prompt-de-auditoria.md): correções de isolamento/cache, PRs rastreáveis e preparação documental; merges confirmados em outubro.
+
 ## Organização e preservação
 
 Os relatórios de chats são guardados em
@@ -80,7 +82,7 @@ que pareça conter uma data não comprova a data da conversa ou do acontecimento
 
 ## Estado da coleta
 
-Em 15/10/2026, foram recebidos oito relatórios de chats. A monografia e os relatos
+Em 15/10/2026, foram recebidos nove relatórios de chats. A monografia e os relatos
 humanos ainda não foram adicionados a este diretório. Esta entrega organiza a
 coleta; a auditoria documental integrada e a redação da monografia ocorrerão
 após a reunião e avaliação das fontes.

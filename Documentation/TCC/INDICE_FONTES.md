@@ -12,6 +12,7 @@
 | CHAT-006 | Relatório retrospectivo de chat | ADS_TCC - Documentação Plataforma | Documentação Plataforma TCC | 15/10/2026 | Julho a setembro de 2026 é período relatado sem confirmação independente; datas individuais desconhecidas e referência contextual a 14/10/2026 | Cópia anonimizada e indexada; correções e verificações atribuídas ao usuário/Codex, sem nova auditoria |
 | CHAT-007 | Relatório retrospectivo de chat | ADS_TCC - Desenvolvimento | Regra de Prompt Codex | 15/10/2026 | Interação atribuída pelo relator a 18/08/2026; datas de movimentação e edição dos documentos desconhecidas | Cópia anonimizada e indexada; revisão e verificações relatadas sem diff ou commit identificado |
 | CHAT-008 | Relatório retrospectivo de chat | ADS_TCC - Desenvolvimento | Desenvolvimento TCC Segurança do Trabalho | 15/10/2026 | Períodos de agosto/setembro relatados, timestamp de migration e referências contextuais a 14/10/2026; cronologia inicial divergente de documentos técnicos | Cópia anonimizada e indexada; homologação relatada com limites e cadastro apenas especificado no chat |
+| CHAT-009 | Relatório retrospectivo de chat | ADS_TCC - Desenvolvimento | Gerar Prompt de Auditoria | 15/10/2026 | Limite em setembro declarado em divergência; merges confirmados em 13/10/2026; contexto do relatório em 14/10/2026 | Cópia anonimizada e indexada; metadados de integração conferidos, testes não reexecutados |
 
 ## CHAT-001 — Estrutura do TCC ADS
 
@@ -374,6 +375,61 @@ Foram consultados [TECH_DECISIONS.md](../../TECH_DECISIONS.md) e
 
 Ver [marcos CHAT-008-M01 a CHAT-008-M11](./LINHA_DO_TEMPO.md) e
 [pendências TCC-P028 a TCC-P032](./PENDENCIAS.md).
+
+## CHAT-009 — Gerar Prompt de Auditoria
+
+- **Arquivo:** [chat-009-gerar-prompt-de-auditoria.md](./fontes/chats/ads-tcc-desenvolvimento/chat-009-gerar-prompt-de-auditoria.md).
+- **Arquivo recebido:** `Pasted text(9).txt`.
+- **Origem informada:** project **ADS_TCC - Desenvolvimento**, chat **Gerar Prompt de Auditoria**. O título proposto pelo relator permanece no corpo.
+- **Recebimento:** 15/10/2026, referência America/Fortaleza.
+- **Integridade da cópia publicada:** 33.248 bytes; SHA-256 `8a0a9870d3752dbccf9fe9947fb9ad3292fa4aba83c58e0bd8791ed386e9ec29`.
+- **Tratamento:** 10 ocorrências de nomes pessoais completos ou abreviados substituídas por papéis; aviso acrescentado. Demais partes preservadas; original fora do repositório público.
+- **Natureza:** retrospectiva baseada em resumos e retornos técnicos; não é nova execução de auditoria ou testes.
+
+### Correções e evidências
+
+O relato registra IC-P6-02 (QueryClient por identidade autenticada) e IC-P9-02
+(política de cache do Service Worker, shell público e private/no-store), com
+correções, regressões e integração via PRs. As contagens 5/5 e 13/13 do PR #7,
+8 regressões e 18 E2E do PR #8 e 173 testes por suíte são relatos de baterias
+respectivas, sem soma ou reexecução nesta coleta. A autenticação sintética e
+interceptação de RPC não substituem homologação com cookies reais, produção,
+Neon, múltiplas abas ou matriz de navegadores. O veredito offline continua
+`APPROVED WITH KNOWN LIMITATIONS`, sem inferência de eficácia em SST.
+
+### Verificação independente limitada aos metadados GitHub
+
+Em 15/10/2026, foram consultados os metadados dos
+[PR #7](https://github.com/PedroVitor237/safe-watch-insight/pull/7) e
+[PR #8](https://github.com/PedroVitor237/safe-watch-insight/pull/8).
+
+| PR | Commit da correção (head registrado) | Merge commit | merged_at (UTC) |
+| --- | --- | --- | --- |
+| #7 | 35ad10d9ffbf9722b33cde3331958e7b31f3bcfe | 33e8c832ab8972cdb91faf7709a52f104bb6106b | 2026-10-13T23:23:16Z |
+| #8 | 6dba3697813b0a33979ef7e0461374b41e07bc61 | 819c35a582f2e1e799d6ae71857d2dd4706723ed | 2026-10-13T23:46:28Z |
+
+Esses registros confirmam identificadores e datas de integração, não datas de
+implementação, testes, sincronização local ou implantação. O § 2 limita o
+histórico a setembro, mas inclui merges de outubro; a contradição permanece
+na fonte e é registrada em TCC-P033. O contexto de 14/10/2026 não foi usado para
+datar a execução.
+
+### Preparação documental e limites
+
+O relato registra revisão humana via PR, preservação do histórico e preparação
+da monografia em paralelo a pendências. A hierarquia proposta exige confronto
+com evidências e preservação da monografia original. TCC-Material/ e TCC-Drafts/
+são caminhos historicamente sugeridos, sem criação comprovada naquela conversa;
+a coleta atual utiliza `Documentation/TCC/`, sem duplicar estruturas.
+
+Os 14 achados da auditoria são uma contagem relatada, não revalidada aqui.
+IC-P9-04 (snapshots VERIFIED) e IC-P9-10 (URLs externas) não têm resolução
+comprovada nesse histórico; isso não constitui diagnóstico do código atual.
+Também não há comprovação de implantação, nova homologação irrestrita ou
+conclusão da monografia.
+
+Ver [marcos CHAT-009-M01 a CHAT-009-M12](./LINHA_DO_TEMPO.md) e
+[pendências TCC-P033 a TCC-P036](./PENDENCIAS.md).
 
 ## Referências consultadas para a organização
 

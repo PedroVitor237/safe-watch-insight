@@ -197,6 +197,32 @@ TECH_DECISIONS.md. Não foi usada para antecipar a conclusão de relatórios e
 dashboard. O identificador de migration e a data contextual de 14/10/2026 para
 recuperação do histórico também não datam os testes. Ver TCC-P028.
 
+## Marcos de correções e preparação documental — CHAT-009
+
+Fonte: [Gerar Prompt de Auditoria](./fontes/chats/ads-tcc-desenvolvimento/chat-009-gerar-prompt-de-auditoria.md).
+A ordem acompanha a narrativa e suas decisões. Somente as datas de merge
+abaixo foram confirmadas independentemente, nos metadados GitHub relacionados
+no índice; a posição dos demais marcos não estabelece calendário.
+
+| Marco | Data do acontecimento | Acontecimento segundo o relatório ou metadado indicado | Fonte / seção | Natureza e limite |
+| --- | --- | --- | --- | --- |
+| CHAT-009-M01 | Não identificada | Auditoria técnica com 14 achados é referida no contexto. | CHAT-009, §§ 3 e 9.1 | Contagem relatada, sem revalidação integral. |
+| CHAT-009-M02 | Não identificada | Priorização das correções de privacidade IC-P6-02 e IC-P9-02. | CHAT-009, §§ 3 e 4.1 | Decisão relatada; não representa encerramento de todos os achados. |
+| CHAT-009-M03 | Não identificada | Correção IC-P6-02 e regressões de isolamento de QueryClient. | CHAT-009, §§ 5.1 e 6.1 | Commit 35ad10d identificado; execução e testes sem data confirmada. |
+| CHAT-009-M04 | 13/10/2026 23:23:16 UTC | Integração do PR #7, merge 33e8c832. | CHAT-009, §§ 3 e 7.1; metadados do PR #7 | merged_at confirmado no GitHub em 15/10; não data testes ou deploy. |
+| CHAT-009-M05 | Não identificada | Correção IC-P9-02 e verificações de cache do Service Worker. | CHAT-009, §§ 5.2 e 6.2 | Commit 6dba369 identificado; resultados e limites atribuídos ao relato. |
+| CHAT-009-M06 | 13/10/2026 23:46:28 UTC | Integração do PR #8, merge 819c35a5. | CHAT-009, §§ 3 e 7.1; metadados do PR #8 | merged_at confirmado no GitHub em 15/10; não prova produção. |
+| CHAT-009-M07 | Não identificada; posterior ao PR #8 na narrativa | Sincronização de quatro referências e árvore limpa relatadas. | CHAT-009, § 7.2 | Estado histórico local não reconstituído nesta coleta; hash não data a operação. |
+| CHAT-009-M08 | Não identificada | Exigência de PR e revisão humana para integração, sem reescrever histórico compartilhado. | CHAT-009, § 4.4 | Regra de processo relatada, sem nova integração à main nesta coleta. |
+| CHAT-009-M09 | Não identificada | Preparação da monografia definida em paralelo às pendências técnicas. | CHAT-009, § 4.5 | Decisão de planejamento; não prova redação ou aprovação concluídas. |
+| CHAT-009-M10 | Não identificada | Hierarquia de fontes definida com confronto de divergências por evidências. | CHAT-009, § 4.6 | Diretriz, sem comprovação de aplicação integral. |
+| CHAT-009-M11 | Não identificada | Propostas de TCC-Material/ e TCC-Drafts/ para organização documental. | CHAT-009, § 5.3 | Caminhos sugeridos; coleta atual usa Documentation/TCC/. |
+| CHAT-009-M12 | Não identificada | Preparação de orientação para coordenação e coleta de históricos. | CHAT-009, § 5.4 | Texto integral indisponível; não comprova conclusão de toda a coleta. |
+
+O limite de setembro declarado no § 2 diverge dos merges de 13/10/2026.
+14/10/2026 é data contextual da resposta (§ 3), sem confirmação de criação
+ou de execução técnica. Ver TCC-P033.
+
 ## Datas de elaboração declaradas pelas fontes
 
 | Fonte | Data declarada | Evidência | Precisão e limite |
@@ -219,6 +245,7 @@ datas desconhecidas dos acontecimentos narrados.
 | 15/10/2026 | Recebimento de CHAT-006, identificado como project ADS_TCC - Documentação Plataforma / chat Documentação Plataforma TCC. | Anexo Pasted text(6).txt e identificação fornecidos nesta coleta; integridade da cópia anonimizada no índice. | Data de recebimento, referência America/Fortaleza; não data correções, verificações ou cumprimento da Atividade 2. |
 | 15/10/2026 | Recebimento de CHAT-007, identificado como project ADS_TCC - Desenvolvimento / chat Regra de Prompt Codex. | Anexo Pasted text(7).txt e identificação fornecidos nesta coleta; integridade da cópia anonimizada no índice. | Data de recebimento, referência America/Fortaleza; distinta da interação atribuída a 18/08/2026 e das edições sem data. |
 | 15/10/2026 | Recebimento de CHAT-008, identificado como project ADS_TCC - Desenvolvimento / chat Desenvolvimento TCC Segurança do Trabalho. | Anexo Pasted text(8).txt e identificação fornecidos nesta coleta; integridade da cópia anonimizada no índice. | Data de recebimento, referência America/Fortaleza; não data hardening, homologação ou implementação do cadastro. |
+| 15/10/2026 | Recebimento de CHAT-009, project ADS_TCC - Desenvolvimento / chat Gerar Prompt de Auditoria. | Anexo Pasted text(9).txt e identificação fornecidos nesta coleta; cópia anonimizada no índice. | Data de recebimento; merges confirmados separadamente e demais execuções sem data. |
 
 As datas presentes nos documentos técnicos do repositório, relacionadas no
 [índice](./INDICE_FONTES.md), permanecem separadas dos marcos sem data deste
