@@ -7,6 +7,7 @@
 | CHAT-001 | Relatório retrospectivo de chat | ADS_TCC - Dúvidas Técnicas | Estrutura do TCC ADS | 15/10/2026 | Datas não identificadas; sequência narrativa disponível | Cópia anonimizada e indexada; afirmações históricas aguardam conciliação |
 | CHAT-002 | Relatório retrospectivo de chat | ADS_TCC - Dúvidas Técnicas | Lovable para FrontEnd TCC | 15/10/2026 | Datas dos acontecimentos não identificadas; referência contextual a 14/10/2026 sem confirmação das datas das mensagens | Cópia anonimizada e indexada; prompts e resultados de execução diferenciados |
 | CHAT-003 | Relatório retrospectivo de chat | ADS_TCC - Prompts | Prompts TCC ADS | 15/10/2026 | Contexto de 2026; datas dos acontecimentos não identificadas; datas de nome de arquivo e contexto de sessão não adotadas como datas dos fatos | Cópia anonimizada e indexada; organização descrita sem inferir adoção em todos os espaços |
+| CHAT-004 | Relatório retrospectivo de chat | ADS_TCC - Pesquisa | Estrutura TCC ADS | 15/10/2026 | Datas dos acontecimentos não identificadas; elaboração do relatório declarada em 14/10/2026, sem confirmação independente | Cópia anonimizada e indexada; preparação de contato diferenciada de pesquisa efetivamente realizada |
 
 ## CHAT-001 — Estrutura do TCC ADS
 
@@ -122,6 +123,42 @@ distribuição, reutilização ou aplicação nos seis espaços mencionados.
 
 Ver [marcos CHAT-003-M01 a CHAT-003-M08](./LINHA_DO_TEMPO.md) e
 [pendências TCC-P015 e TCC-P016](./PENDENCIAS.md).
+
+## CHAT-004 — Estrutura TCC ADS
+
+- **Arquivo:** [chat-004-estrutura-tcc-ads.md](./fontes/chats/ads-tcc-pesquisa/chat-004-estrutura-tcc-ads.md).
+- **Arquivo recebido:** `Pasted text(4).txt`.
+- **Origem informada na coleta:** project **ADS_TCC - Pesquisa**, chat **Estrutura TCC ADS**. O relatório usa o nome do project no campo de chat e propõe um título descritivo; ambos foram mantidos no corpo, enquanto o índice segue a identificação direta da coleta.
+- **Data do recebimento:** 15/10/2026, referência America/Fortaleza.
+- **Data de elaboração declarada pelo relator:** 14/10/2026, em seu § 2; não confirmada por metadados independentes e não atribuída aos acontecimentos.
+- **Integridade da cópia publicada:** 30.371 bytes; SHA-256 `2ce08c3fd2766944d2167b720315ed6a018961fc2e37eaf67c27a75f1dfed854`.
+- **Tratamento:** nove ocorrências de nomes pessoais substituídas por papéis e aviso de anonimização acrescentado; demais partes mantidas sem alteração. Original fornecido preservado fora do repositório público.
+- **Natureza:** relato de preparação textual e exploratória; nenhuma pesquisa de campo efetivamente realizada é comprovada por esta entrada.
+
+### Conteúdo e contribuição
+
+Registra a intenção de conversar informalmente com um profissional de SST para
+compreender sua rotina antes de formular um questionário. Descreve revisão de
+mensagem e sugestões sobre fluxo de inspeção, ferramentas, checklists,
+armazenamento, dificuldades, diferenças entre setores e consulta às NRs.
+
+O resultado relatado é textual: uma mensagem organizada e perguntas sugeridas.
+O relatório não apresenta confirmação de envio, respostas do profissional,
+transcrição, questionário aplicado ou análise de dados. A hipótese de utilidade
+da plataforma continua distinta de validação empírica do produto.
+
+### Relação com outras fontes e limites
+
+- **CHAT-001 / TCC-P007:** a preparação de contato ajuda a contextualizar a intenção de levantar informações do domínio, mas não comprova as entrevistas mencionadas em CHAT-001 nem estabelece que se trate do mesmo contato.
+- **TCC-P001 e TCC-P010:** relata conversas anteriores com a orientadora e reconsideração do foco, sem datas, atas ou comprovação de aprovação formal do escopo.
+- **TCC-P003:** os tópicos e as dificuldades aparecem como perguntas e hipóteses, não como achados fornecidos por participantes nem requisitos validados.
+- **TCC-P009:** documenta apoio textual de IA à preparação da investigação, sem comprovar entrevista semiestruturada, estudo de caso, questionário formal ou divisão de tarefas entre os autores.
+- **Referências:** NRs são mencionadas genericamente; não houve consulta documentada a textos normativos específicos ou literatura científica neste chat.
+- **Materiais:** rascunho, mensagem revisada e lista completa de perguntas são descritos como existentes na conversa original, mas não foram recebidos separadamente nesta coleta. Uma pergunta aberta é reproduzida no próprio relato.
+
+Ver [marcos CHAT-004-M01 a CHAT-004-M08](./LINHA_DO_TEMPO.md) e
+[pendências TCC-P017 e TCC-P018](./PENDENCIAS.md), além dos elementos novos em
+TCC-P003, TCC-P007 e TCC-P010.
 
 ## Referências consultadas para a organização
 

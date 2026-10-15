@@ -7,7 +7,7 @@ está em andamento e os marcos abaixo não formam um calendário completo do
 projeto. Os identificadores de marco permitem relacionar novas evidências sem
 mudar a origem dos registros.
 
-Em CHAT-001, CHAT-002 e CHAT-003, as datas dos acontecimentos e das mensagens são
+Nas quatro fontes recebidas, as datas dos acontecimentos e das mensagens são
 desconhecidas. A numeração de marcos reproduz a sequência narrativa de cada
 relatório; não demonstra duração, intervalo ou data de execução. A ordem de
 recebimento dos chats não estabelece sua ordem histórica.
@@ -80,6 +80,34 @@ sessão) são registradas com seus limites e não datam os marcos desta coleta.
 O alias `VIDEO-001.mp4` relaciona referências textuais em CHAT-001 e CHAT-003;
 os arquivos binários não foram comparados. Ver TCC-P016.
 
+## Marcos sem data identificada — CHAT-004
+
+Fonte: [Estrutura TCC ADS](./fontes/chats/ads-tcc-pesquisa/chat-004-estrutura-tcc-ads.md).
+A ordem reproduz a seção 3 do relato, que separa antecedentes informados pelo
+usuário, preparação textual e ausência de retorno. Não estabelece datas nem
+precedência histórica em relação aos demais chats.
+
+| Marco | Data do acontecimento | Acontecimento segundo o relatório | Fonte / seção | Natureza e limite |
+| --- | --- | --- | --- | --- |
+| CHAT-004-M01 | Não identificada; anterior ao diálogo segundo o relato | Proposta de SST teria começado em outro formato e estaria evoluindo para plataforma digital. | CHAT-004, §§ 3 e 8.1 | Relato de evolução; versão anterior e data não documentadas. |
+| CHAT-004-M02 | Não identificada; anterior ao diálogo segundo o relato | Usuário menciona conversas com a orientadora e consideração do foco em plataforma. | CHAT-004, §§ 3 e 8.1 | Orientação acadêmica relatada; sem ata ou decisão formal verificada. |
+| CHAT-004-M03 | Não identificada | Usuário informa ter obtido contato de profissional de SST para conversa informal. | CHAT-004, §§ 2.1 e 3 | Contato disponível é relatado; interação com o profissional ainda era intenção. |
+| CHAT-004-M04 | Não identificada; durante o diálogo | Apresentação de rascunho de mensagem sobre o projeto e perguntas. | CHAT-004, §§ 3 e 5.1 | Preparação textual descrita; envio não comprovado. |
+| CHAT-004-M05 | Não identificada; durante o diálogo | Sugestão de aprofundar fluxo de trabalho, ferramentas, dificuldades, setores e NRs. | CHAT-004, §§ 3 e 5.2 | Perguntas propostas, sem respostas ou problemas empiricamente constatados. |
+| CHAT-004-M06 | Não identificada; durante o diálogo | Produção de versão revisada da mensagem informal. | CHAT-004, §§ 3 e 5.1 | Texto relatado como elaborado; leitura ou resposta do destinatário não comprovada. |
+| CHAT-004-M07 | Não identificada; durante o diálogo | Recomendação de pedir descrição de uma inspeção recente do profissional. | CHAT-004, §§ 3 e 5.3 | Sugestão de investigação; aplicação e relato do participante desconhecidos. |
+| CHAT-004-M08 | Não identificada; último estado descrito | Preparação encerrada sem respostas do profissional ou resultados de pesquisa disponíveis. | CHAT-004, §§ 3 e 9.6 | Limite do histórico consultado, não prova de que o contato nunca tenha ocorrido em outro contexto. |
+
+## Datas de elaboração declaradas pelas fontes
+
+| Fonte | Data declarada | Evidência | Precisão e limite |
+| --- | --- | --- | --- |
+| CHAT-004 | 14/10/2026 | Campo “Período identificável”, no § 2 do relatório recebido. | Data de elaboração informada pelo relator, sem confirmação independente; não data as mensagens, o contato ou as conversas com a orientadora. |
+
+Essa declaração difere das referências contextuais de CHAT-002/003 e da data
+derivada do nome de vídeo em CHAT-003. Nenhuma dessas referências substitui as
+datas desconhecidas dos acontecimentos narrados.
+
 ## Registro da coleta
 
 | Data | Registro | Evidência | Precisão e limite |
@@ -87,6 +115,7 @@ os arquivos binários não foram comparados. Ver TCC-P016.
 | 15/10/2026 | Recebimento de CHAT-001, identificado pelo responsável pela coleta como project ADS_TCC - Dúvidas Técnicas / chat Estrutura do TCC ADS. | Anexo Pasted text(1).txt e identificação fornecidos nesta coleta; integridade da cópia anonimizada no índice. | Data de recebimento, referência America/Fortaleza; não é data dos marcos acima. |
 | 15/10/2026 | Recebimento de CHAT-002, identificado como project ADS_TCC - Dúvidas Técnicas / chat Lovable para FrontEnd TCC. | Anexo Pasted text(2).txt e identificação fornecidos nesta coleta; integridade da cópia anonimizada no índice. | Data de recebimento, referência America/Fortaleza; não substitui a referência contextual não confirmada de 14/10/2026. |
 | 15/10/2026 | Recebimento de CHAT-003, identificado como project ADS_TCC - Prompts / chat Prompts TCC ADS. | Anexo Pasted text(3).txt e identificação fornecidos nesta coleta; integridade da cópia anonimizada no índice. | Data de recebimento, referência America/Fortaleza; não data a organização dos espaços nem os prompts relatados. |
+| 15/10/2026 | Recebimento de CHAT-004, identificado como project ADS_TCC - Pesquisa / chat Estrutura TCC ADS. | Anexo Pasted text(4).txt e identificação fornecidos nesta coleta; integridade da cópia anonimizada no índice. | Data de recebimento, referência America/Fortaleza; distinta da elaboração declarada em 14/10/2026 e das datas desconhecidas dos fatos. |
 
 As datas presentes nos documentos técnicos do repositório, relacionadas no
 [índice](./INDICE_FONTES.md), permanecem separadas dos marcos sem data deste
