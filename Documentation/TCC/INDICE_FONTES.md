@@ -11,6 +11,7 @@
 | CHAT-005 | Relatório retrospectivo de chat | ADS_TCC - Documentos | Estrutura e Orientações TCC | 15/10/2026 | Datas do documento e da revisão não identificadas; referência contextual a 14/10/2026 e cronograma ilustrativo de outubro a dezembro | Cópia anonimizada e indexada; planejamento acadêmico diferenciado da execução |
 | CHAT-006 | Relatório retrospectivo de chat | ADS_TCC - Documentação Plataforma | Documentação Plataforma TCC | 15/10/2026 | Julho a setembro de 2026 é período relatado sem confirmação independente; datas individuais desconhecidas e referência contextual a 14/10/2026 | Cópia anonimizada e indexada; correções e verificações atribuídas ao usuário/Codex, sem nova auditoria |
 | CHAT-007 | Relatório retrospectivo de chat | ADS_TCC - Desenvolvimento | Regra de Prompt Codex | 15/10/2026 | Interação atribuída pelo relator a 18/08/2026; datas de movimentação e edição dos documentos desconhecidas | Cópia anonimizada e indexada; revisão e verificações relatadas sem diff ou commit identificado |
+| CHAT-008 | Relatório retrospectivo de chat | ADS_TCC - Desenvolvimento | Desenvolvimento TCC Segurança do Trabalho | 15/10/2026 | Períodos de agosto/setembro relatados, timestamp de migration e referências contextuais a 14/10/2026; cronologia inicial divergente de documentos técnicos | Cópia anonimizada e indexada; homologação relatada com limites e cadastro apenas especificado no chat |
 
 ## CHAT-001 — Estrutura do TCC ADS
 
@@ -321,6 +322,58 @@ resolva permissões, titularidade ou obrigações de terceiros.
 
 Ver [marcos CHAT-007-M01 a CHAT-007-M08](./LINHA_DO_TEMPO.md) e
 [pendências TCC-P026 e TCC-P027](./PENDENCIAS.md).
+
+## CHAT-008 — Desenvolvimento TCC Segurança do Trabalho
+
+- **Arquivo:** [chat-008-desenvolvimento-tcc-seguranca-do-trabalho.md](./fontes/chats/ads-tcc-desenvolvimento/chat-008-desenvolvimento-tcc-seguranca-do-trabalho.md).
+- **Arquivo recebido:** `Pasted text(8).txt`.
+- **Origem informada na coleta:** project **ADS_TCC - Desenvolvimento**, chat **Desenvolvimento TCC Segurança do Trabalho**. O título descritivo proposto pelo relator foi preservado no corpo.
+- **Recebimento:** 15/10/2026, referência America/Fortaleza.
+- **Limites temporais:** agosto/setembro são períodos relatados sem confirmação independente; 14/10/2026 é contexto para o prompt e o relatório; o timestamp da migration não comprova aplicação no banco. A afirmação de entregas anteriores a agosto está em divergência com registros técnicos abaixo.
+- **Integridade da cópia publicada:** 45.215 bytes; SHA-256 `8e1642d97a2ee9b502ff5dcfd3b2088dc8342af1701d0792b1c8b520ccb51361`.
+- **Tratamento:** sete ocorrências de nomes pessoais completos ou abreviados substituídas por papéis; aviso de anonimização acrescentado. Demais partes mantidas sem alteração. Original fornecido preservado fora do repositório público.
+- **Natureza:** histórico técnico parcialmente recuperado de resumos e de retornos do Codex; artefatos primários e relatórios integrais não foram consultados pelo relator nem reexecutados nesta coleta.
+
+### Escopo e resultados relatados
+
+O relato separa três frentes: investigação de evidências offline adiada para o
+futuro; correção de autorização das evidências online; homologação PWA/offline
+com o resultado `APPROVED WITH KNOWN LIMITATIONS`. O cadastro de usuários aparece
+como prompt produzido, sem retorno de implementação naquele histórico.
+
+A investigação de evidências offline é resumida como `DEFER TO FUTURE`, com
+estimativa de 16 a 27 dias de engenharia sem memória de cálculo disponível.
+Não se trata de esforço medido ou funcionalidade entregue.
+
+O hardening teria derivado a propriedade das relações existentes de inspeção e
+NC, propagando identidade da sessão, restringindo operações e exposição indireta,
+sem schema novo ou migration. Os números 65/65 testes gerais, 23 testes de
+evidências e demais verificações são resultados relatados; a possível sobreposição
+dessas contagens não foi esclarecida e elas não foram somadas.
+
+A homologação relata seis itens respondidos offline, nove operações na fila,
+sincronização conferida no Neon, testes de conflito e recuperação, 65/65 testes,
+5/5 scripts e 4/4 cenários de navegador. O escopo exige inspeção previamente
+carregada e mantém evidências binárias, criação integral offline, Background
+Sync e resolução assistida de conflitos fora da entrega. O smoke test HTTPS não
+comprova repetição de todo o fluxo autenticado em produção ou compatibilidade
+universal. Os três arquivos finais modificados ainda não tinham commit/push
+confirmados naquele relato.
+
+### Contrapontos documentais e divergências
+
+Foram consultados [TECH_DECISIONS.md](../../TECH_DECISIONS.md) e
+[PROJECT_CONTEXT.md](../../PROJECT_CONTEXT.md) na versão
+`db37b8aa845fe14253577ff4e66d210ec31844fe`, apenas para comparação documental.
+
+- **Cronologia:** CHAT-008 § 3 situa relatórios e dashboard entre entregas anteriores a agosto de 2026. TECH_DECISIONS.md registra Relatórios em 03/09/2026 e Dashboard em 04/09/2026. A divergência foi preservada, sem escolher uma data de execução ou datar os demais marcos por inferência.
+- **Cadastro:** o prompt prefere sessão após cadastro, admitindo login como alternativa. PROJECT_CONTEXT.md descreve cadastro existente que encaminha a `/login` e não inicia sessão. Isso não comprova que o prompt de CHAT-008 foi executado nem autoriza apresentar a preferência como comportamento implementado.
+- **Autorização:** o hardening específico não é auditoria completa de permissões, RBAC ou comprovação de segurança geral.
+- **Fontes resumidas:** `Pasted markdown.md` e `turn5file0` são referências locais do chat de origem, sem relatório integral recebido nesta entrada. Não foram reutilizados como identificadores desta coleta.
+- **Git e validações:** faltam commits, branch, logs, artefatos de teste e identificador de implantação. Não se atribuiu uma versão atual aos resultados históricos.
+
+Ver [marcos CHAT-008-M01 a CHAT-008-M11](./LINHA_DO_TEMPO.md) e
+[pendências TCC-P028 a TCC-P032](./PENDENCIAS.md).
 
 ## Referências consultadas para a organização
 

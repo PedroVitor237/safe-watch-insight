@@ -170,6 +170,33 @@ Não se atribuiu a execução a 18/08/2026 nem se relacionou a revisão a um com
 do repositório sem evidência. As contagens de 37 arquivos e 12 linhas também não
 são as contagens dos arquivos ou links verificados no PR desta coleta.
 
+## Marcos de segurança, offline e cadastro — CHAT-008
+
+Fonte: [Desenvolvimento TCC Segurança do Trabalho](./fontes/chats/ads-tcc-desenvolvimento/chat-008-desenvolvimento-tcc-seguranca-do-trabalho.md).
+Ordem local do § 3. Os períodos e resultados permanecem atribuídos ao relato;
+datas extraídas de identificadores ou contexto não comprovam execução.
+
+| Marco | Data do acontecimento | Acontecimento segundo o relatório | Fonte / seção | Natureza e limite |
+| --- | --- | --- | --- | --- |
+| CHAT-008-M01 | Não identificada | Evolução da cartilha para plataforma aparece como contexto. | CHAT-008, §§ 2 e 3 | Histórico resumido, sem novas evidências da transição. |
+| CHAT-008-M02 | Antes de agosto de 2026, segundo o resumo; em divergência | Funcionalidades centrais, incluindo relatórios/dashboard, já estariam implementadas. | CHAT-008, § 3 | TECH_DECISIONS.md registra Relatórios em 03/09/2026 e Dashboard em 04/09/2026; conciliação pendente. |
+| CHAT-008-M03 | Aplicação no banco não datada | Referência à migration 20260806120000_complete_evidence_mvp. | CHAT-008, §§ 3 e 7.2 | O nome codifica 06/08/2026, mas não comprova criação, execução ou aplicação no ambiente. |
+| CHAT-008-M04 | Agosto de 2026 relatado, sem confirmação independente | Investigação de evidências offline e decisão relatada de adiar. | CHAT-008, §§ 3, 4.1 e 5.1 | Relatório original não recebido; estimativa de esforço não é medição de trabalho realizado. |
+| CHAT-008-M05 | Agosto de 2026 relatado, sem dia confirmado | Identificação de lacuna de propriedade nas operações de evidências. | CHAT-008, §§ 3 e 4.2 | Achado resumido, sem reprodução independente nesta coleta. |
+| CHAT-008-M06 | Não identificada; após investigação na narrativa | Preparação de prompt para restringir autorização de evidências. | CHAT-008, §§ 3 e 5.2 | Escopo específico, distinto da implementação de binários offline. |
+| CHAT-008-M07 | Não identificada; após solicitação na narrativa | Implementação e testes de Evidence Ownership Hardening relatados. | CHAT-008, §§ 3 e 5.2 | Verificações entre usuários, Neon/Cloudinary e build relatados; não comprova auditoria integral de permissões. |
+| CHAT-008-M08 | Setembro de 2026 aproximado, segundo o relato | Etapa de homologação final da PWA/offline. | CHAT-008, §§ 3 e 5.3 | Relatórios/logs originais, commit e implantação não recuperados nesta entrada. |
+| CHAT-008-M09 | Não identificada; após homologação na narrativa | Veredito APPROVED WITH KNOWN LIMITATIONS. | CHAT-008, §§ 3, 5.3 e 6.2 | Aprovação relatada do fluxo delimitado; não é homologação universal ou nova validação desta coleta. |
+| CHAT-008-M10 | Não identificada; após homologação na narrativa | Cadastro recomendado como próximo incremento e auditoria geral de permissões mantida como pendência. | CHAT-008, §§ 3 e 9.6 | Próximo passo, sem implementação comprovada naquele registro. |
+| CHAT-008-M11 | 14/10/2026 contextual, sem confirmação independente | Produção de prompt de User Registration. | CHAT-008, §§ 3 e 5.4 | Prompt elaborado, sem retorno de execução; preferência por sessão automática não prova o comportamento final. |
+
+### Divergência e datas de referência da oitava fonte
+
+A afirmação de CHAT-008-M02 permanece em conflito com as datas documentadas em
+TECH_DECISIONS.md. Não foi usada para antecipar a conclusão de relatórios e
+dashboard. O identificador de migration e a data contextual de 14/10/2026 para
+recuperação do histórico também não datam os testes. Ver TCC-P028.
+
 ## Datas de elaboração declaradas pelas fontes
 
 | Fonte | Data declarada | Evidência | Precisão e limite |
@@ -191,6 +218,7 @@ datas desconhecidas dos acontecimentos narrados.
 | 15/10/2026 | Recebimento de CHAT-005, identificado como project ADS_TCC - Documentos / chat Estrutura e Orientações TCC. | Anexo Pasted text(5).txt e identificação fornecidos nesta coleta; integridade da cópia anonimizada no índice. | Data de recebimento, referência America/Fortaleza; não data criação, revisão ou entrega do projeto acadêmico. |
 | 15/10/2026 | Recebimento de CHAT-006, identificado como project ADS_TCC - Documentação Plataforma / chat Documentação Plataforma TCC. | Anexo Pasted text(6).txt e identificação fornecidos nesta coleta; integridade da cópia anonimizada no índice. | Data de recebimento, referência America/Fortaleza; não data correções, verificações ou cumprimento da Atividade 2. |
 | 15/10/2026 | Recebimento de CHAT-007, identificado como project ADS_TCC - Desenvolvimento / chat Regra de Prompt Codex. | Anexo Pasted text(7).txt e identificação fornecidos nesta coleta; integridade da cópia anonimizada no índice. | Data de recebimento, referência America/Fortaleza; distinta da interação atribuída a 18/08/2026 e das edições sem data. |
+| 15/10/2026 | Recebimento de CHAT-008, identificado como project ADS_TCC - Desenvolvimento / chat Desenvolvimento TCC Segurança do Trabalho. | Anexo Pasted text(8).txt e identificação fornecidos nesta coleta; integridade da cópia anonimizada no índice. | Data de recebimento, referência America/Fortaleza; não data hardening, homologação ou implementação do cadastro. |
 
 As datas presentes nos documentos técnicos do repositório, relacionadas no
 [índice](./INDICE_FONTES.md), permanecem separadas dos marcos sem data deste
