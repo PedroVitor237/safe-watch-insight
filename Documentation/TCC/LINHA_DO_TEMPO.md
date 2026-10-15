@@ -7,8 +7,9 @@ está em andamento e os marcos abaixo não formam um calendário completo do
 projeto. Os identificadores de marco permitem relacionar novas evidências sem
 mudar a origem dos registros.
 
-Nas seis fontes recebidas, as datas exatas dos acontecimentos e das mensagens são
-desconhecidas. A numeração de marcos reproduz a sequência narrativa de cada
+Nas fontes recebidas, a maioria das datas exatas dos acontecimentos e mensagens
+é desconhecida. As datas informadas pelos relatores são identificadas com seus
+limites. A numeração de marcos reproduz a sequência narrativa de cada
 relatório; não demonstra duração, intervalo ou data de execução. A ordem de
 recebimento dos chats não estabelece sua ordem histórica.
 
@@ -148,6 +149,27 @@ a 14/10/2026 para solicitação do relatório (§ 3) não comprova a data das me
 ou das correções. A posição histórica desses marcos em relação aos outros
 chats continua sujeita à conciliação com Git e relatórios técnicos.
 
+## Marcos documentais relatados — CHAT-007
+
+Fonte: [Regra de Prompt Codex](./fontes/chats/ads-tcc-desenvolvimento/chat-007-regra-de-prompt-codex.md).
+Ordem da seção 2 do relato. A data de interação informada não foi estendida às
+edições, verificações ou esclarecimentos sem data própria.
+
+| Marco | Data do acontecimento | Acontecimento segundo o relatório | Fonte / seção | Natureza e limite |
+| --- | --- | --- | --- | --- |
+| CHAT-007-M01 | Não identificada | Evolução da cartilha para plataforma de inspeções aparece como contexto. | CHAT-007, §§ 2 e 7.1 | Relato de evolução; etapas e datas não documentadas aqui. |
+| CHAT-007-M02 | Não identificada; anterior à tarefa segundo o relato | Remoção de DocumentaçãoAtividade/ e transferência para Documentation/. | CHAT-007, §§ 2 e 3.2 | Mudança estrutural informada pelo usuário; commit e data desconhecidos. |
+| CHAT-007-M03 | 18/08/2026, segundo o relator | Definição de padrão de prompts e solicitação de revisão documental e análise de licenciamento. | CHAT-007, §§ 2, 3.1 e 4.1 | Data atribuída à interação, sem verificação independente; não data a execução posterior. |
+| CHAT-007-M04 | Não identificada; após elaboração do prompt na narrativa | Codex teria revisado README, referências e demais documentos. | CHAT-007, §§ 2 e 4.2 | Execução relatada pelo usuário; diff não consultado no chat de origem. |
+| CHAT-007-M05 | Não identificada; mesmo retorno de execução | Relato de 37 Markdown verificados, 12 linhas corrigidas e validações documentais. | CHAT-007, §§ 2, 4.3 e 5.1 | Contagens históricas atribuídas ao Codex, sem reprodução nesta coleta. |
+| CHAT-007-M06 | Não identificada; após apresentação dos resultados | Assistente considera o retorno coerente e recomenda adiar inclusão de licença. | CHAT-007, §§ 2 e 4.4 | Discussão preliminar, sem decisão definitiva de licenciamento. |
+| CHAT-007-M07 | Não identificada; na mesma sequência | Usuário esclarece responsabilidades principais de implementação/documentação e monografia. | CHAT-007, §§ 2, 4.5 e 7.3 | Declaração de participação relatada; não determina exclusividade ou titularidade jurídica. |
+| CHAT-007-M08 | Não identificada; último estado descrito | Revisão documental é considerada concluída no acompanhamento, sem inclusão de licença. | CHAT-007, §§ 2 e 8.2–8.4 | Conclusão relatada, sem confirmação do estado atual dos arquivos. |
+
+Não se atribuiu a execução a 18/08/2026 nem se relacionou a revisão a um commit
+do repositório sem evidência. As contagens de 37 arquivos e 12 linhas também não
+são as contagens dos arquivos ou links verificados no PR desta coleta.
+
 ## Datas de elaboração declaradas pelas fontes
 
 | Fonte | Data declarada | Evidência | Precisão e limite |
@@ -168,6 +190,7 @@ datas desconhecidas dos acontecimentos narrados.
 | 15/10/2026 | Recebimento de CHAT-004, identificado como project ADS_TCC - Pesquisa / chat Estrutura TCC ADS. | Anexo Pasted text(4).txt e identificação fornecidos nesta coleta; integridade da cópia anonimizada no índice. | Data de recebimento, referência America/Fortaleza; distinta da elaboração declarada em 14/10/2026 e das datas desconhecidas dos fatos. |
 | 15/10/2026 | Recebimento de CHAT-005, identificado como project ADS_TCC - Documentos / chat Estrutura e Orientações TCC. | Anexo Pasted text(5).txt e identificação fornecidos nesta coleta; integridade da cópia anonimizada no índice. | Data de recebimento, referência America/Fortaleza; não data criação, revisão ou entrega do projeto acadêmico. |
 | 15/10/2026 | Recebimento de CHAT-006, identificado como project ADS_TCC - Documentação Plataforma / chat Documentação Plataforma TCC. | Anexo Pasted text(6).txt e identificação fornecidos nesta coleta; integridade da cópia anonimizada no índice. | Data de recebimento, referência America/Fortaleza; não data correções, verificações ou cumprimento da Atividade 2. |
+| 15/10/2026 | Recebimento de CHAT-007, identificado como project ADS_TCC - Desenvolvimento / chat Regra de Prompt Codex. | Anexo Pasted text(7).txt e identificação fornecidos nesta coleta; integridade da cópia anonimizada no índice. | Data de recebimento, referência America/Fortaleza; distinta da interação atribuída a 18/08/2026 e das edições sem data. |
 
 As datas presentes nos documentos técnicos do repositório, relacionadas no
 [índice](./INDICE_FONTES.md), permanecem separadas dos marcos sem data deste

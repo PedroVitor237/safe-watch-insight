@@ -15,6 +15,7 @@ Receber e indexar uma fonte não significa aprovar suas afirmações para o TCC.
 - [CHAT-004 — Estrutura TCC ADS](./fontes/chats/ads-tcc-pesquisa/chat-004-estrutura-tcc-ads.md): preparação de mensagem e perguntas para uma possível conversa exploratória com profissional de SST.
 - [CHAT-005 — Estrutura e Orientações TCC](./fontes/chats/ads-tcc-documentos/chat-005-estrutura-e-orientacoes-tcc.md): revisão preliminar do projeto acadêmico inicial, com objetivos, metodologia planejada, cronograma e referências não verificadas.
 - [CHAT-006 — Documentação Plataforma TCC](./fontes/chats/ads-tcc-documentacao-plataforma/chat-006-documentacao-plataforma-tcc.md): correções de datas e React relatadas, verificações direcionadas e preparação de avaliação da Atividade 2.
+- [CHAT-007 — Regra de Prompt Codex](./fontes/chats/ads-tcc-desenvolvimento/chat-007-regra-de-prompt-codex.md): padrão de prompts, revisão documental relatada, divisão de responsabilidades e análise preliminar de licenciamento.
 
 ## Organização e preservação
 
@@ -78,7 +79,7 @@ que pareça conter uma data não comprova a data da conversa ou do acontecimento
 
 ## Estado da coleta
 
-Em 15/10/2026, foram recebidos seis relatórios de chats. A monografia e os relatos
+Em 15/10/2026, foram recebidos sete relatórios de chats. A monografia e os relatos
 humanos ainda não foram adicionados a este diretório. Esta entrega organiza a
 coleta; a auditoria documental integrada e a redação da monografia ocorrerão
 após a reunião e avaliação das fontes.

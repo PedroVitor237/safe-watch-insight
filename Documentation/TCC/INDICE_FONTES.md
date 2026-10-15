@@ -10,6 +10,7 @@
 | CHAT-004 | Relatório retrospectivo de chat | ADS_TCC - Pesquisa | Estrutura TCC ADS | 15/10/2026 | Datas dos acontecimentos não identificadas; elaboração do relatório declarada em 14/10/2026, sem confirmação independente | Cópia anonimizada e indexada; preparação de contato diferenciada de pesquisa efetivamente realizada |
 | CHAT-005 | Relatório retrospectivo de chat | ADS_TCC - Documentos | Estrutura e Orientações TCC | 15/10/2026 | Datas do documento e da revisão não identificadas; referência contextual a 14/10/2026 e cronograma ilustrativo de outubro a dezembro | Cópia anonimizada e indexada; planejamento acadêmico diferenciado da execução |
 | CHAT-006 | Relatório retrospectivo de chat | ADS_TCC - Documentação Plataforma | Documentação Plataforma TCC | 15/10/2026 | Julho a setembro de 2026 é período relatado sem confirmação independente; datas individuais desconhecidas e referência contextual a 14/10/2026 | Cópia anonimizada e indexada; correções e verificações atribuídas ao usuário/Codex, sem nova auditoria |
+| CHAT-007 | Relatório retrospectivo de chat | ADS_TCC - Desenvolvimento | Regra de Prompt Codex | 15/10/2026 | Interação atribuída pelo relator a 18/08/2026; datas de movimentação e edição dos documentos desconhecidas | Cópia anonimizada e indexada; revisão e verificações relatadas sem diff ou commit identificado |
 
 ## CHAT-001 — Estrutura do TCC ADS
 
@@ -265,6 +266,61 @@ contexto como referência principal não altera a política de fontes desta cole
 
 Ver [marcos CHAT-006-M01 a CHAT-006-M10](./LINHA_DO_TEMPO.md) e
 [pendências TCC-P022 a TCC-P025](./PENDENCIAS.md).
+
+## CHAT-007 — Regra de Prompt Codex
+
+- **Arquivo:** [chat-007-regra-de-prompt-codex.md](./fontes/chats/ads-tcc-desenvolvimento/chat-007-regra-de-prompt-codex.md).
+- **Arquivo recebido:** `Pasted text(7).txt`.
+- **Origem informada na coleta:** project **ADS_TCC - Desenvolvimento**, chat **Regra de Prompt Codex**. O título proposto no relatório foi mantido no corpo; a identificação acima segue a informação fornecida na coleta.
+- **Recebimento:** 15/10/2026, referência America/Fortaleza.
+- **Data da interação segundo o relato:** 18/08/2026 para definição de regras e solicitação do prompt (§ 2), sem confirmação independente dos metadados; não é data comprovada de execução das edições.
+- **Integridade da cópia publicada:** 40.921 bytes; SHA-256 `519b6a18cc5567fafdf69696aba2092c4b9c8c951585817db340df950e50857d`.
+- **Tratamento:** dezesseis ocorrências de nomes pessoais completos ou abreviados substituídas por papéis; aviso de anonimização acrescentado. Demais partes mantidas sem alteração. Original fornecido preservado fora do repositório público.
+- **Natureza:** elaboração de prompt e análise de retorno do Codex reproduzido pelo usuário, sem inspeção independente do repositório no chat de origem.
+
+### Contribuição e resultados relatados
+
+Descreve um padrão de prompts técnicos em inglês, com inspeção prévia, escopo,
+restrições e validação. A tarefa relatada corrigia referências após a remoção de
+`DocumentaçãoAtividade/` e consolidação em `Documentation/`, além de reformular
+o README para apresentar o software profissionalmente, preservando o histórico
+acadêmico relevante.
+
+O retorno atribuído ao Codex afirma revisão de 37 arquivos Markdown, correção de
+12 linhas com referências antigas, validação de links, Prettier e whitespace,
+com mudanças restritas a Markdown. Esses números e resultados pertencem ao
+relato histórico; não são contagens ou testes reexecutados nesta coleta e não
+comprovam funcionamento da aplicação ou homologação offline.
+
+O usuário teria explicitado a atuação principal de Autor 1 em código com Codex,
+metodologia e documentação de desenvolvimento, e de Autor 2 na redação da
+monografia e atividades textuais. A informação ajuda a esclarecer a participação
+dos autores, sem torná-la necessariamente exclusiva ou uma conclusão de
+titularidade jurídica.
+
+### Licenciamento: registro histórico
+
+O relato descreve a intenção de usar o GitHub como portfólio e uma comparação
+preliminar entre licenças, seguida da recomendação de adiar a escolha. Informa
+que nenhum arquivo de licença foi criado naquela tarefa, sem verificação
+independente. A análise permanece histórica: não foi adotada licença nem
+confirmada titularidade por meio deste registro.
+
+As páginas oficiais são mencionadas pelo relator, sem que seus conteúdos tenham
+sido conferidos nesta coleta. Não se presume que a divisão acadêmica de tarefas
+resolva permissões, titularidade ou obrigações de terceiros.
+
+### Relação com outras fontes e limites
+
+- **CHAT-002 / TCC-P013:** acrescenta relato de revisão dos documentos de telas, guia e navegação, mas não comprova que sua criação decorreu dos prompts de CHAT-002.
+- **CHAT-003/006 / TCC-P009/P015:** reforça o padrão de prompts em inglês, o escopo controlado e a preferência por validação, com um episódio de execução documental relatada; não comprova adoção uniforme em todas as tarefas.
+- **TCC-P025:** AI_PROJECT_CONTEXT.md é citado entre os documentos atualizados, sem esclarecer quando foi criado ou se veio da solicitação de CHAT-006.
+- **TCC-P026:** nomes como WIREFRAMES/ e WIREFRAMES.md aparecem em contextos diferentes; a grafia iagramaModeloFisicoDB.puml foi preservada no original. Os caminhos precisam de conferência histórica, não correção automática.
+- **Comandos:** o relato alterna `git diff -check` e `git diff --check`; os logs e o comando efetivamente executado permanecem a confirmar.
+- **Rastreabilidade:** não há branch, hash ou PR associado à revisão histórica. Não se vinculou a tarefa a um PR atual apenas pela semelhança dos arquivos descritos.
+
+Ver [marcos CHAT-007-M01 a CHAT-007-M08](./LINHA_DO_TEMPO.md) e
+[pendências TCC-P026 e TCC-P027](./PENDENCIAS.md).
 
 ## Referências consultadas para a organização
 
