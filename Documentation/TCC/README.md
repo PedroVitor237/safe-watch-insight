@@ -10,6 +10,7 @@ Receber e indexar uma fonte não significa aprovar suas afirmações para o TCC.
 - [Linha do tempo](./LINHA_DO_TEMPO.md): marcos extraídos, datas disponíveis e suas incertezas.
 - [Pendências e divergências](./PENDENCIAS.md): questões para conferir nas fontes ou com os autores.
 - [CHAT-001 — Estrutura do TCC ADS](./fontes/chats/ads-tcc-duvidas-tecnicas/chat-001-estrutura-do-tcc-ads.md): cópia anonimizada do primeiro relatório.
+- [CHAT-002 — Lovable para FrontEnd TCC](./fontes/chats/ads-tcc-duvidas-tecnicas/chat-002-lovable-para-frontend-tcc.md): relato anonimizado sobre frontend, Atividade 1 e prompts de documentação.
 
 ## Organização e preservação
 
@@ -73,7 +74,7 @@ que pareça conter uma data não comprova a data da conversa ou do acontecimento
 
 ## Estado da coleta
 
-Em 15/10/2026, foi recebido um relatório de chat. A monografia e os relatos
+Em 15/10/2026, foram recebidos dois relatórios de chats. A monografia e os relatos
 humanos ainda não foram adicionados a este diretório. Esta entrega organiza a
 coleta; a auditoria documental integrada e a redação da monografia ocorrerão
 após a reunião e avaliação das fontes.
