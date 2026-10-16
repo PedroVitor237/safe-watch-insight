@@ -9,6 +9,8 @@ Receber e indexar uma fonte não significa aprovar suas afirmações para o TCC.
 
 - [Acordos de escrita](./ACORDOS_DE_ESCRITA.md): escopo, prioridade das fontes, tom, referências, IA e preservação.
 - [Plano de continuidade](./PLANO_DE_CONTINUIDADE.md): estado atual e etapas restantes até a escrita.
+- [DOCX atual da monografia](./fontes/monografia/docx/README.md): cópia integral fornecida pelo autor.
+- [Prompt para o Codex](./prompts/01-conciliar-e-redigir.md): conciliação das fontes e redação nos arquivos.
 - [Skill de escrita](../../.agents/skills/escrever-tcc-safe-watch/SKILL.md): instruções reutilizáveis para o Codex.
 - [Revisão da dupla](./REVISAO_DA_DUPLA.md): mapa da monografia, figuras candidatas e ajustes relacionados.
 
@@ -39,8 +41,8 @@ data dos acontecimentos narrados.
 
 Os relatórios históricos são cópias anonimizadas. As novas fontes podem ser
 sínteses explicitamente identificadas ou extrações textuais com limites declarados.
-O original
-fornecido é preservado fora do repositório público. Nomes pessoais são
+Para os registros de pesquisa e chats, o original é preservado fora do repositório
+público. A monografia DOCX tem a autorização específica registrada abaixo. Nomes pessoais são
 substituídos por papéis e identificadores pessoais desnecessários são omitidos
 ou substituídos por aliases. Credenciais e dados de participantes de pesquisas
 não devem ser publicados. O tratamento é registrado no índice, sem publicar a
@@ -54,8 +56,9 @@ identificadas e relacionadas à versão recebida.
 
 Relatos dos autores, orientações, pesquisa e monografia são organizados em
 `fontes/relatos/`, `fontes/orientacoes/`, `fontes/pesquisa/` e `fontes/monografia/`.
-A versão original da monografia é preservada fora deste diretório público;
-a extração de referência é MONO-001. A futura revisão deve usar arquivo distinto.
+A extração histórica de referência é MONO-001. Posteriormente, a pedido do autor,
+o DOCX integral também foi incluído em `fontes/monografia/docx/`, sem anonimização.
+A revisão deve usar arquivo distinto.
 
 ## Autoridade e uso das fontes
 
@@ -79,7 +82,7 @@ com as fontes coletadas pertencem à próxima etapa, sem duplicar seus conteúdo
 ## Procedimento de entrada
 
 1. Registrar tipo, origem e data de recebimento; para chats, também project e título.
-2. Preservar o original fora do repositório público e preparar uma cópia anonimizada; registrar o tratamento e o SHA-256 da cópia publicada.
+2. Registrar o tratamento autorizado e o SHA-256 do arquivo publicado. Para pesquisa e chats, preservar originais fora do repositório e preparar cópias anonimizadas; para a monografia, seguir a autorização específica de publicação integral.
 3. Acrescentar a ficha ao índice e relacionar os marcos à seção de origem.
 4. Registrar lacunas, conflitos e limites sem modificar os fatos relatados.
 5. Publicar as adições na branch de coleta e atualizar o PR em andamento.
@@ -91,13 +94,14 @@ que pareça conter uma data não comprova a data da conversa ou do acontecimento
 ## Estado da coleta e preparação
 
 Atualizado em 16/10/2026: nove relatos de chats, relato humano, orientações da dupla,
-duas sínteses de pesquisa e transcrição da monografia indexados. Originais DOCX e
-capturas identificáveis permanecem fora do repositório público.
+duas sínteses de pesquisa e transcrição da monografia indexados. Os originais de pesquisa e capturas identificáveis permanecem fora do repositório.
+O DOCX da monografia foi incluído integralmente após autorização expressa do autor.
 
 O ebook de Prodanov e Freitas foi analisado seletivamente. A skill foi criada após
 pedido do autor, com notas metodológicas e instrução de acompanhar o padrão de
 referências da monografia. A conciliação integral das fontes, a seleção final de
-referências, o prompt de escrita e a redação continuam pendentes.
+referências e a redação continuam pendentes. O prompt de execução já foi gerado
+em `prompts/01-conciliar-e-redigir.md`; ainda não foi executado.
 
 ## Uso da skill no Codex
 

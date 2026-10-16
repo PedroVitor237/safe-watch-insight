@@ -487,3 +487,18 @@ Contrapontos documentais utilizados:
 As datas dessas referências pertencem aos registros técnicos e não foram
 atribuídas aos acontecimentos sem data de CHAT-001. A cronologia global será
 conciliada após a coleta das demais fontes.
+
+## MONO-001 — inclusão posterior do DOCX integral em 16/10/2026
+
+Após solicitar a inclusão do arquivo no repositório, o autor dispensou a
+anonimização da monografia. Foi adicionada uma cópia binária idêntica ao original:
+[monografia-atual.docx](./fontes/monografia/docx/monografia-atual.docx).
+
+- SHA-256: `474dbdd725b191a7d8853f3e954d9f3626d2bbcecd5bdc3d773b69846ab6fe77`.
+- Tamanho: 156.477 bytes.
+- Tratamento: nenhum; nomes, texto, formatação e imagens preservados.
+- Uso: fonte de conteúdo/apresentação para uma cópia de trabalho separada.
+- A transcrição histórica anonimizada MONO-001 não foi modificada. Registros
+  anteriores de que o binário não havia sido publicado descrevem a etapa anterior
+  à autorização; o estado atual é o registrado nesta atualização.
+- Os originais de entrevistas e avaliação não foram publicados por essa ação.

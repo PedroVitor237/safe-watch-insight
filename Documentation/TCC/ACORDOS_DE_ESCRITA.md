@@ -163,5 +163,20 @@ leitura e os limites de uso estão nas
 Usar seus conceitos metodológicos, conferindo a normalização aplicável separadamente.
 
 O plugin “Humanização de Texto”, atribuído a Felipe Carvalho Mouco, foi discutido,
-mas não foi instalado, validado ou adotado como dependência. O prompt final e a
-redação das seções ainda não foram produzidos nesta atualização.
+mas não foi instalado, validado ou adotado como dependência. O prompt de execução
+foi produzido posteriormente nesta mesma data; sua existência
+não significa que a redação tenha sido executada.
+
+## Entrada DOCX e prompt de execução — atualização de 16/10/2026
+
+O autor solicitou o diretório para o DOCX e autorizou o uso do arquivo já enviado.
+Em seguida, dispensou a anonimização. A monografia integral foi preservada em
+[fontes/monografia/docx/monografia-atual.docx](./fontes/monografia/docx/monografia-atual.docx),
+sem alterações nos bytes. Essa instrução atualiza a orientação anterior de manter
+somente sua cópia anonimizada no repositório. Não altera retrospectivamente as
+fontes já preservadas nem publica originais da pesquisa com participantes.
+
+O [prompt de conciliação e redação](./prompts/01-conciliar-e-redigir.md) orienta o
+Codex a concluir a preparação necessária e produzir uma cópia DOCX de trabalho,
+os trechos em Markdown e a revisão auxiliar. A entrada deve permanecer intacta.
+A geração do prompt não executou a redação nesta rodada.

@@ -13,7 +13,11 @@ criar a skill. O checkpoint anterior preservou fontes e acordos antes dessa aná
 - Ebook identificado e examinado seletivamente: Prodanov e Freitas, 2. ed., 2013.
   [Notas metodológicas e bibliográficas](../../.agents/skills/escrever-tcc-safe-watch/references/metodologia-e-referencias.md).
 - [Skill escrever-tcc-safe-watch](../../.agents/skills/escrever-tcc-safe-watch/SKILL.md)
-  criada a pedido do autor. Não houve redação das seções ou geração do prompt final.
+  criada a pedido do autor.
+- DOCX integral incluído em `fontes/monografia/docx/monografia-atual.docx`, após
+  pedido expresso para não anonimizar. Nenhuma alteração no conteúdo ou nos bytes.
+- [Prompt de execução](./prompts/01-conciliar-e-redigir.md) criado. A redação ainda
+  não foi executada; a conciliação e verificação final cabem à execução desse prompt.
 
 A criação da skill foi antecipada em relação à ordem inicial por solicitação do
 autor. As verificações restantes foram incorporadas ao fluxo de preparação antes
@@ -39,10 +43,10 @@ ainda deve ser fixada na etapa pertinente.
    verificar as referências efetivamente necessárias, com páginas e conteúdo lidos.
 3. Preparar cópia de trabalho preservando MONO-001 e DOCX. Manter partes fora do
    escopo; registrar ajustes relacionados em REVISAO_DA_DUPLA.md.
-4. Usar a skill para preparar o prompt final de escrita quando solicitado. Seu
-   conteúdo deve indicar arquivos, seções, fontes e saídas sem ampliar a tarefa.
-5. Redigir nas seções autorizadas, revisar com a dupla e conferir a integração ao
-   DOCX quando solicitada. Ajustar a skill se o uso revelar necessidade concreta.
+4. Executar o prompt já preparado com a skill: redigir nas seções autorizadas da
+   cópia DOCX, gerar trechos em Markdown e atualizar os auxiliares.
+5. Revisar a entrega com a dupla e concluir figuras/montagem conforme as indicações.
+   Ajustar a skill se o uso revelar necessidade concreta.
 
 ## Como retomar
 
