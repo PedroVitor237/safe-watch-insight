@@ -1,10 +1,15 @@
 # Fontes para revisão do TCC — Safe Watch Insight
 
 Este diretório reúne as fontes recebidas para organizar a revisão da monografia
-de Análise e Desenvolvimento de Sistemas da UEMA. A coleta está em andamento.
+de Análise e Desenvolvimento de Sistemas da UEMA. A coleta dos nove relatórios
+de chats foi encerrada pelo autor; a preparação acadêmica continua.
 Receber e indexar uma fonte não significa aprovar suas afirmações para o TCC.
 
 ## Como consultar
+
+- [Acordos de escrita](./ACORDOS_DE_ESCRITA.md): escopo, prioridade das fontes, tom, referências, IA e preservação.
+- [Plano de continuidade](./PLANO_DE_CONTINUIDADE.md): checkpoint e sequência até a skill e a escrita.
+- [Revisão da dupla](./REVISAO_DA_DUPLA.md): mapa da monografia, figuras candidatas e ajustes relacionados.
 
 - [Índice das fontes](./INDICE_FONTES.md): origem, identificação, escopo e integridade de cada material.
 - [Linha do tempo](./LINHA_DO_TEMPO.md): marcos extraídos, datas disponíveis e suas incertezas.
@@ -31,7 +36,9 @@ O identificador `CHAT-001` representa a ordem de recebimento, não a ordem
 cronológica do desenvolvimento. A data de recebimento também não determina a
 data dos acontecimentos narrados.
 
-Cada arquivo publicado é uma cópia anonimizada da fonte recebida. O original
+Os relatórios históricos são cópias anonimizadas. As novas fontes podem ser
+sínteses explicitamente identificadas ou extrações textuais com limites declarados.
+O original
 fornecido é preservado fora do repositório público. Nomes pessoais são
 substituídos por papéis e identificadores pessoais desnecessários são omitidos
 ou substituídos por aliases. Credenciais e dados de participantes de pesquisas
@@ -44,16 +51,16 @@ informações posteriormente superadas. O índice, a cronologia e as pendências
 são registros de organização separados da fonte. Retificações futuras devem ser
 identificadas e relacionadas à versão recebida.
 
-Novos tipos de material, como monografia original, relatos dos autores e
-referências, serão registrados no mesmo índice e ganharão diretórios próprios
-quando forem recebidos. A versão original da monografia deve ser preservada e
-as revisões devem ser gravadas em arquivos distintos.
+Relatos dos autores, orientações, pesquisa e monografia são organizados em
+`fontes/relatos/`, `fontes/orientacoes/`, `fontes/pesquisa/` e `fontes/monografia/`.
+A versão original da monografia é preservada fora deste diretório público;
+a extração de referência é MONO-001. A futura revisão deve usar arquivo distinto.
 
 ## Autoridade e uso das fontes
 
-A consulta parte do relatório principal de desenvolvimento, da monografia
-existente, dos relatos dos autores e dos relatórios dos chats, nessa ordem
-inicial. A comprovação de cada afirmação depende das evidências pertinentes:
+A consulta prioriza o relatório principal de desenvolvimento e a monografia
+existente; depois, os relatos dos autores; por último, os relatórios dos chats,
+com preferência pelos mais recentes para o estado mais recente. A comprovação de cada afirmação depende das evidências pertinentes:
 código, testes, registros de execução, documentos acadêmicos ou bibliografia.
 A hierarquia não elimina divergências nem substitui evidências diretas.
 
@@ -70,7 +77,7 @@ com as fontes coletadas pertencem à próxima etapa, sem duplicar seus conteúdo
 
 ## Procedimento de entrada
 
-1. Registrar project, título do chat, arquivo recebido e data de recebimento.
+1. Registrar tipo, origem e data de recebimento; para chats, também project e título.
 2. Preservar o original fora do repositório público e preparar uma cópia anonimizada; registrar o tratamento e o SHA-256 da cópia publicada.
 3. Acrescentar a ficha ao índice e relacionar os marcos à seção de origem.
 4. Registrar lacunas, conflitos e limites sem modificar os fatos relatados.
@@ -82,7 +89,13 @@ que pareça conter uma data não comprova a data da conversa ou do acontecimento
 
 ## Estado da coleta
 
-Em 15/10/2026, foram recebidos nove relatórios de chats. A monografia e os relatos
-humanos ainda não foram adicionados a este diretório. Esta entrega organiza a
-coleta; a auditoria documental integrada e a redação da monografia ocorrerão
-após a reunião e avaliação das fontes.
+Atualizado em 16/10/2026: nove relatórios históricos, um relato humano, as
+orientações da dupla, duas sínteses de pesquisa e a extração textual da monografia
+estão indexados. Os originais DOCX e capturas com identificação pessoal não foram
+publicados. O ebook permanece sem análise nesta etapa.
+
+Esta consolidação registra o que foi acordado; não redige a monografia, não cria
+skill e não altera código. A escrita deverá valorizar a proposta, as entregas e
+a avaliação, descrevendo o estágio atual com precisão e as melhorias como
+continuidade do trabalho, sem tom de derrota. Detalhes de conciliação ficam nos
+registros auxiliares, conforme os acordos.

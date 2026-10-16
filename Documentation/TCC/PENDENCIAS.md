@@ -2,8 +2,10 @@
 
 Entradas: CHAT-001 a CHAT-009, recebidas em 15/10/2026. Este registro organiza
 questões de evidência e redação; não altera decisões técnicas nem o backlog de
-implementação. As pendências permanecem abertas, com novos elementos de
-CHAT-002 a CHAT-009 para as questões já relacionadas.
+implementação. As descrições históricas são preservadas. A atualização de
+16/10/2026 ao final deste arquivo qualifica seu estado com as fontes humanas,
+de pesquisa e da monografia; não considerar essas fontes ainda ausentes quando
+já recebidas. Nem toda dúvida histórica é necessária à redação acadêmica.
 
 Fonte de origem: [CHAT-001 — Estrutura do TCC ADS](./fontes/chats/ads-tcc-duvidas-tecnicas/chat-001-estrutura-do-tcc-ads.md).
 Segunda fonte: [CHAT-002 — Lovable para FrontEnd TCC](./fontes/chats/ads-tcc-duvidas-tecnicas/chat-002-lovable-para-frontend-tcc.md).
@@ -88,3 +90,40 @@ Quando uma fonte esclarecer uma questão, acrescentar sua identificação, a
 conclusão e o alcance da confirmação. Preservar o que motivou a dúvida e a
 distinção entre proposta inicial e entrega posterior. A confirmação documental
 de um registro de teste não equivale à reexecução desse teste.
+
+## Atualização de estado em 16/10/2026
+
+A prioridade é a coerência acadêmica, conforme [ACORDOS_DE_ESCRITA.md](./ACORDOS_DE_ESCRITA.md).
+Consultar fontes existentes antes de pedir complementações. Dúvidas históricas
+que não influenciem o texto podem permanecer apenas neste registro auxiliar.
+
+| Pendência histórica | Complemento disponível | Estado e encaminhamento |
+| --- | --- | --- |
+| TCC-P001 | HUM-001 situa mudança de tema na reunião de 25/05 | Esclarecida por relato humano; manter a natureza relatada da data. |
+| TCC-P002 | HUM-001 mantém consulta às NRs e prioriza inspeções | Direção esclarecida; não equiparar consulta normativa a um módulo educativo completo. |
+| TCC-P003 | HUM-001 descreve dificuldades e relação com a proposta | Parcialmente esclarecida; conferir requisitos específicos na documentação. |
+| TCC-P007 | PES-001 reúne três registros de reuniões; HUM-001 confirma entrevistas como fonte principal | Realização descrita/documentada; datas mais prováveis em junho, sem transcrição disponível. |
+| TCC-P009 | HUM-001 esclarece decisões, prompts, revisões, testes e pequenas alterações manuais | Participação humana e uso de IA esclarecidos por relato; não inferir adoção ortodoxa de métodos. |
+| TCC-P014 | HUM-001 situa envio do protótipo no dia seguinte a 18/07 | Data de trabalho 19/07; conciliar com história documental se necessário. |
+| TCC-P017 | HUM-001 distingue formulário inicial e avaliação; PES-002 contém a análise posterior | Avaliação disponível; formulário inicial e detalhes do tratamento ainda a localizar. |
+| TCC-P018 | MONO-001 contém bibliografia atual | Recebida, ainda não validada; verificar fontes que sustentarem o texto novo. |
+| TCC-P019 | MONO-001 é a monografia atual fornecida pelo autor | Ausência da monografia resolvida; aprovação institucional não presumida. |
+| TCC-P020 | PES-002 informa quatro avaliações com instrumento próprio | Não apresentar como aplicação SUS com 30 participantes; o plano histórico não é execução demonstrada. |
+| TCC-P021 | HUM-001 fornece cronologia de maio a agosto e continuidade posterior | Cronologia humana disponível; calendário institucional não verificado. |
+| TCC-P028 | Avaliação em agosto antecede algumas entregas registradas em setembro/outubro | Não retroagir o estado atual à versão avaliada; ver TCC-P038. |
+| TCC-P036 | Monografia, relato e orientações recebidos; nove chats encerrados | Recebimento resolvido; fixação de versão e conciliação integrada continuam futuras. |
+
+## Questões de preparação acadêmica
+
+| ID | Questão | Material disponível | Próxima ação proporcional |
+| --- | --- | --- | --- |
+| TCC-P037 | Como foi aplicado e analisado o formulário inicial de necessidades? | HUM-001 confirma sua existência e diferença das entrevistas; PES-002 é avaliação posterior | Procurar instrumento, respostas, período e síntese na documentação; perguntar apenas o que continuar faltando. |
+| TCC-P038 | Qual versão foi disponibilizada na avaliação de agosto? | HUM-001 e PES-002; registros posteriores de funcionalidades | Conciliar relato e histórico antes de atribuir entregas posteriores aos testes com participantes. |
+| TCC-P039 | Como se relacionam participantes das entrevistas e da avaliação? | Três registros em PES-001, quatro respondentes em PES-002; relato de envio às pessoas consultadas | Esclarecer quantidades e eventual participante adicional, sem exigir nomes ou inventar uma quarta entrevista. |
+| TCC-P040 | Quais fontes sustentam engenharia de software e a influência do PMBOK? | MONO-001 cita Guerra (2020), lista Valente (2020); HUM-001 relata influência em aula | Identificar obra/edição e trechos, verificar referências reais; Código Limpo/TDD/SDD não são adoções presumidas. |
+| TCC-P041 | Que orientações do ebook contribuirão para a skill e metodologia? | Ebook sinalizado, leitura adiada pelo autor | Analisar depois desta consolidação; criar skill somente no último passo antes da escrita. |
+| TCC-P042 | Quais figuras, apêndices e ajustes relacionados serão necessários? | Mapa inicial em REVISAO_DA_DUPLA.md | Selecionar artefatos existentes e definir locais exatos durante a escrita; indicar alterações externas ao escopo. |
+
+A orientação acadêmica relatada sobre a prioridade da proposta e da escrita
+não equivale a regra institucional verificada. As limitações devem ser tratadas
+com precisão e equilíbrio, valorizando as entregas e a continuidade do trabalho.

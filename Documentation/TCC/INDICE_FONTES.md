@@ -14,6 +14,43 @@
 | CHAT-008 | Relatório retrospectivo de chat | ADS_TCC - Desenvolvimento | Desenvolvimento TCC Segurança do Trabalho | 15/10/2026 | Períodos de agosto/setembro relatados, timestamp de migration e referências contextuais a 14/10/2026; cronologia inicial divergente de documentos técnicos | Cópia anonimizada e indexada; homologação relatada com limites e cadastro apenas especificado no chat |
 | CHAT-009 | Relatório retrospectivo de chat | ADS_TCC - Desenvolvimento | Gerar Prompt de Auditoria | 15/10/2026 | Limite em setembro declarado em divergência; merges confirmados em 13/10/2026; contexto do relatório em 14/10/2026 | Cópia anonimizada e indexada; metadados de integração conferidos, testes não reexecutados |
 
+## Complementos recebidos e acordos em 16/10/2026
+
+A coleta dos nove chats foi encerrada pelo autor. Os registros seguintes são
+novos tipos de fonte, não novos relatórios CHAT. As orientações consolidadas
+estão em [ACORDOS_DE_ESCRITA.md](./ACORDOS_DE_ESCRITA.md).
+
+| ID | Tipo | Arquivo | Conteúdo e tratamento |
+| --- | --- | --- | --- |
+| HUM-001 | Relato humano | [HUM-001](./fontes/relatos/hum-001-relato-do-desenvolvimento.md) | Trajetória, entrevistas, necessidades, participação humana e tom acadêmico. |
+| ORI-001 | Orientações da dupla | [ORI-001](./fontes/orientacoes/ori-001-orientacoes-da-dupla.md) | Orientações metodológicas, complementos do autor e delimitação da tarefa. |
+| PES-001 | Registros de entrevistas | [PES-001](./fontes/pesquisa/pes-001-registros-das-entrevistas.md) | Síntese anonimizada dos três registros; datas de legendas e gravações distinguidas. |
+| PES-002 | Avaliação da plataforma | [PES-002](./fontes/pesquisa/pes-002-avaliacao-da-plataforma.md) | Quatro respondentes; coleta declarada em 28–31/08/2026; resultados agregados e comentários. |
+| MONO-001 | Monografia recebida | [MONO-001](./fontes/monografia/mono-001-texto-recebido.md) | Extração textual anonimizada do DOCX; texto preservado, sem revisão acadêmica. |
+
+HUM-001 e ORI-001 são sínteses da conversa, sem arquivo original independente.
+PES-001/PES-002 são sínteses dos anexos; MONO-001 é extração de referência.
+Nenhuma dessas sínteses se apresenta como transcrição literal integral. Dados
+agregados e comentários da avaliação foram preservados; não se publicaram
+capturas com nomes/rostos, empregadores ou acesso a gravações. O texto da
+monografia conserva autores bibliográficos e anonimiza os autores do TCC e a
+orientadora. Limites de formatação da extração estão no próprio arquivo.
+
+### Integridade das novas fontes
+
+| ID | SHA-256 da cópia Markdown publicada | SHA-256 do DOCX original, quando aplicável |
+| --- | --- | --- |
+| HUM-001 | `a44ee2fb74690416ba7fd3d0449109a56ae7689eb65dddf4080f3f3e37e470c0` | Não se aplica: relato/orientação na conversa |
+| ORI-001 | `246d7f7286aef07d649123ad97773aaa9c752fc57f5cd1d8e62e940e1c7c93ca` | Não se aplica: relato/orientação na conversa |
+| PES-001 | `4a2ffa629874b47a45ddf415a2c76e157d929016417c3454f2b17390fb8ca477` | `5d5cbcd38ad01c68e54bd3017af00aac69ff6e2c21b7a3cc989a2ef7ff435d1b` |
+| PES-002 | `3e58bb519649e3c74e2dc160604bc053db302e55d4be86aa2b5047d85cea51bf` | `d4929ab59a8ee34845414d1a1fa857a727f549dd8cd960d6e265f67832450b06` |
+| MONO-001 | `c7763f471b793aa5382f989760c2299c1d0a378760f0e1c3e8f4bdebc8dc53e7` | `474dbdd725b191a7d8853f3e954d9f3626d2bbcecd5bdc3d773b69846ab6fe77` |
+
+O ebook de metodologia foi sinalizado no chat; sua leitura foi adiada pelo autor
+para depois desta consolidação. Não foi analisado, identificado bibliograficamente
+ou incluído entre as fontes utilizadas. As referências do DOCX ainda não foram
+verificadas integralmente; receber o documento não valida suas citações.
+
 ## CHAT-001 — Estrutura do TCC ADS
 
 - **Arquivo:** [chat-001-estrutura-do-tcc-ads.md](./fontes/chats/ads-tcc-duvidas-tecnicas/chat-001-estrutura-do-tcc-ads.md).

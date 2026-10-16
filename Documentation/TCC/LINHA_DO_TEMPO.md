@@ -250,3 +250,28 @@ datas desconhecidas dos acontecimentos narrados.
 As datas presentes nos documentos técnicos do repositório, relacionadas no
 [índice](./INDICE_FONTES.md), permanecem separadas dos marcos sem data deste
 relatório até a conciliação das fontes.
+
+## Complemento humano e avaliação recebidos em 16/10/2026
+
+Fonte: [HUM-001](./fontes/relatos/hum-001-relato-do-desenvolvimento.md),
+com [PES-001](./fontes/pesquisa/pes-001-registros-das-entrevistas.md) e
+[PES-002](./fontes/pesquisa/pes-002-avaliacao-da-plataforma.md).
+O contexto é 2026, mas o relato omitiu o ano em algumas datas. As lembranças
+aproximadas não foram convertidas em datas exatas de commits ou implantação.
+
+| Marco | Data ou período | Acontecimento | Precisão e limite |
+| --- | --- | --- | --- |
+| HUM-001-M01 | 25/05 | Primeira reunião e passagem da cartilha para plataforma de inspeções | Data relatada pelo autor. |
+| HUM-001-M02 | Após a mudança; entrevistas em 04, 08 e 10/06/2026 | Contatos com profissionais, formulário inicial e entrevistas | Datas de gravações consideradas mais prováveis pelo autor; legendas divergentes preservadas em PES-001. |
+| HUM-001-M03 | Por volta de 12/06 | Documento de requisitos a partir da análise dos dados | Aproximação explícita. |
+| HUM-001-M04 | Até 18/07 | Trabalho com requisitos e elaboração dos modelos lógico e físico | Relato associado à disciplina de Desenvolvimento Web. |
+| HUM-001-M05 | 19/07 | Benchmarking e envio do protótipo Lovable | Dia derivado de “no dia seguinte” a 18/07. |
+| HUM-001-M06 | Após o protótipo | Complementação documental, instruções ao agente e início do desenvolvimento | Sequência sem dia exato. |
+| HUM-001-M07 | Até 23/08, em paralelo ao desenvolvimento | Leitura teórica, trabalhos correlatos e introdução | Não significa encerramento do desenvolvimento. |
+| HUM-001-M08 | Ao final dessa etapa | Envio da versão preliminar e formulário às pessoas antes consultadas | Dia de envio não confirmado separadamente; grupos não equiparados automaticamente. |
+| PES-002-M01 | 28–31/08/2026 | Coleta de quatro respostas de avaliação | Período declarado no DOCX de análise; versão do software a conciliar. |
+| HUM-001-M09 | Depois da avaliação até o relato | Continuidade de implementação, melhorias e polimentos | Sem data de conclusão integral. |
+
+Esses marcos complementam os 82 marcos históricos dos chats. A narrativa da
+monografia deverá ser concisa; não é necessário reproduzir esta tabela de
+rastreabilidade no corpo do trabalho.
