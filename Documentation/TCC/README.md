@@ -8,7 +8,8 @@ Receber e indexar uma fonte não significa aprovar suas afirmações para o TCC.
 ## Como consultar
 
 - [Acordos de escrita](./ACORDOS_DE_ESCRITA.md): escopo, prioridade das fontes, tom, referências, IA e preservação.
-- [Plano de continuidade](./PLANO_DE_CONTINUIDADE.md): checkpoint e sequência até a skill e a escrita.
+- [Plano de continuidade](./PLANO_DE_CONTINUIDADE.md): estado atual e etapas restantes até a escrita.
+- [Skill de escrita](../../.agents/skills/escrever-tcc-safe-watch/SKILL.md): instruções reutilizáveis para o Codex.
 - [Revisão da dupla](./REVISAO_DA_DUPLA.md): mapa da monografia, figuras candidatas e ajustes relacionados.
 
 - [Índice das fontes](./INDICE_FONTES.md): origem, identificação, escopo e integridade de cada material.
@@ -87,15 +88,29 @@ Datas desconhecidas continuam desconhecidas. Quando só houver sequência
 narrativa, registrar essa ordem sem estimar um calendário. O nome de um anexo
 que pareça conter uma data não comprova a data da conversa ou do acontecimento.
 
-## Estado da coleta
+## Estado da coleta e preparação
 
-Atualizado em 16/10/2026: nove relatórios históricos, um relato humano, as
-orientações da dupla, duas sínteses de pesquisa e a extração textual da monografia
-estão indexados. Os originais DOCX e capturas com identificação pessoal não foram
-publicados. O ebook permanece sem análise nesta etapa.
+Atualizado em 16/10/2026: nove relatos de chats, relato humano, orientações da dupla,
+duas sínteses de pesquisa e transcrição da monografia indexados. Originais DOCX e
+capturas identificáveis permanecem fora do repositório público.
 
-Esta consolidação registra o que foi acordado; não redige a monografia, não cria
-skill e não altera código. A escrita deverá valorizar a proposta, as entregas e
-a avaliação, descrevendo o estágio atual com precisão e as melhorias como
-continuidade do trabalho, sem tom de derrota. Detalhes de conciliação ficam nos
-registros auxiliares, conforme os acordos.
+O ebook de Prodanov e Freitas foi analisado seletivamente. A skill foi criada após
+pedido do autor, com notas metodológicas e instrução de acompanhar o padrão de
+referências da monografia. A conciliação integral das fontes, a seleção final de
+referências, o prompt de escrita e a redação continuam pendentes.
+
+## Uso da skill no Codex
+
+A skill do projeto está em `.agents/skills/escrever-tcc-safe-watch/`. Abrir o Codex
+no repositório com a branch que contém esses arquivos atualizada e invocar
+`$escrever-tcc-safe-watch`, indicando a tarefa e as seções desejadas. No seletor,
+procurar “TCC Safe Watch Insight”. Se não aparecer, reiniciar a sessão do Codex.
+Não é necessário instalar o plugin de humanização ou copiar manualmente instruções.
+
+Exemplo de preparação: “Use $escrever-tcc-safe-watch para conferir as pendências
+antes da escrita, sem redigir as seções ainda.” A ativação da skill não autoriza
+alterações fora da tarefa pedida.
+
+A escrita deve valorizar proposta, entregas e avaliação, descrevendo o estágio
+atual com precisão e as melhorias como continuidade, sem tom de derrota. Detalhes
+de conciliação ficam nos registros auxiliares.

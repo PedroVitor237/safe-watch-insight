@@ -1,65 +1,56 @@
 # Continuidade da preparação e escrita do TCC
 
-Checkpoint de 16/10/2026, solicitado antes da análise do ebook. A tarefa desta
-rodada é preservar os acordos e materiais; não executar as etapas futuras.
+Atualizado em 16/10/2026 após a análise seletiva do ebook e o pedido do autor para
+criar a skill. O checkpoint anterior preservou fontes e acordos antes dessa análise.
 
-## Estado de partida
+## Estado atual
 
-- Nove relatórios de chats recebidos e indexados; o autor encerrou essa coleta.
-- Relato humano e orientações da dupla consolidados.
-- Registros de entrevistas e análise do questionário de avaliação lidos,
-  sintetizados e anonimizados.
-- DOCX atual da monografia lido; cópia textual anonimizada de referência
-  incluída em MONO-001, sem redação ou correção do conteúdo acadêmico.
-- Escopo, tom, regras de referências e arquivo auxiliar definidos.
-- Ebook de metodologia anunciado/recebido no chat, ainda sem análise, sem
-  classificação bibliográfica e sem incorporação ao repositório nesta rodada.
-- Skill personalizada e prompt final de escrita ainda não criados.
+- Nove relatórios de chats recebidos e indexados; coleta encerrada pelo autor.
+- Relato humano, orientações da dupla, entrevistas e avaliação consolidados.
+- DOCX lido e preservado; MONO-001 contém cópia textual anonimizada de referência.
+- Escopo, tom e arquivo auxiliar definidos; novos registros bibliográficos devem
+  acompanhar o padrão da monografia, sem repetir erros ou ampliar a revisão.
+- Ebook identificado e examinado seletivamente: Prodanov e Freitas, 2. ed., 2013.
+  [Notas metodológicas e bibliográficas](../../.agents/skills/escrever-tcc-safe-watch/references/metodologia-e-referencias.md).
+- [Skill escrever-tcc-safe-watch](../../.agents/skills/escrever-tcc-safe-watch/SKILL.md)
+  criada a pedido do autor. Não houve redação das seções ou geração do prompt final.
 
-## Fontes principais do repositório
+A criação da skill foi antecipada em relação à ordem inicial por solicitação do
+autor. As verificações restantes foram incorporadas ao fluxo de preparação antes
+da escrita; não foram marcadas como concluídas por isso.
+
+## Fontes principais
 
 Consultar a [retrospectiva do desenvolvimento](../RetrospectivaTecnicaDesenvolvimentoSafeWatchInsight.md)
 e o [relatório técnico pré-escrita](../RelatorioAuditoriaTecnicaPreEscritaTCC.md),
-junto com a monografia, antes de usar resumos de chats como fundamento.
-O estado técnico deve ser conciliado com os documentos e evidências pertinentes,
+junto com a monografia. Conciliar o estado técnico pelas evidências pertinentes,
 sem executar correções de código durante a preparação acadêmica.
 
-Esta consolidação partiu da branch `docs/coleta-fontes-tcc` no commit
-`d2802fad9ae12e672a2877a65158bb85c54e0528`. Esse é o ponto de partida documental,
-não o identificador da versão testada pelos participantes em agosto. A versão
-de referência para a redação técnica ainda deve ser fixada na etapa pertinente.
+A consolidação anterior foi publicada em `a6da1ad47ac7034af1f6c231caf9963cf84c1ac9`,
+na branch `docs/coleta-fontes-tcc`. Esse é um marco documental, não a versão
+avaliada pelos participantes em agosto. A versão de referência da redação técnica
+ainda deve ser fixada na etapa pertinente.
 
-## Próximas etapas, na ordem combinada
+## Próximas etapas
 
-1. Examinar o ebook pelo sumário e pelas partes úteis: caracterização da pesquisa,
-   instrumentos, tratamento e redação metodológica. Registrar autoria, edição e
-   páginas verificadas, sem necessidade de leitura linear das 277 páginas
-   mencionadas pelo autor. Não inferir sua identificação só pelo nome do arquivo.
-2. Confrontar as fontes principais com o relato humano e os dados de pesquisa;
-   localizar respostas às pendências nos arquivos antes de perguntar aos autores.
-3. Definir o recorte temporal dos resultados técnicos e da avaliação com usuários,
-   selecionar referências reais e materiais complementares pertinentes.
-4. Preparar a cópia de trabalho para escrita, preservando MONO-001 e o DOCX
-   original. As partes fora do escopo permanecem preservadas; propostas de ajuste
-   vão para REVISAO_DA_DUPLA.md.
-5. Criar a skill personalizada como último passo de preparação. Deve incorporar
-   ACORDOS_DE_ESCRITA.md, orientações da dupla, regras de fonte/ABNT, tom acadêmico,
-   escopo, figuras e revisão, sem promessas de “indetectabilidade” de IA.
-6. Gerar o prompt para o Codex escrever diretamente nos arquivos de trabalho,
-   com limites claros e atualização do arquivo auxiliar. Não é um prompt para
-   reavaliar toda a monografia ou desenvolver novas funcionalidades.
-7. Revisar o texto com a dupla: coerência, correspondência às fontes, referências,
-   figuras, contribuições e limitações. Integrar ao DOCX e conferir apresentação
-   quando essa etapa for solicitada.
+1. Confrontar fontes principais, relato e dados de pesquisa; procurar respostas às
+   pendências nos arquivos antes de perguntar aos autores.
+2. Delimitar resultados técnicos e avaliação com usuários no tempo. Selecionar e
+   verificar as referências efetivamente necessárias, com páginas e conteúdo lidos.
+3. Preparar cópia de trabalho preservando MONO-001 e DOCX. Manter partes fora do
+   escopo; registrar ajustes relacionados em REVISAO_DA_DUPLA.md.
+4. Usar a skill para preparar o prompt final de escrita quando solicitado. Seu
+   conteúdo deve indicar arquivos, seções, fontes e saídas sem ampliar a tarefa.
+5. Redigir nas seções autorizadas, revisar com a dupla e conferir a integração ao
+   DOCX quando solicitada. Ajustar a skill se o uso revelar necessidade concreta.
 
 ## Como retomar
 
-Começar por [ACORDOS_DE_ESCRITA.md](./ACORDOS_DE_ESCRITA.md),
+Ler [ACORDOS_DE_ESCRITA.md](./ACORDOS_DE_ESCRITA.md),
 [INDICE_FONTES.md](./INDICE_FONTES.md), [REVISAO_DA_DUPLA.md](./REVISAO_DA_DUPLA.md)
-e pelas fontes principais. As pendências históricas são apoio à conciliação;
-não devem ser copiadas como lista de defeitos para o texto acadêmico.
+e as fontes principais. As pendências históricas apoiam a conciliação; não devem
+ser copiadas como lista de defeitos para o texto acadêmico.
 
-Conduzir a escrita valorizando a proposta, o percurso, as entregas e a avaliação
-favorável nos limites observados. Descrever melhorias futuras como continuidade,
-sem ocultar limitações materiais e sem exigir maturidade de produto comercial
-como condição para reconhecer a contribuição do TCC.
+Valorizar proposta, percurso, entregas e avaliação favorável nos limites observados.
+Descrever melhorias como continuidade, sem ocultar limitações materiais ou exigir
+maturidade de produto comercial para reconhecer a contribuição do TCC.

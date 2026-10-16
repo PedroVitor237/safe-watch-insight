@@ -90,6 +90,10 @@ para o corpo da monografia. Não prometer resultados em detectores de IA.
 - Usar citações e referências em padrão ABNT, conferindo as normas aplicáveis
   e as orientações institucionais vigentes. Não supor que um ebook antigo
   substitui essa verificação.
+- Seguir o padrão de citações e referências já usado na monografia nas novas
+  entradas, conforme instrução de 16/10/2026. Preservar escolhas compatíveis com
+  ABNT; não reproduzir campos incompletos, URLs inválidas ou erros como convenções.
+  Não padronizar toda a bibliografia nesta tarefa.
 - PMBOK: o autor relata influência de conteúdos vistos em aula na organização
   e documentação inicial. Não declarar aplicação integral do guia ou adoção
   ortodoxa de sua metodologia. Confirmar edição/conteúdo antes de citar.
@@ -145,11 +149,19 @@ o tratamento aplicado. Não houve decisão para mudar a visibilidade do reposit�
 
 ## Skill e sequência de trabalho
 
-A skill personalizada será criada somente no último passo de preparação antes
-da escrita pelo Codex, incorporando as orientações da dupla e as fontes já
-avaliadas. O plugin “Humanização de Texto”, atribuído a Felipe Carvalho Mouco,
-foi discutido, mas não foi instalado, validado ou adotado como dependência.
+A intenção inicial era criar a skill no último passo de preparação. Após a análise
+seletiva do ebook, em 16/10/2026, o autor solicitou avançar para sua criação com as
+informações já levantadas. A skill está em
+[escrever-tcc-safe-watch](../../.agents/skills/escrever-tcc-safe-watch/SKILL.md).
+Ela incorpora as orientações da dupla, o padrão de referências da monografia e os
+limites de escopo. Sua criação não significa que a conciliação integral das fontes,
+a seleção das referências ou a redação estejam concluídas.
 
-Em 16/10/2026, a tarefa autorizada é consolidar estes registros no repositório.
-O ebook de metodologia permanece aguardando análise. Esta consolidação não
-cria a skill, não gera o prompt final e não redige as seções da monografia.
+O ebook foi identificado como Prodanov e Freitas, 2. ed., Feevale, 2013. Seu mapa de
+leitura e os limites de uso estão nas
+[notas metodológicas da skill](../../.agents/skills/escrever-tcc-safe-watch/references/metodologia-e-referencias.md).
+Usar seus conceitos metodológicos, conferindo a normalização aplicável separadamente.
+
+O plugin “Humanização de Texto”, atribuído a Felipe Carvalho Mouco, foi discutido,
+mas não foi instalado, validado ou adotado como dependência. O prompt final e a
+redação das seções ainda não foram produzidos nesta atualização.
