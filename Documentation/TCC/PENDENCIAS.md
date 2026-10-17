@@ -127,3 +127,19 @@ que não influenciem o texto podem permanecer apenas neste registro auxiliar.
 A orientação acadêmica relatada sobre a prioridade da proposta e da escrita
 não equivale a regra institucional verificada. As limitações devem ser tratadas
 com precisão e equilíbrio, valorizando as entregas e a continuidade do trabalho.
+
+## Atualização após a redação — 16/10/2026
+
+A conciliação, as novas referências e a integração das seções autorizadas foram
+concluídas. O estado por pendência está em
+[REVISAO_DA_DUPLA.md](./REVISAO_DA_DUPLA.md), na seção de conciliação; as descrições
+anteriores permanecem como histórico. TCC-P036 agora tem baseline técnico e
+documental fixados; TCC-P041 tem leitura e fundamentação registradas; TCC-P042
+tem figura selecionada, recorte e instruções de montagem entregues.
+
+TCC-P020 foi esclarecida diretamente pelo autor: SUS não foi aplicado. Não
+incluir o instrumento, o plano histórico nem explicação sobre escore na
+monografia. O texto entregue descreve as 14 questões do questionário próprio,
+as quatro avaliações e o tratamento efetivamente sustentado por PES-002.
+Permanecem somente as lacunas localizadas no auxiliar, como formulário inicial,
+datas conflitantes de marcos, versão individualmente acessada e Guerra (2020).

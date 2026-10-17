@@ -1,60 +1,78 @@
 # Continuidade da preparação e escrita do TCC
 
-Atualizado em 16/10/2026 após a análise seletiva do ebook e o pedido do autor para
-criar a skill. O checkpoint anterior preservou fontes e acordos antes dessa análise.
+Atualizado em **16/10/2026**, após execução do
+[prompt de conciliação e redação](./prompts/01-conciliar-e-redigir.md) com a
+[skill escrever-tcc-safe-watch](../../.agents/skills/escrever-tcc-safe-watch/SKILL.md).
+A pausa por limite de uso preservou o Markdown inicial; a retomada conferiu a
+entrada e concluiu a integração e os auxiliares, sem alterações da aplicação.
 
 ## Estado atual
 
-- Nove relatórios de chats recebidos e indexados; coleta encerrada pelo autor.
-- Relato humano, orientações da dupla, entrevistas e avaliação consolidados.
-- DOCX lido e preservado; MONO-001 contém cópia textual anonimizada de referência.
-- Escopo, tom e arquivo auxiliar definidos; novos registros bibliográficos devem
-  acompanhar o padrão da monografia, sem repetir erros ou ampliar a revisão.
-- Ebook identificado e examinado seletivamente: Prodanov e Freitas, 2. ed., 2013.
-  [Notas metodológicas e bibliográficas](../../.agents/skills/escrever-tcc-safe-watch/references/metodologia-e-referencias.md).
-- [Skill escrever-tcc-safe-watch](../../.agents/skills/escrever-tcc-safe-watch/SKILL.md)
-  criada a pedido do autor.
-- DOCX integral incluído em `fontes/monografia/docx/monografia-atual.docx`, após
-  pedido expresso para não anonimizar. Nenhuma alteração no conteúdo ou nos bytes.
-- [Prompt de execução](./prompts/01-conciliar-e-redigir.md) criado. A redação ainda
-  não foi executada; a conciliação e verificação final cabem à execução desse prompt.
+- Conciliação concluída para o escopo da escrita, confrontando monografia,
+  retrospectiva, atualizações da auditoria, relato humano, pesquisa e projeto.
+- Recorte fixado: percurso de maio a outubro de 2026; avaliação de 28–31/08;
+  estado técnico com integrações até 13/10. Divergências remanescentes ficaram
+  localizadas no auxiliar, sem afirmações inventadas.
+- Treze referências novas verificadas em fontes primárias; páginas/trechos,
+  datas de consulta e metadados registrados em
+  [referencias-verificadas.md](./redacao/referencias-verificadas.md).
+- Redigidas 3.4 (complementação), 3.4.1, 4, 4.1, 4.2, 5 e 6 em
+  [monografia-trabalho.docx](./redacao/monografia-trabalho.docx), com as referências
+  integradas. [secoes-redigidas.md](./redacao/secoes-redigidas.md) permite revisar
+  somente o conteúdo acrescentado.
+- Tabela 1 editável contém as 13 questões fechadas; a questão aberta 13, seus
+  três comentários e a abstenção são discutidos no texto. Não há SUS na
+  monografia nem explicação sobre ausência de escore, conforme instrução do autor.
+- [Figura 1](./redacao/figuras/fig-01-arquitetura.puml) preparada como recorte fiel,
+  com marcador de inserção no DOCX e instruções na revisão da dupla.
+- DOCX original, MONO-001 e fontes de pesquisa preservados. Comparação do XML
+  confirmou conteúdo fora do escopo e componentes do documento; renderização
+  e revisão visual concluídas. Detalhes em
+  [validacao-editorial.md](./redacao/validacao-editorial.md).
+- [REVISAO_DA_DUPLA.md](./REVISAO_DA_DUPLA.md) atualizada com conciliações, limites,
+  figuras, propostas de apêndices e ajustes externos ao escopo. PENDENCIAS.md
+  conserva o histórico e aponta para o estado conciliado.
+- A redação e a validação não envolveram execução da aplicação, instalação de
+  dependências ou merge. Após a entrega, o autor solicitou explicitamente o
+  commit e o push dos arquivos na branch documental, em 16/10/2026.
 
-A criação da skill foi antecipada em relação à ordem inicial por solicitação do
-autor. As verificações restantes foram incorporadas ao fluxo de preparação antes
-da escrita; não foram marcadas como concluídas por isso.
+## Baseline e preservação
 
-## Fontes principais
+Branch de trabalho: `docs/coleta-fontes-tcc`. HEAD documental de entrada:
+`c67b4d8eeb323f361b606fef1abdfdc3701b4bed`. O estado técnico corresponde à integração
+`819c35a582f2e1e799d6ae71857d2dd4706723ed`; a versão descrita não é uma comprovação
+independente do deploy de agosto nem da publicação de cada correção.
 
-Consultar a [retrospectiva do desenvolvimento](../RetrospectivaTecnicaDesenvolvimentoSafeWatchInsight.md)
-e o [relatório técnico pré-escrita](../RelatorioAuditoriaTecnicaPreEscritaTCC.md),
-junto com a monografia. Conciliar o estado técnico pelas evidências pertinentes,
-sem executar correções de código durante a preparação acadêmica.
+Entrada: `fontes/monografia/docx/monografia-atual.docx`, SHA-256
+`474dbdd725b191a7d8853f3e954d9f3626d2bbcecd5bdc3d773b69846ab6fe77`.
+A cópia de trabalho conserva autores, estrutura, conteúdo recebido de 3.4 e a
+subseção 3.4.2 **Trabalhos relacionados**, além das demais partes não autorizadas.
 
-A consolidação anterior foi publicada em `a6da1ad47ac7034af1f6c231caf9963cf84c1ac9`,
-na branch `docs/coleta-fontes-tcc`. Esse é um marco documental, não a versão
-avaliada pelos participantes em agosto. A versão de referência da redação técnica
-ainda deve ser fixada na etapa pertinente.
+## Próxima etapa da dupla
 
-## Próximas etapas
-
-1. Confrontar fontes principais, relato e dados de pesquisa; procurar respostas às
-   pendências nos arquivos antes de perguntar aos autores.
-2. Delimitar resultados técnicos e avaliação com usuários no tempo. Selecionar e
-   verificar as referências efetivamente necessárias, com páginas e conteúdo lidos.
-3. Preparar cópia de trabalho preservando MONO-001 e DOCX. Manter partes fora do
-   escopo; registrar ajustes relacionados em REVISAO_DA_DUPLA.md.
-4. Executar o prompt já preparado com a skill: redigir nas seções autorizadas da
-   cópia DOCX, gerar trechos em Markdown e atualizar os auxiliares.
-5. Revisar a entrega com a dupla e concluir figuras/montagem conforme as indicações.
-   Ajustar a skill se o uso revelar necessidade concreta.
+1. Ler o DOCX e revisar os trechos entregues. Conferir propostas REV-01 a REV-07,
+   especialmente a identificação de Guerra (2020), o exemplo arquitetural antigo,
+   resumos vazios e os títulos herdados dos apêndices. Essas partes não foram
+   reescritas nesta tarefa.
+2. Exportar o recorte da Figura 1, substituir o marcador e conferir legibilidade,
+   título e fonte. Escolher os materiais que efetivamente integrarão apêndices;
+   não criar remissões a documentos ainda não inseridos.
+3. Concluir a montagem: atualizar sumário, conferir numeração/continuidade das
+   páginas e quebras de seção, e renderizar novamente após a edição final.
+4. Se recuperados os materiais ausentes, complementar somente as afirmações
+   pertinentes: formulário inicial, datas conflitantes de marcos e edição
+   estudada em aula. Não reconstruir dados individuais da avaliação a partir
+   de resultados agregados.
 
 ## Como retomar
 
-Ler [ACORDOS_DE_ESCRITA.md](./ACORDOS_DE_ESCRITA.md),
-[INDICE_FONTES.md](./INDICE_FONTES.md), [REVISAO_DA_DUPLA.md](./REVISAO_DA_DUPLA.md)
-e as fontes principais. As pendências históricas apoiam a conciliação; não devem
-ser copiadas como lista de defeitos para o texto acadêmico.
+Partir de `redacao/monografia-trabalho.docx`, inspecionando qualquer contribuição
+posterior da dupla antes de editar. Não regenerar a saída sobre novas alterações
+nem substituir o DOCX original. Consultar o Markdown para comparação textual,
+o auxiliar de referências para suporte bibliográfico e REVISAO_DA_DUPLA.md para
+os pontos ainda abertos. Os intermediários de renderização ficaram em `/tmp` e
+não fazem parte da entrega versionável.
 
-Valorizar proposta, percurso, entregas e avaliação favorável nos limites observados.
-Descrever melhorias como continuidade, sem ocultar limitações materiais ou exigir
-maturidade de produto comercial para reconhecer a contribuição do TCC.
+A redação autorizada está concluída; a revisão autoral e a montagem final
+permanecem distintas da implementação futura da plataforma. Não reabrir a coleta
+inteira nem executar nova auditoria de software para retomar a edição acadêmica.
