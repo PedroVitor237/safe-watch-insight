@@ -1,0 +1,4 @@
+interface:
+  display_name: "TCC Safe Watch Insight"
+  short_description: "Escrita acadêmica fiel às fontes e ao escopo do TCC"
+  default_prompt: "Use $escrever-tcc-safe-watch para preparar ou redigir as seções solicitadas do TCC, seguindo os acordos e verificando as fontes."
