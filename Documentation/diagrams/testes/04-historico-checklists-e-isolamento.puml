@@ -1,0 +1,41 @@
+' Fontes: AI/OfficialTemplates.md (validação final de 3 de outubro de 2026),
+' AI/ChecklistCopy.md, Documentation/RelatorioAuditoriaTecnicaPreEscritaTCC.md
+' (§ 3.3, atualizações IC-P6-02 e IC-P9-02).
+' Conferência dos denominadores: scripts/validate-official-templates.ts,
+' scripts/validate-checklist-copy.ts e e2e/official-templates.spec.ts.
+
+' Espaços inseparáveis dão margem ao texto dentro das células.
+
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam legendFontSize 16
+skinparam titleFontSize 20
+skinparam footerFontSize 14
+skinparam footerFontColor black
+skinparam shadowing false
+skinparam legendBackgroundColor white
+skinparam legendBorderColor transparent
+
+title Safe Watch Insight\nHistórico, cópia de checklists e isolamento entre contas
+
+legend
+|=  Verificação  |=  Ambiente  |=  Resultado verificado  |
+|  Histórico de \n checklists  |  PostgreSQL \n no Neon (TCC)  |  **Aprovada.** Conferiu a migração de \n dados legados, os snapshots de v1/v2 \n com itens e normas, a não conformidade \n histórica, a inspeção concluída após edição \n e a reversão em caso de falha.  |
+|  Templates \n institucionais  |  PostgreSQL \n no Neon (TCC)  |  **8/8**, incluindo o teste pai e 7 subtestes. \n A derivação, a autorização e a publicação \n foram conferidas junto ao snapshot, à \n conclusão e ao relatório.  |
+|  Cópia independente  |  PostgreSQL \n no Neon (TCC)  |  **10/10**, incluindo o teste pai e 9 subtestes. \n Cópias pessoais independentes, proteção de \n rascunhos alheios, reutilização de versões \n publicadas acessíveis e reversão de falha.  |
+|  Edição da cópia \n pela interface  |  Chromium, \n banco Neon (TCC)  |  **1/1.** A edição da cópia pessoal preservou \n o template de origem. Chamadas de terceiro \n e sem sessão foram recusadas.  |
+|  Acesso a registros \n privados  |  PostgreSQL \n no Neon (TCC)  |  **Aprovada com duas contas.** Leituras \n e alterações de registros privados \n alheios foram bloqueadas. O titular \n concluiu a inspeção e pôde reutilizar \n conteúdo publicado.  |
+|  Cache React Query  |  Chromium local, \n respostas sintéticas  |  **5/5.** Cache separado na troca ou \n expiração da sessão, inclusive com \n consultas pendentes e retornos tardios.  |
+|  Cache do \n service worker  |  Chromium e HTTP \n local, dados e \n respostas sintéticas  |  **8/8.** O service worker deixou de guardar \n HTML e respostas privadas. Reabertura, \n expiração e troca de conta foram verificadas.  |
+endlegend
+
+center footer
+Os resultados são apresentados por execução, com cenários em comum.
+Os registros de histórico e autorização informam aprovação.
+Templates e cópia refletem a validação final após a correção no Neon.
+
+Fonte dos dados — AI/OfficialTemplates.md, AI/ChecklistCopy.md
+e auditoria técnica pré-escrita do TCC (IC-P6-02 e IC-P9-02).
+endfooter
+@enduml

@@ -1,0 +1,44 @@
+' Fontes: Documentation/EnsaioVolumeTCC/volume-rodada-01.json,
+' Documentation/EnsaioVolumeTCC/Rodada01.md e tests/volume/workflow.ts.
+
+' Espaços inseparáveis dão margem ao texto dentro das células.
+
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam legendFontSize 16
+skinparam titleFontSize 20
+skinparam footerFontSize 14
+skinparam footerFontColor black
+skinparam shadowing false
+skinparam legendBackgroundColor white
+skinparam legendBorderColor transparent
+
+title Safe Watch Insight\nEnsaio de volume de uso sequencial
+
+legend
+|=  Verificação  |=  Etapa  |=  Total confirmado  |
+|  Playwright \n (Chromium)  |  Cadastro e consulta da empresa  |  30 empresas  |
+|  Playwright  |  Cadastro de dois itens e \n publicação da v1  |  30 checklists  |
+|  Playwright  |  Criação e abertura da inspeção  |  30 inspeções  |
+|  Playwright  |  Preenchimento e conclusão na interface  |  60 respostas em \n 30 inspeções  |
+|  Playwright  |  Nova consulta da conclusão \n e das respostas sincronizadas \n em outro contexto de navegação  |  30 inspeções \n concluídas  |
+|  Playwright  |  Abertura e conferência do relatório \n histórico com o ID da inspeção  |  30 relatórios \n renderizados  |
+|  Playwright  |  Não conformidade e observação \n na seção do relatório correspondente  |  10 casos  |
+|  Neon \n (consulta \n complementar)  |  Contagem de cadastros e vínculos \n históricos por ciclo  |  30 empresas, \n 30 checklists e 30 \n versões publicadas  |
+|  Neon  |  Inspeções concluídas e sincronizadas, \n snapshots e respostas  |  30 inspeções, \n 30 snapshots e \n 60 respostas  |
+|  Neon  |  Contagem de não conformidades ativas  |  10 ocorrências  |
+endlegend
+
+center footer
+A rodada final aprovou 30 ciclos completos e sequenciais em um
+deploy de teste na Vercel com Neon dedicado. Todas as etapas
+aplicáveis foram aprovadas.
+Na preparação anterior, uma transação de leitura no Neon atingiu
+o tempo limite. A tentativa parou antes de qualquer gravação,
+com zero ciclos iniciados.
+
+Fonte dos dados — JSON e relatório da rodada 01 do Ensaio de Volume
+(21 de novembro de 2026) e roteiro Playwright (tests/volume/workflow.ts).
+endfooter
+@enduml
