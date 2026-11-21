@@ -418,7 +418,7 @@ type DatabaseClient = (typeof import("../../src/server/prisma/client"))["prisma"
 
 async function otherRecords(prisma: DatabaseClient) {
   const prior = { email: { not: account } };
-  const [usuarios, empresas, checklists, inspecoes] = await prisma.$transaction([
+  const [usuarios, empresas, checklists, inspecoes] = await Promise.all([
     prisma.user.count({ where: prior }),
     prisma.company.count({ where: { createdBy: prior } }),
     prisma.checklist.count({ where: { createdBy: prior } }),
@@ -432,7 +432,7 @@ async function verifyDatabase(
   userId: string,
   before: Awaited<ReturnType<typeof otherRecords>>,
 ) {
-  const [companies, checklists, inspections] = await prisma.$transaction([
+  const [companies, checklists, inspections] = await Promise.all([
     prisma.company.findMany({
       where: { createdById: userId },
       select: { id: true, corporateName: true, deletedAt: true },
@@ -592,11 +592,14 @@ async function run() {
     throw new Error("Confirme o deploy, o banco dedicado e o commit do roteiro.");
 
   preflight = "banco_dedicado";
+  dbUrl.searchParams.set("sslmode", "verify-full");
   process.env.DATABASE_URL = dbUrl.toString();
   const { prisma } = await import("../../src/server/prisma/client");
   try {
-    const [timingUser, unexpectedUser, before] = await Promise.all([
-      prisma.user.count({ where: { email: timingRunEmail, deletedAt: null } }),
+    const timingUser = await prisma.user.count({
+      where: { email: timingRunEmail, deletedAt: null },
+    });
+    const [unexpectedUser, before] = await Promise.all([
       prisma.user.count({
         where: {
           NOT: {
