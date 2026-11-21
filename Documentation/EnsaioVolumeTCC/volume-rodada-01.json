@@ -1,0 +1,1610 @@
+{
+  "runId": "23d245a2-5ea6-462d-95d4-5342fd851816",
+  "status": "finalizado",
+  "preflight": "validado",
+  "startedAt": "2026-11-21T16:45:27.043Z",
+  "updatedAt": "2026-11-21T16:53:12.472Z",
+  "deployment": {
+    "origin": "https://safe-watch-insight-timing.vercel.app",
+    "id": "dpl_9nBhHuVpEmuxFHWbxNK8Ha6Ka3Hx",
+    "project": "safe-watch-insight-timing",
+    "projectId": "prj_W58Dd38R2lx3QqEhJXJqkcIemFky",
+    "commit": "b247c8694c06221a64000e6844479bf7a015e429",
+    "region": "gru1"
+  },
+  "database": {
+    "project": "SafeWatchInsightTiming",
+    "projectId": "icy-cake-52272050",
+    "branchId": "br-sparkling-meadow-b689n13x",
+    "endpoint": "ep-young-brook-b6zvhv9e.c-2.sa-east-1.aws.neon.tech",
+    "name": "safe_watch_timing",
+    "region": "aws-sa-east-1"
+  },
+  "runnerCommit": "286f511abaa33ee3d939d0aa730fc8c112b60d6a",
+  "runner": {
+    "node": "v22.23.2",
+    "platform": "linux",
+    "chromium": "151.0.7922.34"
+  },
+  "ciclosCompletos": 30,
+  "resumo": {
+    "empresa": {
+      "previstas": 30,
+      "iniciadas": 30,
+      "aprovadas": 30,
+      "falhas": 0,
+      "naoExecutadas": 0
+    },
+    "checklist": {
+      "previstas": 30,
+      "iniciadas": 30,
+      "aprovadas": 30,
+      "falhas": 0,
+      "naoExecutadas": 0
+    },
+    "inspecaoCriada": {
+      "previstas": 30,
+      "iniciadas": 30,
+      "aprovadas": 30,
+      "falhas": 0,
+      "naoExecutadas": 0
+    },
+    "respostasEConclusao": {
+      "previstas": 30,
+      "iniciadas": 30,
+      "aprovadas": 30,
+      "falhas": 0,
+      "naoExecutadas": 0
+    },
+    "persistencia": {
+      "previstas": 30,
+      "iniciadas": 30,
+      "aprovadas": 30,
+      "falhas": 0,
+      "naoExecutadas": 0
+    },
+    "relatorio": {
+      "previstas": 30,
+      "iniciadas": 30,
+      "aprovadas": 30,
+      "falhas": 0,
+      "naoExecutadas": 0
+    },
+    "naoConformidade": {
+      "previstas": 10,
+      "iniciadas": 10,
+      "aprovadas": 10,
+      "falhas": 0,
+      "naoExecutadas": 0
+    }
+  },
+  "relatoriosDisponiveis": [
+    "264c902d-089b-42b7-9de8-f6e5ebf3d072",
+    "a67d0584-bf8a-40f0-a7fc-9c88071b6dd4",
+    "950ad8b4-d2b4-480e-bdb2-10db5d28e2b5",
+    "6df124c1-d0aa-46fb-b9ba-ec5709974cf6",
+    "c254ac27-efb3-4e37-b5bd-351b71b41364",
+    "b73973b9-da83-4312-b1ad-ca9d8a12f29e",
+    "e40ae7a5-bd75-4c5f-b772-f1e51fa9da0c",
+    "2602221b-ea87-4304-a823-a7d81de36135",
+    "c73b4a0a-ba4b-43aa-91b4-792ced207139",
+    "996623c7-30ce-481b-83b0-9f41a05cfa81",
+    "f97031f6-de56-4f61-80e8-803b883064ed",
+    "749afed7-ba4c-40cb-bde3-9ca6606f262a",
+    "2d1387fb-328d-48d1-9e5e-3e402a966549",
+    "8f242d8e-4a82-4ff9-bf8b-a34020802cbf",
+    "9f33b7c6-4511-491e-9836-68ffe4cefe9b",
+    "6f0c8948-3bf1-48ff-845e-7f41b56c448d",
+    "80b87e6a-2920-4fb5-a574-9e58afaac508",
+    "84559294-cbd5-4c4b-af56-41d076d4135a",
+    "992b5633-7dda-4b9a-bd7f-0fe560d25e39",
+    "c46b39c6-0fe2-4f18-b12a-fd8f425b5843",
+    "76a5cc6b-7c93-4ac2-96a7-a4b0639b4ee2",
+    "c836694a-9efb-4346-8ce9-044a82472801",
+    "23bb7d2a-86ea-46dc-b22d-a4b15d0b30d4",
+    "5b9d95c3-807a-46fc-818f-db5c606ec141",
+    "a2550346-80ab-475f-a555-d79438e0f64b",
+    "e1c697ef-3b5a-459f-a6e9-086da796b4d7",
+    "40b99334-0bba-48dc-be84-9bc2485d67ba",
+    "81a3627e-811f-4e62-a174-f65a5142d4f9",
+    "70fc1606-c209-4b6c-8276-9c38d585fb1f",
+    "4c5fd81b-8989-42b4-b714-ee6058898028"
+  ],
+  "verificacaoComplementar": {
+    "outrosRegistrosAntes": {
+      "usuarios": 2,
+      "empresas": 2,
+      "checklists": 2,
+      "inspecoes": 21
+    },
+    "outrosRegistrosDepois": {
+      "usuarios": 2,
+      "empresas": 2,
+      "checklists": 2,
+      "inspecoes": 21
+    },
+    "quantidades": {
+      "empresas": 30,
+      "checklists": 30,
+      "versoesPublicadas": 30,
+      "inspecoes": 30,
+      "snapshots": 30,
+      "respostas": 60,
+      "naoConformidadesAtivas": 10
+    },
+    "vinculosValidados": [
+      {
+        "ciclo": 1,
+        "empresaId": "6be9017d-4b03-4623-88a3-830301a4dc25",
+        "checklistId": "96469a0d-49a4-4aa8-a4af-57157372fdbb",
+        "versaoId": "7aa77549-ab28-476b-8123-3d68ca776bff",
+        "inspecaoId": "264c902d-089b-42b7-9de8-f6e5ebf3d072",
+        "snapshotId": "0c82e02e-1cbd-4b92-a84b-eaa7cc3b227d",
+        "respostasIds": [
+          "968b858c-0cc1-4949-b79a-5f79a51100d1",
+          "78d9f496-a8aa-4990-9563-b615a5871963"
+        ],
+        "naoConformidadeId": null
+      },
+      {
+        "ciclo": 2,
+        "empresaId": "2c54fa91-b4f1-47ae-8a98-5ba50d5073e5",
+        "checklistId": "770706cb-5ad1-457c-b4bd-24456ff2952a",
+        "versaoId": "08359f1c-de5a-4bab-9d10-f5f097e11de8",
+        "inspecaoId": "a67d0584-bf8a-40f0-a7fc-9c88071b6dd4",
+        "snapshotId": "ffef62f0-4daf-4b93-9ad7-e204dca6ca46",
+        "respostasIds": [
+          "a6bd7a43-25d0-48d8-a6d1-38f9d17f5090",
+          "93bffefd-f37e-423b-83ac-438bd1002702"
+        ],
+        "naoConformidadeId": null
+      },
+      {
+        "ciclo": 3,
+        "empresaId": "64ccfd7d-76fa-4bd4-a010-1545161d3180",
+        "checklistId": "0531a3ab-ee8e-4316-bf30-2658088ab687",
+        "versaoId": "a03ceae2-d33d-4486-ad8d-fee9349451cb",
+        "inspecaoId": "950ad8b4-d2b4-480e-bdb2-10db5d28e2b5",
+        "snapshotId": "ddf27500-4e4d-4756-9ba2-a59cc3385b50",
+        "respostasIds": [
+          "2ac8e104-9ed7-4ad2-9ee0-23a991933de6",
+          "e2bdb1e5-7b62-4dc1-afe8-db412034fa32"
+        ],
+        "naoConformidadeId": "bd56cb85-f005-47e5-b0c1-8d7c2b704958"
+      },
+      {
+        "ciclo": 4,
+        "empresaId": "01afaf2c-c0d4-4e15-b8db-06ca6d0c43ee",
+        "checklistId": "03e6de83-f2f5-4427-afc0-a89f106b5407",
+        "versaoId": "7ec00c30-05ca-4ff6-973e-1e9222fd415e",
+        "inspecaoId": "6df124c1-d0aa-46fb-b9ba-ec5709974cf6",
+        "snapshotId": "38cb8d77-942e-4990-a17f-8e548eb76ea8",
+        "respostasIds": [
+          "7325e2ad-28bd-484c-82ad-6d94e81a752f",
+          "4107d320-114d-43bb-871a-5d08ae35b485"
+        ],
+        "naoConformidadeId": null
+      },
+      {
+        "ciclo": 5,
+        "empresaId": "e1cfa909-0105-47b5-9307-034769d1f182",
+        "checklistId": "67d4befd-84a0-4488-8468-2d99208dfcbc",
+        "versaoId": "e497f452-8b58-47f4-a4b1-cf349ec673c2",
+        "inspecaoId": "c254ac27-efb3-4e37-b5bd-351b71b41364",
+        "snapshotId": "48c9fe99-0f03-4305-b243-85abf335bd22",
+        "respostasIds": [
+          "76c2f4ba-915e-4cd0-9c95-aeb66783ccca",
+          "f14ba3e8-1954-451b-bf7b-9883a52c5b2f"
+        ],
+        "naoConformidadeId": null
+      },
+      {
+        "ciclo": 6,
+        "empresaId": "b7b21ea5-685d-4f6f-820b-86492be78419",
+        "checklistId": "ac1abcf1-f1c2-4fc9-9475-d998fa31bef9",
+        "versaoId": "330c2f04-4d67-43a8-9281-8fb714c1763c",
+        "inspecaoId": "b73973b9-da83-4312-b1ad-ca9d8a12f29e",
+        "snapshotId": "cdfcf2db-325f-49d6-8c1f-a72f7dc98340",
+        "respostasIds": [
+          "76224a91-0857-4415-9d99-78fc486d401e",
+          "8be5e633-ab1a-4ae9-a00f-41cdc2e6ab16"
+        ],
+        "naoConformidadeId": "0663a7a4-3c65-4168-8c5d-c8f7341f0432"
+      },
+      {
+        "ciclo": 7,
+        "empresaId": "27951e18-d58a-4a1d-a13e-fdf6b1dc5dba",
+        "checklistId": "2c3fc087-81ac-49ea-a506-893126ac475b",
+        "versaoId": "fb2f8347-5cfc-4b45-9e0c-dedf52da1688",
+        "inspecaoId": "e40ae7a5-bd75-4c5f-b772-f1e51fa9da0c",
+        "snapshotId": "9c6a4923-288f-4069-9a18-6e5ba75c4568",
+        "respostasIds": [
+          "5aa65128-1030-428d-8d2d-b62bf387ce13",
+          "8c90e796-7faf-45e8-b77f-0ca5422f68b9"
+        ],
+        "naoConformidadeId": null
+      },
+      {
+        "ciclo": 8,
+        "empresaId": "e310ff07-afc4-4c07-8777-8ae16c8dd097",
+        "checklistId": "cceaf3d5-4d6b-4fbd-8a22-809d6d17a345",
+        "versaoId": "83dea21b-82b6-4e9e-9f0e-6a8a15ba02ec",
+        "inspecaoId": "2602221b-ea87-4304-a823-a7d81de36135",
+        "snapshotId": "677d5fb7-e5c8-44e4-ace0-b192acf1d920",
+        "respostasIds": [
+          "e4cac054-d73e-46bb-88c8-923d1cfe951c",
+          "da72b90e-6a9b-4676-9d59-4bca425e66d8"
+        ],
+        "naoConformidadeId": null
+      },
+      {
+        "ciclo": 9,
+        "empresaId": "af6631a8-6755-4c89-acc6-3e85e5405e5a",
+        "checklistId": "1174beca-b297-4944-8671-57a6e0ecd7b7",
+        "versaoId": "cf5dd2de-8659-47a5-aca4-3d304e9a0b64",
+        "inspecaoId": "c73b4a0a-ba4b-43aa-91b4-792ced207139",
+        "snapshotId": "4f942ce7-9f7b-4b6a-a131-065e0e7a5260",
+        "respostasIds": [
+          "cf9878a0-72ce-436e-a33e-ffa8e713b996",
+          "915c63b7-8881-4a75-9757-8483ef4ba838"
+        ],
+        "naoConformidadeId": "d025dde8-7441-46d7-a6d2-b24f7e261546"
+      },
+      {
+        "ciclo": 10,
+        "empresaId": "e086944e-5a4d-496c-801b-bb6e055d7fec",
+        "checklistId": "1e2be9ad-af3c-4527-872c-1d4e69eeca74",
+        "versaoId": "4a63a89e-ab9d-4ce1-a145-8258df283c49",
+        "inspecaoId": "996623c7-30ce-481b-83b0-9f41a05cfa81",
+        "snapshotId": "7619d8d0-dcaf-46d1-bfa9-83e38e1d40d4",
+        "respostasIds": [
+          "4c395ca4-20d8-473b-8412-00c02a119d65",
+          "d63eac9a-46af-4fa1-abca-fd809951a8e9"
+        ],
+        "naoConformidadeId": null
+      },
+      {
+        "ciclo": 11,
+        "empresaId": "6c2c55e3-8a92-4879-992a-c569feb0cc07",
+        "checklistId": "1d8f5c81-cc00-4c32-9ebb-dd4605ac86f5",
+        "versaoId": "915f2762-0b27-4c96-b53a-48a140956379",
+        "inspecaoId": "f97031f6-de56-4f61-80e8-803b883064ed",
+        "snapshotId": "67ad6910-df5e-4a52-8488-24b3899bba1a",
+        "respostasIds": [
+          "34a9d0ee-6250-4cac-b8f9-6d044f664685",
+          "196eb5ed-92c1-4d61-b00e-4d9a268506ee"
+        ],
+        "naoConformidadeId": null
+      },
+      {
+        "ciclo": 12,
+        "empresaId": "5b4dcdb5-10b0-4db1-b8bc-daa2bd7d7794",
+        "checklistId": "7e8e2a0f-d208-4ced-90ad-7ad1562d062a",
+        "versaoId": "2c31ae65-efa7-445d-9b9a-854a2442451b",
+        "inspecaoId": "749afed7-ba4c-40cb-bde3-9ca6606f262a",
+        "snapshotId": "dd3baadd-91a5-47d0-918b-5a9ec077bb12",
+        "respostasIds": [
+          "78955ccd-a937-4ca4-919e-467cab2598b3",
+          "288ed97b-5612-4573-8a76-a76b8f3e7357"
+        ],
+        "naoConformidadeId": "fa5a7b43-5008-4cc4-b119-2ab4b01a79c3"
+      },
+      {
+        "ciclo": 13,
+        "empresaId": "a4e5bb0c-872c-4d48-a238-e69160df551d",
+        "checklistId": "fb280d67-76d3-4f74-b7a4-2b261547f955",
+        "versaoId": "256a37c2-7801-49fe-896c-d3f4fa217130",
+        "inspecaoId": "2d1387fb-328d-48d1-9e5e-3e402a966549",
+        "snapshotId": "d7bd19dd-1839-4b5f-9e12-284e9b300305",
+        "respostasIds": [
+          "9dfd8f10-40a3-4fc9-82b8-d3bc2bc58ea9",
+          "690e7d9e-8f14-47ed-b265-bd3fdc768f07"
+        ],
+        "naoConformidadeId": null
+      },
+      {
+        "ciclo": 14,
+        "empresaId": "da1b4114-47a2-4ef1-bad3-fa2f702d340a",
+        "checklistId": "158e5e73-08ad-4377-a9be-c5821617efc8",
+        "versaoId": "77f3a58f-088e-44c5-a82c-782e39919891",
+        "inspecaoId": "8f242d8e-4a82-4ff9-bf8b-a34020802cbf",
+        "snapshotId": "57da3b1e-6e3b-4dc9-8e5d-f8c839d21bee",
+        "respostasIds": [
+          "9d2a37a2-db87-4fba-a7f8-7d2ef8108043",
+          "75c386b0-4ac2-4f71-ba0b-8e545d0d974f"
+        ],
+        "naoConformidadeId": null
+      },
+      {
+        "ciclo": 15,
+        "empresaId": "8f44b487-08ee-4344-97a7-f394396d5f6f",
+        "checklistId": "ca25299e-872f-4888-9307-9322615718de",
+        "versaoId": "1dd70ac4-8ed1-40b3-b76c-ef5dafaa7c20",
+        "inspecaoId": "9f33b7c6-4511-491e-9836-68ffe4cefe9b",
+        "snapshotId": "7f44d4cd-3328-4b09-a51d-7a6ac0ada19c",
+        "respostasIds": [
+          "4a8ee79a-248c-4874-8d86-bd6f57b90b42",
+          "aecf5312-a1f7-4aeb-bee3-d0275b9bfbdf"
+        ],
+        "naoConformidadeId": "44f7c640-0752-4289-8ced-5b7605a1541f"
+      },
+      {
+        "ciclo": 16,
+        "empresaId": "3e6203fa-542f-4859-b80c-3b53c3876db6",
+        "checklistId": "a9d590f1-0d07-4c6b-9279-eed6b9996461",
+        "versaoId": "4204c4fa-2b13-424d-b00f-53e476769402",
+        "inspecaoId": "6f0c8948-3bf1-48ff-845e-7f41b56c448d",
+        "snapshotId": "0c1a3e78-ff9f-411a-a826-6c80937d00ba",
+        "respostasIds": [
+          "5bf1b3d9-3d6e-41e5-9efa-e5369a6de4fe",
+          "8b3a1a78-e7a4-47f3-84bb-f62b0568378d"
+        ],
+        "naoConformidadeId": null
+      },
+      {
+        "ciclo": 17,
+        "empresaId": "db913a1f-cea7-49b5-8035-367b3e32998e",
+        "checklistId": "4fa83de7-4206-4e91-943d-10ad63b838ab",
+        "versaoId": "4e05820e-efca-4b13-832b-5a443f74c20c",
+        "inspecaoId": "80b87e6a-2920-4fb5-a574-9e58afaac508",
+        "snapshotId": "41aca053-1b67-45ec-8de9-7a5b2d7fbf07",
+        "respostasIds": [
+          "9e7d4fc7-7917-4ac3-8b0e-9648b04744d4",
+          "769501d9-6272-4199-9b2c-14a62633c1a9"
+        ],
+        "naoConformidadeId": null
+      },
+      {
+        "ciclo": 18,
+        "empresaId": "e5bf76a3-5c4c-47c7-8410-37ceec76d386",
+        "checklistId": "95100378-d100-46e7-be4a-707ae4c968e7",
+        "versaoId": "4d094dff-022f-461c-91a2-17709d3b3edd",
+        "inspecaoId": "84559294-cbd5-4c4b-af56-41d076d4135a",
+        "snapshotId": "4204402b-9d8f-4bd5-bfdb-df13d000c5cd",
+        "respostasIds": [
+          "a6d79999-7c9e-4e60-a4d6-a9eb69b2b15a",
+          "7d93c2e9-0d99-4c96-9101-fd13730c1376"
+        ],
+        "naoConformidadeId": "8d2b80cc-0bac-4fa5-a096-2b3cf587d526"
+      },
+      {
+        "ciclo": 19,
+        "empresaId": "83dc212d-0a5a-49a2-a841-aa3e9e9d9268",
+        "checklistId": "a4f5e9f5-55dc-4a4c-900f-1d1a5fdbff88",
+        "versaoId": "96dc87f0-156f-417c-90a8-feb22a34a97d",
+        "inspecaoId": "992b5633-7dda-4b9a-bd7f-0fe560d25e39",
+        "snapshotId": "edd1ec6a-3a67-41b9-8e1c-90ef6261398b",
+        "respostasIds": [
+          "67370693-2285-45ff-beb1-81b1129bce04",
+          "a57f207b-fc24-4478-883f-41a648573b1a"
+        ],
+        "naoConformidadeId": null
+      },
+      {
+        "ciclo": 20,
+        "empresaId": "6ae03bbb-51bc-41df-bf32-2d481d560177",
+        "checklistId": "3a643cec-f4a0-44c6-b0e8-0f88fc221194",
+        "versaoId": "261a8c80-6a77-4120-9ca0-0ec3fa9c364f",
+        "inspecaoId": "c46b39c6-0fe2-4f18-b12a-fd8f425b5843",
+        "snapshotId": "fac35fd6-676e-42dd-9abb-c11bad65e396",
+        "respostasIds": [
+          "d425a16f-415f-489c-aade-d1087fce3fca",
+          "65e760c4-525f-4134-95e0-4f10cf746fc8"
+        ],
+        "naoConformidadeId": null
+      },
+      {
+        "ciclo": 21,
+        "empresaId": "60cee05d-a476-4f07-848c-1b4a6fd152f7",
+        "checklistId": "ddeebce1-3ff8-47b2-8cef-79cf6b72d9a0",
+        "versaoId": "8c012b2b-64ee-428e-b8e8-fac1c3fbe814",
+        "inspecaoId": "76a5cc6b-7c93-4ac2-96a7-a4b0639b4ee2",
+        "snapshotId": "55af5b4c-d66f-463b-9c7e-213a0758ed41",
+        "respostasIds": [
+          "ac6aa65c-c365-4e4c-9883-a9109d02ba46",
+          "6369a8d7-1703-48d0-a753-384b8d046ed0"
+        ],
+        "naoConformidadeId": "efee6ba1-4f1a-4a6b-8744-b92f76385f83"
+      },
+      {
+        "ciclo": 22,
+        "empresaId": "353845ea-43c0-4d7c-a064-04c049224172",
+        "checklistId": "8f207594-f060-4641-af20-39e9deaa1b63",
+        "versaoId": "0b8ed38d-6c93-4e1a-9d7f-1189ffcef249",
+        "inspecaoId": "c836694a-9efb-4346-8ce9-044a82472801",
+        "snapshotId": "4c97da16-e328-460f-9bdb-ddf66a1155f2",
+        "respostasIds": [
+          "f854ba6d-0b70-4e47-a208-871a43dc4989",
+          "f523be2b-9762-4e96-ac78-61992961fd94"
+        ],
+        "naoConformidadeId": null
+      },
+      {
+        "ciclo": 23,
+        "empresaId": "f77efb62-782e-42e5-bd09-28ed5e194b3e",
+        "checklistId": "e40d1814-e421-4667-a65c-351b6ad77d27",
+        "versaoId": "c4a99c1c-d61a-44bf-8172-cb544a8acf53",
+        "inspecaoId": "23bb7d2a-86ea-46dc-b22d-a4b15d0b30d4",
+        "snapshotId": "c4c4e87d-896a-449e-a0ca-7d2a884aeb45",
+        "respostasIds": [
+          "ab6b8f4c-37c5-4926-adf0-820d5b574e76",
+          "278949da-e1fb-4d99-b5f4-d5f1831e42bc"
+        ],
+        "naoConformidadeId": null
+      },
+      {
+        "ciclo": 24,
+        "empresaId": "84abbd9d-71e7-4dd5-9a48-e6f195ab494b",
+        "checklistId": "854706c1-3398-46c3-b0e3-7c73030d2d29",
+        "versaoId": "d0f06dd0-14eb-4361-bbba-3ee16824f666",
+        "inspecaoId": "5b9d95c3-807a-46fc-818f-db5c606ec141",
+        "snapshotId": "48f7d0f7-b5c5-412c-bb47-82d39063cacc",
+        "respostasIds": [
+          "83707a46-1711-4500-9fa4-52359a320777",
+          "aa2856f8-1bfe-4391-9f65-1709674e32f4"
+        ],
+        "naoConformidadeId": "ad266ab5-d55f-452c-929c-5f50ad0a0fc7"
+      },
+      {
+        "ciclo": 25,
+        "empresaId": "cc1c7516-c4f0-45eb-81ab-2d15b3013d2c",
+        "checklistId": "a779843a-cda8-4b7a-aee0-125a260f93eb",
+        "versaoId": "fbb3aa44-4dfe-4137-88c9-3bd3d1b0984b",
+        "inspecaoId": "a2550346-80ab-475f-a555-d79438e0f64b",
+        "snapshotId": "c5f2218f-447e-4083-a9c9-daf339876b31",
+        "respostasIds": [
+          "23f40e06-9bb4-41af-ada8-b2bcfd507b7c",
+          "b0388540-4e93-4f8e-b952-003cf8a24f23"
+        ],
+        "naoConformidadeId": null
+      },
+      {
+        "ciclo": 26,
+        "empresaId": "0614dd04-6b47-4d10-b1ec-7c270aafe50a",
+        "checklistId": "f80a55e8-c897-4270-b81a-371c0c0633b8",
+        "versaoId": "041d5afb-833b-44ba-ac5f-ed28ff53411d",
+        "inspecaoId": "e1c697ef-3b5a-459f-a6e9-086da796b4d7",
+        "snapshotId": "461c8401-b3c1-4dba-ac82-a5235c1e08be",
+        "respostasIds": [
+          "521ae179-bebc-45cc-82b2-945bd71d0e00",
+          "faf60d6b-5c83-4a10-9dd0-8dfa344b99ec"
+        ],
+        "naoConformidadeId": null
+      },
+      {
+        "ciclo": 27,
+        "empresaId": "48773952-f859-44e4-9783-9c36eea33e46",
+        "checklistId": "8b45a59c-bc40-4246-890a-30de7faf59af",
+        "versaoId": "dd6a591f-50b3-47fe-8fac-0ee2126bcce9",
+        "inspecaoId": "40b99334-0bba-48dc-be84-9bc2485d67ba",
+        "snapshotId": "74bf7574-973b-4de3-8e75-43a2985852df",
+        "respostasIds": [
+          "26387347-8c57-4d6a-acfd-79ec09473548",
+          "809e80c9-e1c0-4303-9376-b0abf0578ebe"
+        ],
+        "naoConformidadeId": "5e2c85a0-1929-4dbc-86ad-06bce9f85f3a"
+      },
+      {
+        "ciclo": 28,
+        "empresaId": "515f6139-bbe7-41cd-a26d-8b187843b5cd",
+        "checklistId": "147bbc7a-6f18-4ff8-a67f-2c1e6304ae74",
+        "versaoId": "df88c837-bbfd-43f0-9d1e-f30b91a44a96",
+        "inspecaoId": "81a3627e-811f-4e62-a174-f65a5142d4f9",
+        "snapshotId": "ea319a9e-7417-4843-9612-b7d4c672c7ac",
+        "respostasIds": [
+          "6cb0f3de-edf4-4e4f-b381-b477a022cf7d",
+          "d9d5ebdb-0078-4d8e-831d-07204c330564"
+        ],
+        "naoConformidadeId": null
+      },
+      {
+        "ciclo": 29,
+        "empresaId": "bacd87c6-4184-4dda-be5c-c86e4fb81afc",
+        "checklistId": "5d922308-0091-46a3-8a35-3e867ce5bfac",
+        "versaoId": "541d8da8-b369-4bce-af19-b0e02097d1e4",
+        "inspecaoId": "70fc1606-c209-4b6c-8276-9c38d585fb1f",
+        "snapshotId": "6acc7c02-dbde-4624-9a1b-0b9aa1d0b1cb",
+        "respostasIds": [
+          "371df586-875e-485b-80a7-b4403c433de4",
+          "a4c716a9-ba4a-441a-af4a-35e7c997f976"
+        ],
+        "naoConformidadeId": null
+      },
+      {
+        "ciclo": 30,
+        "empresaId": "600dec0e-b984-4778-b75d-8758edc540a4",
+        "checklistId": "4705cce9-3d39-43ed-803f-e06dfba4309b",
+        "versaoId": "6699d16e-8f84-4b0f-944a-916ba74df92e",
+        "inspecaoId": "4c5fd81b-8989-42b4-b714-ee6058898028",
+        "snapshotId": "6fe7d574-d154-4112-9eb6-50f07375b15c",
+        "respostasIds": [
+          "e779b76f-b6d2-4fe7-ab68-2ae102be3415",
+          "312775c3-171b-4ca0-b5de-20955b9c5a0b"
+        ],
+        "naoConformidadeId": "79d6aadd-cbc7-44a0-91f9-2fe356c51401"
+      }
+    ]
+  },
+  "ciclos": [
+    {
+      "numero": 1,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 01",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 01",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 01",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 01"
+      ],
+      "observacaoNC": null,
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "nao_aplicavel"
+        }
+      },
+      "checklistId": "96469a0d-49a4-4aa8-a4af-57157372fdbb",
+      "inspecaoId": "264c902d-089b-42b7-9de8-f6e5ebf3d072",
+      "relatorioInspecaoId": "264c902d-089b-42b7-9de8-f6e5ebf3d072"
+    },
+    {
+      "numero": 2,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 02",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 02",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 02",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 02"
+      ],
+      "observacaoNC": null,
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "nao_aplicavel"
+        }
+      },
+      "checklistId": "770706cb-5ad1-457c-b4bd-24456ff2952a",
+      "inspecaoId": "a67d0584-bf8a-40f0-a7fc-9c88071b6dd4",
+      "relatorioInspecaoId": "a67d0584-bf8a-40f0-a7fc-9c88071b6dd4"
+    },
+    {
+      "numero": 3,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 03",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 03",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 03",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 03"
+      ],
+      "observacaoNC": "Observação sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 03",
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "aprovada"
+        }
+      },
+      "checklistId": "0531a3ab-ee8e-4316-bf30-2658088ab687",
+      "inspecaoId": "950ad8b4-d2b4-480e-bdb2-10db5d28e2b5",
+      "relatorioInspecaoId": "950ad8b4-d2b4-480e-bdb2-10db5d28e2b5"
+    },
+    {
+      "numero": 4,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 04",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 04",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 04",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 04"
+      ],
+      "observacaoNC": null,
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "nao_aplicavel"
+        }
+      },
+      "checklistId": "03e6de83-f2f5-4427-afc0-a89f106b5407",
+      "inspecaoId": "6df124c1-d0aa-46fb-b9ba-ec5709974cf6",
+      "relatorioInspecaoId": "6df124c1-d0aa-46fb-b9ba-ec5709974cf6"
+    },
+    {
+      "numero": 5,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 05",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 05",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 05",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 05"
+      ],
+      "observacaoNC": null,
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "nao_aplicavel"
+        }
+      },
+      "checklistId": "67d4befd-84a0-4488-8468-2d99208dfcbc",
+      "inspecaoId": "c254ac27-efb3-4e37-b5bd-351b71b41364",
+      "relatorioInspecaoId": "c254ac27-efb3-4e37-b5bd-351b71b41364"
+    },
+    {
+      "numero": 6,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 06",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 06",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 06",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 06"
+      ],
+      "observacaoNC": "Observação sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 06",
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "aprovada"
+        }
+      },
+      "checklistId": "ac1abcf1-f1c2-4fc9-9475-d998fa31bef9",
+      "inspecaoId": "b73973b9-da83-4312-b1ad-ca9d8a12f29e",
+      "relatorioInspecaoId": "b73973b9-da83-4312-b1ad-ca9d8a12f29e"
+    },
+    {
+      "numero": 7,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 07",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 07",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 07",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 07"
+      ],
+      "observacaoNC": null,
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "nao_aplicavel"
+        }
+      },
+      "checklistId": "2c3fc087-81ac-49ea-a506-893126ac475b",
+      "inspecaoId": "e40ae7a5-bd75-4c5f-b772-f1e51fa9da0c",
+      "relatorioInspecaoId": "e40ae7a5-bd75-4c5f-b772-f1e51fa9da0c"
+    },
+    {
+      "numero": 8,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 08",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 08",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 08",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 08"
+      ],
+      "observacaoNC": null,
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "nao_aplicavel"
+        }
+      },
+      "checklistId": "cceaf3d5-4d6b-4fbd-8a22-809d6d17a345",
+      "inspecaoId": "2602221b-ea87-4304-a823-a7d81de36135",
+      "relatorioInspecaoId": "2602221b-ea87-4304-a823-a7d81de36135"
+    },
+    {
+      "numero": 9,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 09",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 09",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 09",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 09"
+      ],
+      "observacaoNC": "Observação sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 09",
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "aprovada"
+        }
+      },
+      "checklistId": "1174beca-b297-4944-8671-57a6e0ecd7b7",
+      "inspecaoId": "c73b4a0a-ba4b-43aa-91b4-792ced207139",
+      "relatorioInspecaoId": "c73b4a0a-ba4b-43aa-91b4-792ced207139"
+    },
+    {
+      "numero": 10,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 10",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 10",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 10",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 10"
+      ],
+      "observacaoNC": null,
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "nao_aplicavel"
+        }
+      },
+      "checklistId": "1e2be9ad-af3c-4527-872c-1d4e69eeca74",
+      "inspecaoId": "996623c7-30ce-481b-83b0-9f41a05cfa81",
+      "relatorioInspecaoId": "996623c7-30ce-481b-83b0-9f41a05cfa81"
+    },
+    {
+      "numero": 11,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 11",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 11",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 11",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 11"
+      ],
+      "observacaoNC": null,
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "nao_aplicavel"
+        }
+      },
+      "checklistId": "1d8f5c81-cc00-4c32-9ebb-dd4605ac86f5",
+      "inspecaoId": "f97031f6-de56-4f61-80e8-803b883064ed",
+      "relatorioInspecaoId": "f97031f6-de56-4f61-80e8-803b883064ed"
+    },
+    {
+      "numero": 12,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 12",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 12",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 12",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 12"
+      ],
+      "observacaoNC": "Observação sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 12",
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "aprovada"
+        }
+      },
+      "checklistId": "7e8e2a0f-d208-4ced-90ad-7ad1562d062a",
+      "inspecaoId": "749afed7-ba4c-40cb-bde3-9ca6606f262a",
+      "relatorioInspecaoId": "749afed7-ba4c-40cb-bde3-9ca6606f262a"
+    },
+    {
+      "numero": 13,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 13",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 13",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 13",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 13"
+      ],
+      "observacaoNC": null,
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "nao_aplicavel"
+        }
+      },
+      "checklistId": "fb280d67-76d3-4f74-b7a4-2b261547f955",
+      "inspecaoId": "2d1387fb-328d-48d1-9e5e-3e402a966549",
+      "relatorioInspecaoId": "2d1387fb-328d-48d1-9e5e-3e402a966549"
+    },
+    {
+      "numero": 14,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 14",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 14",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 14",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 14"
+      ],
+      "observacaoNC": null,
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "nao_aplicavel"
+        }
+      },
+      "checklistId": "158e5e73-08ad-4377-a9be-c5821617efc8",
+      "inspecaoId": "8f242d8e-4a82-4ff9-bf8b-a34020802cbf",
+      "relatorioInspecaoId": "8f242d8e-4a82-4ff9-bf8b-a34020802cbf"
+    },
+    {
+      "numero": 15,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 15",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 15",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 15",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 15"
+      ],
+      "observacaoNC": "Observação sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 15",
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "aprovada"
+        }
+      },
+      "checklistId": "ca25299e-872f-4888-9307-9322615718de",
+      "inspecaoId": "9f33b7c6-4511-491e-9836-68ffe4cefe9b",
+      "relatorioInspecaoId": "9f33b7c6-4511-491e-9836-68ffe4cefe9b"
+    },
+    {
+      "numero": 16,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 16",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 16",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 16",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 16"
+      ],
+      "observacaoNC": null,
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "nao_aplicavel"
+        }
+      },
+      "checklistId": "a9d590f1-0d07-4c6b-9279-eed6b9996461",
+      "inspecaoId": "6f0c8948-3bf1-48ff-845e-7f41b56c448d",
+      "relatorioInspecaoId": "6f0c8948-3bf1-48ff-845e-7f41b56c448d"
+    },
+    {
+      "numero": 17,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 17",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 17",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 17",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 17"
+      ],
+      "observacaoNC": null,
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "nao_aplicavel"
+        }
+      },
+      "checklistId": "4fa83de7-4206-4e91-943d-10ad63b838ab",
+      "inspecaoId": "80b87e6a-2920-4fb5-a574-9e58afaac508",
+      "relatorioInspecaoId": "80b87e6a-2920-4fb5-a574-9e58afaac508"
+    },
+    {
+      "numero": 18,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 18",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 18",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 18",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 18"
+      ],
+      "observacaoNC": "Observação sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 18",
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "aprovada"
+        }
+      },
+      "checklistId": "95100378-d100-46e7-be4a-707ae4c968e7",
+      "inspecaoId": "84559294-cbd5-4c4b-af56-41d076d4135a",
+      "relatorioInspecaoId": "84559294-cbd5-4c4b-af56-41d076d4135a"
+    },
+    {
+      "numero": 19,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 19",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 19",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 19",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 19"
+      ],
+      "observacaoNC": null,
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "nao_aplicavel"
+        }
+      },
+      "checklistId": "a4f5e9f5-55dc-4a4c-900f-1d1a5fdbff88",
+      "inspecaoId": "992b5633-7dda-4b9a-bd7f-0fe560d25e39",
+      "relatorioInspecaoId": "992b5633-7dda-4b9a-bd7f-0fe560d25e39"
+    },
+    {
+      "numero": 20,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 20",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 20",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 20",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 20"
+      ],
+      "observacaoNC": null,
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "nao_aplicavel"
+        }
+      },
+      "checklistId": "3a643cec-f4a0-44c6-b0e8-0f88fc221194",
+      "inspecaoId": "c46b39c6-0fe2-4f18-b12a-fd8f425b5843",
+      "relatorioInspecaoId": "c46b39c6-0fe2-4f18-b12a-fd8f425b5843"
+    },
+    {
+      "numero": 21,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 21",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 21",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 21",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 21"
+      ],
+      "observacaoNC": "Observação sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 21",
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "aprovada"
+        }
+      },
+      "checklistId": "ddeebce1-3ff8-47b2-8cef-79cf6b72d9a0",
+      "inspecaoId": "76a5cc6b-7c93-4ac2-96a7-a4b0639b4ee2",
+      "relatorioInspecaoId": "76a5cc6b-7c93-4ac2-96a7-a4b0639b4ee2"
+    },
+    {
+      "numero": 22,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 22",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 22",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 22",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 22"
+      ],
+      "observacaoNC": null,
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "nao_aplicavel"
+        }
+      },
+      "checklistId": "8f207594-f060-4641-af20-39e9deaa1b63",
+      "inspecaoId": "c836694a-9efb-4346-8ce9-044a82472801",
+      "relatorioInspecaoId": "c836694a-9efb-4346-8ce9-044a82472801"
+    },
+    {
+      "numero": 23,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 23",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 23",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 23",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 23"
+      ],
+      "observacaoNC": null,
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "nao_aplicavel"
+        }
+      },
+      "checklistId": "e40d1814-e421-4667-a65c-351b6ad77d27",
+      "inspecaoId": "23bb7d2a-86ea-46dc-b22d-a4b15d0b30d4",
+      "relatorioInspecaoId": "23bb7d2a-86ea-46dc-b22d-a4b15d0b30d4"
+    },
+    {
+      "numero": 24,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 24",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 24",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 24",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 24"
+      ],
+      "observacaoNC": "Observação sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 24",
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "aprovada"
+        }
+      },
+      "checklistId": "854706c1-3398-46c3-b0e3-7c73030d2d29",
+      "inspecaoId": "5b9d95c3-807a-46fc-818f-db5c606ec141",
+      "relatorioInspecaoId": "5b9d95c3-807a-46fc-818f-db5c606ec141"
+    },
+    {
+      "numero": 25,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 25",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 25",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 25",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 25"
+      ],
+      "observacaoNC": null,
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "nao_aplicavel"
+        }
+      },
+      "checklistId": "a779843a-cda8-4b7a-aee0-125a260f93eb",
+      "inspecaoId": "a2550346-80ab-475f-a555-d79438e0f64b",
+      "relatorioInspecaoId": "a2550346-80ab-475f-a555-d79438e0f64b"
+    },
+    {
+      "numero": 26,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 26",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 26",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 26",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 26"
+      ],
+      "observacaoNC": null,
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "nao_aplicavel"
+        }
+      },
+      "checklistId": "f80a55e8-c897-4270-b81a-371c0c0633b8",
+      "inspecaoId": "e1c697ef-3b5a-459f-a6e9-086da796b4d7",
+      "relatorioInspecaoId": "e1c697ef-3b5a-459f-a6e9-086da796b4d7"
+    },
+    {
+      "numero": 27,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 27",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 27",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 27",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 27"
+      ],
+      "observacaoNC": "Observação sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 27",
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "aprovada"
+        }
+      },
+      "checklistId": "8b45a59c-bc40-4246-890a-30de7faf59af",
+      "inspecaoId": "40b99334-0bba-48dc-be84-9bc2485d67ba",
+      "relatorioInspecaoId": "40b99334-0bba-48dc-be84-9bc2485d67ba"
+    },
+    {
+      "numero": 28,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 28",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 28",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 28",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 28"
+      ],
+      "observacaoNC": null,
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "nao_aplicavel"
+        }
+      },
+      "checklistId": "147bbc7a-6f18-4ff8-a67f-2c1e6304ae74",
+      "inspecaoId": "81a3627e-811f-4e62-a174-f65a5142d4f9",
+      "relatorioInspecaoId": "81a3627e-811f-4e62-a174-f65a5142d4f9"
+    },
+    {
+      "numero": 29,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 29",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 29",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 29",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 29"
+      ],
+      "observacaoNC": null,
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "nao_aplicavel"
+        }
+      },
+      "checklistId": "5d922308-0091-46a3-8a35-3e867ce5bfac",
+      "inspecaoId": "70fc1606-c209-4b6c-8276-9c38d585fb1f",
+      "relatorioInspecaoId": "70fc1606-c209-4b6c-8276-9c38d585fb1f"
+    },
+    {
+      "numero": 30,
+      "empresa": "Empresa sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 30",
+      "checklist": "Checklist VOL 23d245a2-5ea6-462d-95d4-5342fd851816 30",
+      "itens": [
+        "Circulação desobstruída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 30",
+        "Sinalização de saída VOL 23d245a2-5ea6-462d-95d4-5342fd851816 30"
+      ],
+      "observacaoNC": "Observação sintética VOL 23d245a2-5ea6-462d-95d4-5342fd851816 30",
+      "etapas": {
+        "empresa": {
+          "status": "aprovada"
+        },
+        "checklist": {
+          "status": "aprovada"
+        },
+        "inspecaoCriada": {
+          "status": "aprovada"
+        },
+        "respostasEConclusao": {
+          "status": "aprovada"
+        },
+        "persistencia": {
+          "status": "aprovada"
+        },
+        "relatorio": {
+          "status": "aprovada"
+        },
+        "naoConformidade": {
+          "status": "aprovada"
+        }
+      },
+      "checklistId": "4705cce9-3d39-43ed-803f-e06dfba4309b",
+      "inspecaoId": "4c5fd81b-8989-42b4-b714-ee6058898028",
+      "relatorioInspecaoId": "4c5fd81b-8989-42b4-b714-ee6058898028"
+    }
+  ]
+}
