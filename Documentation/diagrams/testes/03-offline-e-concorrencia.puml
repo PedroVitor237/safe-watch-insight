@@ -1,0 +1,36 @@
+' Fontes: AI/Offline.md (homologação de 5 de setembro de 2026),
+' Documentation/HomologacaoConcorrenciaPostgreSQLIC-P6-03.md (12 de outubro de 2026)
+' e Documentation/RelatorioAuditoriaTecnicaPreEscritaTCC.md (atualização IC-P6-03).
+
+' Espaços inseparáveis dão margem ao texto dentro das células.
+
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam legendFontSize 16
+skinparam titleFontSize 20
+skinparam footerFontSize 14
+skinparam footerFontColor black
+skinparam shadowing false
+skinparam legendBackgroundColor white
+skinparam legendBorderColor transparent
+
+title Safe Watch Insight\nOperação offline e concorrência na sincronização
+
+legend
+|=  Execução  |=  Ambiente  |=  Resultado verificado  |
+|  Offline — instalação, \n reabertura e reenvio  |  Chromium, servidor \n local e Neon  |  Cenário aprovado. Reabertura sem \n rede, recuperação da fila e reenvio \n do mesmo UUID sem duplicação.  |
+|  Offline — edição \n e conclusão  |  Chromium, servidor \n local e Neon  |  Cenário aprovado. Seis itens e nove \n operações em ordem, com observação, \n reabertura offline e sincronização. O \n reenvio da conclusão foi idempotente.  |
+|  Offline — conflito \n de revisão  |  Chromium, servidor \n local e Neon  |  Cenário aprovado. O conflito bloqueou \n a operação local mesmo após mudanças \n de rede e preservou o dado no servidor.  |
+|  Concorrência \n no banco  |  PostgreSQL 18.4 \n local descartável  |  **18/18 aprovados.** Reenvios idênticos \n gravaram uma única vez. Em conflito, \n foram preservados os registros \n confirmados.  |
+|  Concorrência \n no navegador  |  Chromium, HTTP \n local e IndexedDB, \n com PostgreSQL 18.4 \n local descartável  |  **10/10 aprovados.** Reenvios entre abas \n foram deduplicados. O conflito preservou \n a alteração da fila perdedora. Após perda \n da confirmação HTTP, não houve nova \n gravação no reenvio.  |
+endlegend
+
+center footer
+Os três cenários offline foram homologados em 5 de setembro de 2026.
+Os resultados finais de concorrência são de 12 de outubro de 2026.
+
+Fonte dos dados — AI/Offline.md, relatório de homologação PostgreSQL
+IC-P6-03 e atualização correspondente na auditoria pré-escrita do TCC.
+endfooter
+@enduml

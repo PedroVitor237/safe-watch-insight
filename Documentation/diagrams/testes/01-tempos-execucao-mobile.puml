@@ -1,0 +1,42 @@
+' Fontes: Documentation/EnsaioTemposMobileTCC/tempos-mobile-rodada-01.json,
+' Documentation/EnsaioTemposMobileTCC/ConferenciaRodada01.md,
+' Documentation/EnsaioTemposMobileTCC/Rodada01.md e Documentation/EnsaioTemposMobileTCC.md.
+
+' Espaços inseparáveis dão margem ao texto dentro das células.
+
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam legendFontSize 16
+skinparam titleFontSize 20
+skinparam footerFontSize 14
+skinparam footerFontColor black
+skinparam shadowing false
+skinparam legendBackgroundColor white
+skinparam legendBorderColor transparent
+
+title Safe Watch Insight\nTempos de execução mobile
+
+legend
+|=  Medida  |=  Após 6 min de espera \n Média (s)  |=  Consecutivas \n Média (s)  |
+|  Acesso à inspeção  |  3,688  |  1,675  |
+|  Preenchimento da inspeção  |  29,023  |  29,062  |
+|  Preenchimento até a \n confirmação local  |  29,218  |  29,261  |
+|  Relatório pronto na tela  |  3,700  |  1,682  |
+endlegend
+
+center footer
+O ensaio usou o Chromium com emulação de Pixel 7.
+Por fluxo (inspeção e relatório), foram 3 tentativas após espera
+e 15 consecutivas. Ao todo, 36 foram aprovadas, com o piloto à parte.
+A digitação usou 331 ms entre caracteres. O protocolo previa 332 ms.
+No Neon, registrou-se reativação perto da primeira abertura nos seis
+blocos. No segundo bloco de relatório, a marca registrada veio 1,592 s
+após a abertura. O log tem resolução de um segundo. A contribuição
+do Neon para a diferença e a ocorrência de partida a frio na Vercel
+ficaram indeterminadas.
+
+Fonte dos dados — JSON, relatório e conferência da rodada 01
+do Ensaio de Tempos Mobile (21 de novembro de 2026).
+endfooter
+@enduml
