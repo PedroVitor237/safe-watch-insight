@@ -1,12 +1,16 @@
 # Continuidade da preparação e escrita do TCC
 
-## Revisão recebida em 21/11/2026
+## Redação consolidada em 22/11/2026
 
 A [revisão de 18/11 em Markdown](./fontes/monografia/mono-002-revisao-2026-11-18.md)
-é a versão de referência indicada pelo autor para retomar o trabalho. A próxima
-etapa começa pela leitura de [Resultados e Discussão](./fontes/monografia/mono-002-revisao-2026-11-18.md#secao-5)
-e pela conferência dos resultados e testes que podem ser citados. A redação dos
-parágrafos adicionais vem depois dessa análise, em uma cópia de trabalho.
+é a fonte preservada. A redação consolidada está em
+[Markdown](./redacao/revisao-2026-11-22/monografia.md) e
+[Word](./redacao/revisao-2026-11-22/monografia.docx). A Tabela 2, em Resultados e
+Discussão, apresenta os tempos dos dois fluxos do ensaio com emulação móvel.
+O Apêndice I reúne os quadros de volume sequencial, sincronização e histórico.
+
+- [Trechos e pontos de inserção](./redacao/revisao-2026-11-22/trechos-e-insercoes.md).
+- [Conferência de evidências e referências](./redacao/revisao-2026-11-22/conferencia-de-fontes.md).
 
 ## Registro de 16/10/2026
 
