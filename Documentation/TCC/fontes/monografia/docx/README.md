@@ -1,4 +1,7 @@
-# Monografia atual em DOCX
+# Monografia recebida em 16/10/2026
+
+A versão mais recente indicada pelo autor é a
+[revisão de 18/11/2026 transcrita em Markdown](../mono-002-revisao-2026-11-18.md).
 
 [monografia-atual.docx](./monografia-atual.docx) é uma cópia binária idêntica ao DOCX
 fornecido pelo autor em 16/10/2026. Após solicitar sua inclusão no repositório, o

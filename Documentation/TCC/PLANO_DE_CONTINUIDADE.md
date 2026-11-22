@@ -1,6 +1,16 @@
 # Continuidade da preparação e escrita do TCC
 
-Atualizado em **16/10/2026**, após execução do
+## Revisão recebida em 21/11/2026
+
+A [revisão de 18/11 em Markdown](./fontes/monografia/mono-002-revisao-2026-11-18.md)
+é a versão de referência indicada pelo autor para retomar o trabalho. A próxima
+etapa começa pela leitura de [Resultados e Discussão](./fontes/monografia/mono-002-revisao-2026-11-18.md#secao-5)
+e pela conferência dos resultados e testes que podem ser citados. A redação dos
+parágrafos adicionais vem depois dessa análise, em uma cópia de trabalho.
+
+## Registro de 16/10/2026
+
+Registro produzido após execução do
 [prompt de conciliação e redação](./prompts/01-conciliar-e-redigir.md) com a
 [skill escrever-tcc-safe-watch](../../.agents/skills/escrever-tcc-safe-watch/SKILL.md).
 A pausa por limite de uso preservou o Markdown inicial; a retomada conferiu a
@@ -64,7 +74,7 @@ subseção 3.4.2 **Trabalhos relacionados**, além das demais partes não autori
    estudada em aula. Não reconstruir dados individuais da avaliação a partir
    de resultados agregados.
 
-## Como retomar
+## Como foi organizada a retomada de outubro
 
 Partir de `redacao/monografia-trabalho.docx`, inspecionando qualquer contribuição
 posterior da dupla antes de editar. Não regenerar a saída sobre novas alterações

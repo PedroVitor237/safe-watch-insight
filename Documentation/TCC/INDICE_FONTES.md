@@ -1,5 +1,12 @@
 # Índice das fontes do TCC
 
+## MONO-002 — revisão mais recente da monografia
+
+- [Transcrição em Markdown](./fontes/monografia/mono-002-revisao-2026-11-18.md), recebida em DOCX em 21/11/2026 e identificada no nome original como `rev 18-11`. Esta versão serve de referência para a próxima análise de **Resultados e Discussão**.
+- O texto conserva títulos, citações, referências e apêndices A a H. As três tabelas estão em Markdown, e as cinco figuras e as cinco imagens dos apêndices D a H foram extraídas do DOCX. O sumário mantém a numeração e as páginas do Word, com links adaptados. Paginação, cabeçalhos, rodapés e logotipos de cabeçalho ficam no DOCX fornecido.
+- SHA-256 do DOCX fornecido: `006f6c5f55f9d05171dab8fb820e1cce90ac0312dce6f19305da2d894220c993`.
+- SHA-256 da transcrição: `0e7f7681c91d97178e69c79e4fce6f6219ddd13fe1b7552c644e475a65f3d8c0`.
+
 ## Fontes recebidas
 
 | ID | Tipo | Project de origem (ChatGPT) | Chat | Recebimento | Período dos acontecimentos | Situação |

@@ -9,7 +9,8 @@ Receber e indexar uma fonte não significa aprovar suas afirmações para o TCC.
 
 - [Acordos de escrita](./ACORDOS_DE_ESCRITA.md): escopo, prioridade das fontes, tom, referências, IA e preservação.
 - [Plano de continuidade](./PLANO_DE_CONTINUIDADE.md): estado atual e etapas restantes até a escrita.
-- [DOCX atual da monografia](./fontes/monografia/docx/README.md): cópia integral fornecida pelo autor.
+- [Monografia — revisão de 18/11/2026](./fontes/monografia/mono-002-revisao-2026-11-18.md): transcrição em Markdown e referência para a próxima análise de Resultados e Discussão.
+- [DOCX recebido em 16/10/2026](./fontes/monografia/docx/README.md): versão histórica preservada.
 - [Prompt para o Codex](./prompts/01-conciliar-e-redigir.md): conciliação das fontes e redação nos arquivos.
 - [Skill de escrita](../../.agents/skills/escrever-tcc-safe-watch/SKILL.md): instruções reutilizáveis para o Codex.
 - [Revisão da dupla](./REVISAO_DA_DUPLA.md): mapa da monografia, figuras candidatas e ajustes relacionados.
