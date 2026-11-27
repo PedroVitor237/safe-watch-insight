@@ -7,6 +7,7 @@ Receber e indexar uma fonte não significa aprovar suas afirmações para o TCC.
 
 ## Como consultar
 
+- [Registro das revisões de 27/11/2026](./redacao/revisao-2026-11-27/registro-de-revisao.md): versões do Word, decisões, resultados conferidos e pendências da versão atual.
 - [Acordos de escrita](./ACORDOS_DE_ESCRITA.md): escopo, prioridade das fontes, tom, referências, IA e preservação.
 - [Plano de continuidade](./PLANO_DE_CONTINUIDADE.md): estado atual e etapas restantes até a escrita.
 - [Monografia — revisão de 22/11/2026](./redacao/revisao-2026-11-22/monografia.md) e [versão em Word](./redacao/revisao-2026-11-22/monografia.docx). Inclui os ensaios de novembro, com [trechos e inserções](./redacao/revisao-2026-11-22/trechos-e-insercoes.md) e [conferência de fontes](./redacao/revisao-2026-11-22/conferencia-de-fontes.md).

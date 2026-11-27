@@ -1,5 +1,14 @@
 # Apoio à revisão da dupla
 
+## Atualização de 27/11/2026
+
+Consultar o [registro de revisão de 27/11](./redacao/revisao-2026-11-27/registro-de-revisao.md) para as decisões
+atuais sobre Guerra/Valente, a confirmação sobre os participantes, os
+resumos, a Figura 1, os Apêndices A–H e a montagem do Word. O registro
+também lista as pendências da versão atual, incluindo o ano do exemplar
+do SWEBOK e os elementos pré-textuais. As seções abaixo documentam
+a entrega de outubro.
+
 Atualizado em **16/10/2026**, após conciliação, verificação das novas referências e
 redação das seções autorizadas. A entrega principal está em
 [monografia-trabalho.docx](./redacao/monografia-trabalho.docx); os novos trechos,

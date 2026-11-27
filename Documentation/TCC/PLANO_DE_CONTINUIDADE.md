@@ -1,5 +1,14 @@
 # Continuidade da preparação e escrita do TCC
 
+## Revisões de 27/11/2026
+
+O [registro de revisão](./redacao/revisao-2026-11-27/registro-de-revisao.md) identifica a versão atual do Word,
+as decisões dos autores, as evidências e as pendências antes do depósito.
+A versão corrigida parte do DOCX mais recente enviado pelos autores.
+A consolidação de 22/11 é a referência complementar para os quadros de
+verificação técnica. Ao retomar a edição, conferir primeiro a seção de
+pendências do registro de 27/11.
+
 ## Redação consolidada em 22/11/2026
 
 A [revisão de 18/11 em Markdown](./fontes/monografia/mono-002-revisao-2026-11-18.md)
