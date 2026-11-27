@@ -1,0 +1,84 @@
+' Síntese para os apêndices do TCC: 22 requisitos funcionais e 8 não funcionais.
+' Fonte exclusiva: Documentation/DocumentoDeRequisitos.md, seções 5 e 6.
+' Blob da fonte consultada: fc083982386f9edfd977fa90a0f25fdc01827347.
+' Identificadores e títulos preservados; descrições condensadas sem criar requisitos.
+' O documento-fonte mantém os detalhes e as delimitações de entrega.
+' Dois blocos no mesmo arquivo permitem exportar RF e RNF separadamente.
+' Renderização: java -jar plantuml.jar -charset UTF-8 -tsvg Documentation/diagrams/domain/requirements-summary.puml
+
+@startuml requirements-functional-summary
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam titleFontSize 16
+skinparam footerFontSize 11
+skinparam footerFontColor black
+skinparam shadowing false
+skinparam legendBackgroundColor white
+skinparam legendBorderColor transparent
+
+title Safe Watch Insight\nSíntese dos requisitos funcionais
+
+legend
+|= Código |= Requisito |= Descrição resumida |
+| RF01 | Autenticação de\nUsuários | Permitir o acesso à plataforma por login. |
+| RF02 | Cadastro de Empresas | Cadastrar empresas para as inspeções. |
+| RF03 | Cadastro de Checklists | Criar checklists personalizados. |
+| RF04 | Edição de Checklists | Adicionar, remover e editar itens. |
+| RF05 | Templates de Checklist | Oferecer modelos de checklist cadastrados. |
+| RF06 | Execução de Inspeções | Iniciar e executar inspeções com checklists\ncadastrados. |
+| RF07 | Registro de Não\nConformidades | Registrar não conformidades identificadas\nna inspeção. |
+| RF08 | Associação de Normas | Associar itens às normas aplicáveis. |
+| RF09 | Consulta de Normas | Consultar rapidamente as Normas\nRegulamentadoras relacionadas aos itens\ninspecionados. |
+| RF10 | Visualização de Normas\nDurante a Inspeção | Exibir as normas associadas aos itens\ndurante o preenchimento da inspeção. |
+| RF11 | Associação de Inspeções\nàs Empresas | Vincular inspeções a empresas cadastradas. |
+| RF12 | Registro de Solicitante | Registrar, de forma opcional, o solicitante\nda vistoria ou inspeção. |
+| RF13 | Emissão de Relatórios | Gerar relatórios estruturados dos registros. |
+| RF14 | Modelos de Relatórios | Disponibilizar modelos padronizados de\nrelatório. |
+| RF15 | Registro de Ações\nCorretivas | Registrar ações corretivas associadas às\nnão conformidades. |
+| RF16 | Definição de Prazo | Definir prazos para correção de não\nconformidades. |
+| RF17 | Controle de Pendências | Identificar ações corretivas pendentes,\nconcluídas ou vencidas. |
+| RF18 | Consulta ao Histórico | Consultar o histórico de inspeções. |
+| RF19 | Dashboard | Apresentar indicadores resumidos de\ninspeções, não conformidades e ações\ncorretivas. |
+| RF20 | Operação Offline | Registrar inspeções sem acesso à internet. |
+| RF21 | Sincronização\nAutomática | Sincronizar automaticamente os dados locais\nquando houver conexão disponível. |
+| RF22 | Registro de Evidências | Selecionar, visualizar, enviar, consultar e\nremover fotos de inspeção ou não\nconformidade; JPEG, PNG ou WebP até 4 MB;\narquivos externos e apenas URL e metadados\nno banco. |
+endlegend
+
+footer
+Fonte: elaboração dos autores com base no Documento de Requisitos.
+Síntese da especificação; não representa avaliação da implementação.
+endfooter
+@enduml
+
+@startuml requirements-nonfunctional-summary
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam titleFontSize 16
+skinparam footerFontSize 11
+skinparam footerFontColor black
+skinparam shadowing false
+skinparam legendBackgroundColor white
+skinparam legendBorderColor transparent
+
+title Safe Watch Insight\nSíntese dos requisitos não funcionais
+
+legend
+|= Código |= Requisito |= Descrição resumida |
+| RNF01 | Responsividade | Ser compatível com smartphones, tablets e\ncomputadores. |
+| RNF02 | Mobile First | Priorizar dispositivos móveis no projeto da\ninterface. |
+| RNF03 | Disponibilidade Offline | Permitir utilização sem conexão com a\ninternet. |
+| RNF04 | Sincronização Segura | Preservar a integridade dos dados\nregistrados offline durante a\nsincronização. |
+| RNF05 | Facilidade de Uso | Oferecer interface simples e intuitiva para\nuso em ambientes operacionais. |
+| RNF06 | Rastreabilidade | Manter todas as inspeções registradas para\nconsulta futura. |
+| RNF07 | Escalabilidade | Permitir evolução da arquitetura sem\nreestruturação completa da solução. |
+| RNF08 | Compatibilidade PWA | Ser compatível com os conceitos de\nProgressive Web App (PWA). |
+endlegend
+
+footer
+Fonte: elaboração dos autores com base no Documento de Requisitos.
+Síntese da especificação; não representa avaliação da implementação.
+endfooter
+@enduml
+

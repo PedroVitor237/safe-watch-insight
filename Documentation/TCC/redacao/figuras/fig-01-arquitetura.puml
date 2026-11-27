@@ -1,0 +1,42 @@
+@startuml
+' Recorte de Documentation/diagrams/architecture/application.puml em 16/10/2026.
+' Mantém os 14 nós e 15 relações do fluxo de dados, autenticação e evidências.
+' Omite somente UI --> SW --> CACHE e os dois nós correspondentes.
+' O cache público do service worker é explicado em 3.4.1, fora deste recorte.
+title Camadas e persistência do Safe Watch Insight
+top to bottom direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam componentStyle rectangle
+component "Frontend: rotas e\ncomponentes React" as UI
+component "Hooks / React Query /\nchamada direta" as CLIENT
+component "Server Functions:\nsrc/lib/api" as SF
+component "Schemas Zod:\nentrada" as ZOD
+component "Authentication:\nsessão e UserService" as AUTH
+component "Services:\ndomínio e autorização" as SVC
+component "Repositories:\nescopo e persistência" as REPO
+component "Prisma Client" as ORM
+database "PostgreSQL / Neon" as PG
+component "Camada offline cliente" as LOCAL
+database "IndexedDB / Dexie:\npacotes e fila por usuário" as IDB
+component "Sync manager:\nrespostas e conclusão" as SYNC
+component "StorageService /\nCloudinaryStorageService" as STORAGE
+cloud "Cloudinary:\nbinários de evidência" as CLOUD
+UI --> CLIENT
+CLIENT --> SF
+SF --> ZOD
+SF --> AUTH
+SF --> SVC
+SVC --> REPO
+AUTH --> REPO
+REPO --> ORM
+ORM --> PG
+CLIENT --> LOCAL
+LOCAL --> IDB
+IDB --> SYNC
+SYNC --> SF
+SVC --> STORAGE
+STORAGE --> CLOUD
+@enduml

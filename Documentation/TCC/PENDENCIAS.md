@@ -1,0 +1,145 @@
+# Pendências e divergências para revisão do TCC
+
+Entradas: CHAT-001 a CHAT-009, recebidas em 15/10/2026. Este registro organiza
+questões de evidência e redação; não altera decisões técnicas nem o backlog de
+implementação. As descrições históricas são preservadas. A atualização de
+16/10/2026 ao final deste arquivo qualifica seu estado com as fontes humanas,
+de pesquisa e da monografia; não considerar essas fontes ainda ausentes quando
+já recebidas. Nem toda dúvida histórica é necessária à redação acadêmica.
+
+Fonte de origem: [CHAT-001 — Estrutura do TCC ADS](./fontes/chats/ads-tcc-duvidas-tecnicas/chat-001-estrutura-do-tcc-ads.md).
+Segunda fonte: [CHAT-002 — Lovable para FrontEnd TCC](./fontes/chats/ads-tcc-duvidas-tecnicas/chat-002-lovable-para-frontend-tcc.md).
+Terceira fonte: [CHAT-003 — Prompts TCC ADS](./fontes/chats/ads-tcc-prompts/chat-003-prompts-tcc-ads.md).
+Quarta fonte: [CHAT-004 — Estrutura TCC ADS](./fontes/chats/ads-tcc-pesquisa/chat-004-estrutura-tcc-ads.md).
+Quinta fonte: [CHAT-005 — Estrutura e Orientações TCC](./fontes/chats/ads-tcc-documentos/chat-005-estrutura-e-orientacoes-tcc.md).
+Sexta fonte: [CHAT-006 — Documentação Plataforma TCC](./fontes/chats/ads-tcc-documentacao-plataforma/chat-006-documentacao-plataforma-tcc.md).
+Sétima fonte: [CHAT-007 — Regra de Prompt Codex](./fontes/chats/ads-tcc-desenvolvimento/chat-007-regra-de-prompt-codex.md).
+Oitava fonte: [CHAT-008 — Desenvolvimento TCC Segurança do Trabalho](./fontes/chats/ads-tcc-desenvolvimento/chat-008-desenvolvimento-tcc-seguranca-do-trabalho.md).
+Nona fonte: [CHAT-009 — Gerar Prompt de Auditoria](./fontes/chats/ads-tcc-desenvolvimento/chat-009-gerar-prompt-de-auditoria.md).
+Os contrapontos documentais foram consultados no commit
+`819c35a582f2e1e799d6ae71857d2dd4706723ed`, conforme o
+[índice das fontes](./INDICE_FONTES.md).
+
+| ID | Questão ou diferença | Evidência disponível e seu limite | O que falta conferir / fonte responsável |
+| --- | --- | --- | --- |
+| TCC-P001 | Quando ocorreram a concepção e a passagem de cartilha para plataforma de inspeções? | CHAT-001 §§ 3 e 4 e CHAT-003 §§ 3 e 4.2 relatam refinamento do foco sem datas individuais. Datas contextuais ou derivadas de nome de vídeo não comprovam a mudança. O recebimento em 15/10/2026 não data os fatos. | Histórico original, documentos anteriores ou confirmação dos autores; manter data desconhecida enquanto não houver evidência. |
+| TCC-P002 | O módulo educativo foi excluído, adiado ou mantido como secundário? | CHAT-001 §§ 4.2, 6.5 e 12.1 confirma prioridade das inspeções, sem exclusão formal da cartilha. CHAT-003 §§ 4.2 e 9.1 reitera que a mudança de foco não comprova abandono de todo conteúdo informativo. | Documento de Requisitos, monografia e decisão dos autores; consultar orientadora se houver mudança do escopo acadêmico. |
+| TCC-P003 | Quais requisitos do MVP foram aprovados e quais vieram de entrevistas? | CHAT-001 §§ 5, 7 e 12.2 contém lista preliminar, sem aprovação formal ou critérios de aceite. CHAT-004 §§ 5.2 e 9.2 contém perguntas e hipóteses sem respostas profissionais ou validação do produto. | Documento de Requisitos consolidado e rastreio das fontes de cada requisito; não transformar perguntas em achados nem atribuir requisitos a entrevistas sem seus registros. |
+| TCC-P004 | Como a proposta de Next.js evoluiu para a base TanStack Start? | CHAT-001 § 6.2 descreve proposta preliminar; TECH_DECISIONS.md / Framework registra preservação da base Lovable + TanStack Start. CHAT-002 §§ 5.2 e 10.1 acrescenta o relato de que o usuário informou frontend já feito em TanStack após a sugestão de Next.js. | Conciliação parcial: há evidência narrativa de esclarecimento da base existente, sem comprovação de migração. Conferir datas, histórico e relatório principal; não presumir que Next.js chegou a ser implementado. |
+| TCC-P005 | Qual foi a evolução da proposta de sincronização? | CHAT-001 §§ 6.3 e 12.3 classifica “última alteração vence” como sugestão não confirmada. TECH_DECISIONS.md / Offline registra idempotência e bloqueio de conflito por revisão, sem Last Write Wins, em 07/08/2026. | Relacionar a decisão técnica aos relatórios e testes correspondentes; não atribuir a estratégia posterior a este chat preliminar nem declarar nova validação nesta coleta. |
+| TCC-P006 | Quando o upload preparado passou a ser entrega real e qual seu alcance? | CHAT-001 §§ 6.4 e 12.4 registra integração futura. TECH_DECISIONS.md / Upload de Evidências registra upload online em 06/08/2026 e mantém binários offline adiados. | Conciliar com retrospectiva, relatórios e evidências de implementação; preservar a diferença entre upload online e sincronização offline. |
+| TCC-P007 | Quais contatos ou entrevistas foram realizados e quais registros estão disponíveis? | CHAT-001 §§ 2, 10.1 e 12.6 menciona anotações não apresentadas. CHAT-004 §§ 2.1, 5.1 e 9.1 registra preparação de conversa informal, sem comprovar envio, realização ou respostas. Não está demonstrado que os dois relatos se refiram à mesma interação. | Recuperar registros originais e confirmar realização, datas, perfil não identificador do participante, método e tratamento acadêmico com os autores e a orientadora. Separar preparação, contato informal, entrevista e avaliação do produto. |
+| TCC-P008 | Que testes e homologações podem sustentar a descrição da solução? | CHAT-006 acrescenta verificações direcionadas de datas; CHAT-009 §§ 5–6 acrescenta regressões de cache por PR, com limitações de autenticação real/produção; CHAT-008 §§ 5–6 acrescenta hardening e homologação PWA reportados, com contagens e limitações. Os artefatos primários não foram recebidos ou reexecutados nesta coleta. | Recuperar resultados e versões correspondentes; distinguir relato, reexecução, cobertura específica e aprovação global. Não somar contagens possivelmente sobrepostas nem inferir avaliação com usuários ou homologação universal. |
+| TCC-P009 | Qual metodologia foi efetivamente aplicada e como cada integrante e a IA participaram? | CHAT-001 a CHAT-006 distinguem apoio consultivo, plano e manutenção relatada. CHAT-007 §§ 4.5 e 7.3 acrescenta declaração de atuação principal de Autor 1 em código/metodologia/documentação e Autor 2 na monografia; §§ 3.1 e 4.1 descreve padrão de prompts aplicado a uma tarefa. | Conciliação parcial da divisão de trabalho: confirmar o acordo dos autores e registros pertinentes, sem presumir exclusividade ou titularidade. Distinguir plano, exemplo de prática, aplicação uniforme e produtividade medida. |
+| TCC-P010 | Quais decisões receberam aprovação acadêmica e quais materiais de origem ainda precisam ser recuperados? | CHAT-001 não apresenta aprovação da orientadora. CHAT-004 §§ 3 e 8.1 acrescenta relato de conversas anteriores sobre o foco, sem registro direto dos encaminhamentos. Vídeo, entrevistas e outros materiais citados continuam sujeitos à recuperação. | Confirmação dos autores/orientadora e documentos originais quando pertinentes; distinguir orientação relatada de aprovação formal, sem inferir ausência de aprovação em outro contexto. |
+| TCC-P011 | Quais eram os formatos e critérios oficiais da Atividade 1? | CHAT-002 §§ 2.1 e 6.3 afirma consulta a PDF de quatro páginas, com especificação de ao menos cinco telas em PDF/DOCX, wireframes, frontend e guia de uma a duas páginas. Os prompts descritos pedem Markdown. O PDF não foi recebido nesta coleta. | Recuperar o enunciado original, confirmar critérios e possíveis conversões dos artefatos; avaliação pelo professor quando houver dúvida. Não tratar o relato como nova leitura direta do PDF. |
+| TCC-P012 | Os wireframes foram produzidos e a representação escolhida foi aceita? | CHAT-002 §§ 6.4 e 10.3 relata sugestão de ASCII, cuja equivalência ao protótipo exigido não foi confirmada. A existência atual de WIREFRAMES.md não prova a entrega ou aprovação dessa versão. | Artefatos finais, versões históricas e avaliação do professor; distinguir representação estrutural sugerida de protótipo efetivamente entregue. |
+| TCC-P013 | Quais prompts de documentação foram executados e quais artefatos derivaram deles? | CHAT-002 não confirma execução de seus prompts. CHAT-007 §§ 4.2 e 5 relata revisão de telas, guia, navegação e README pelo Codex, sem demonstrar que criou esses arquivos ou executou os prompts de CHAT-002. GUIA_USUARIO.md difere do nome GUIA_DO_USUARIO.md inicialmente proposto. | Recuperar histórico de arquivos, versões e respostas; distinguir criação, revisão e origem por prompt. Não usar nomes semelhantes ou existência atual para comprovar a sequência de geração. |
+| TCC-P014 | Quando ocorreram a criação do frontend e a entrega acadêmica, e qual material de contexto foi usado? | CHAT-002 § 4 cita referência contextual a 14/10/2026 sem datar mensagens; §§ 2 e 8 cita Estrutura do TCC ADS.txt, não recebido separadamente. Coincidência com o título de CHAT-001 não prova identidade entre os materiais. | Datas e registros originais de frontend, atividade e entrega; recuperar o resumo citado e confirmar relação com CHAT-001. Não atribuir marcos a 14/10/2026 sem evidência. |
+| TCC-P015 | Qual versão do prompt orquestrador foi efetivamente reutilizada e em quais espaços? | CHAT-003 §§ 2.2, 4.4 e 5.1 descreve seis espaços e uma versão ampliada de contexto com premissas. O texto integral do prompt não foi recebido separadamente nesta coleta, e sua aplicação fora daquele chat não foi comprovada. | Recuperar versões do prompt e registros de uso; diferenciar organização declarada, aplicação real e revisões humanas, sem presumir que todos os espaços receberam as mesmas instruções. |
+| TCC-P016 | Qual é a origem, a data e a relação do vídeo com o software, e sua descrição é fiel? | CHAT-001 menciona vídeo inacessível ao relator; CHAT-003 §§ 3 e 5.3 relata uma descrição textual, sem análise independente. A data 13/04/2026 foi extraída do nome do arquivo, não da gravação ou da mensagem. As referências compartilham o mesmo nome textual, sem comparação dos binários. | Recuperar o vídeo e contexto primário se forem necessários à monografia; conferir conteúdo, autorização de uso, versão retratada e datas verificáveis. Não tratar a descrição como homologação nem a data do nome como data de evento. |
+| TCC-P017 | Houve questionário formal posterior e quais procedimentos de coleta e análise foram realmente usados? | CHAT-004 §§ 4.2, 8.3 e 9.4 registra intenção futura, sem instrumento, aplicação, revisão, participantes definidos ou análise. O rascunho e a mensagem completa são descritos no relato, não recebidos separadamente. | Recuperar instrumentos e registros posteriores, se existirem; confirmar procedimentos realmente executados e sua descrição acadêmica com os autores e a orientadora. Não atribuir método científico formal apenas à preparação informal. |
+| TCC-P018 | Quais fontes científicas e normativas sustentam o problema e o conteúdo de SST? | CHAT-004 menciona NRs genericamente. CHAT-005 §§ 3.3, 5.5 e 8.2 acrescenta referências relatadas de SST, software, usabilidade e andragogia, sem conferência independente. A revisão menciona ISO 45001:2024 e a lista registra 45001:2018 com publicação em 2024. | Recuperar o documento e conferir fontes primárias, edições, vigência quando pertinente e correspondência entre citações e referências. Preservar autores bibliográficos; não tratar a lista ou recomendações como validação ABNT. |
+| TCC-P019 | Qual é a versão aprovada do projeto acadêmico e como seus objetivos se relacionam à monografia atual? | CHAT-005 §§ 3, 5 e 10 descreve Modelo de Projeto de TCC centrado em cartilha, com revisão preliminar. O Word não foi recebido nesta entrada; data e aprovação são desconhecidas. Problema, hipótese e correções são sugestões sem adoção comprovada. | Recuperar Word e versões posteriores, datas e registros de entrega/aprovação; comparar objetivos e problema com o escopo final. Não substituir a monografia atual pelo projeto inicial. |
+| TCC-P020 | A avaliação SUS planejada foi realizada e quais resultados estão documentados? | CHAT-005 §§ 3.5, 7 e 9.3 descreve plano de 30 participantes, dez por perfil de colaborador/empregador/fiscal, com escore superior a 68 como referência. Não comprova recrutamento, aplicação, cálculo ou resultado; o critério não foi verificado nesta coleta. | Recuperar protocolo, instrumento, dados e análise, se existirem; confirmar método e limites com autores/orientadora. Distinguir plano SUS, contato exploratório de CHAT-004 e avaliação executada. |
+| TCC-P021 | Qual cronograma foi aprovado e quais datas de execução e entrega podem ser comprovadas? | CHAT-005 §§ 4, 5.6 e 10.2 registra cronograma de outubro a dezembro e exemplo de preenchimento, sem ano confirmado, adoção ou execução. A referência contextual de 14/10/2026 não data a revisão. | Recuperar calendário institucional, cronograma adotado e registros de execução; separar período proposto, prazo oficial e data efetiva. Não converter o exemplo mensal em histórico do desenvolvimento. |
+
+## Pendências de manutenção, documentação e disponibilização
+
+Os itens seguintes registram dúvidas históricas. Não são diagnósticos novos de
+falhas presentes nem ordens para modificar o código durante esta coleta.
+
+| ID | Questão ou diferença | Evidência disponível e seu limite | O que falta conferir / fonte responsável |
+| --- | --- | --- | --- |
+| TCC-P022 | Quais versões e testes comprovam as correções de datas e a limpeza do React? | CHAT-006 §§ 4–5 descreve helper local, centralização em format.ts e remoção de useMemo, com resultados direcionados relatados. Não informa commits, PRs, diff final, regressão completa ou build final confirmado. | Recuperar Git e registros das verificações, relacionar mudanças e versões, conferir formatos aceitos e páginas atingidas. A aprovação local de um teste não resolve automaticamente falhas globais de lint ou produção. |
+| TCC-P023 | Qual foi a resolução dos problemas históricos de sessão, produção e avisos de segurança/manutenção? | CHAT-006 § 6 relata SESSION_SECRET corrigido pelo usuário, avisos de CSRF, inputValidator depreciado, SSL, OIDC local e preocupação com credenciais em logs. Não comprova estado atual ou causa comum. O relatório não reproduz valores reais de credenciais. | Conferir evidências posteriores de autenticação/deploy, middleware e política de logs; classificar avisos por camada e alcance. Não solicitar nem publicar segredos e não tratar todos os avisos como a mesma falha funcional. |
+| TCC-P024 | O backend e banco atenderam ao enunciado completo da Atividade 2? | CHAT-006 § 8 resume modelagem/DDL, CRUD de duas entidades, validação, autenticação, contratos, integração e README, mas não apresenta auditoria completa ou o enunciado como arquivo independente desta coleta. | Recuperar enunciado original e relacionar cada critério a modelos, migrations, contratos reais de Server Functions, código e testes. Avaliar a arquitetura existente sem presumir backend REST separado ou conclusão pela presença de telas. |
+| TCC-P025 | Qual relatório de contexto foi produzido e como ele se relaciona à proposta de CHAT-006? | CHAT-006 propõe AI_PROJECT_CONTEXT sem retorno de geração; a árvore contém AI_PROJECT_CONTEXT.md. CHAT-007 §§ 4.2 e 6.2 relata atualização desse arquivo, sem comprovar sua origem, versão ou relação com a solicitação anterior. | Ler o arquivo e recuperar versões/autoria; comparar com repositório e relatórios existentes. Distinguir existência, criação e revisão; não duplicar o documento ou tratá-lo como autoridade absoluta. |
+| TCC-P026 | Quais alterações e verificações comprovam a consolidação documental relatada? | CHAT-007 §§ 4.2–4.3 e 5 relata mudança para Documentation/, revisão de 37 Markdown e correção de 12 linhas; não fornece diff, branch, commit ou saídas. Há variações de caminhos e de grafia do comando de whitespace. A data de interação é atribuída a 18/08/2026, sem datar as edições. | Recuperar Git, prompt e retorno original, mapear caminhos antigos/novos e comandos executados. Separar verificações de links/formatação de auditoria semântica e de testes do software; não atribuir a tarefa a um PR por similaridade. |
+| TCC-P027 | Qual decisão de disponibilização e licenciamento foi formalizada? | CHAT-007 §§ 3.6, 4.4 e 8.3 relata comparação preliminar e adiamento da licença, sem nova licença criada naquela tarefa; não comprova estado atual ou titularidade. A declaração de divisão acadêmica de trabalho não resolve esses temas. | Recuperar decisões e documentos aplicáveis, situação do repositório e registros pertinentes à titularidade e dependências. Preservar a análise como histórica; não converter recomendação preliminar em conclusão jurídica ou licença adotada. |
+
+## Cronologia, evidências e cadastro — CHAT-008
+
+| ID | Questão ou diferença | Evidência disponível e seu limite | O que falta conferir / fonte responsável |
+| --- | --- | --- | --- |
+| TCC-P028 | Como conciliar a cronologia das entregas centrais e dos marcos de segurança/offline? | CHAT-008 § 3 inclui relatórios/dashboard antes de agosto de 2026. TECH_DECISIONS.md, consultado em db37b8a, registra Relatórios em 03/09/2026 e Dashboard em 04/09/2026. Datas do nome da migration e contexto de 14/10/2026 não comprovam execução. | Recuperar Git, relatórios e registros de implantação para distinguir concepção, implementação e homologação. Preservar a divergência até conciliação, sem datar outras entregas por inferência. |
+| TCC-P029 | Que investigação fundamentou o adiamento de evidências offline? | CHAT-008 §§ 4.1 e 5.1 resume DEFER TO FUTURE e estimativa de 16–27 dias, sem relatório integral ou memória de cálculo. LocalEvidence e UPLOAD_EVIDENCE são alternativas futuras descritas, não implementação comprovada. | Recuperar o relatório original e a decisão de escopo; confirmar premissas e limites. Não apresentar estimativa como esforço medido ou binários offline como entregues. |
+| TCC-P030 | Quais evidências comprovam o hardening e qual foi o alcance da auditoria de permissões? | CHAT-008 § 5.2 relata propagação da sessão e propriedade por relações, sem migration, com 65/65 testes gerais, 23 específicos e validações reais. Logs/commit não foram recebidos; auditoria ampla continuava pendente no relato. | Recuperar diff, testes e versões; conferir fronteiras de acesso e possível sobreposição dos números. Não converter correção de evidências em RBAC geral ou prova de ausência de vulnerabilidades. |
+| TCC-P031 | Qual foi o alcance efetivo da homologação PWA/offline e quais alterações foram incorporadas? | CHAT-008 § 5.3 relata APPROVED WITH KNOWN LIMITATIONS, 65/65 testes, 5/5 scripts e 4/4 navegador. Mantém inspeção pré-carregada, binários online, sem Background Sync/reconciliação assistida/matriz ampla; três arquivos ainda sem commit confirmado. | Recuperar relatório, logs, fixtures, commit/push e implantação. Distinguir smoke HTTPS do fluxo autenticado completo e reabertura de reinício integral; preservar as limitações e investigar a falha transitória inicial sem inventar causa. |
+| TCC-P032 | Que execução comprova o cadastro e qual comportamento de sessão foi adotado? | CHAT-008 §§ 4.4 e 5.4 contém prompt, sem retorno. Prefere sessão após cadastro, admitindo login. PROJECT_CONTEXT.md, consultado em db37b8a, descreve cadastro existente sem sessão automática, com redirecionamento para /login. | Recuperar implementação, decisão, testes e histórico de cadastro. Distinguir preferência, alternativa permitida e resultado documentado; não atribuir a entrega ao prompt ou declarar cadastro ausente só porque esse chat não comprova execução. |
+
+## Correções de cache e preparação documental — CHAT-009
+
+| ID | Questão ou diferença | Evidência disponível e seu limite | O que falta conferir / fonte responsável |
+| --- | --- | --- | --- |
+| TCC-P033 | Como conciliar o limite temporal em setembro com integrações em outubro? | CHAT-009 § 2 encerra o período em setembro. Metadados GitHub confirmam PR #7 em 13/10/2026 23:23:16 UTC e PR #8 em 13/10/2026 23:46:28 UTC, com os hashes relatados. | Confirmação parcial das datas de merge; recuperar datas de implementação, testes e sincronização e esclarecer o limite incorreto do resumo. Não retroagir execuções a setembro nem atribuí-las ao contexto de 14/10. |
+| TCC-P034 | Quais registros sustentam as correções IC-P6-02/IC-P9-02 e seus testes? | CHAT-009 §§ 5–7 relata QueryClient por identidade e restrição de cache do SW. PRs, heads e merges foram conferidos; contagens e logs não reexecutados. Testes sintéticos não cobrem autenticação real, produção, multitab ou matriz ampla. | Recuperar diffs, logs, ambientes e versão de apresentação; distinguir integração, teste e implantação. Não somar baterias sobrepostas nem substituir o veredito offline condicionado por aprovação irrestrita. |
+| TCC-P035 | Qual é o estado conciliado dos achados da auditoria pré-escrita? | CHAT-009 § 9.1 cita 14 achados, dois associados a PRs integrados e IC-P9-04/IC-P9-10 sem resolução comprovada no histórico. A coleta não revalidou a contagem nem a presença atual dos problemas. | Consultar relatório integral, revisões posteriores e evidências por item; relacionar correções sem declarar toda a auditoria encerrada ou tratar lacunas como vulnerabilidades atuais confirmadas. |
+| TCC-P036 | Qual versão do software e quais fontes sustentarão a redação da monografia? | CHAT-009 §§ 4.5–4.6 e 5.3–5.4 define trabalho paralelo, hierarquia com confronto de evidências e caminhos sugeridos. Não prova conclusão da coleta ou aprovação acadêmica. O SHA 819c35a é estado histórico referido. | Fixar baseline e limitações na etapa de revisão, receber monografia/relatos e confrontar fontes; preservar original. Usar a estrutura adotada Documentation/TCC/ sem presumir execução dos antigos diretórios ou do prompt integral indisponível. |
+
+## Tratamento da identificação do chat
+
+A divergência entre project e título do chat foi resolvida para fins de
+catalogação pela identificação direta do responsável pela coleta: **ADS_TCC - Dúvidas Técnicas →
+Estrutura do TCC ADS**. A cópia publicada foi anonimizada. Não é necessário alterar seu
+campo `Chat` para manter o índice correto.
+
+## Atualização das pendências
+
+Quando uma fonte esclarecer uma questão, acrescentar sua identificação, a
+conclusão e o alcance da confirmação. Preservar o que motivou a dúvida e a
+distinção entre proposta inicial e entrega posterior. A confirmação documental
+de um registro de teste não equivale à reexecução desse teste.
+
+## Atualização de estado em 16/10/2026
+
+A prioridade é a coerência acadêmica, conforme [ACORDOS_DE_ESCRITA.md](./ACORDOS_DE_ESCRITA.md).
+Consultar fontes existentes antes de pedir complementações. Dúvidas históricas
+que não influenciem o texto podem permanecer apenas neste registro auxiliar.
+
+| Pendência histórica | Complemento disponível | Estado e encaminhamento |
+| --- | --- | --- |
+| TCC-P001 | HUM-001 situa mudança de tema na reunião de 25/05 | Esclarecida por relato humano; manter a natureza relatada da data. |
+| TCC-P002 | HUM-001 mantém consulta às NRs e prioriza inspeções | Direção esclarecida; não equiparar consulta normativa a um módulo educativo completo. |
+| TCC-P003 | HUM-001 descreve dificuldades e relação com a proposta | Parcialmente esclarecida; conferir requisitos específicos na documentação. |
+| TCC-P007 | PES-001 reúne três registros de reuniões; HUM-001 confirma entrevistas como fonte principal | Realização descrita/documentada; datas mais prováveis em junho, sem transcrição disponível. |
+| TCC-P009 | HUM-001 esclarece decisões, prompts, revisões, testes e pequenas alterações manuais | Participação humana e uso de IA esclarecidos por relato; não inferir adoção ortodoxa de métodos. |
+| TCC-P014 | HUM-001 situa envio do protótipo no dia seguinte a 18/07 | Data de trabalho 19/07; conciliar com história documental se necessário. |
+| TCC-P017 | HUM-001 distingue formulário inicial e avaliação; PES-002 contém a análise posterior | Avaliação disponível; formulário inicial e detalhes do tratamento ainda a localizar. |
+| TCC-P018 | MONO-001 contém bibliografia atual | Recebida, ainda não validada; verificar fontes que sustentarem o texto novo. |
+| TCC-P019 | MONO-001 é a monografia atual fornecida pelo autor | Ausência da monografia resolvida; aprovação institucional não presumida. |
+| TCC-P020 | PES-002 informa quatro avaliações com instrumento próprio | Não apresentar como aplicação SUS com 30 participantes; o plano histórico não é execução demonstrada. |
+| TCC-P021 | HUM-001 fornece cronologia de maio a agosto e continuidade posterior | Cronologia humana disponível; calendário institucional não verificado. |
+| TCC-P028 | Avaliação em agosto antecede algumas entregas registradas em setembro/outubro | Não retroagir o estado atual à versão avaliada; ver TCC-P038. |
+| TCC-P036 | Monografia, relato e orientações recebidos; nove chats encerrados | Recebimento resolvido; fixação de versão e conciliação integrada continuam futuras. |
+
+## Questões de preparação acadêmica
+
+| ID | Questão | Material disponível | Próxima ação proporcional |
+| --- | --- | --- | --- |
+| TCC-P037 | Como foi aplicado e analisado o formulário inicial de necessidades? | HUM-001 confirma sua existência e diferença das entrevistas; PES-002 é avaliação posterior | Procurar instrumento, respostas, período e síntese na documentação; perguntar apenas o que continuar faltando. |
+| TCC-P038 | Qual versão foi disponibilizada na avaliação de agosto? | HUM-001 e PES-002; registros posteriores de funcionalidades | Conciliar relato e histórico antes de atribuir entregas posteriores aos testes com participantes. |
+| TCC-P039 | Como se relacionam participantes das entrevistas e da avaliação? | Três registros em PES-001, quatro respondentes em PES-002; relato de envio às pessoas consultadas | Esclarecer quantidades e eventual participante adicional, sem exigir nomes ou inventar uma quarta entrevista. |
+| TCC-P040 | Quais fontes sustentam engenharia de software e a influência do PMBOK? | MONO-001 cita Guerra (2020), lista Valente (2020); HUM-001 relata influência em aula | Identificar obra/edição e trechos, verificar referências reais; Código Limpo/TDD/SDD não são adoções presumidas. |
+| TCC-P041 | Que orientações do ebook contribuirão para a skill e metodologia? | Ebook sinalizado, leitura adiada pelo autor | Analisar depois desta consolidação; criar skill somente no último passo antes da escrita. |
+| TCC-P042 | Quais figuras, apêndices e ajustes relacionados serão necessários? | Mapa inicial em REVISAO_DA_DUPLA.md | Selecionar artefatos existentes e definir locais exatos durante a escrita; indicar alterações externas ao escopo. |
+
+A orientação acadêmica relatada sobre a prioridade da proposta e da escrita
+não equivale a regra institucional verificada. As limitações devem ser tratadas
+com precisão e equilíbrio, valorizando as entregas e a continuidade do trabalho.
+
+## Atualização após a redação — 16/10/2026
+
+A conciliação, as novas referências e a integração das seções autorizadas foram
+concluídas. O estado por pendência está em
+[REVISAO_DA_DUPLA.md](./REVISAO_DA_DUPLA.md), na seção de conciliação; as descrições
+anteriores permanecem como histórico. TCC-P036 agora tem baseline técnico e
+documental fixados; TCC-P041 tem leitura e fundamentação registradas; TCC-P042
+tem figura selecionada, recorte e instruções de montagem entregues.
+
+TCC-P020 foi esclarecida diretamente pelo autor: SUS não foi aplicado. Não
+incluir o instrumento, o plano histórico nem explicação sobre escore na
+monografia. O texto entregue descreve as 14 questões do questionário próprio,
+as quatro avaliações e o tratamento efetivamente sustentado por PES-002.
+Permanecem somente as lacunas localizadas no auxiliar, como formulário inicial,
+datas conflitantes de marcos, versão individualmente acessada e Guerra (2020).
